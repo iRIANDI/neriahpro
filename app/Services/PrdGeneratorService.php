@@ -350,8 +350,11 @@ class PrdGeneratorService
             'virtual_charts' => [
                 'workflow_mermaid' => $workflowMermaid,
                 'erd_mermaid' => $erdMermaid,
+                'feature_dep_mermaid' => $featureDepMermaid,
                 'feature_dependency_mermaid' => $featureDepMermaid,
+                'gantt_mermaid' => $sprintGanttMermaid,
                 'sprint_gantt_mermaid' => $sprintGanttMermaid,
+                'infra_mermaid' => $infrastructureMermaid,
                 'infrastructure_mermaid' => $infrastructureMermaid,
                 'mobile_sync_mermaid' => $mobileSyncMermaid,
             ],
@@ -949,6 +952,102 @@ class PrdGeneratorService
                     ['name' => 'score', 'type' => 'decimal(5,2)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Skor angka 0.00 - 100.00', 'label' => ['id' => 'Nilai Skor', 'en' => 'Score']],
                     ['name' => 'competency_note', 'type' => 'text', 'index' => 'NONE', 'nullable' => true, 'notes' => 'Catatan capaian kompetensi', 'label' => ['id' => 'Capaian Kompetensi', 'en' => 'Competency Note']],
                     ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Waktu input nilai', 'label' => ['id' => 'Waktu Input', 'en' => 'Created At']],
+                ],
+            ];
+        }
+
+        // Domain 2: Tourism, Travel, Airport Transfers & Smart Itinerary (e.g. PT Gayabalical, Bali Tours, Overland Jawa Timur)
+        if (str_contains($combinedText, 'tour') || str_contains($combinedText, 'travel') || str_contains($combinedText, 'wisata') || 
+            str_contains($combinedText, 'gayabalical') || str_contains($combinedText, 'itinerary') || str_contains($combinedText, 'ngurah rai') ||
+            str_contains($combinedText, 'overland') || str_contains($combinedText, 'transfer in') || str_contains($combinedText, 'transfer out') ||
+            str_contains($combinedText, 'armada') || str_contains($combinedText, 'kendaraan') || str_contains($combinedText, 'bromo') || str_contains($combinedText, 'ijen')) {
+            
+            $baseTables[] = [
+                'name' => 'tour_packages',
+                'description' => 'Katalog master paket tour Bali dan overland Jawa Timur (Bromo/Ijen) dengan rute dan batas kapasitas.',
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => [
+                    ['name' => 'id', 'type' => 'ulid', 'index' => 'PRIMARY', 'nullable' => false, 'notes' => 'ULID primary key', 'label' => ['id' => 'ID Paket Tour (ULID)', 'en' => 'Tour Package ID (ULID)']],
+                    ['name' => 'package_code', 'type' => 'string(50)', 'index' => 'UNIQUE', 'nullable' => false, 'notes' => 'Kode paket unik (e.g. PKG-BALI-01)', 'label' => ['id' => 'Kode Paket', 'en' => 'Package Code']],
+                    ['name' => 'name', 'type' => 'string(255)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Nama paket wisata', 'label' => ['id' => 'Nama Paket Wisata', 'en' => 'Package Name']],
+                    ['name' => 'destination_area', 'type' => 'string(100)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Bali Selatan | Ubud | Bedugul | Overland Bromo-Ijen', 'label' => ['id' => 'Wilayah Destinasi', 'en' => 'Destination Area']],
+                    ['name' => 'duration_type', 'type' => 'string(50)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'half_day | full_day | overland_multi_day', 'label' => ['id' => 'Durasi Perjalanan', 'en' => 'Trip Duration']],
+                    ['name' => 'base_price_idr', 'type' => 'decimal(15,2)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Tarif dasar paket wisata', 'label' => ['id' => 'Tarif Dasar (IDR)', 'en' => 'Base Price (IDR)']],
+                    ['name' => 'included_features', 'type' => 'jsonb', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Daftar fasilitas include/exclude format JSON', 'label' => ['id' => 'Fasilitas Termasuk', 'en' => 'Included Features']],
+                    ['name' => 'is_active', 'type' => 'boolean', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Status aktif paket', 'label' => ['id' => 'Status Aktif', 'en' => 'Active Status']],
+                    ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Waktu pendaftaran paket', 'label' => ['id' => 'Waktu Dibuat', 'en' => 'Created At']],
+                ],
+            ];
+
+            $baseTables[] = [
+                'name' => 'vehicles',
+                'description' => 'Master armada transportasi (Avanza, Innova Reborn, HiAce, Alphard) dengan kapasitas bagasi dan penumpang.',
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => [
+                    ['name' => 'id', 'type' => 'ulid', 'index' => 'PRIMARY', 'nullable' => false, 'notes' => 'ULID primary key', 'label' => ['id' => 'ID Kendaraan (ULID)', 'en' => 'Vehicle ID (ULID)']],
+                    ['name' => 'vehicle_name', 'type' => 'string(150)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Nama tipe kendaraan', 'label' => ['id' => 'Nama Kendaraan', 'en' => 'Vehicle Name']],
+                    ['name' => 'vehicle_type', 'type' => 'string(50)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'mpv | standard_van | luxury_van | suv', 'label' => ['id' => 'Tipe Kendaraan', 'en' => 'Vehicle Type']],
+                    ['name' => 'passenger_capacity', 'type' => 'int', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Kapasitas maksimal orang', 'label' => ['id' => 'Kapasitas Orang', 'en' => 'Passenger Capacity']],
+                    ['name' => 'luggage_capacity', 'type' => 'int', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Kapasitas maksimal koper bagasi', 'label' => ['id' => 'Kapasitas Koper', 'en' => 'Luggage Capacity']],
+                    ['name' => 'plate_number', 'type' => 'string(20)', 'index' => 'UNIQUE', 'nullable' => false, 'notes' => 'Nomor polisi resmi kendaraan', 'label' => ['id' => 'Nomor Polisi (Plat)', 'en' => 'Plate Number']],
+                    ['name' => 'status', 'type' => 'string(30)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'ready | on_trip | maintenance', 'label' => ['id' => 'Status Operasional', 'en' => 'Fleet Status']],
+                    ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Waktu pendaftaran armada', 'label' => ['id' => 'Waktu Dibuat', 'en' => 'Created At']],
+                ],
+            ];
+
+            $baseTables[] = [
+                'name' => 'bookings',
+                'description' => 'Transaksi reservasi transfer bandara Ngurah Rai, day tour Bali, dan overland Jawa Timur.',
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => [
+                    ['name' => 'id', 'type' => 'ulid', 'index' => 'PRIMARY', 'nullable' => false, 'notes' => 'ULID primary key', 'label' => ['id' => 'ID Reservasi (ULID)', 'en' => 'Booking ID (ULID)']],
+                    ['name' => 'user_id', 'type' => 'foreignUlid', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Relasi ke users.id (Klien Pemesan)', 'label' => ['id' => 'ID Pemesan', 'en' => 'User ID']],
+                    ['name' => 'tour_package_id', 'type' => 'foreignUlid', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Relasi ke tour_packages.id', 'label' => ['id' => 'ID Paket Tour', 'en' => 'Tour Package ID']],
+                    ['name' => 'vehicle_id', 'type' => 'foreignUlid', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Relasi ke vehicles.id', 'label' => ['id' => 'ID Armada', 'en' => 'Vehicle ID']],
+                    ['name' => 'booking_code', 'type' => 'string(50)', 'index' => 'UNIQUE', 'nullable' => false, 'notes' => 'Kode unik reservasi', 'label' => ['id' => 'Kode Reservasi', 'en' => 'Booking Code']],
+                    ['name' => 'service_category', 'type' => 'string(50)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'airport_transfer_in | airport_transfer_out | day_tour_bali | overland_east_java', 'label' => ['id' => 'Kategori Layanan', 'en' => 'Service Category']],
+                    ['name' => 'pickup_datetime', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Waktu penjemputan terjadwal', 'label' => ['id' => 'Waktu Jemput', 'en' => 'Pickup Datetime']],
+                    ['name' => 'pickup_location', 'type' => 'string(255)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Titik jemput (Bandara / Hotel)', 'label' => ['id' => 'Lokasi Penjemputan', 'en' => 'Pickup Location']],
+                    ['name' => 'flight_number', 'type' => 'string(30)', 'index' => 'NONE', 'nullable' => true, 'notes' => 'Nomor penerbangan jika transfer bandara', 'label' => ['id' => 'Nomor Penerbangan', 'en' => 'Flight Number']],
+                    ['name' => 'passenger_count', 'type' => 'int', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Jumlah penumpang', 'label' => ['id' => 'Jumlah Orang', 'en' => 'Passenger Count']],
+                    ['name' => 'total_price_idr', 'type' => 'decimal(15,2)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Total biaya keseluruhan', 'label' => ['id' => 'Total Biaya (IDR)', 'en' => 'Total Price (IDR)']],
+                    ['name' => 'dp_amount_idr', 'type' => 'decimal(15,2)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Nominal DP 50% untuk lock armada', 'label' => ['id' => 'Uang Muka DP 50%', 'en' => 'Down Payment (50%)']],
+                    ['name' => 'status', 'type' => 'string(50)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'pending_dp | dp_confirmed | driver_assigned | completed | cancelled', 'label' => ['id' => 'Status Reservasi', 'en' => 'Booking Status']],
+                    ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Waktu reservasi dibuat', 'label' => ['id' => 'Waktu Dibuat', 'en' => 'Created At']],
+                ],
+            ];
+
+            $baseTables[] = [
+                'name' => 'itinerary_wishlists',
+                'description' => 'Wish list kustom klien yang dianalisis oleh AI tanpa asumsi untuk menghasilkan rute & harga nyata dari database.',
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => [
+                    ['name' => 'id', 'type' => 'ulid', 'index' => 'PRIMARY', 'nullable' => false, 'notes' => 'ULID primary key', 'label' => ['id' => 'ID Wishlist (ULID)', 'en' => 'Wishlist ID (ULID)']],
+                    ['name' => 'user_id', 'type' => 'foreignUlid', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Relasi ke users.id (Pembuat Wishlist)', 'label' => ['id' => 'ID Pengguna', 'en' => 'User ID']],
+                    ['name' => 'booking_id', 'type' => 'foreignUlid', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Relasi ke bookings.id saat dikonversi', 'label' => ['id' => 'ID Booking Terkait', 'en' => 'Related Booking ID']],
+                    ['name' => 'wishlist_code', 'type' => 'string(50)', 'index' => 'UNIQUE', 'nullable' => false, 'notes' => 'Kode referensi analisis AI', 'label' => ['id' => 'Kode Wishlist', 'en' => 'Wishlist Code']],
+                    ['name' => 'raw_destinations_input', 'type' => 'text', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Daftar destinasi mentah dari klien', 'label' => ['id' => 'Destinasi Impian Klien', 'en' => 'Raw Wishlist Input']],
+                    ['name' => 'ai_analyzed_itinerary', 'type' => 'jsonb', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Itinerary tervalidasi hasil analisis AI', 'label' => ['id' => 'Itinerary Analisis AI', 'en' => 'AI Synthesized Itinerary']],
+                    ['name' => 'calculated_price_idr', 'type' => 'decimal(15,2)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Kalkulasi harga matematis dari database', 'label' => ['id' => 'Kalkulasi Tarif (IDR)', 'en' => 'Calculated Price (IDR)']],
+                    ['name' => 'status', 'type' => 'string(30)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'draft | analyzed | converted', 'label' => ['id' => 'Status Wishlist', 'en' => 'Wishlist Status']],
+                    ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Waktu pembuatan wish list', 'label' => ['id' => 'Waktu Dibuat', 'en' => 'Created At']],
+                ],
+            ];
+
+            $baseTables[] = [
+                'name' => 'payments',
+                'description' => 'Catatan transaksi pembayaran termin DP 50% dan pelunasan melalui Midtrans Snap QRIS / Virtual Account.',
+                'primary_key' => 'id (ULID - VARCHAR 26)',
+                'columns' => [
+                    ['name' => 'id', 'type' => 'ulid', 'index' => 'PRIMARY', 'nullable' => false, 'notes' => 'ULID primary key', 'label' => ['id' => 'ID Pembayaran (ULID)', 'en' => 'Payment ID (ULID)']],
+                    ['name' => 'booking_id', 'type' => 'foreignUlid', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'Relasi ke bookings.id', 'label' => ['id' => 'ID Reservasi Terkait', 'en' => 'Related Booking ID']],
+                    ['name' => 'transaction_ref', 'type' => 'string(100)', 'index' => 'UNIQUE', 'nullable' => false, 'notes' => 'Order ID Midtrans / Gateway', 'label' => ['id' => 'Nomor Referensi Transaksi', 'en' => 'Transaction Reference']],
+                    ['name' => 'payment_stage', 'type' => 'string(30)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'dp_50 | pelunasan_100', 'label' => ['id' => 'Tahap Termin Pembayaran', 'en' => 'Payment Stage']],
+                    ['name' => 'payment_channel', 'type' => 'string(50)', 'index' => 'NONE', 'nullable' => true, 'notes' => 'qris | bca_va | bni_va | credit_card', 'label' => ['id' => 'Metode Pembayaran', 'en' => 'Payment Channel']],
+                    ['name' => 'gross_amount_idr', 'type' => 'decimal(15,2)', 'index' => 'NONE', 'nullable' => false, 'notes' => 'Nominal transaksi dalam Rupiah', 'label' => ['id' => 'Nominal Transaksi (IDR)', 'en' => 'Gross Amount (IDR)']],
+                    ['name' => 'status', 'type' => 'string(30)', 'index' => 'INDEX', 'nullable' => false, 'notes' => 'pending | settlement | expire | cancel', 'label' => ['id' => 'Status Transaksi Gateway', 'en' => 'Transaction Status']],
+                    ['name' => 'settled_at', 'type' => 'timestamp', 'index' => 'NONE', 'nullable' => true, 'notes' => 'Waktu pelunasan sukses', 'label' => ['id' => 'Waktu Pelunasan', 'en' => 'Settled At']],
+                    ['name' => 'created_at', 'type' => 'timestamp', 'index' => 'INDEX', 'nullable' => true, 'notes' => 'Waktu penerbitan tagihan', 'label' => ['id' => 'Waktu Dibuat', 'en' => 'Created At']],
                 ],
             ];
         }
@@ -4542,25 +4641,86 @@ PROMPT;
      */
     public static function generateErdMermaid(array $erdTables): string
     {
-        $domainTable = 'PROJECT_RECORDS';
+        // 1. Build lookup dictionary for all tables in this ERD
+        $tableLookup = [];
         foreach ($erdTables as $t) {
-            $tname = strtoupper(preg_replace('/[^a-zA-Z0-9_]/', '_', $t['name'] ?? ''));
-            if ($tname !== 'USERS' && $tname !== 'ACTIVITY_LOGS' && $tname !== 'SYSTEM_NOTIFICATIONS' && !empty($tname)) {
-                $domainTable = $tname;
-                break;
+            $raw = strtolower(trim((string)($t['name'] ?? '')));
+            $clean = strtoupper(preg_replace('/[^a-zA-Z0-9_]/', '_', $raw));
+            if (!empty($clean)) {
+                $tableLookup[$raw] = $clean;
+                $tableLookup[rtrim($raw, 's')] = $clean;
             }
         }
 
         $code = "erDiagram\n";
-        $code .= "    USERS ||--o{ {$domainTable} : \"manages/owns\"\n";
-        $code .= "    USERS ||--o{ ACTIVITY_LOGS : \"triggers\"\n";
-        $code .= "    {$domainTable} ||--o{ SYSTEM_NOTIFICATIONS : \"generates\"\n";
+        $emittedRelations = [];
 
-        // Connect any additional custom domain tables to primary domain table
-        foreach ($erdTables as $t) {
-            $tname = strtoupper(preg_replace('/[^a-zA-Z0-9_]/', '_', $t['name'] ?? ''));
-            if (!in_array($tname, ['USERS', 'ACTIVITY_LOGS', 'SYSTEM_NOTIFICATIONS', $domainTable, 'TABLE']) && !empty($tname)) {
-                $code .= "    {$domainTable} ||--o{ {$tname} : \"contains/relates\"\n";
+        // 2. Dynamic Relational Detection: Scan every column for Foreign Keys
+        foreach ($erdTables as $table) {
+            $childClean = strtoupper(preg_replace('/[^a-zA-Z0-9_]/', '_', $table['name'] ?? 'TABLE'));
+            foreach ($table['columns'] ?? [] as $col) {
+                $cname = strtolower(trim((string)($col['name'] ?? '')));
+                $rawType = strtolower((string)($col['type'] ?? ''));
+                $isFk = str_ends_with($cname, '_id') || str_contains($rawType, 'foreign');
+
+                if ($isFk && $cname !== 'id') {
+                    $targetClean = null;
+                    if (in_array($cname, ['user_id', 'customer_id', 'driver_id', 'pic_id', 'client_id', 'admin_id'])) {
+                        $targetClean = $tableLookup['users'] ?? 'USERS';
+                    } else {
+                        $base = preg_replace('/_id$/', '', $cname);
+                        if (isset($tableLookup[$base])) {
+                            $targetClean = $tableLookup[$base];
+                        } elseif (isset($tableLookup[$base . 's'])) {
+                            $targetClean = $tableLookup[$base . 's'];
+                        } else {
+                            foreach ($tableLookup as $k => $cln) {
+                                if (str_contains($cln, strtoupper($base)) || str_contains(strtoupper($base), $cln)) {
+                                    $targetClean = $cln;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if ($targetClean && $targetClean !== $childClean) {
+                        $relKey = "{$targetClean}__TO__{$childClean}";
+                        if (!isset($emittedRelations[$relKey])) {
+                            $emittedRelations[$relKey] = true;
+                            $code .= "    {$targetClean} ||--o{ {$childClean} : \"references/has\"\n";
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback core relationships if not already linked
+        if (isset($tableLookup['users'])) {
+            $userClean = $tableLookup['users'];
+            if (isset($tableLookup['activity_logs']) && !isset($emittedRelations["{$userClean}__TO__ACTIVITY_LOGS"])) {
+                $code .= "    {$userClean} ||--o{ ACTIVITY_LOGS : \"triggers\"\n";
+                $emittedRelations["{$userClean}__TO__ACTIVITY_LOGS"] = true;
+            }
+            if (isset($tableLookup['system_notifications']) && !isset($emittedRelations["{$userClean}__TO__SYSTEM_NOTIFICATIONS"])) {
+                $code .= "    {$userClean} ||--o{ SYSTEM_NOTIFICATIONS : \"receives\"\n";
+                $emittedRelations["{$userClean}__TO__SYSTEM_NOTIFICATIONS"] = true;
+            }
+
+            foreach ($erdTables as $t) {
+                $tname = strtoupper(preg_replace('/[^a-zA-Z0-9_]/', '_', $t['name'] ?? ''));
+                if ($tname !== $userClean && $tname !== 'ACTIVITY_LOGS' && $tname !== 'SYSTEM_NOTIFICATIONS') {
+                    $hasRel = false;
+                    foreach ($emittedRelations as $k => $v) {
+                        if (str_ends_with($k, "__{$tname}") || str_starts_with($k, "{$tname}__")) {
+                            $hasRel = true;
+                            break;
+                        }
+                    }
+                    if (!$hasRel) {
+                        $emittedRelations["{$userClean}__TO__{$tname}"] = true;
+                        $code .= "    {$userClean} ||--o{ {$tname} : \"manages\"\n";
+                    }
+                }
             }
         }
         $code .= "\n";

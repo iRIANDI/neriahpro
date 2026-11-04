@@ -854,6 +854,48 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     <script>
         function blueprintApp() {
             return {
+                blueprintSlug: '{{ $blueprint->slug }}',
+                roiRecalculating: false,
+                async recalculateRoi() {
+                    if (this.roiRecalculating) return;
+                    this.roiRecalculating = true;
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const res = await fetch('/api/blueprint/' + this.blueprintSlug + '/recalculate-roi', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token || ''
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: 'ROI & Kelayakan Diperbarui',
+                                    message: 'Formula ROI dan grafik telah diselaraskan dengan visi proyek!'
+                                });
+                            }
+                            setTimeout(() => {
+                                window.location.href = window.location.pathname + '?regenerate_roi=1#section-1-5';
+                            }, 500);
+                        } else {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'error',
+                                    title: 'Gagal Menghitung Ulang',
+                                    message: data.message || 'Terjadi kesalahan saat memproses data.'
+                                });
+                            }
+                            this.roiRecalculating = false;
+                        }
+                    } catch (err) {
+                        console.error('ROI recalculation error:', err);
+                        window.location.href = '/blueprint/' + this.blueprintSlug + '/recalculate-roi';
+                    }
+                },
                 userMenuOpen: false, 
                 paymentModalOpen: false, 
                 taskEditorOpen: false,
@@ -3242,10 +3284,21 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
             <!-- SECTION 1.5: ANALISIS KELAYAKAN BISNIS, PROYEKSI ROI & 5 GARANSI BEBAS PENYESALAN -->
             @php
-                $businessRoi = $prd['business_roi_analysis'] ?? \App\Services\PrdGeneratorService::generateBusinessRoiAnalysis(
-                    $blueprint, 
-                    $prd['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint)
-                );
+                $corpusRoi = strtolower($blueprint->nama_bisnis . ' ' . ($blueprint->masalah_utama ?? '') . ' ' . ($blueprint->tujuan_utama ?? '') . ' ' . ($blueprint->fitur_wajib ?? ''));
+                $isTravelDomain = str_contains($corpusRoi, 'tour') || str_contains($corpusRoi, 'travel') || str_contains($corpusRoi, 'wisata') ||
+                            str_contains($corpusRoi, 'itinerary') || str_contains($corpusRoi, 'trip') || str_contains($corpusRoi, 'overland') ||
+                            str_contains($corpusRoi, 'ngurah rai') || str_contains($corpusRoi, 'gayabalical');
+                $savedCat = $prd['business_roi_analysis']['domain_category'] ?? '';
+                $isMismatchedRoi = $isTravelDomain && (str_contains($savedCat, 'Villa') || str_contains($savedCat, 'Real Estate') || empty($savedCat));
+
+                if ($isMismatchedRoi || empty($prd['business_roi_analysis']) || request()->has('regenerate_roi')) {
+                    $businessRoi = \App\Services\PrdGeneratorService::generateBusinessRoiAnalysis(
+                        $blueprint, 
+                        $prd['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint)
+                    );
+                } else {
+                    $businessRoi = $prd['business_roi_analysis'];
+                }
             @endphp
             <section id="section-1-5" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-4">
@@ -3261,6 +3314,18 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto font-mono text-[11px]">
+                        @if(!$isScopeLocked)
+                        <button 
+                            type="button" 
+                            @click="recalculateRoi()" 
+                            :disabled="roiRecalculating"
+                            class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-black font-mono font-bold text-[11px] transition flex items-center gap-1.5 shadow-sm rounded-none cursor-pointer"
+                            title="Hitung ulang formula ROI berdasarkan visi dan sektor bisnis terkini"
+                        >
+                            <svg class="w-3 h-3" :class="roiRecalculating ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            <span x-text="roiRecalculating ? 'Menghitung...' : 'HITUNG ULANG ROI'">HITUNG ULANG ROI</span>
+                        </button>
+                        @endif
                         <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold uppercase">
                             {{ $businessRoi['domain_category'] ?? 'Custom Commercial Enterprise' }}
                         </span>
@@ -4872,7 +4937,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </button>
                             </div>
                         </div>
-                        <script type="text/plain" id="mermaid-studio-flow-source">{!! $prd['virtual_charts']['workflow_mermaid'] ?? '' !!}</script>
+                        <script type="text/plain" id="mermaid-studio-flow-source">{!! !empty($prd['virtual_charts']['workflow_mermaid']) ? $prd['virtual_charts']['workflow_mermaid'] : \App\Services\PrdGeneratorService::generateWorkflowMermaid($blueprint->nama_bisnis, $prd['state_machine'] ?? []) !!}</script>
                         <div 
                             class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-flow-target', $event)"
@@ -4913,7 +4978,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </button>
                             </div>
                         </div>
-                        <script type="text/plain" id="mermaid-studio-erd-source">{!! $prd['virtual_charts']['erd_mermaid'] ?? '' !!}</script>
+                        <script type="text/plain" id="mermaid-studio-erd-source">{!! !empty($prd['virtual_charts']['erd_mermaid']) ? $prd['virtual_charts']['erd_mermaid'] : \App\Services\PrdGeneratorService::generateErdMermaid($prd['erd_schema']['tables'] ?? []) !!}</script>
                         <div 
                             class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-erd-target', $event)"
@@ -4954,7 +5019,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </button>
                             </div>
                         </div>
-                        <script type="text/plain" id="mermaid-studio-featdep-source">{!! $prd['virtual_charts']['feature_dependency_mermaid'] ?? '' !!}</script>
+                        <script type="text/plain" id="mermaid-studio-featdep-source">{!! !empty($prd['virtual_charts']['feature_dependency_mermaid']) ? $prd['virtual_charts']['feature_dependency_mermaid'] : (!empty($prd['virtual_charts']['feature_dep_mermaid']) ? $prd['virtual_charts']['feature_dep_mermaid'] : \App\Services\PrdGeneratorService::generateFeatureDependencyMermaid($prd['target_actors']['items'] ?? [], $prd['engineering_specs']['mvp_phase_1']['items'] ?? [], $prd['erd_schema']['tables'] ?? [])) !!}</script>
                         <div 
                             class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-featdep-target', $event)"
@@ -4995,7 +5060,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </button>
                             </div>
                         </div>
-                        <script type="text/plain" id="mermaid-studio-gantt-source">{!! $prd['virtual_charts']['sprint_gantt_mermaid'] ?? '' !!}</script>
+                        <script type="text/plain" id="mermaid-studio-gantt-source">{!! !empty($prd['virtual_charts']['sprint_gantt_mermaid']) ? $prd['virtual_charts']['sprint_gantt_mermaid'] : (!empty($prd['virtual_charts']['gantt_mermaid']) ? $prd['virtual_charts']['gantt_mermaid'] : \App\Services\PrdGeneratorService::generateGanttRoadmapMermaid($blueprint->target_waktu ?? '30 Hari Kerja', $prd['engineering_specs'] ?? [])) !!}</script>
                         <div 
                             class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-gantt-target', $event)"
@@ -5036,7 +5101,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </button>
                             </div>
                         </div>
-                        <script type="text/plain" id="mermaid-studio-infra-source">{!! $prd['virtual_charts']['infrastructure_mermaid'] ?? '' !!}</script>
+                        <script type="text/plain" id="mermaid-studio-infra-source">{!! !empty($prd['virtual_charts']['infrastructure_mermaid']) ? $prd['virtual_charts']['infrastructure_mermaid'] : (!empty($prd['virtual_charts']['infra_mermaid']) ? $prd['virtual_charts']['infra_mermaid'] : \App\Services\PrdGeneratorService::generateInfrastructureMermaid($blueprint->user_metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS')) !!}</script>
                         <div 
                             class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-infra-target', $event)"
@@ -5077,7 +5142,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </button>
                             </div>
                         </div>
-                        <script type="text/plain" id="mermaid-studio-mobilesync-source">{!! $prd['virtual_charts']['mobile_sync_mermaid'] ?? '' !!}</script>
+                        <script type="text/plain" id="mermaid-studio-mobilesync-source">{!! !empty($prd['virtual_charts']['mobile_sync_mermaid']) ? $prd['virtual_charts']['mobile_sync_mermaid'] : \App\Services\PrdGeneratorService::generateMobileSyncMermaid($blueprint->nama_bisnis) !!}</script>
                         <div 
                             class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-mobilesync-target', $event)"
@@ -5466,21 +5531,96 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     }
                     $domainTableClean = $sanitizedTables[1]['name'] ?? 'PROJECT_RECORDS';
                     $domainTableRaw = $rawTables[1]['name'] ?? 'project_records';
+
+                    // Compute dynamic relational connections from Foreign Keys
+                    $resolvedRelations = [];
+                    $tableLookupMap = [];
+                    foreach ($sanitizedTables as $st) {
+                        $rawLow = strtolower($st['raw_name']);
+                        $tableLookupMap[$rawLow] = $st['name'];
+                        $tableLookupMap[rtrim($rawLow, 's')] = $st['name'];
+                    }
+
+                    foreach ($sanitizedTables as $st) {
+                        $childClean = $st['name'];
+                        $childRaw = $st['raw_name'];
+                        foreach ($st['columns'] as $col) {
+                            $cname = strtolower($col['name']);
+                            if ($col['key'] === 'FK' && $cname !== 'id') {
+                                $targetClean = null;
+                                $targetRaw = null;
+                                if (in_array($cname, ['user_id', 'customer_id', 'driver_id', 'pic_id', 'client_id', 'admin_id'])) {
+                                    $targetClean = $tableLookupMap['users'] ?? 'USERS';
+                                    $targetRaw = 'users';
+                                } else {
+                                    $base = preg_replace('/_id$/', '', $cname);
+                                    if (isset($tableLookupMap[$base])) {
+                                        $targetClean = $tableLookupMap[$base];
+                                        $targetRaw = $base;
+                                    } elseif (isset($tableLookupMap[$base . 's'])) {
+                                        $targetClean = $tableLookupMap[$base . 's'];
+                                        $targetRaw = $base . 's';
+                                    } else {
+                                        foreach ($tableLookupMap as $k => $cln) {
+                                            if (str_contains($cln, strtoupper($base)) || str_contains(strtoupper($base), $cln)) {
+                                                $targetClean = $cln;
+                                                $targetRaw = $k;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if ($targetClean && $targetClean !== $childClean) {
+                                    $relKey = "{$targetClean}__{$childClean}";
+                                    if (!isset($resolvedRelations[$relKey])) {
+                                        $resolvedRelations[$relKey] = [
+                                            'parent' => $targetClean,
+                                            'parent_raw' => $targetRaw ?: strtolower($targetClean),
+                                            'child' => $childClean,
+                                            'child_raw' => $childRaw,
+                                            'fk_col' => $col['name'],
+                                            'label' => '1:N',
+                                        ];
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (empty($resolvedRelations)) {
+                        $resolvedRelations['USERS__' . $domainTableClean] = [
+                            'parent' => 'USERS',
+                            'parent_raw' => 'users',
+                            'child' => $domainTableClean,
+                            'child_raw' => $domainTableRaw,
+                            'fk_col' => 'user_id',
+                            'label' => '1:N',
+                        ];
+                    }
                 @endphp
 
                 <!-- 1. Interactive Visual ERD Topology (Connected Entity Relationship Cards) -->
                 <div x-show="erdTab === 'visual'" class="mb-6">
                     <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
                         <!-- Cardinality Banner -->
-                        <div class="mb-6 p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-                            <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 bg-emerald-500 text-black font-bold text-[10px]">RELATIONAL GRAPH</span>
-                                <span class="text-zinc-700 dark:text-zinc-300 text-[11px]">Strict PostgreSQL Foreign Key Cardinalities</span>
+                        <div class="mb-6 p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <div class="flex items-center justify-between gap-3 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px]">RELATIONAL GRAPH</span>
+                                    <span class="text-zinc-800 dark:text-zinc-200 text-xs font-bold">Relasi Antar Tabel (PostgreSQL Strict Foreign Key Cardinalities)</span>
+                                </div>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden sm:inline">{{ count($resolvedRelations) }} Relasi Terdefinisi</span>
                             </div>
-                            <div class="flex flex-wrap items-center gap-4 text-[11px] text-zinc-600 dark:text-zinc-400">
-                                <div><strong class="text-emerald-600 dark:text-emerald-400">users (1)</strong> &bull;--&lt; <strong>{{ $domainTableRaw }} (N)</strong></div>
-                                <div><strong class="text-emerald-600 dark:text-emerald-400">users (1)</strong> &bull;--&lt; <strong>activity_logs (N)</strong></div>
-                                <div><strong class="text-emerald-600 dark:text-emerald-400">{{ $domainTableRaw }} (1)</strong> &bull;--&lt; <strong>system_notifications (N)</strong></div>
+                            <div class="flex flex-wrap items-center gap-2 text-[11px]">
+                                @foreach($resolvedRelations as $rel)
+                                    <div class="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300">
+                                        <strong class="text-emerald-600 dark:text-emerald-400 font-black">{{ $rel['parent_raw'] }} (1)</strong>
+                                        <span class="text-zinc-400 font-bold">&bull;--&lt;</span>
+                                        <strong class="text-zinc-900 dark:text-white font-black">{{ $rel['child_raw'] }} (N)</strong>
+                                        <span class="text-[9px] px-1 py-0.2 bg-sky-500/20 text-sky-700 dark:text-sky-300 font-mono font-bold">via {{ $rel['fk_col'] }}</span>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
 
@@ -5512,6 +5652,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                                         <span class="px-1.5 py-0.2 bg-emerald-500 text-black font-black text-[9px]">PK</span>
                                                     @elseif(str_contains(strtolower($col['type']), 'foreign') || str_contains($col['name'], '_id'))
                                                         <span class="px-1.5 py-0.2 bg-sky-500 text-white font-black text-[9px]">FK</span>
+                                                        <span class="text-[9px] text-sky-600 dark:text-sky-400 font-mono font-bold">&rarr; {{ preg_replace('/_id$/', '', $col['name']) }}</span>
                                                     @elseif($col['index'] === 'UNIQUE')
                                                         <span class="px-1.5 py-0.2 bg-purple-500 text-white font-black text-[9px]">UK</span>
                                                     @elseif($col['index'] === 'INDEX')
@@ -5560,10 +5701,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
 
                         <script type="text/plain" id="mermaid-erd-source">erDiagram
-    USERS ||--o{ {{ $domainTableClean }} : "manages"
-    USERS ||--o{ ACTIVITY_LOGS : "logs"
-    USERS ||--o{ SYSTEM_NOTIFICATIONS : "receives"
-    {{ $domainTableClean }} ||--o{ SYSTEM_NOTIFICATIONS : "triggers"
+@foreach($resolvedRelations as $rel)
+    {{ $rel['parent'] }} ||--o{ {{ $rel['child'] }} : "references/has"
+@endforeach
 
 @foreach($sanitizedTables as $st)
     {{ $st['name'] }} {
@@ -10930,6 +11070,7 @@ class ProcessSecureDataset implements ShouldQueue
         };
     </script>
     <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
+    @endif
     <!-- Tweak Segment / AI Grounded Architecture Deepener Modal -->
     <div x-show="tweakModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6" style="display: none;">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="tweakModalOpen = false" x-transition.opacity></div>
@@ -11134,7 +11275,6 @@ class ProcessSecureDataset implements ShouldQueue
             </div>
         </div>
     </div>
-    @endif
 
     <!-- Centralized Interactive Fullscreen Diagram Modal -->
     <div 
@@ -11142,7 +11282,6 @@ class ProcessSecureDataset implements ShouldQueue
         x-cloak 
         @keydown.escape.window="fullscreenDiagramModal = false"
         class="fixed inset-0 z-[120] flex flex-col bg-zinc-950/95 backdrop-blur-md p-2 sm:p-4 print:hidden select-none"
-        style="display: none;"
     >
         <!-- Fullscreen Header / Toolbar -->
         <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-zinc-900 border border-zinc-800 text-white shrink-0 font-mono text-xs">
@@ -11185,7 +11324,7 @@ class ProcessSecureDataset implements ShouldQueue
             <div 
                 id="mermaid-fullscreen-target" 
                 :style="`transform: translate(${fullscreenDiagramPanX}px, ${fullscreenDiagramPanY}px) scale(${fullscreenDiagramZoom}); transform-origin: center center; transition: ${fullscreenDiagramDragging ? 'none' : 'transform 0.12s ease-out'};`"
-                class="w-full h-full flex items-center justify-center text-center text-zinc-100 pointer-events-none"
+                class="w-full h-full flex items-center justify-center text-center text-zinc-100 pointer-events-auto"
             >
             </div>
         </div>

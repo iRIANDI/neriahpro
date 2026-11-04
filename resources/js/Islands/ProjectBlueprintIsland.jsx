@@ -1093,19 +1093,6 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [selectedPaymentRailIds, setSelectedPaymentRailIds] = useState(() => new Set(['qris_national']));
   const [selectedIdeaCategory, setSelectedIdeaCategory] = useState(null);
 
-  // Dynamic Domain Detection for Quick Idea Templates (Auto-Adapts to Client Vision & Keywords)
-  const detectedIdeaCategory = useMemo(() => {
-    const rawText = `${formData.namaBisnis || ''} ${ideaText || ''} ${formData.primarySector || ''}`.toLowerCase();
-    for (const [key, data] of Object.entries(QUICK_IDEA_CATALOG)) {
-      if (data.keywords && data.keywords.some(kw => rawText.includes(kw))) {
-        return key;
-      }
-    }
-    return 'tourism';
-  }, [formData.namaBisnis, ideaText, formData.primarySector]);
-
-  const activeIdeaCategory = selectedIdeaCategory || detectedIdeaCategory;
-
   // In-Card Interactive Add Helpers
   const [activeAddKey, setActiveAddKey] = useState(null);
   const [quickInputText, setQuickInputText] = useState('');
@@ -1249,6 +1236,19 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       }
     })(),
   });
+
+  // Dynamic Domain Detection for Quick Idea Templates (Auto-Adapts to Client Vision & Keywords)
+  const detectedIdeaCategory = useMemo(() => {
+    const rawText = `${formData.namaBisnis || ''} ${ideaText || ''} ${formData.primarySector || ''}`.toLowerCase();
+    for (const [key, data] of Object.entries(QUICK_IDEA_CATALOG)) {
+      if (data.keywords && data.keywords.some(kw => rawText.includes(kw))) {
+        return key;
+      }
+    }
+    return 'tourism';
+  }, [formData.namaBisnis, ideaText, formData.primarySector]);
+
+  const activeIdeaCategory = selectedIdeaCategory || detectedIdeaCategory;
 
   // 12-Sector, 36 Visual UI Blueprints, 12 Core Primitives, 9 Curated Tech Stack Presets & 15 Master Pillars (v8.0)
   const [matrixCatalog, setMatrixCatalog] = useState({

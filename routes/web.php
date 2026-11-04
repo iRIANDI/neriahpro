@@ -83,6 +83,8 @@ Route::post('/api/mcp/project-os', [ProjectOsMcpController::class, 'handleRpc'])
 Route::get('/blueprint', [BlueprintController::class, 'create'])->name('blueprint.create');
 Route::get('/blueprint/studio/{slug?}', BlueprintArchitectStudio::class)->name('blueprint.studio');
 Route::get('/blueprint/{slug}', [BlueprintController::class, 'show'])->name('blueprint.show');
+Route::post('/api/blueprint/{slug}/recalculate-roi', [BlueprintController::class, 'recalculateRoi'])->name('api.blueprint.recalculate-roi')->middleware('throttle:30,1');
+Route::get('/blueprint/{slug}/recalculate-roi', [BlueprintController::class, 'recalculateRoiRedirect'])->name('blueprint.recalculate-roi.get');
 Route::post('/blueprint/{slug}/generate-contract', [BlueprintController::class, 'generateContract'])->name('blueprint.generate-contract');
 Route::post('/blueprint/{slug}/snap-token', [BlueprintController::class, 'getSnapToken'])->name('blueprint.snap-token');
 Route::post('/blueprint/{slug}/pelunasan-snap-token', [BlueprintController::class, 'getPelunasanSnapToken'])->name('blueprint.pelunasan-snap-token');

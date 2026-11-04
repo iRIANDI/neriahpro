@@ -676,6 +676,51 @@ class BlueprintController extends Controller
             $blueprint->refresh();
         }
 
+        // Auto-heal mismatched or stale Business ROI and Virtual Charts if scope is not frozen
+        if (! $isScopeLocked && ! empty($blueprint->prd_content)) {
+            $prd = $blueprint->prd_content;
+            $needsPrdSave = false;
+
+            // 1. Check ROI Domain Mismatch (e.g. Tour & Travel showing Villa/Real Estate)
+            $corpus = strtolower($blueprint->nama_bisnis . ' ' . ($blueprint->masalah_utama ?? '') . ' ' . ($blueprint->tujuan_utama ?? '') . ' ' . ($blueprint->fitur_wajib ?? ''));
+            $isTravel = str_contains($corpus, 'tour') || str_contains($corpus, 'travel') || str_contains($corpus, 'wisata') ||
+                        str_contains($corpus, 'itinerary') || str_contains($corpus, 'trip') || str_contains($corpus, 'overland') ||
+                        str_contains($corpus, 'ngurah rai') || str_contains($corpus, 'gayabalical');
+            
+            $currentCat = $prd['business_roi_analysis']['domain_category'] ?? '';
+            $isRoiMismatched = ($isTravel && (str_contains($currentCat, 'Villa') || str_contains($currentCat, 'Real Estate') || empty($currentCat)));
+
+            if ($isRoiMismatched || request()->has('regenerate_roi') || request()->has('refresh_roi')) {
+                $prd['business_roi_analysis'] = PrdGeneratorService::generateBusinessRoiAnalysis(
+                    $blueprint,
+                    $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint)
+                );
+                $needsPrdSave = true;
+            }
+
+            // 2. Check Virtual Charts Presence and Completeness
+            if (empty($prd['virtual_charts']) || empty($prd['virtual_charts']['erd_mermaid']) || empty($prd['virtual_charts']['workflow_mermaid']) || empty($prd['virtual_charts']['feature_dependency_mermaid'])) {
+                $erdTables = $prd['erd_schema']['tables'] ?? [];
+                $prd['virtual_charts'] = [
+                    'workflow_mermaid' => PrdGeneratorService::generateWorkflowMermaid($blueprint->nama_bisnis, $prd['state_machine'] ?? []),
+                    'erd_mermaid' => PrdGeneratorService::generateErdMermaid($erdTables),
+                    'feature_dep_mermaid' => PrdGeneratorService::generateFeatureDependencyMermaid($prd['target_actors']['items'] ?? [], $prd['engineering_specs']['mvp_phase_1']['items'] ?? [], $erdTables),
+                    'feature_dependency_mermaid' => PrdGeneratorService::generateFeatureDependencyMermaid($prd['target_actors']['items'] ?? [], $prd['engineering_specs']['mvp_phase_1']['items'] ?? [], $erdTables),
+                    'gantt_mermaid' => PrdGeneratorService::generateGanttRoadmapMermaid($blueprint->target_waktu ?? '30 Hari Kerja', $prd['engineering_specs'] ?? []),
+                    'sprint_gantt_mermaid' => PrdGeneratorService::generateGanttRoadmapMermaid($blueprint->target_waktu ?? '30 Hari Kerja', $prd['engineering_specs'] ?? []),
+                    'infra_mermaid' => PrdGeneratorService::generateInfrastructureMermaid($blueprint->user_metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS'),
+                    'infrastructure_mermaid' => PrdGeneratorService::generateInfrastructureMermaid($blueprint->user_metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS'),
+                    'mobile_sync_mermaid' => PrdGeneratorService::generateMobileSyncMermaid($blueprint->nama_bisnis),
+                ];
+                $needsPrdSave = true;
+            }
+
+            if ($needsPrdSave) {
+                $blueprint->update(['prd_content' => $prd]);
+                $blueprint->refresh();
+            }
+        }
+
         return view('blueprint.show', [
             'blueprint' => $blueprint,
             'prd' => $blueprint->prd_content,
@@ -685,6 +730,64 @@ class BlueprintController extends Controller
             'isContractSigned' => $isContractSigned,
             'contractDocument' => $contractDocument,
         ]);
+    }
+
+    /**
+     * Recalculate and regenerate Business Feasibility & ROI Analysis for this blueprint (JSON API).
+     */
+    public function recalculateRoi(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        if ($blueprint->isScopeFrozen()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Spesifikasi telah dikunci (Scope Frozen). Analisis ROI tidak dapat diubah.',
+            ], 422);
+        }
+
+        $prd = $blueprint->prd_content ?? [];
+        $itemized = $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint);
+        $newRoi = PrdGeneratorService::generateBusinessRoiAnalysis($blueprint, $itemized);
+
+        $prd['business_roi_analysis'] = $newRoi;
+        
+        // Also regenerate ERD and Virtual Charts to ensure domain alignment
+        $erdTables = $prd['erd_schema']['tables'] ?? [];
+        $prd['virtual_charts']['erd_mermaid'] = PrdGeneratorService::generateErdMermaid($erdTables);
+        $prd['virtual_charts']['workflow_mermaid'] = PrdGeneratorService::generateWorkflowMermaid($blueprint->nama_bisnis, $prd['state_machine'] ?? []);
+
+        $blueprint->update(['prd_content' => $prd]);
+        $blueprint->refresh();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Analisis kelayakan bisnis & proyeksi ROI berhasil dihitung ulang sesuai visi proyek!',
+            'data' => $newRoi,
+        ]);
+    }
+
+    /**
+     * Recalculate ROI and redirect back to the blueprint view.
+     */
+    public function recalculateRoiRedirect(string $slug)
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        if (! $blueprint->isScopeFrozen()) {
+            $prd = $blueprint->prd_content ?? [];
+            $itemized = $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint);
+            $newRoi = PrdGeneratorService::generateBusinessRoiAnalysis($blueprint, $itemized);
+            $prd['business_roi_analysis'] = $newRoi;
+            $prd['virtual_charts']['erd_mermaid'] = PrdGeneratorService::generateErdMermaid($prd['erd_schema']['tables'] ?? []);
+            $blueprint->update(['prd_content' => $prd]);
+            $blueprint->refresh();
+        }
+
+        return redirect()->route('blueprint.show', ['slug' => $slug])
+            ->with('status', 'Analisis kelayakan bisnis dan ROI telah diperbarui sesuai visi proyek.');
     }
 
     /**

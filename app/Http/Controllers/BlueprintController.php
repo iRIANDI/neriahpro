@@ -715,9 +715,21 @@ class BlueprintController extends Controller
                 $needsPrdSave = true;
             }
 
-            // 2. Check Virtual Charts Presence and Completeness
+            // 1.5 Auto-repair single-step workflow if raw alur_kerja contains multiple numbered/bulleted points
+            if (count($prd['workflow'] ?? []) <= 1 && !empty($blueprint->alur_kerja)) {
+                $reparsedWorkflow = PrdGeneratorService::parseWorkflow($blueprint->alur_kerja, $blueprint->nama_bisnis ?? '');
+                if (count($reparsedWorkflow) > 1) {
+                    $prd['workflow'] = $reparsedWorkflow;
+                    $needsPrdSave = true;
+                }
+            }
+
+            // 2. Check Virtual Charts Presence, Completeness and dynamic wrap compliance
             $isChartsRefreshRequested = request()->has('regenerate_charts') || request()->has('refresh_charts');
-            if ($isChartsRefreshRequested || empty($prd['virtual_charts']) || empty($prd['virtual_charts']['erd_mermaid']) || empty($prd['virtual_charts']['workflow_mermaid']) || empty($prd['virtual_charts']['feature_dependency_mermaid'])) {
+            $existingWf = $prd['virtual_charts']['workflow_mermaid'] ?? '';
+            $isWfUnwrapped = (bool) preg_match('/\["[^"]{60,}"\]/', $existingWf) || (!empty($existingWf) && !str_contains($existingWf, '<br/>'));
+
+            if ($isChartsRefreshRequested || $isWfUnwrapped || empty($prd['virtual_charts']) || empty($prd['virtual_charts']['erd_mermaid']) || empty($prd['virtual_charts']['workflow_mermaid']) || empty($prd['virtual_charts']['feature_dependency_mermaid'])) {
                 $erdTables = $prd['erd_schema']['tables'] ?? [];
                 $prd['virtual_charts'] = [
                     'workflow_mermaid' => PrdGeneratorService::generateWorkflowMermaid($prd['workflow'] ?? []),

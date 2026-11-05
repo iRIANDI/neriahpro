@@ -649,13 +649,15 @@ class PrdGeneratorService
     /**
      * Parse workflow text into sequenced step cards with deep engineering parameters.
      */
-    protected static function parseWorkflow(string $text, string $businessName = ''): array
+    public static function parseWorkflow(string $text, string $businessName = ''): array
     {
-        // 1. First attempt split by -> or => or newlines
+        // 1. First attempt split by -> or => or newlines or numbered patterns (1. ... 2. ...)
         if (str_contains($text, '->')) {
             $rawSteps = explode('->', $text);
         } elseif (str_contains($text, '=>')) {
             $rawSteps = explode('=>', $text);
+        } elseif (preg_match('/(?:\r?\n|\s+)\d+[\.\)]\s+/', $text)) {
+            $rawSteps = preg_split('/(?:\r?\n|\s+)(?=\d+[\.\)]\s+)/', $text);
         } else {
             $rawSteps = preg_split('/[\r\n]+/', $text);
         }
@@ -668,10 +670,18 @@ class PrdGeneratorService
             }
         }
 
-        // 2. If it resulted in only 1 long step, intelligently split by comma / transitional keywords
+        // 2. Filter out introductory preambles (e.g. "saya mau buat website berupa...", "Konsep antara lain...")
+        if (count($steps) > 1) {
+            $firstLower = strtolower($steps[0]);
+            if (str_contains($firstLower, 'buat website') || str_contains($firstLower, 'konsep antara lain') || str_contains($firstLower, 'berupa') || str_contains($firstLower, 'atas nama')) {
+                array_shift($steps);
+            }
+        }
+
+        // 3. If it resulted in only 1 long step, intelligently split by numbered patterns or transitional keywords
         if (count($steps) === 1 && strlen($steps[0]) > 35) {
             $textSingle = $steps[0];
-            $splitParts = preg_split('/,\s*(?:lalu\s+|kemudian\s+|setelah itu\s+|selanjutnya\s+)?|\s+(?:lalu|kemudian|setelah itu|selanjutnya)\s+/i', $textSingle);
+            $splitParts = preg_split('/(?:\r?\n|\s+)(?=\d+[\.\)]\s+)|\s*;\s*|,\s*(?:lalu\s+|kemudian\s+|setelah itu\s+|selanjutnya\s+)?|\s+(?:lalu|kemudian|setelah itu|selanjutnya)\s+/i', $textSingle);
             
             $refined = [];
             foreach ($splitParts as $part) {
@@ -4645,14 +4655,32 @@ PROMPT;
     /**
      * Wrap text dynamically into multi-line safe labels for Mermaid nodes.
      */
-    public static function wrapMermaidLabel(string $text, int $width = 30): string
+    public static function wrapMermaidLabel(string $text, int $width = 24, int $maxTotalLength = 70): string
     {
         $clean = trim(preg_replace('/["\r\n]+/', ' ', $text));
-        $clean = str_replace(['"', '`', '$'], ["'", '', ''], $clean);
+        $clean = str_replace(['"', '`', '$', '[', ']', '(', ')', '{', '}'], ["'", '', '', '', '', '', '', '', ''], $clean);
+        if (mb_strlen($clean) > $maxTotalLength) {
+            $clean = mb_substr($clean, 0, $maxTotalLength - 3) . '...';
+        }
         if (mb_strlen($clean) <= $width) {
             return $clean;
         }
-        return wordwrap($clean, $width, '<br/>', false);
+        return wordwrap($clean, $width, '<br/>', true);
+    }
+
+    /**
+     * Resolve workflow mermaid diagram with dynamic wrap validation.
+     */
+    public static function resolveWorkflowMermaid(?string $existingMermaid, array $workflowStages): string
+    {
+        if (empty($existingMermaid)) {
+            return self::generateWorkflowMermaid($workflowStages);
+        }
+        // If the existing mermaid has overly long lines (> 60 chars without <br/>) or missing <br/>, re-generate dynamically
+        if (preg_match('/\["[^"]{60,}"\]/', $existingMermaid) || !str_contains($existingMermaid, '<br/>')) {
+            return self::generateWorkflowMermaid($workflowStages);
+        }
+        return $existingMermaid;
     }
 
     /**
@@ -4691,8 +4719,8 @@ PROMPT;
                     $nodeId = "S" . $wIdx;
                     $actionClean = $w['action'] ?? ('Step ' . $wIdx);
                     $actorClean = $w['actor'] ?? 'Pengguna';
-                    $wrappedAction = self::wrapMermaidLabel($actionClean, 28);
-                    $wrappedActor = self::wrapMermaidLabel($actorClean, 22);
+                    $wrappedAction = self::wrapMermaidLabel($actionClean, 24, 70);
+                    $wrappedActor = self::wrapMermaidLabel($actorClean, 20, 36);
 
                     $code .= "        {$nodeId}[\"<b>Step {$wIdx}: {$wrappedAction}</b><br/><small>Aktor: {$wrappedActor}</small>\"]\n";
                     if ($prevInChunk) {
@@ -4715,8 +4743,8 @@ PROMPT;
                 $nodeId = "S" . $wIdx;
                 $actionClean = $w['action'] ?? ('Step ' . $wIdx);
                 $actorClean = $w['actor'] ?? 'Pengguna';
-                $wrappedAction = self::wrapMermaidLabel($actionClean, 32);
-                $wrappedActor = self::wrapMermaidLabel($actorClean, 24);
+                $wrappedAction = self::wrapMermaidLabel($actionClean, 24, 70);
+                $wrappedActor = self::wrapMermaidLabel($actorClean, 20, 36);
 
                 $code .= "    {$nodeId}[\"<b>Step {$wIdx}: {$wrappedAction}</b><br/><small>Aktor: {$wrappedActor}</small>\"]\n";
                 if ($prevNode) {

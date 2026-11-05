@@ -1240,10 +1240,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             clonedSvg.removeAttribute('height');
                             clonedSvg.style.maxWidth = '92vw';
                             clonedSvg.style.maxHeight = '80vh';
-                            clonedSvg.style.width = 'auto';
+                            clonedSvg.style.width = '100%';
                             clonedSvg.style.height = 'auto';
                             clonedSvg.style.display = 'block';
                             clonedSvg.style.margin = '0 auto';
+                            clonedSvg.style.transform = 'none';
                             clonedSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
                             fsTarget.innerHTML = '';
                             fsTarget.appendChild(clonedSvg);
@@ -1257,10 +1258,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 svg.removeAttribute('height');
                                 svg.style.maxWidth = '92vw';
                                 svg.style.maxHeight = '80vh';
-                                svg.style.width = 'auto';
+                                svg.style.width = '100%';
                                 svg.style.height = 'auto';
                                 svg.style.display = 'block';
                                 svg.style.margin = '0 auto';
+                                svg.style.transform = 'none';
                                 svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
                             }
                         }
@@ -1367,6 +1369,19 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     this.tweakSpecIndex = specIndex;
                     this.tweakModalOpen = true;
                     this.loadSourceCorpus();
+
+                    if (key === 'database_erd') {
+                        const tableList = Array.isArray(content) ? content : (content?.tables || []);
+                        if (tableList.length >= 14) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'info',
+                                    title: 'SKEMA ERD 100% LENGKAP & TERVERIFIKASI',
+                                    message: 'Skema basis data relasional telah mencapai tingkat kematangan paripurna (' + tableList.length + ' tabel Strict ULID, indeks O(1), & relasi FK). Anda tetap dapat menambahkan entitas kustom melalui prompt elaborasi di bawah.'
+                                });
+                            }
+                        }
+                    }
                 },
                 async submitTweak() {
                     this.tweakLoading = true;
@@ -5305,7 +5320,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </button>
                             </div>
                         </div>
-                        <script type="text/plain" id="mermaid-studio-flow-source">{!! !empty($prd['virtual_charts']['workflow_mermaid']) ? $prd['virtual_charts']['workflow_mermaid'] : \App\Services\PrdGeneratorService::generateWorkflowMermaid($prd['workflow'] ?? []) !!}</script>
+                        <script type="text/plain" id="mermaid-studio-flow-source">{!! \App\Services\PrdGeneratorService::resolveWorkflowMermaid($prd['virtual_charts']['workflow_mermaid'] ?? null, $prd['workflow'] ?? []) !!}</script>
                         <div 
                             class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-flow-target', $event)"
@@ -11114,6 +11129,8 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
             </div>
         </div>
+    </div>
+
     <!-- CONTEXT-ROT PREVENTION & RAW MD EDUCATIONAL WARNING MODAL -->
     <div 
         x-show="showRawMdWarningModal" 

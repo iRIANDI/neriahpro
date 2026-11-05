@@ -4643,24 +4643,90 @@ PROMPT;
     }
 
     /**
-     * Generate Mermaid syntax for Workflow User Journey (Flowchart TD).
+     * Wrap text dynamically into multi-line safe labels for Mermaid nodes.
+     */
+    public static function wrapMermaidLabel(string $text, int $width = 30): string
+    {
+        $clean = trim(preg_replace('/["\r\n]+/', ' ', $text));
+        $clean = str_replace(['"', '`', '$'], ["'", '', ''], $clean);
+        if (mb_strlen($clean) <= $width) {
+            return $clean;
+        }
+        return wordwrap($clean, $width, '<br/>', false);
+    }
+
+    /**
+     * Generate Mermaid syntax for Workflow User Journey (Flowchart TD) with dynamic wrapping and phase grouping.
      */
     public static function generateWorkflowMermaid(array $workflowStages): string
     {
+        $count = count($workflowStages);
+        if ($count === 0) {
+            return "flowchart TD\n    S1[\"<b>Step 1: Intake Proyek</b><br/><small>Aktor: Klien</small>\"]";
+        }
+
         $code = "flowchart TD\n";
         $wIdx = 1;
-        $prevNode = null;
-        foreach ($workflowStages as $w) {
-            $nodeId = "S" . $wIdx;
-            $actionClean = preg_replace('/["\r\n]+/', '', $w['action'] ?? ('Step ' . $wIdx));
-            $actorClean = preg_replace('/["\r\n]+/', '', $w['actor'] ?? 'Pengguna');
-            $code .= "    {$nodeId}[\"<b>Step {$wIdx}: {$actionClean}</b><br/><small>Aktor: {$actorClean}</small>\"]\n";
-            if ($prevNode) {
-                $code .= "    {$prevNode} -->|Lanjut| {$nodeId}\n";
+
+        // Dynamic multi-stage grouping if > 3 steps to wrap gracefully and prevent horizontal stretching
+        if ($count > 3) {
+            $chunkSize = (int) ceil($count / 3);
+            $phaseNames = [
+                1 => '1. INTAKE & RESERVASI (Tahap Awal)',
+                2 => '2. OPERASIONAL & EKSEKUSI (Tahap Lapangan)',
+                3 => '3. SETTLEMENT & REVIEW (Tahap Penyelesaian)',
+            ];
+
+            $chunks = array_chunk($workflowStages, $chunkSize);
+            $lastNodeInPrevPhase = null;
+
+            foreach ($chunks as $cIdx => $chunk) {
+                $pId = "PHASE_" . ($cIdx + 1);
+                $pTitle = $phaseNames[$cIdx + 1] ?? ('Fase ' . ($cIdx + 1));
+                $code .= "    subgraph {$pId} [\"{$pTitle}\"]\n";
+                $code .= "        direction TB\n";
+
+                $prevInChunk = null;
+                foreach ($chunk as $w) {
+                    $nodeId = "S" . $wIdx;
+                    $actionClean = $w['action'] ?? ('Step ' . $wIdx);
+                    $actorClean = $w['actor'] ?? 'Pengguna';
+                    $wrappedAction = self::wrapMermaidLabel($actionClean, 28);
+                    $wrappedActor = self::wrapMermaidLabel($actorClean, 22);
+
+                    $code .= "        {$nodeId}[\"<b>Step {$wIdx}: {$wrappedAction}</b><br/><small>Aktor: {$wrappedActor}</small>\"]\n";
+                    if ($prevInChunk) {
+                        $code .= "        {$prevInChunk} --> {$nodeId}\n";
+                    }
+                    $prevInChunk = $nodeId;
+                    $wIdx++;
+                }
+                $code .= "    end\n\n";
+
+                if ($lastNodeInPrevPhase && !empty($chunk)) {
+                    $firstInThisChunk = "S" . ($wIdx - count($chunk));
+                    $code .= "    {$lastNodeInPrevPhase} ==>|Lanjut ke Tahap Berikutnya| {$firstInThisChunk}\n\n";
+                }
+                $lastNodeInPrevPhase = $prevInChunk;
             }
-            $prevNode = $nodeId;
-            $wIdx++;
+        } else {
+            $prevNode = null;
+            foreach ($workflowStages as $w) {
+                $nodeId = "S" . $wIdx;
+                $actionClean = $w['action'] ?? ('Step ' . $wIdx);
+                $actorClean = $w['actor'] ?? 'Pengguna';
+                $wrappedAction = self::wrapMermaidLabel($actionClean, 32);
+                $wrappedActor = self::wrapMermaidLabel($actorClean, 24);
+
+                $code .= "    {$nodeId}[\"<b>Step {$wIdx}: {$wrappedAction}</b><br/><small>Aktor: {$wrappedActor}</small>\"]\n";
+                if ($prevNode) {
+                    $code .= "    {$prevNode} -->|Lanjut| {$nodeId}\n";
+                }
+                $prevNode = $nodeId;
+                $wIdx++;
+            }
         }
+
         return trim($code);
     }
 
@@ -4784,41 +4850,45 @@ PROMPT;
      */
     public static function generateFeatureDependencyMermaid(array $actorItems, array $mvpItems, array $erdTables): string
     {
-        $code = "flowchart LR\n";
-        $code .= "    subgraph ACTORS [\"👥 Aktor Sistem (RBAC)\"]\n";
+        $code = "flowchart TB\n";
+        $code .= "    subgraph ACTORS [\"👥 Aktor Sistem (Hak Akses RBAC)\"]\n";
+        $code .= "        direction LR\n";
         $actCount = min(count($actorItems), 3);
         if ($actCount === 0) $actCount = 1;
         for ($idx = 0; $idx < $actCount; $idx++) {
             $aId = "A" . ($idx + 1);
             $actor = $actorItems[$idx] ?? [];
-            $aName = preg_replace('/["\r\n]+/', '', $actor['name'] ?? ('Actor ' . ($idx + 1)));
+            $aName = self::wrapMermaidLabel($actor['name'] ?? ('Actor ' . ($idx + 1)), 24);
             $code .= "        {$aId}[\"{$aName}\"]\n";
         }
         $code .= "    end\n\n";
 
         $code .= "    subgraph FEATURES [\"⚡ Modul Fitur MVP (Fase 1)\"]\n";
+        $code .= "        direction TB\n";
         $featCount = min(count($mvpItems), 4);
         if ($featCount === 0) $featCount = 1;
         for ($idx = 0; $idx < $featCount; $idx++) {
             $fId = "F" . ($idx + 1);
             $f = $mvpItems[$idx] ?? [];
-            $fTitle = preg_replace('/["\r\n]+/', '', $f['title'] ?? ('Feature ' . ($idx + 1)));
+            $fTitle = self::wrapMermaidLabel($f['title'] ?? ('Feature ' . ($idx + 1)), 28);
             $code .= "        {$fId}[\"{$fTitle}\"]\n";
         }
         $code .= "    end\n\n";
 
         $code .= "    subgraph DB [\"🗄️ Basis Data (PostgreSQL Strict ULID)\"]\n";
+        $code .= "        direction LR\n";
         $dbCount = min(count($erdTables), 4);
         if ($dbCount === 0) $dbCount = 1;
         for ($idx = 0; $idx < $dbCount; $idx++) {
             $tId = "T" . ($idx + 1);
             $t = $erdTables[$idx] ?? [];
-            $tName = preg_replace('/["\r\n]+/', '', $t['name'] ?? ('table_' . ($idx + 1)));
+            $tName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $t['name'] ?? ('table_' . ($idx + 1))));
             $code .= "        {$tId}[(\"{$tName}\")]\n";
         }
         $code .= "    end\n\n";
 
-        // Safe Relasi Aktor -> Fitur
+        // Relasi Aktor -> Fitur
+        $code .= "    ACTORS ==>|Otorisasi Akses| FEATURES\n";
         $code .= "    A1 --> F1\n";
         if ($actCount > 1 && $featCount > 1) {
             $code .= "    A2 --> F2\n";
@@ -4833,7 +4903,8 @@ PROMPT;
             $code .= ($actCount > 2 ? "    A3 --> F4\n" : "    A1 --> F4\n");
         }
 
-        // Safe Relasi Fitur -> Database
+        // Relasi Fitur -> Database
+        $code .= "    FEATURES ==>|I/O Mutasi Data| DB\n";
         $code .= "    F1 --> T1\n";
         if ($featCount > 1 && $dbCount > 1) {
             $code .= "    F2 --> T2\n";
@@ -5087,13 +5158,13 @@ PROMPT;
     {
         $code = "sequenceDiagram\n";
         $code .= "    autonumber\n";
-        $code .= "    actor User as Pengguna / Operator Lapangan\n";
-        $code .= "    participant Mobile as Mobile App (Flutter / React Native)\n";
-        $code .= "    participant SQLite as Local Database (SQLite Encrypted)\n";
-        $code .= "    participant SyncWorker as Background Sync Worker\n";
-        $code .= "    participant API as Laravel 13 REST API Gateway\n";
-        $code .= "    participant ServerDB as Server Database (PostgreSQL 16+)\n";
-        $code .= "    participant Redis as Redis Cache & Idempotency Guard\n\n";
+        $code .= "    actor User as 👤 Pengguna\n";
+        $code .= "    participant Mobile as 📱 Mobile App\n";
+        $code .= "    participant SQLite as 💾 SQLite Lokal\n";
+        $code .= "    participant SyncWorker as ⚙️ Sync Worker\n";
+        $code .= "    participant API as 🌐 REST API\n";
+        $code .= "    participant ServerDB as 🗄️ PostgreSQL 16\n";
+        $code .= "    participant Redis as ⚡ Redis Guard\n\n";
         $code .= "    Note over User,SQLite: FASE OFFLINE (Mutasi Lokal Tanpa Internet)\n";
         $code .= "    User->>Mobile: Input Transaksi / Formulir Baru\n";
         $code .= "    Mobile->>SQLite: INSERT (status='pending_push', mutation_id=ULID)\n";

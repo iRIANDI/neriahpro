@@ -661,17 +661,36 @@
                     startOnLoad: false,
                     theme: isDark ? 'dark' : 'neutral',
                     securityLevel: 'loose',
-                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                    flowchart: {
+                        useMaxWidth: true,
+                        htmlLabels: true,
+                        curve: 'basis'
+                    },
+                    er: {
+                        useMaxWidth: true
+                    }
                 });
 
-                const id = 'render-' + containerId + '-' + Math.floor(Math.random() * 100000);
+                const safeId = 'render_' + containerId.replace(/[^a-zA-Z0-9]/g, '_') + '_' + Math.floor(Math.random() * 1000000);
                 const code = source.textContent.trim();
-                const { svg } = await mermaid.render(id, code);
+                const { svg } = await mermaid.render(safeId, code);
                 container.innerHTML = svg;
                 const renderedSvg = container.querySelector('svg');
                 if (renderedSvg) {
-                    renderedSvg.style.maxWidth = 'none';
-                    renderedSvg.style.height = 'auto';
+                    if (containerId === 'mermaid-fullscreen-target') {
+                        renderedSvg.style.maxWidth = '92vw';
+                        renderedSvg.style.maxHeight = '80vh';
+                        renderedSvg.style.width = 'auto';
+                        renderedSvg.style.height = 'auto';
+                        renderedSvg.removeAttribute('width');
+                        renderedSvg.removeAttribute('height');
+                    } else {
+                        renderedSvg.style.maxWidth = '100%';
+                        renderedSvg.style.height = 'auto';
+                    }
+                    renderedSvg.style.display = 'block';
+                    renderedSvg.style.margin = '0 auto';
                 }
             } catch (err) {
                 console.warn('Mermaid rendering notice for ' + containerId + ':', err);
@@ -1163,7 +1182,15 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         svg.style.transform = `translate(${px}px, ${py}px) scale(${zoom})`;
                         svg.style.transformOrigin = 'center center';
                         svg.style.transition = el.getAttribute('data-dragging') === 'true' ? 'none' : 'transform 0.15s ease-out';
-                        svg.style.maxWidth = 'none';
+                        if (zoom === 1 && px === 0 && py === 0) {
+                            svg.style.maxWidth = '100%';
+                            svg.style.maxHeight = '100%';
+                            svg.style.width = 'auto';
+                            svg.style.height = 'auto';
+                        } else {
+                            svg.style.maxWidth = 'none';
+                            svg.style.maxHeight = 'none';
+                        }
                     }
                 },
                 startDiagramDrag(targetId, e) {
@@ -1199,16 +1226,53 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     this.fullscreenDiagramModal = true;
                     this.$nextTick(async () => {
                         const fsTarget = document.getElementById('mermaid-fullscreen-target');
-                        if (fsTarget) {
-                            fsTarget.innerHTML = '<div class="text-zinc-400 text-xs font-mono animate-pulse">Rendering diagram fullscreen...</div>';
+                        if (!fsTarget) return;
+
+                        // 1. Prioritize instant 0ms cloning from already-rendered DOM target
+                        const targetId = sourceId.replace(/-source$/, '-target');
+                        const origTarget = document.getElementById(targetId);
+                        const existingSvg = origTarget ? origTarget.querySelector('svg') : null;
+
+                        if (existingSvg) {
+                            const clonedSvg = existingSvg.cloneNode(true);
+                            clonedSvg.id = 'fs_svg_' + Date.now();
+                            clonedSvg.removeAttribute('width');
+                            clonedSvg.removeAttribute('height');
+                            clonedSvg.style.maxWidth = '92vw';
+                            clonedSvg.style.maxHeight = '80vh';
+                            clonedSvg.style.width = 'auto';
+                            clonedSvg.style.height = 'auto';
+                            clonedSvg.style.display = 'block';
+                            clonedSvg.style.margin = '0 auto';
+                            clonedSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                            fsTarget.innerHTML = '';
+                            fsTarget.appendChild(clonedSvg);
+                        } else {
+                            // Fallback fresh render
+                            fsTarget.innerHTML = '<div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2"><span class="w-2 h-2 bg-emerald-500 animate-ping"></span><span>Merender diagram layar penuh...</span></div>';
                             await window.renderMermaidDiagram('mermaid-fullscreen-target', sourceId, true);
                             const svg = fsTarget.querySelector('svg');
                             if (svg) {
-                                svg.style.maxWidth = 'none';
-                                svg.style.maxHeight = 'none';
+                                svg.removeAttribute('width');
+                                svg.removeAttribute('height');
+                                svg.style.maxWidth = '92vw';
+                                svg.style.maxHeight = '80vh';
+                                svg.style.width = 'auto';
+                                svg.style.height = 'auto';
+                                svg.style.display = 'block';
+                                svg.style.margin = '0 auto';
+                                svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
                             }
                         }
                     });
+                },
+                closeDiagramFullscreen() {
+                    this.fullscreenDiagramModal = false;
+                    this.fullscreenDiagramZoom = 1;
+                    this.fullscreenDiagramPanX = 0;
+                    this.fullscreenDiagramPanY = 0;
+                    const fsTarget = document.getElementById('mermaid-fullscreen-target');
+                    if (fsTarget) fsTarget.innerHTML = '';
                 },
                 zoomFullscreenDiagram(delta) {
                     this.fullscreenDiagramZoom = Math.min(4.0, Math.max(0.3, +(this.fullscreenDiagramZoom + delta).toFixed(2)));
@@ -1935,6 +1999,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     return idx >= 0 ? (idx + 1) : 1;
                 },
                 init() {
+                    window.openDiagramFullscreen = (title, sourceId) => this.openDiagramFullscreen(title, sourceId);
+                    window.closeDiagramFullscreen = () => this.closeDiagramFullscreen();
                     this.$nextTick(() => {
                         window.setupBlueprintScrollSpy(id => { 
                             this.activeSectionId = id; 
@@ -5239,7 +5305,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </button>
                             </div>
                         </div>
-                        <script type="text/plain" id="mermaid-studio-flow-source">{!! !empty($prd['virtual_charts']['workflow_mermaid']) ? $prd['virtual_charts']['workflow_mermaid'] : \App\Services\PrdGeneratorService::generateWorkflowMermaid($blueprint->nama_bisnis, $prd['state_machine'] ?? []) !!}</script>
+                        <script type="text/plain" id="mermaid-studio-flow-source">{!! !empty($prd['virtual_charts']['workflow_mermaid']) ? $prd['virtual_charts']['workflow_mermaid'] : \App\Services\PrdGeneratorService::generateWorkflowMermaid($prd['workflow'] ?? []) !!}</script>
                         <div 
                             class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-flow-target', $event)"
@@ -5362,7 +5428,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </button>
                             </div>
                         </div>
-                        <script type="text/plain" id="mermaid-studio-gantt-source">{!! !empty($prd['virtual_charts']['sprint_gantt_mermaid']) ? $prd['virtual_charts']['sprint_gantt_mermaid'] : (!empty($prd['virtual_charts']['gantt_mermaid']) ? $prd['virtual_charts']['gantt_mermaid'] : \App\Services\PrdGeneratorService::generateGanttRoadmapMermaid($blueprint->target_waktu ?? '30 Hari Kerja', $prd['engineering_specs'] ?? [])) !!}</script>
+                        <script type="text/plain" id="mermaid-studio-gantt-source">{!! !empty($prd['virtual_charts']['sprint_gantt_mermaid']) ? $prd['virtual_charts']['sprint_gantt_mermaid'] : (!empty($prd['virtual_charts']['gantt_mermaid']) ? $prd['virtual_charts']['gantt_mermaid'] : \App\Services\PrdGeneratorService::generateSprintGanttMermaid($blueprint, $blueprint->target_waktu ?? '30 Hari Kerja')) !!}</script>
                         <div 
                             class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-gantt-target', $event)"
@@ -5403,7 +5469,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 </button>
                             </div>
                         </div>
-                        <script type="text/plain" id="mermaid-studio-infra-source">{!! !empty($prd['virtual_charts']['infrastructure_mermaid']) ? $prd['virtual_charts']['infrastructure_mermaid'] : (!empty($prd['virtual_charts']['infra_mermaid']) ? $prd['virtual_charts']['infra_mermaid'] : \App\Services\PrdGeneratorService::generateInfrastructureMermaid($blueprint->user_metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS')) !!}</script>
+                        <script type="text/plain" id="mermaid-studio-infra-source">{!! !empty($prd['virtual_charts']['infrastructure_mermaid']) ? $prd['virtual_charts']['infrastructure_mermaid'] : (!empty($prd['virtual_charts']['infra_mermaid']) ? $prd['virtual_charts']['infra_mermaid'] : \App\Services\PrdGeneratorService::generateInfrastructureMermaid($blueprint, $blueprint->user_metadata ?? [])) !!}</script>
                         <div 
                             class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-infra-target', $event)"
@@ -5647,36 +5713,46 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 <!-- 2. Mermaid Flowchart View (Code & Native Mermaid SVG) -->
                 <div x-show="flowTab === 'mermaid'" x-cloak class="mb-6">
-                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 rounded-none relative">
-                        <div class="flex items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
-                            <span class="text-zinc-500 font-bold uppercase">ALUR KERJA MERMAID (FLOWCHART TD)</span>
-                            <button 
-                                type="button"
-                                onclick="window.copyMermaidCode('mermaid-flow-source', this)"
-                                class="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700"
-                            >
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                <span>SALIN KODE MERMAID</span>
-                            </button>
+                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
+                            <div class="flex items-center gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">ALUR KERJA MERMAID (FLOWCHART TD)</span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <button type="button" @click="zoomDiagram('mermaid-flow-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-flow-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="zoomDiagram('mermaid-flow-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
+                                <button type="button" @click="openDiagramFullscreen('Diagram Alur Kerja Sistem (Workflow Flowchart)', 'mermaid-flow-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                    <span>LAYAR PENUH</span>
+                                </button>
+                                <button 
+                                    type="button"
+                                    onclick="window.copyMermaidCode('mermaid-flow-source', this)"
+                                    class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer"
+                                >
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    <span>SALIN KODE MERMAID</span>
+                                </button>
+                            </div>
                         </div>
 
-                        <script type="text/plain" id="mermaid-flow-source">flowchart TD
-@foreach($rawWorkflows as $index => $flow)
-@php
-    $safeText = preg_replace('/["\r\n]+/', '', $flow['action'] ?? 'Step');
-    $safeActor = preg_replace('/["\r\n]+/', '', $flow['actor'] ?? 'Pengguna');
-@endphp
-    S{{ $index + 1 }}["<b>Step {{ $index + 1 }}: {{ $safeText }}</b><br/><small>Aktor: {{ $safeActor }}</small>"]
-    @if(!$loop->last)
-    S{{ $index + 1 }} -->|Lanjut| S{{ $index + 2 }}
-    @endif
-@endforeach
-                        </script>
+                        <script type="text/plain" id="mermaid-flow-source">{!! \App\Services\PrdGeneratorService::generateWorkflowMermaid($rawWorkflows) !!}</script>
 
-                        <div id="mermaid-flow-target" class="overflow-x-auto min-h-[140px] flex items-center justify-center p-2 text-center">
-                            <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
-                                <span>Memuat visualisasi alur kerja Mermaid...</span>
+                        <div 
+                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            @mousedown="startDiagramDrag('mermaid-flow-target', $event)"
+                            @mousemove="onDiagramDrag('mermaid-flow-target', $event)"
+                            @mouseup="stopDiagramDrag('mermaid-flow-target')"
+                            @mouseleave="stopDiagramDrag('mermaid-flow-target')"
+                            @wheel.prevent="zoomDiagram('mermaid-flow-target', $event.deltaY < 0 ? 0.2 : -0.2)"
+                        >
+                            <div id="mermaid-flow-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                                <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
+                                    <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
+                                    <span>Memuat visualisasi alur kerja Mermaid...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -11772,7 +11848,8 @@ class ProcessSecureDataset implements ShouldQueue
     <div 
         x-show="fullscreenDiagramModal" 
         x-cloak 
-        @keydown.escape.window="fullscreenDiagramModal = false"
+        style="display: none;"
+        @keydown.escape.window="closeDiagramFullscreen()"
         class="fixed inset-0 z-[120] flex flex-col bg-zinc-950/95 backdrop-blur-md p-2 sm:p-4 print:hidden select-none"
     >
         <!-- Fullscreen Header / Toolbar -->
@@ -11780,7 +11857,7 @@ class ProcessSecureDataset implements ShouldQueue
             <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 bg-emerald-500 rounded-none inline-block animate-pulse"></span>
                 <span class="font-black text-emerald-400 uppercase tracking-wide" x-text="fullscreenDiagramTitle || 'DIAGRAM FULLSCREEN VIEWER'"></span>
-                <span class="text-[10px] text-zinc-400 hidden md:inline">&bull; Drag mouse untuk menggeser (Pan) &bull; Scroll roda mouse untuk Zoom</span>
+                <span class="text-[10px] text-zinc-400 hidden md:inline">&bull; Drag mouse untuk menggeser (Pan) &bull; Scroll roda mouse untuk Zoom &bull; Dobel klik untuk Reset</span>
             </div>
             <div class="flex items-center gap-1.5 flex-wrap">
                 <!-- Zoom Controls -->
@@ -11798,7 +11875,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                     <span>SALIN MERMAID</span>
                 </button>
-                <button type="button" @click="fullscreenDiagramModal = false" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-black uppercase transition rounded-none cursor-pointer ml-1">
+                <button type="button" @click="closeDiagramFullscreen()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-black uppercase transition rounded-none cursor-pointer ml-1">
                     &times; TUTUP (ESC)
                 </button>
             </div>
@@ -11812,6 +11889,7 @@ class ProcessSecureDataset implements ShouldQueue
             @mousemove="onFullscreenDrag($event)"
             @mouseup="stopFullscreenDrag()"
             @mouseleave="stopFullscreenDrag()"
+            @dblclick="resetFullscreenDiagram()"
         >
             <div 
                 id="mermaid-fullscreen-target" 

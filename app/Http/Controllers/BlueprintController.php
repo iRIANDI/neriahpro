@@ -716,18 +716,19 @@ class BlueprintController extends Controller
             }
 
             // 2. Check Virtual Charts Presence and Completeness
-            if (empty($prd['virtual_charts']) || empty($prd['virtual_charts']['erd_mermaid']) || empty($prd['virtual_charts']['workflow_mermaid']) || empty($prd['virtual_charts']['feature_dependency_mermaid'])) {
+            $isChartsRefreshRequested = request()->has('regenerate_charts') || request()->has('refresh_charts');
+            if ($isChartsRefreshRequested || empty($prd['virtual_charts']) || empty($prd['virtual_charts']['erd_mermaid']) || empty($prd['virtual_charts']['workflow_mermaid']) || empty($prd['virtual_charts']['feature_dependency_mermaid'])) {
                 $erdTables = $prd['erd_schema']['tables'] ?? [];
                 $prd['virtual_charts'] = [
-                    'workflow_mermaid' => PrdGeneratorService::generateWorkflowMermaid($blueprint->nama_bisnis, $prd['state_machine'] ?? []),
+                    'workflow_mermaid' => PrdGeneratorService::generateWorkflowMermaid($prd['workflow'] ?? []),
                     'erd_mermaid' => PrdGeneratorService::generateErdMermaid($erdTables),
                     'feature_dep_mermaid' => PrdGeneratorService::generateFeatureDependencyMermaid($prd['target_actors']['items'] ?? [], $prd['engineering_specs']['mvp_phase_1']['items'] ?? [], $erdTables),
                     'feature_dependency_mermaid' => PrdGeneratorService::generateFeatureDependencyMermaid($prd['target_actors']['items'] ?? [], $prd['engineering_specs']['mvp_phase_1']['items'] ?? [], $erdTables),
-                    'gantt_mermaid' => PrdGeneratorService::generateGanttRoadmapMermaid($blueprint->target_waktu ?? '30 Hari Kerja', $prd['engineering_specs'] ?? []),
-                    'sprint_gantt_mermaid' => PrdGeneratorService::generateGanttRoadmapMermaid($blueprint->target_waktu ?? '30 Hari Kerja', $prd['engineering_specs'] ?? []),
-                    'infra_mermaid' => PrdGeneratorService::generateInfrastructureMermaid($blueprint->user_metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS'),
-                    'infrastructure_mermaid' => PrdGeneratorService::generateInfrastructureMermaid($blueprint->user_metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS'),
-                    'mobile_sync_mermaid' => PrdGeneratorService::generateMobileSyncMermaid($blueprint->nama_bisnis),
+                    'gantt_mermaid' => PrdGeneratorService::generateSprintGanttMermaid($blueprint, $blueprint->target_waktu ?? '30 Hari Kerja'),
+                    'sprint_gantt_mermaid' => PrdGeneratorService::generateSprintGanttMermaid($blueprint, $blueprint->target_waktu ?? '30 Hari Kerja'),
+                    'infra_mermaid' => PrdGeneratorService::generateInfrastructureMermaid($blueprint, $blueprint->user_metadata ?? []),
+                    'infrastructure_mermaid' => PrdGeneratorService::generateInfrastructureMermaid($blueprint, $blueprint->user_metadata ?? []),
+                    'mobile_sync_mermaid' => PrdGeneratorService::generateMobileSyncMermaid($blueprint->nama_bisnis ?: 'Proyek'),
                 ];
                 $needsPrdSave = true;
             }
@@ -773,7 +774,14 @@ class BlueprintController extends Controller
         // Also regenerate ERD and Virtual Charts to ensure domain alignment
         $erdTables = $prd['erd_schema']['tables'] ?? [];
         $prd['virtual_charts']['erd_mermaid'] = PrdGeneratorService::generateErdMermaid($erdTables);
-        $prd['virtual_charts']['workflow_mermaid'] = PrdGeneratorService::generateWorkflowMermaid($blueprint->nama_bisnis, $prd['state_machine'] ?? []);
+        $prd['virtual_charts']['workflow_mermaid'] = PrdGeneratorService::generateWorkflowMermaid($prd['workflow'] ?? []);
+        $prd['virtual_charts']['feature_dep_mermaid'] = PrdGeneratorService::generateFeatureDependencyMermaid($prd['target_actors']['items'] ?? [], $prd['engineering_specs']['mvp_phase_1']['items'] ?? [], $erdTables);
+        $prd['virtual_charts']['feature_dependency_mermaid'] = $prd['virtual_charts']['feature_dep_mermaid'];
+        $prd['virtual_charts']['gantt_mermaid'] = PrdGeneratorService::generateSprintGanttMermaid($blueprint, $blueprint->target_waktu ?? '30 Hari Kerja');
+        $prd['virtual_charts']['sprint_gantt_mermaid'] = $prd['virtual_charts']['gantt_mermaid'];
+        $prd['virtual_charts']['infra_mermaid'] = PrdGeneratorService::generateInfrastructureMermaid($blueprint, $blueprint->user_metadata ?? []);
+        $prd['virtual_charts']['infrastructure_mermaid'] = $prd['virtual_charts']['infra_mermaid'];
+        $prd['virtual_charts']['mobile_sync_mermaid'] = PrdGeneratorService::generateMobileSyncMermaid($blueprint->nama_bisnis ?: 'Proyek');
 
         $blueprint->update(['prd_content' => $prd]);
         $blueprint->refresh();
@@ -798,7 +806,16 @@ class BlueprintController extends Controller
             $itemized = $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint);
             $newRoi = PrdGeneratorService::generateBusinessRoiAnalysis($blueprint, $itemized);
             $prd['business_roi_analysis'] = $newRoi;
-            $prd['virtual_charts']['erd_mermaid'] = PrdGeneratorService::generateErdMermaid($prd['erd_schema']['tables'] ?? []);
+            $erdTables = $prd['erd_schema']['tables'] ?? [];
+            $prd['virtual_charts']['erd_mermaid'] = PrdGeneratorService::generateErdMermaid($erdTables);
+            $prd['virtual_charts']['workflow_mermaid'] = PrdGeneratorService::generateWorkflowMermaid($prd['workflow'] ?? []);
+            $prd['virtual_charts']['feature_dep_mermaid'] = PrdGeneratorService::generateFeatureDependencyMermaid($prd['target_actors']['items'] ?? [], $prd['engineering_specs']['mvp_phase_1']['items'] ?? [], $erdTables);
+            $prd['virtual_charts']['feature_dependency_mermaid'] = $prd['virtual_charts']['feature_dep_mermaid'];
+            $prd['virtual_charts']['gantt_mermaid'] = PrdGeneratorService::generateSprintGanttMermaid($blueprint, $blueprint->target_waktu ?? '30 Hari Kerja');
+            $prd['virtual_charts']['sprint_gantt_mermaid'] = $prd['virtual_charts']['gantt_mermaid'];
+            $prd['virtual_charts']['infra_mermaid'] = PrdGeneratorService::generateInfrastructureMermaid($blueprint, $blueprint->user_metadata ?? []);
+            $prd['virtual_charts']['infrastructure_mermaid'] = $prd['virtual_charts']['infra_mermaid'];
+            $prd['virtual_charts']['mobile_sync_mermaid'] = PrdGeneratorService::generateMobileSyncMermaid($blueprint->nama_bisnis ?: 'Proyek');
             $blueprint->update(['prd_content' => $prd]);
             $blueprint->refresh();
         }

@@ -2005,6 +2005,44 @@ class BlueprintController extends Controller
     }
 
     /**
+     * Generate an AI-elaborated directive instruction grounded in project source corpus & world-class standards.
+     */
+    public function elaborateDirective(Request $request, string $slug, BlueprintRefinementService $refinementService): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $request->validate([
+            'segment_key' => 'required|string',
+            'ai_provider' => 'nullable|string',
+            'custom_title' => 'nullable|string',
+        ]);
+
+        $segmentKey = $request->input('segment_key');
+        $aiProvider = $request->input('ai_provider');
+        $customTitle = $request->input('custom_title');
+
+        try {
+            $directive = $refinementService->elaborateDirective($blueprint, $segmentKey, $aiProvider, $customTitle);
+
+            return response()->json([
+                'success' => true,
+                'directive' => $directive,
+                'message' => 'Instruksi penajaman berhasil dielaborasi dari Dokumen Acuan & Standar Industri.',
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Elaborate directive failed: '.$e->getMessage(), [
+                'exception' => $e,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengelaborasi instruksi: '.$e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
      * Update and persist developer/architect execution checkpoints for a blueprint.
      * Synchronizes live progress with the customer dashboard.
      */

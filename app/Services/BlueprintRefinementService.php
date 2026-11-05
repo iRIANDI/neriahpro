@@ -653,6 +653,27 @@ TXT;
 
         if (in_array($segmentKey, ['alurs_kerja', 'workflow'])) {
             $workflows = is_array($parsedData) ? $parsedData : [];
+            $normalizedWorkflows = [];
+            foreach ($workflows as $idx => $wf) {
+                if (!is_array($wf)) continue;
+                $action = $wf['action'] ?? ($wf['title'] ?? ($wf['name'] ?? 'Langkah ' . ($idx + 1)));
+                $desc = $wf['description'] ?? ($wf['system_processing'] ?? ($wf['action'] ?? 'Tahapan alur kerja dan validasi transaksi.'));
+                $actor = $wf['actor'] ?? 'Pengguna / Pengunjung';
+                $normalizedWorkflows[] = [
+                    'step' => $wf['step'] ?? ($wf['stage'] ?? ($idx + 1)),
+                    'action' => $action,
+                    'description' => $desc,
+                    'actor' => $actor,
+                    'trigger' => $wf['trigger'] ?? ($wf['pemicu'] ?? ($wf['input'] ?? 'Pengguna mengakses antarmuka.')),
+                    'badge' => $wf['badge'] ?? ($idx === 0 ? 'DISCOVERY' : ($idx === 1 ? 'PROCESSING' : ($idx === 2 ? 'INTERACTION' : 'APPROVAL'))),
+                    'computation' => $wf['computation'] ?? ($wf['system_processing'] ?? 'Validasi request FormRequest dan pemrosesan basis data.'),
+                    'response' => $wf['response'] ?? ($wf['output'] ?? 'Status terverifikasi dengan respon HTTP 200 OK.'),
+                    'mitigation' => $wf['mitigation'] ?? ($wf['exception_handling'] ?? 'Penanganan error inline dan rollback transaksi.'),
+                ];
+            }
+            if (!empty($normalizedWorkflows)) {
+                $workflows = $normalizedWorkflows;
+            }
             $prd['workflow'] = $workflows;
             $prd['alurs_kerja'] = $workflows;
 
@@ -1019,5 +1040,95 @@ PROMPT;
         }
 
         return "// Scaffold component for {$businessName}\n";
+    }
+
+    /**
+     * Elaborate a grounded, high-level directive prompt based on project source corpus & world-class standards.
+     * Zero-assumption: ground strictly in the client's actual documents, business idea, and global engineering best practices.
+     */
+    public function elaborateDirective(
+        VisionBlueprint $blueprint,
+        string $segmentKey,
+        ?string $preferredAiProvider = null,
+        ?string $customTitle = null
+    ): string {
+        $sourceData = $this->getSourceCorpus($blueprint);
+        $corpusText = $sourceData['corpus_text'] ?? '';
+        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise');
+        $rawProblems = $blueprint->masalah_utama ?: '';
+        $sector = $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
+            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform');
+
+        // Segment-specific guidance for industry standards
+        $segmentStandards = match ($segmentKey) {
+            'alurs_kerja', 'workflow' => 'Pola User Journey & State Machine, Happy Path, Edge Cases (Validasi gagal, Timeout payment, Batal/Refund), Role Handoff antar Aktor (Pengguna -> Admin Dispatcher -> Supir/Mitra), Idempotency Token, dan Notifikasi Otomatis (WhatsApp/Email).',
+            'database_erd', 'erd_schema' => 'Standar PostgreSQL 16 Strict, Skalabilitas O(1), ULID 26-karakter Primary & Foreign Keys, Keyset Cursor Pagination berindeks, Foreign Key Constraints, Audit Trail & Logging (created_at, updated_at, deleted_at, created_by).',
+            'features', 'feature_single', 'mvp_features' => 'Spesifikasi MVP Fase 1, OWASP Security, UU PDP & Enkripsi Data Pribadi, Validasi FormRequest, Response Kontrak JSON API v1, State Shimmer, dan Penanganan Error Inline.',
+            'system_actors' => 'Matriks RBAC (Role-Based Access Control) granular, prinsip Least Privilege, Isolasi Akses Multi-Tenant, Audit Trail Peran, dan Session Management terenkripsi.',
+            'executive_summary' => 'Executive Architecture Discovery 26 Parameter, Analisis Beban Transaksi & Skalabilitas Jutaan Pengguna, Matriks Risiko & Mitigasi, dan High-Yield ROI Protections.',
+            'scaffold_file' => 'Standar Scaffolding Produksi, Docker Compose Hardened (PHP 8.5+, PG 16, Redis 7, Nginx), Pest API Contract Test Suite, dan Seeder Data Sintetis Realistis.',
+            default => 'Standar rekayasa perangkat lunak enterprise kelas dunia, Clean Architecture, performa sub-10ms, dan reliabilitas tinggi.'
+        };
+
+        $systemInstruction = "Anda adalah Principal Software Enterprise Architect di Neriah Pro. Tugas Anda adalah merumuskan 'Instruksi Penajaman Arsitektur' (Actionable Directive) yang sangat terarah, konkret, dan berbasis FAKTA MURNI dari Dokumen Acuan Proyek klien serta STANDAR REKAYASA DUNIA.
+
+ATURAN UTAMA:
+1. DILARANG KERAS MEMBUAT ASUMSI FIKTIF ATAU MENGUBAH IDE PROYEK. Rujuk fakta dari Dokumen Acuan Klien.
+2. Selaraskan dengan standar dunia: {$segmentStandards}
+3. Outputkan HANYA instruksi penajaman langsung (tanpa pembuka basa-basi seperti 'Berikut instruksi...', tanpa markdown codeblock). Format dalam 2-3 paragraf padat, terstruktur, profesional, dan tegas.";
+
+        $prompt = "PROYEK: {$businessName}
+SEKTOR / ARSITEKTUR: {$sector}
+MASALAH UTAMA / KEBUTUHAN: {$rawProblems}
+SEGMEN YANG DIELABORASI: {$segmentKey}" . ($customTitle ? " ({$customTitle})" : "") . "
+
+DOKUMEN ACUAN PROYEK (MARKITDOWN CORPUS / BRIEF KLIEN):
+" . Str::limit($corpusText ?: 'Klien memerlukan solusi platform digital terotomasi dengan integrasi alur bisnis, pelacakan status, dan dasbor admin.', 4000) . "
+
+Rumuskan instruksi penajaman arsitektur (Directive Prompt) yang konkret untuk segmen '{$segmentKey}' agar AI dapat memperdalam segmen ini secara maksimal tanpa asumsi fiktif.";
+
+        try {
+            $aiResult = MultiAiModelManager::executeWithFailover(
+                $prompt,
+                $systemInstruction,
+                'prd',
+                $preferredAiProvider
+            );
+
+            $text = trim($aiResult['text'] ?? '');
+            if (!empty($text)) {
+                $text = preg_replace('/^```(?:markdown|text)?\s*/i', '', $text);
+                $text = preg_replace('/\s*```$/', '', $text);
+                $text = preg_replace('/^(?:Berikut adalah|Tentu|Berikut ini|Instruksi Penajaman).*?:\s*\n+/i', '', $text);
+                return trim($text);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Elaborate directive AI notice: ' . $e->getMessage());
+        }
+
+        // Resilient deterministic fallback based on exact segment & business context
+        return $this->generateDeterministicDirective($blueprint, $segmentKey, $sourceData);
+    }
+
+    /**
+     * Resilient deterministic directive engine when AI APIs are unconfigured or unavailable.
+     */
+    protected function generateDeterministicDirective(VisionBlueprint $blueprint, string $segmentKey, array $sourceData): string
+    {
+        $businessName = $blueprint->nama_bisnis ?: 'Sistem Enterprise';
+        
+        return match ($segmentKey) {
+            'alurs_kerja', 'workflow' => "Perdalam seluruh alur perjalanan pengguna (User Journey) untuk {$businessName} dengan memecah setiap tahapan menjadi langkah atomic yang jelas: mulai dari intake kebutuhan/layanan, kalkulasi & rekomendasi cerdas, pemesanan & penerbitan QR E-Voucher, verifikasi & penugasan staf/armada operasional di dasbor admin, eksekusi layanan lapangan, hingga alur pembatalan, rekonsiliasi, dan pengembalian dana (refund) otomatis. Sertakan aktor penanggung jawab, trigger pemicu, komputasi basis data atomik, dan mitigasi edge cases pada setiap tahapan.",
+            
+            'database_erd', 'erd_schema' => "Susun dan perinci skema basis data PostgreSQL 16 Strict untuk {$businessName} dengan memastikan seluruh primary key dan foreign key menggunakan tipe data ULID (VARCHAR 26), mengeliminasi relasi fiktif, mengindeks kolom kunci untuk pencarian O(1) Keyset Cursor Pagination, serta melengkapi entitas dengan audit trail (created_at, updated_at, deleted_at, created_by).",
+            
+            'features', 'feature_single', 'mvp_features' => "Perdalam spesifikasi teknis modul MVP {$businessName} dengan menjabarkan input/output request yang presisi, validasi FormRequest anti-XSS/SQLi, status machine transisi data, kepatuhan privasi data UU PDP, serta kontrak OpenAPI 3.0 yang siap pakai untuk frontend dan integrasi gateway pihak ketiga.",
+            
+            'system_actors' => "Strukturkan matriks hak akses pengguna (RBAC) {$businessName} berbasis peran konkret: bedakan hak akses publik/klien, operator lapangan/mitra, staf dispatcher/keuangan, hingga administrator manajemen sesuai prinsip Least Privilege dan pemisahan wewenang (Separation of Duties).",
+            
+            'executive_summary' => "Lakukan sintesis mendalam terhadap 26 parameter arsitektur {$businessName}: pertegas proposisi nilai bisnis, efisiensi operasional, estimasi ROI realistis, serta mitigasi risiko teknis jangka panjang berbasis dokumen acuan.",
+            
+            default => "Lakukan penajaman arsitektur dan spesifikasi teknis untuk {$businessName} berpatokan pada Dokumen Acuan Proyek klien, terapkan standar rekayasa enterprise dunia (Clean Architecture, performa sub-10ms, dan ketahanan data)."
+        };
     }
 }

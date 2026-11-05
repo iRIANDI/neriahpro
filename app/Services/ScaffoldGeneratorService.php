@@ -165,6 +165,7 @@ class ScaffoldGeneratorService
             'schema_complete.sql' => $schemaSql,
             'database/migrations/schema_complete.sql' => $schemaSql,
             'docs/adr/ADR-001-architectural-paradigm.md' => self::generateAdr001($blueprint),
+            'docs/architecture/ADR-001-postgresql-ulid.md' => self::generateAdr001($blueprint),
             'docs/adr/ADR-002-database-ulid-and-keyset-pagination.md' => self::generateAdr002($blueprint),
             'docs/adr/ADR-003-translatable-tabs-in-place.md' => self::generateAdr003(),
 
@@ -246,6 +247,7 @@ class ScaffoldGeneratorService
             'tests/Feature/HealthProbeTest.php' => self::generateHealthProbeTest(),
             'tests/e2e/playwright.config.ts' => self::generatePlaywrightConfig($slug),
             'tests/e2e/critical-flows.spec.ts' => self::generatePlaywrightE2ETest($blueprint, $mvpEngineeringSpecs),
+            'tests/e2e/smoke.spec.ts' => self::generatePlaywrightE2ETest($blueprint, $mvpEngineeringSpecs),
 
             // Pillar 7: One-Click Cloud CI/CD, Railpack FrankenPHP & Deploy Pipeline
             '.github/workflows/deploy.yml' => self::generateCiCdWorkflow($blueprint, $slug),
@@ -263,6 +265,7 @@ class ScaffoldGeneratorService
             'scripts/backup.sh' => self::generateBackupScript($blueprint, $slug),
             'scripts/restore.sh' => self::generateRestoreScript($blueprint, $slug),
             'docs/disaster-recovery-runbook.md' => self::generateDisasterRecoveryRunbook($blueprint, $slug),
+            'docs/runbooks/disaster-recovery.md' => self::generateDisasterRecoveryRunbook($blueprint, $slug),
 
             // Pillar 10: Interactive API Sandbox & Developer Portal
             'resources/views/api-docs.blade.php' => self::generateApiDocsBlade($blueprint),
@@ -336,9 +339,21 @@ class ScaffoldGeneratorService
         // Apply any user-elaborated / customized scaffold files (persisted in user_metadata)
         $customizations = $blueprint->user_metadata['scaffold_customizations'] ?? [];
         if (! empty($customizations) && is_array($customizations)) {
+            $aliasPairs = [
+                'docs/architecture/ADR-001-postgresql-ulid.md' => 'docs/adr/ADR-001-architectural-paradigm.md',
+                'docs/adr/ADR-001-architectural-paradigm.md' => 'docs/architecture/ADR-001-postgresql-ulid.md',
+                'tests/e2e/smoke.spec.ts' => 'tests/e2e/critical-flows.spec.ts',
+                'tests/e2e/critical-flows.spec.ts' => 'tests/e2e/smoke.spec.ts',
+                'docs/runbooks/disaster-recovery.md' => 'docs/disaster-recovery-runbook.md',
+                'docs/disaster-recovery-runbook.md' => 'docs/runbooks/disaster-recovery.md',
+            ];
+
             foreach ($customizations as $file => $customContent) {
-                if (is_string($customContent) && isset($files[$file])) {
+                if (is_string($customContent)) {
                     $files[$file] = $customContent;
+                    if (isset($aliasPairs[$file])) {
+                        $files[$aliasPairs[$file]] = $customContent;
+                    }
                 }
             }
         }
@@ -1002,8 +1017,26 @@ MARKDOWN;
             'schema_complete.sql' => $schemaSql,
             'database/migrations/schema_complete.sql' => $schemaSql,
             'docs/product/PRODUCT-BRIEF.md' => self::generateProductBrief($blueprint),
+            'docs/adr/ADR-001-architectural-paradigm.md' => self::generateAdr001($blueprint),
+            'docs/architecture/ADR-001-postgresql-ulid.md' => self::generateAdr001($blueprint),
+            'openapi.json' => self::generateOpenApiSpec($blueprint, []),
+            'design/tokens.json' => self::generateDesignTokens($blueprint),
+            'design/wireframes/screens.md' => self::generateWireframeBlueprints($blueprint, []),
+            'routes/web.php' => self::generateLaravelRoutes($blueprint, []),
+            'routes/api.php' => self::generateLaravelApiRoutes($blueprint, []),
+            'app/api/route.ts' => self::generateNextJsRoute($blueprint, []),
+            'database/seeders/SyntheticDataSeeder.php' => self::generateSyntheticDataSeeder($blueprint, []),
+            'tests/Feature/ApiContractTest.php' => self::generateContractTest($blueprint, []),
+            'tests/e2e/critical-flows.spec.ts' => self::generatePlaywrightE2ETest($blueprint, []),
+            'tests/e2e/smoke.spec.ts' => self::generatePlaywrightE2ETest($blueprint, []),
+            '.github/workflows/deploy.yml' => self::generateCiCdWorkflow($blueprint, $slug),
+            'scripts/backup.sh' => self::generateBackupScript($blueprint, $slug),
+            'scripts/restore.sh' => self::generateRestoreScript($blueprint, $slug),
+            'docs/disaster-recovery-runbook.md' => self::generateDisasterRecoveryRunbook($blueprint, $slug),
+            'docs/runbooks/disaster-recovery.md' => self::generateDisasterRecoveryRunbook($blueprint, $slug),
             '.cursorrules' => PrdGeneratorService::toCursorrules($blueprint, $blueprint->prd_content ?? []),
             'CLAUDE.md' => PrdGeneratorService::toCursorrules($blueprint, $blueprint->prd_content ?? []),
+            'AGENTS.md' => PrdGeneratorService::toCursorrules($blueprint, $blueprint->prd_content ?? []),
             '.agents/PONYTAIL.md' => self::generatePonytailProtocolMarkdown(),
             'app/Http/Controllers/HealthProbeController.php' => self::generateHealthProbeController($slug),
             'deploy.sh' => self::generateDeployScript($blueprint, $slug),

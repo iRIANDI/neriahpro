@@ -51,6 +51,7 @@ class BlueprintScaffoldAndPresenceTest extends TestCase
         // Assert 10 Pillars Assets
         $this->assertArrayHasKey('docs/product/PRODUCT-BRIEF.md', $files);
         $this->assertArrayHasKey('docs/adr/ADR-001-architectural-paradigm.md', $files);
+        $this->assertArrayHasKey('docs/architecture/ADR-001-postgresql-ulid.md', $files);
         $this->assertArrayHasKey('docs/adr/ADR-002-database-ulid-and-keyset-pagination.md', $files);
         $this->assertArrayHasKey('docs/adr/ADR-003-translatable-tabs-in-place.md', $files);
         $this->assertArrayHasKey('app/Http/Controllers/HealthProbeController.php', $files);
@@ -59,11 +60,13 @@ class BlueprintScaffoldAndPresenceTest extends TestCase
         $this->assertArrayHasKey('tests/Feature/HealthProbeTest.php', $files);
         $this->assertArrayHasKey('tests/e2e/playwright.config.ts', $files);
         $this->assertArrayHasKey('tests/e2e/critical-flows.spec.ts', $files);
+        $this->assertArrayHasKey('tests/e2e/smoke.spec.ts', $files);
         $this->assertArrayHasKey('config/telemetry.php', $files);
         $this->assertArrayHasKey('app/Listeners/NotifyFailedJobListener.php', $files);
         $this->assertArrayHasKey('scripts/backup.sh', $files);
         $this->assertArrayHasKey('scripts/restore.sh', $files);
         $this->assertArrayHasKey('docs/disaster-recovery-runbook.md', $files);
+        $this->assertArrayHasKey('docs/runbooks/disaster-recovery.md', $files);
         $this->assertArrayHasKey('resources/views/api-docs.blade.php', $files);
 
         // Assert Product Brief contains ECC Product-Lens questions

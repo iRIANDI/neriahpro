@@ -2020,6 +2020,28 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 scaffoldIsScopeLocked: {{ ($isScopeLocked ?? false) ? 'true' : 'false' }},
                 collaborators: [],
                 collaboratorCursor: { x: 0, y: 0, visible: false, name: '' },
+                getScaffoldCode(tabId) {
+                    if (this.scaffoldFiles && this.scaffoldFiles[tabId] !== undefined && this.scaffoldFiles[tabId] !== null && this.scaffoldFiles[tabId] !== '') {
+                        return this.scaffoldFiles[tabId];
+                    }
+                    const aliasMap = {
+                        'docs/architecture/ADR-001-postgresql-ulid.md': 'docs/adr/ADR-001-architectural-paradigm.md',
+                        'docs/adr/ADR-001-architectural-paradigm.md': 'docs/architecture/ADR-001-postgresql-ulid.md',
+                        'tests/e2e/smoke.spec.ts': 'tests/e2e/critical-flows.spec.ts',
+                        'tests/e2e/critical-flows.spec.ts': 'tests/e2e/smoke.spec.ts',
+                        'docs/runbooks/disaster-recovery.md': 'docs/disaster-recovery-runbook.md',
+                        'docs/disaster-recovery-runbook.md': 'docs/runbooks/disaster-recovery.md',
+                    };
+                    const alias = aliasMap[tabId];
+                    if (alias && this.scaffoldFiles && this.scaffoldFiles[alias] !== undefined && this.scaffoldFiles[alias] !== null && this.scaffoldFiles[alias] !== '') {
+                        this.scaffoldFiles[tabId] = this.scaffoldFiles[alias];
+                        return this.scaffoldFiles[tabId];
+                    }
+                    if (this.scaffoldLoading) {
+                        return 'Memuat berkas...';
+                    }
+                    return '// Berkas ' + tabId + ' belum tersedia atau dalam proses sintesis.';
+                },
                 async openScaffoldModal() {
                     this.scaffoldModalOpen = true;
                     if (Object.keys(this.scaffoldFiles).length === 0) {
@@ -2032,7 +2054,10 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 this.scaffoldCustomizedFiles = data.customized_files || [];
                                 const keys = Object.keys(data.files);
                                 if (keys.length > 0 && !this.scaffoldFiles[this.scaffoldActiveTab]) {
-                                    this.scaffoldActiveTab = keys[0];
+                                    const code = this.getScaffoldCode(this.scaffoldActiveTab);
+                                    if (!code || code.startsWith('// Berkas')) {
+                                        this.scaffoldActiveTab = keys[0];
+                                    }
                                 }
                             }
                         } catch(e) {
@@ -2052,7 +2077,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 async autoSaveActiveScaffoldFile(showToastFeedback = false) {
                     if (this.scaffoldIsScopeLocked) return;
                     const filename = this.scaffoldActiveTab;
-                    const content = this.scaffoldFiles[filename] || '';
+                    const content = this.scaffoldFiles[filename] !== undefined ? this.scaffoldFiles[filename] : this.getScaffoldCode(filename);
                     this.scaffoldSaveStatus = 'saving';
 
                     try {
@@ -2138,8 +2163,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     this.onScaffoldCodeInput();
                 },
                 copyActiveScaffold() {
-                    const code = this.scaffoldFiles[this.scaffoldActiveTab] || '';
-                    if (!code) return;
+                    const code = this.getScaffoldCode(this.scaffoldActiveTab);
+                    if (!code || code.startsWith('// Berkas')) return;
                     navigator.clipboard.writeText(code).then(() => {
                         if (window.showToast) window.showToast({ type: 'success', title: 'KODE DISALIN', message: 'File ' + this.scaffoldActiveTab + ' berhasil disalin ke clipboard!' });
                     });
@@ -11786,7 +11811,7 @@ class ProcessSecureDataset implements ShouldQueue
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="w-2 h-2 rounded-none shrink-0" :class="scaffoldCustomizedFiles.includes(scaffoldActiveTab) ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-emerald-500'"></span>
                         <span class="text-zinc-200 font-bold" x-text="scaffoldActiveTab">docker-compose.yml</span>
-                        <span class="text-zinc-500" x-text="'(' + ((scaffoldFiles[scaffoldActiveTab] || '').split('\n').length) + ' baris)'"></span>
+                        <span class="text-zinc-500" x-text="'(' + ((getScaffoldCode(scaffoldActiveTab) || '').split('\n').length) + ' baris)'"></span>
                         <template x-if="scaffoldCustomizedFiles.includes(scaffoldActiveTab)">
                             <span class="px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] font-bold uppercase tracking-wider">
                                 DIELABORASI (CUSTOM)
@@ -11837,7 +11862,7 @@ class ProcessSecureDataset implements ShouldQueue
                             <button type="button" @click="scaffoldMode = 'preview'" :class="scaffoldMode === 'preview' ? 'bg-zinc-800 text-zinc-100 font-bold' : 'text-zinc-500 hover:text-zinc-300'" class="px-2 py-0.5 transition cursor-pointer">
                                 PREVIEW
                             </button>
-                            <button type="button" @click="scaffoldMode = 'edit'" :class="scaffoldMode === 'edit' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-500 hover:text-zinc-300'" class="px-2 py-0.5 transition cursor-pointer flex items-center gap-1">
+                            <button type="button" @click="scaffoldFiles[scaffoldActiveTab] = getScaffoldCode(scaffoldActiveTab); scaffoldMode = 'edit'" :class="scaffoldMode === 'edit' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-500 hover:text-zinc-300'" class="px-2 py-0.5 transition cursor-pointer flex items-center gap-1">
                                 <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 <span>EDIT &amp; ELABORASI</span>
                             </button>
@@ -11846,7 +11871,7 @@ class ProcessSecureDataset implements ShouldQueue
                         <!-- AI Grounded Deepener Button for Active Scaffold File -->
                         <button 
                             type="button" 
-                            @click="openTweakModal('scaffold_file', 'Scaffold // ' + scaffoldActiveTab, scaffoldFiles[scaffoldActiveTab] || '')" 
+                            @click="openTweakModal('scaffold_file', 'Scaffold // ' + scaffoldActiveTab, getScaffoldCode(scaffoldActiveTab))" 
                             class="px-2 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition cursor-pointer flex items-center gap-1 font-mono text-[10px] font-bold"
                             title="Perdalam file scaffold ini secara langsung menggunakan AI berbasis Dokumen Acuan"
                         >
@@ -11876,7 +11901,7 @@ class ProcessSecureDataset implements ShouldQueue
                         x-show="scaffoldMode === 'preview'"
                         class="flex-1 min-h-0 w-full overflow-y-scroll overflow-x-auto text-[11px] text-emerald-400 leading-relaxed select-all font-mono whitespace-pre p-3 bg-zinc-950/90 border border-zinc-900 custom-prd-scrollbar focus:outline-none" 
                         tabindex="0"
-                        x-text="scaffoldFiles[scaffoldActiveTab] || 'Memuat berkas...'"
+                        x-text="getScaffoldCode(scaffoldActiveTab)"
                     ></pre>
 
                     <!-- EDIT & ELABORASI MODE (<textarea> with Tab Support & Auto-Save) -->

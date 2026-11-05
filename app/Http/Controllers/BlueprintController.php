@@ -724,12 +724,13 @@ class BlueprintController extends Controller
                 }
             }
 
-            // 2. Check Virtual Charts Presence, Completeness and dynamic wrap compliance
+            // 2. Check Virtual Charts Presence, Completeness, dynamic wrap compliance, and truncation repair
             $isChartsRefreshRequested = request()->has('regenerate_charts') || request()->has('refresh_charts');
             $existingWf = $prd['virtual_charts']['workflow_mermaid'] ?? '';
             $isWfUnwrapped = (bool) preg_match('/\["[^"]{60,}"\]/', $existingWf) || (!empty($existingWf) && !str_contains($existingWf, '<br/>'));
+            $isWfTruncated = str_contains($existingWf, '...');
 
-            if ($isChartsRefreshRequested || $isWfUnwrapped || empty($prd['virtual_charts']) || empty($prd['virtual_charts']['erd_mermaid']) || empty($prd['virtual_charts']['workflow_mermaid']) || empty($prd['virtual_charts']['feature_dependency_mermaid'])) {
+            if ($isChartsRefreshRequested || $isWfUnwrapped || $isWfTruncated || empty($prd['virtual_charts']) || empty($prd['virtual_charts']['erd_mermaid']) || empty($prd['virtual_charts']['workflow_mermaid']) || empty($prd['virtual_charts']['feature_dependency_mermaid'])) {
                 $erdTables = $prd['erd_schema']['tables'] ?? [];
                 $prd['virtual_charts'] = [
                     'workflow_mermaid' => PrdGeneratorService::generateWorkflowMermaid($prd['workflow'] ?? []),

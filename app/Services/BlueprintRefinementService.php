@@ -563,7 +563,8 @@ Tugas Anda: Memperdalam ALUR KERJA SISTEM (User Flow & Business Logic Stages) un
 ATURAN KETAT:
 1. Jangan hanya membuat alur lurus; gali percabangan keputusan (decision points), validasi gagal, proses approval berjenjang, dan notifikasi.
 2. Setiap tahapan wajib mendefinisikan aktor, aksi, input, validasi sistem, output, dan exception handler.
-3. Kembalikan HANYA array JSON valid.
+3. Kalimat aksi ("action") WAJIB dirumuskan SINGKAT, JELAS, DAN PADAT (6-12 kata). DILARANG KERAS menyertakan daftar panjang di dalam tanda kurung atau singkatan terpotong (...) agar visualisasi diagram Mermaid tampil utuh dan terbaca tanpa pemotongan teks.
+4. Kembalikan HANYA array JSON valid.
 TXT;
 
             $prompt = <<<TXT
@@ -580,7 +581,7 @@ Kembalikan JSON ARRAY tahapan alur kerja:
     "stage": 1,
     "title": "Nama Tahap Alur",
     "actor": "Aktor Pelaksana",
-    "action": "Aksi yang dilakukan...",
+    "action": "Deskripsi aksi singkat, padat, dan jelas (6-12 kata tanpa tanda kurung panjang)",
     "system_processing": "Pemrosesan otomatis di backend...",
     "validation_rules": ["Validasi 1", "Validasi 2"],
     "exception_handling": "Alur penanganan jika gagal/ditolak...",

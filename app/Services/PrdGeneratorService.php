@@ -4655,18 +4655,44 @@ PROMPT;
 
     /**
      * Wrap text dynamically into multi-line safe labels for Mermaid nodes.
+     * Prevents truncation artifacts, strips troublesome symbols, and wraps at clean word boundaries.
      */
-    public static function wrapMermaidLabel(string $text, int $width = 24, int $maxTotalLength = 70): string
+    public static function wrapMermaidLabel(string $text, int $width = 28, int $maxTotalLength = 180): string
     {
         $clean = trim(preg_replace('/["\r\n]+/', ' ', $text));
-        $clean = str_replace(['"', '`', '$', '[', ']', '(', ')', '{', '}'], ["'", '', '', '', '', '', '', '', ''], $clean);
+        $clean = str_replace(['"', '`', '$', '[', ']', '{', '}'], ["'", '', '', '', '', '', ''], $clean);
+
+        // Strip trailing dots/ellipses from legacy or cached input
+        $clean = preg_replace('/\s*\.{2,}\s*$/', '', $clean);
+
+        // If sentence contains lengthy parenthetical lists like "(Transfer Bandara Ngurah Rai, Day Tour Bali...)",
+        // condense the parentheses so the action sentence stays concise and punchy
+        $clean = preg_replace_callback('/\(([^)]{30,})\)/', function($m) {
+            $inside = $m[1];
+            $parts = explode(',', $inside);
+            if (count($parts) > 1) {
+                return '(' . trim($parts[0]) . ' dll)';
+            }
+            return '(' . trim($inside) . ')';
+        }, $clean);
+
+        // If text still exceeds maxTotalLength, truncate gracefully at word boundary without slicing words in half
         if (mb_strlen($clean) > $maxTotalLength) {
-            $clean = mb_substr($clean, 0, $maxTotalLength - 3) . '...';
+            $truncated = mb_substr($clean, 0, $maxTotalLength);
+            $lastSpace = mb_strrpos($truncated, ' ');
+            if ($lastSpace !== false && $lastSpace > (int)($maxTotalLength * 0.7)) {
+                $clean = mb_substr($truncated, 0, $lastSpace);
+            } else {
+                $clean = $truncated;
+            }
         }
+
         if (mb_strlen($clean) <= $width) {
             return $clean;
         }
-        return wordwrap($clean, $width, '<br/>', true);
+
+        // Wrap lines cleanly at space/word boundaries (cut_long_words = false)
+        return wordwrap($clean, $width, '<br/>', false);
     }
 
     /**
@@ -4677,8 +4703,8 @@ PROMPT;
         if (empty($existingMermaid)) {
             return self::generateWorkflowMermaid($workflowStages);
         }
-        // If the existing mermaid has overly long lines (> 60 chars without <br/>) or missing <br/>, re-generate dynamically
-        if (preg_match('/\["[^"]{60,}"\]/', $existingMermaid) || !str_contains($existingMermaid, '<br/>')) {
+        // If the existing mermaid has truncated words with "..." or overly long lines (> 60 chars without <br/>) or missing <br/>, re-generate dynamically
+        if (str_contains($existingMermaid, '...') || preg_match('/\["[^"]{60,}"\]/', $existingMermaid) || !str_contains($existingMermaid, '<br/>')) {
             return self::generateWorkflowMermaid($workflowStages);
         }
         return $existingMermaid;
@@ -4720,8 +4746,8 @@ PROMPT;
                     $nodeId = "S" . $wIdx;
                     $actionClean = $w['action'] ?? ('Step ' . $wIdx);
                     $actorClean = $w['actor'] ?? 'Pengguna';
-                    $wrappedAction = self::wrapMermaidLabel($actionClean, 24, 70);
-                    $wrappedActor = self::wrapMermaidLabel($actorClean, 20, 36);
+                    $wrappedAction = self::wrapMermaidLabel($actionClean, 28, 180);
+                    $wrappedActor = self::wrapMermaidLabel($actorClean, 22, 60);
 
                     $code .= "        {$nodeId}[\"<b>Step {$wIdx}: {$wrappedAction}</b><br/><small>Aktor: {$wrappedActor}</small>\"]\n";
                     if ($prevInChunk) {
@@ -4744,8 +4770,8 @@ PROMPT;
                 $nodeId = "S" . $wIdx;
                 $actionClean = $w['action'] ?? ('Step ' . $wIdx);
                 $actorClean = $w['actor'] ?? 'Pengguna';
-                $wrappedAction = self::wrapMermaidLabel($actionClean, 24, 70);
-                $wrappedActor = self::wrapMermaidLabel($actorClean, 20, 36);
+                $wrappedAction = self::wrapMermaidLabel($actionClean, 28, 180);
+                $wrappedActor = self::wrapMermaidLabel($actorClean, 22, 60);
 
                 $code .= "    {$nodeId}[\"<b>Step {$wIdx}: {$wrappedAction}</b><br/><small>Aktor: {$wrappedActor}</small>\"]\n";
                 if ($prevNode) {

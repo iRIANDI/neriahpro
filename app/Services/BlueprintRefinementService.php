@@ -375,7 +375,26 @@ Kembalikan satu objek JSON yang diperdalam dengan struktur kunci:
   "sprint_phase": "Sprint 2",
   "target_files": ["..."],
   "user_story": "Sebagai ..., saya ingin ... sehingga ...",
-  "acceptance_criteria": ["...", "..."],
+  "acceptance_criteria": [
+    {
+      "scenario": "Skenario 1 (Happy Path)",
+      "given": "Pengguna terautentikasi dan data input valid...",
+      "when": "Aksi utama modul dieksekusi...",
+      "then": "Sistem berhasil memproses data dengan HTTP 200 OK dan menyimpan ke database Strict ULID..."
+    },
+    {
+      "scenario": "Skenario 2 (Validation Error)",
+      "given": "Pengguna berada pada antarmuka modul...",
+      "when": "Input tidak lengkap atau format parameter salah...",
+      "then": "Sistem merespons HTTP 422 Unprocessable Content dengan pesan error terstruktur..."
+    },
+    {
+      "scenario": "Skenario 3 (Edge Case & Concurrency)",
+      "given": "Dua sesi pengguna melakukan mutasi data simultan...",
+      "when": "Request konkuren dikirimkan serentak...",
+      "then": "Database locking mencegah race condition dan integritas ACID terjamin..."
+    }
+  ],
   "frontend": { "component": "...", "interactions": ["..."] },
   "backend": { "controller": "...", "service": "...", "validation_rules": { "field": "rules" } },
   "integration": { "third_party": "...", "webhook": "..." },
@@ -421,7 +440,26 @@ Kembalikan JSON ARRAY dari seluruh fitur MVP yang diperdalam. Format setiap item
     "sprint_phase": "Sprint 1",
     "target_files": ["app/Models/...", "app/Services/..."],
     "user_story": "...",
-    "acceptance_criteria": ["...", "..."],
+    "acceptance_criteria": [
+      {
+        "scenario": "Skenario 1 (Happy Path)",
+        "given": "Kondisi awal prasyarat terpenuhi...",
+        "when": "Aksi utama dijalankan...",
+        "then": "Status sukses 200 OK dan data tersimpan di basis data Strict ULID..."
+      },
+      {
+        "scenario": "Skenario 2 (Validation Error)",
+        "given": "Pengguna berada pada form input...",
+        "when": "Parameter wajib tidak diisi...",
+        "then": "Status 422 Unprocessable Content dengan pesan error terstruktur..."
+      },
+      {
+        "scenario": "Skenario 3 (Edge Case & Concurrency)",
+        "given": "Akses simultan pada data yang sama...",
+        "when": "Mutasi data dilakukan bersamaan...",
+        "then": "Database locking mencegah race condition..."
+      }
+    ],
     "frontend": { "component": "...", "interactions": ["..."] },
     "backend": { "controller": "...", "service": "...", "validation_rules": {} },
     "integration": { "third_party": "...", "webhook": "..." },
@@ -595,13 +633,28 @@ TXT;
             foreach ($specs as $idx => $spec) {
                 if (($featureId && (($spec['id'] ?? '') === $featureId || ($spec['feature_id'] ?? '') === $featureId)) ||
                     ($specIndex !== null && $idx === (int) $specIndex)) {
-                    $specs[$idx] = array_merge($spec, is_array($parsedData) ? $parsedData : []);
+                    $merged = array_merge($spec, is_array($parsedData) ? $parsedData : []);
+                    if (!empty($merged['acceptance_criteria'])) {
+                        $merged['acceptance_criteria'] = PrdGeneratorService::normalizeAcceptanceCriteria(
+                            $merged['acceptance_criteria'],
+                            $merged['title'] ?? '',
+                            $merged['user_story'] ?? ''
+                        );
+                    }
+                    $specs[$idx] = $merged;
                     $found = true;
                     break;
                 }
             }
 
             if (!$found && is_array($parsedData)) {
+                if (!empty($parsedData['acceptance_criteria'])) {
+                    $parsedData['acceptance_criteria'] = PrdGeneratorService::normalizeAcceptanceCriteria(
+                        $parsedData['acceptance_criteria'],
+                        $parsedData['title'] ?? '',
+                        $parsedData['user_story'] ?? ''
+                    );
+                }
                 $specs[] = $parsedData;
             }
 
@@ -620,6 +673,16 @@ TXT;
 
         if (in_array($segmentKey, ['features', 'feature_specifications', 'mvp_features'])) {
             $featuresList = is_array($parsedData) ? $parsedData : [];
+            foreach ($featuresList as &$fItem) {
+                if (is_array($fItem) && !empty($fItem['acceptance_criteria'])) {
+                    $fItem['acceptance_criteria'] = PrdGeneratorService::normalizeAcceptanceCriteria(
+                        $fItem['acceptance_criteria'],
+                        $fItem['title'] ?? '',
+                        $fItem['user_story'] ?? ''
+                    );
+                }
+            }
+            unset($fItem);
             $prd['engineering_specs']['mvp_specs'] = $featuresList;
             $prd['features']['mvp_phase1'] = $featuresList;
 
@@ -830,11 +893,11 @@ PROMPT;
                     "tests/Feature/{$pascal}ContractTest.php",
                 ],
                 'user_story' => "Sebagai Pengguna Sistem {$businessName}, saya dapat mengelola {$title} dengan validasi data real-time, perlindungan konkurensi, dan laporan audit terpusat.",
-                'acceptance_criteria' => [
+                'acceptance_criteria' => PrdGeneratorService::normalizeAcceptanceCriteria([
                     "Skenario 1 (Happy Path): Sistem berhasil memproses {$title} dengan status 200 OK dan menyimpan relasi database Strict ULID.",
                     "Skenario 2 (Validation Error): Request dengan parameter tidak lengkap menghasilkan response 422 Unprocessable Content dengan pesan error terstruktur.",
                     "Skenario 3 (Edge Case & Concurrency): Percobaan mutasi simultan ditangani melalui database transaction locking untuk mencegah race condition.",
-                ],
+                ], $title, "Sebagai Pengguna Sistem {$businessName}, saya dapat mengelola {$title}..."),
                 'frontend' => [
                     'component' => "{$pascal}Manager.jsx",
                     'interactions' => [

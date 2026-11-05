@@ -4768,16 +4768,28 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                                     <!-- Tab 1: Gherkin -->
                                     <div x-show="specTab === &apos;gherkin&apos;" class="space-y-3 font-mono text-xs">
-                                        @foreach($spec['acceptance_criteria'] ?? [] as $ac)
-                                            <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                                <div class="font-bold text-zinc-900 dark:text-white mb-2 flex items-center gap-1.5">
-                                                    <span class="w-1.5 h-1.5 bg-emerald-500 inline-block"></span>
-                                                    <span>{{ $ac['rule'] ?? 'Skenario Validasi' }}</span>
+                                        @php
+                                            $normalizedAc = \App\Services\PrdGeneratorService::normalizeAcceptanceCriteria(
+                                                $spec['acceptance_criteria'] ?? [], 
+                                                $spec['title'] ?? '', 
+                                                $spec['user_story'] ?? ''
+                                            );
+                                        @endphp
+                                        @foreach($normalizedAc as $acIdx => $ac)
+                                            <div class="p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+                                                <div class="font-bold text-zinc-900 dark:text-white flex items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <span class="w-1.5 h-1.5 bg-emerald-500 inline-block"></span>
+                                                        <span class="uppercase tracking-tight text-xs">{{ $ac['scenario'] ?? ('Skenario ' . ($acIdx + 1)) }}</span>
+                                                    </div>
+                                                    <span class="text-[9px] font-mono px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase font-bold tracking-wider">
+                                                        GHERKIN VERIFIED
+                                                    </span>
                                                 </div>
-                                                <div class="pl-3 space-y-1 text-zinc-600 dark:text-zinc-400 text-[11px] leading-relaxed">
-                                                    <div><strong class="text-emerald-500">GIVEN:</strong> {{ $ac['given'] ?? '-' }}</div>
-                                                    <div><strong class="text-sky-500">WHEN:</strong> {{ $ac['when'] ?? '-' }}</div>
-                                                    <div><strong class="text-amber-500">THEN:</strong> {{ $ac['then'] ?? '-' }}</div>
+                                                <div class="pl-3 space-y-1.5 text-zinc-700 dark:text-zinc-300 text-[11px] leading-relaxed border-l-2 border-emerald-500/40 font-mono">
+                                                    <div><strong class="text-emerald-600 dark:text-emerald-400 font-black">GIVEN:</strong> {{ $ac['given'] ?? '-' }}</div>
+                                                    <div><strong class="text-sky-600 dark:text-sky-400 font-black">WHEN:</strong> {{ $ac['when'] ?? '-' }}</div>
+                                                    <div><strong class="text-amber-600 dark:text-amber-400 font-black">THEN:</strong> {{ $ac['then'] ?? '-' }}</div>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -5464,22 +5476,32 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     @endif
 
                                     <!-- Acceptance Criteria DoD Card -->
-                                    @if(!empty($spec['acceptance_criteria']))
+                                    @php
+                                        $normalizedDod = \App\Services\PrdGeneratorService::normalizeAcceptanceCriteria(
+                                            $spec['acceptance_criteria'] ?? [], 
+                                            $spec['title'] ?? '', 
+                                            $spec['user_story'] ?? ''
+                                        );
+                                    @endphp
+                                    @if(!empty($normalizedDod))
                                         <div class="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
                                             <span class="text-sky-700 dark:text-sky-400 text-[10px] font-bold uppercase tracking-wider block">
                                                 ACCEPTANCE CRITERIA (DEFINITION OF DONE):
                                             </span>
                                             <div class="space-y-2 max-h-40 overflow-y-auto custom-prd-scrollbar text-[11px]">
-                                                @foreach($spec['acceptance_criteria'] as $acIdx => $acItem)
+                                                @foreach($normalizedDod as $acIdx => $acItem)
                                                     <div class="p-2 bg-white dark:bg-black/60 border border-zinc-200 dark:border-zinc-800/80 space-y-1">
-                                                        <div class="font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-                                                            <span class="w-1.5 h-1.5 bg-sky-500 inline-block"></span>
-                                                            <span>{{ $acItem['scenario'] ?? ('Skenario ' . ($acIdx + 1)) }}</span>
+                                                        <div class="font-bold text-zinc-900 dark:text-zinc-100 flex items-center justify-between gap-1.5 border-b border-zinc-100 dark:border-zinc-800/60 pb-1">
+                                                            <div class="flex items-center gap-1.5">
+                                                                <span class="w-1.5 h-1.5 bg-sky-500 inline-block"></span>
+                                                                <span class="uppercase text-[11px]">{{ $acItem['scenario'] ?? ('Skenario ' . ($acIdx + 1)) }}</span>
+                                                            </div>
+                                                            <span class="text-[8px] font-mono px-1.5 py-0.2 bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 font-bold">VERIFIED</span>
                                                         </div>
-                                                        <div class="text-[10px] text-zinc-600 dark:text-zinc-400 font-sans space-y-0.5 pl-3 border-l border-zinc-200 dark:border-zinc-800">
-                                                            <div><strong>Given:</strong> {{ $acItem['given'] ?? '-' }}</div>
-                                                            <div><strong>When:</strong> {{ $acItem['when'] ?? '-' }}</div>
-                                                            <div><strong>Then:</strong> {{ $acItem['then'] ?? '-' }}</div>
+                                                        <div class="text-[10px] text-zinc-700 dark:text-zinc-300 font-mono space-y-0.5 pl-2 border-l border-sky-500/40">
+                                                            <div><strong class="text-emerald-600 dark:text-emerald-400">Given:</strong> {{ $acItem['given'] ?? '-' }}</div>
+                                                            <div><strong class="text-sky-600 dark:text-sky-400">When:</strong> {{ $acItem['when'] ?? '-' }}</div>
+                                                            <div><strong class="text-amber-600 dark:text-amber-400">Then:</strong> {{ $acItem['then'] ?? '-' }}</div>
                                                         </div>
                                                     </div>
                                                 @endforeach

@@ -745,15 +745,60 @@ class BlueprintController extends Controller
                 $needsPrdSave = true;
             }
 
+            // 3. Auto-heal feature acceptance criteria if any contain raw strings or missing Gherkin
+            $featureSpecs = $prd['engineering_specs']['mvp_specs'] ?? ($prd['features']['mvp_phase1'] ?? []);
+            if (!empty($featureSpecs) && is_array($featureSpecs)) {
+                $hasStaleAc = false;
+                foreach ($featureSpecs as $fSpec) {
+                    if (!empty($fSpec['acceptance_criteria']) && is_array($fSpec['acceptance_criteria'])) {
+                        foreach ($fSpec['acceptance_criteria'] as $acItem) {
+                            if (is_string($acItem) || (is_array($acItem) && (!isset($acItem['given']) || $acItem['given'] === '-'))) {
+                                $hasStaleAc = true;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+
+                if ($hasStaleAc) {
+                    foreach ($featureSpecs as &$fSpec) {
+                        $fSpec['acceptance_criteria'] = PrdGeneratorService::normalizeAcceptanceCriteria(
+                            $fSpec['acceptance_criteria'] ?? [],
+                            $fSpec['title'] ?? '',
+                            $fSpec['user_story'] ?? ''
+                        );
+                    }
+                    unset($fSpec);
+                    $prd['engineering_specs']['mvp_specs'] = $featureSpecs;
+                    $prd['features']['mvp_phase1'] = $featureSpecs;
+                    $needsPrdSave = true;
+                }
+            }
+
             if ($needsPrdSave) {
                 $blueprint->update(['prd_content' => $prd]);
                 $blueprint->refresh();
             }
         }
 
+        $viewPrd = $blueprint->prd_content ?? [];
+        if (!empty($viewPrd['engineering_specs']['mvp_specs']) && is_array($viewPrd['engineering_specs']['mvp_specs'])) {
+            foreach ($viewPrd['engineering_specs']['mvp_specs'] as &$vSpec) {
+                if (isset($vSpec['acceptance_criteria'])) {
+                    $vSpec['acceptance_criteria'] = PrdGeneratorService::normalizeAcceptanceCriteria(
+                        $vSpec['acceptance_criteria'],
+                        $vSpec['title'] ?? '',
+                        $vSpec['user_story'] ?? ''
+                    );
+                }
+            }
+            unset($vSpec);
+            $viewPrd['features']['mvp_phase1'] = $viewPrd['engineering_specs']['mvp_specs'];
+        }
+
         return view('blueprint.show', [
             'blueprint' => $blueprint,
-            'prd' => $blueprint->prd_content,
+            'prd' => $viewPrd,
             'globalSettings' => $globalSettings,
             'isScopeLocked' => $isScopeLocked,
             'isDpConfirmed' => $isDpConfirmed,

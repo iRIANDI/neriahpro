@@ -3366,7 +3366,7 @@ PROMPT;
                 ];
 
             $mission = $item['mission'] ?? "Implementasikan modul {$title} sesuai spesifikasi arsitektur Laravel 13 (PHP 8.5+), Filament v5, dan PostgreSQL ULID.";
-            $acceptanceCriteria = $item['acceptance_criteria'] ?? [];
+            $acceptanceCriteria = self::normalizeAcceptanceCriteria($item['acceptance_criteria'] ?? [], $title, $item['user_story'] ?? '');
             $integration = $item['integration'] ?? null;
 
             $agentPrompt = self::buildAgentPrompt(
@@ -4131,9 +4131,10 @@ SCHEMA;
 
         // 3. Concrete Acceptance Criteria (DoD)
         $acSection = "";
-        if (!empty($acceptanceCriteria)) {
+        $normalizedAc = self::normalizeAcceptanceCriteria($acceptanceCriteria, $title);
+        if (!empty($normalizedAc)) {
             $scenarios = [];
-            foreach ($acceptanceCriteria as $ac) {
+            foreach ($normalizedAc as $ac) {
                 $scName = $ac['scenario'] ?? 'Skenario Fungsional';
                 $scGiven = $ac['given'] ?? 'Kondisi awal valid.';
                 $scWhen = $ac['when'] ?? 'Aksi pengguna dijalankan.';
@@ -5511,6 +5512,207 @@ PROMPT;
     }
 
     /**
+     * Intelligently normalize acceptance criteria from any shape (array of strings, array of objects, single string, or empty)
+     * into a structured, production-ready array of Gherkin scenario objects:
+     * [
+     *     [
+     *         'scenario' => 'Skenario 1 (Happy Path)',
+     *         'given' => '...',
+     *         'when' => '...',
+     *         'then' => '...',
+     *     ]
+     * ]
+     */
+    public static function normalizeAcceptanceCriteria(mixed $rawAc, string $featureTitle = '', string $userStory = ''): array
+    {
+        $featureTitle = trim($featureTitle);
+        $titleLabel = $featureTitle ?: 'Fitur';
+
+        // 1. If null or empty, provide standard 3-tier Gherkin scenarios
+        if (empty($rawAc)) {
+            return self::getDefaultAcceptanceCriteria($titleLabel, $userStory);
+        }
+
+        // 2. If it's a JSON string, decode first
+        if (is_string($rawAc)) {
+            $trimmed = trim($rawAc);
+            if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) ||
+                (str_starts_with($trimmed, '{') && str_ends_with($trimmed, '}'))) {
+                $decoded = json_decode($trimmed, true);
+                if (is_array($decoded)) {
+                    $rawAc = $decoded;
+                }
+            } else {
+                // Multiline or bulleted string
+                $lines = preg_split('/[\r\n]+/', $trimmed);
+                $rawAc = array_values(array_filter(array_map('trim', $lines)));
+            }
+        }
+
+        // 3. If single associative object (not list)
+        if (is_array($rawAc) && !isset($rawAc[0]) && !empty($rawAc)) {
+            $rawAc = [$rawAc];
+        }
+
+        if (!is_array($rawAc) || empty($rawAc)) {
+            return self::getDefaultAcceptanceCriteria($titleLabel, $userStory);
+        }
+
+        $normalized = [];
+
+        foreach ($rawAc as $idx => $item) {
+            $defaultIndexTitle = 'Skenario ' . ($idx + 1);
+
+            // Case A: Item is an associative array / object
+            if (is_array($item)) {
+                $scenarioTitle = trim($item['scenario'] ?? ($item['rule'] ?? ($item['title'] ?? ($item['name'] ?? ''))));
+                if (empty($scenarioTitle)) {
+                    $scenarioTitle = $defaultIndexTitle;
+                }
+
+                $given = trim((string)($item['given'] ?? ''));
+                $when = trim((string)($item['when'] ?? ''));
+                $then = trim((string)($item['then'] ?? ''));
+
+                // Check for fallback in case fields are missing or equal to '-'
+                if ($given === '' || $given === '-') {
+                    $given = self::deriveGivenCondition($scenarioTitle, $titleLabel, $idx);
+                }
+                if ($when === '' || $when === '-') {
+                    $when = self::deriveWhenCondition($scenarioTitle, $titleLabel, $idx);
+                }
+                if ($then === '' || $then === '-') {
+                    $then = !empty($item['description']) && $item['description'] !== '-'
+                        ? trim((string)$item['description'])
+                        : self::deriveThenCondition($scenarioTitle, $titleLabel, $idx);
+                }
+
+                $normalized[] = [
+                    'scenario' => $scenarioTitle,
+                    'given' => $given,
+                    'when' => $when,
+                    'then' => $then,
+                ];
+                continue;
+            }
+
+            // Case B: Item is a string
+            if (is_string($item)) {
+                $str = trim($item, " \t\n\r\0\x0B-•*");
+                if (empty($str)) continue;
+
+                // Check if string contains explicit Given/When/Then
+                if (preg_match('/(?:Given|GIVEN)\s*:\s*(.*?)\s*(?:When|WHEN)\s*:\s*(.*?)\s*(?:Then|THEN)\s*:\s*(.*)/is', $str, $gm) ||
+                    preg_match('/(?:Given|GIVEN)\s+(.*?)\s+(?:When|WHEN)\s+(.*?)\s+(?:Then|THEN)\s+(.*)/is', $str, $gm)) {
+                    $normalized[] = [
+                        'scenario' => $defaultIndexTitle,
+                        'given' => trim($gm[1]),
+                        'when' => trim($gm[2]),
+                        'then' => trim($gm[3]),
+                    ];
+                    continue;
+                }
+
+                // Check if string follows "Title: Body" format
+                $scenarioTitle = $defaultIndexTitle;
+                $body = $str;
+
+                if (preg_match('/^([^\:\r\n]{3,60})\s*:\s*(.*)$/us', $str, $parts)) {
+                    $scenarioTitle = trim($parts[1]);
+                    $body = trim($parts[2]);
+                }
+
+                // Intelligently derive Given/When/Then based on scenario type
+                $given = self::deriveGivenCondition($scenarioTitle, $titleLabel, $idx);
+                $when = self::deriveWhenCondition($scenarioTitle, $titleLabel, $idx);
+                $then = !empty($body) ? $body : self::deriveThenCondition($scenarioTitle, $titleLabel, $idx);
+
+                $normalized[] = [
+                    'scenario' => $scenarioTitle,
+                    'given' => $given,
+                    'when' => $when,
+                    'then' => $then,
+                ];
+            }
+        }
+
+        if (empty($normalized)) {
+            return self::getDefaultAcceptanceCriteria($titleLabel, $userStory);
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Generate 3 default Gherkin acceptance criteria scenarios for a feature.
+     */
+    public static function getDefaultAcceptanceCriteria(string $title, string $userStory = ''): array
+    {
+        return [
+            [
+                'scenario' => 'Skenario 1 (Happy Path - Eksekusi Sukses)',
+                'given' => "Pengguna terautentikasi dan memasukkan parameter data {$title} yang valid.",
+                'when' => "Pengguna mengirimkan permintaan eksekusi atau transaksi ke server.",
+                'then' => "Sistem berhasil memproses data {$title} dengan status 200 OK dan menyimpan relasi database PostgreSQL Strict ULID.",
+            ],
+            [
+                'scenario' => 'Skenario 2 (Validation Error & Integritas Data)',
+                'given' => "Pengguna mengakses formulir atau endpoint modul {$title}.",
+                'when' => "Terdapat parameter wajib yang kosong, tidak valid, atau format melanggar aturan form request.",
+                'then' => "Sistem menolak mutasi data dan mengembalikan respons HTTP 422 Unprocessable Content dengan pesan error terstruktur.",
+            ],
+            [
+                'scenario' => 'Skenario 3 (Edge Case & Perlindungan Konkurensi)',
+                'given' => "Dua atau lebih sesi pengguna melakukan aksi transaksi secara simultan pada data {$title} yang sama.",
+                'when' => "Permintaan mutasi data paralel diterima oleh server secara bersamaan.",
+                'then' => "Sistem menerapkan database transaction locking untuk mencegah race condition dan menjamin integritas konsistensi ACID.",
+            ],
+        ];
+    }
+
+    protected static function deriveGivenCondition(string $scenarioTitle, string $title, int $idx): string
+    {
+        $lower = strtolower($scenarioTitle);
+        if (str_contains($lower, 'validation') || str_contains($lower, 'error') || str_contains($lower, '422') || str_contains($lower, 'validasi')) {
+            return "Pengguna mengirimkan request pada antarmuka atau endpoint {$title}.";
+        }
+        if (str_contains($lower, 'edge') || str_contains($lower, 'concurrency') || str_contains($lower, 'race') || str_contains($lower, 'simultan')) {
+            return "Dua atau lebih sesi pengguna melakukan aksi transaksi secara bersamaan pada data {$title} yang sama.";
+        }
+        if (str_contains($lower, 'auth') || str_contains($lower, 'security') || str_contains($lower, 'rbac') || str_contains($lower, 'akses')) {
+            return "Pengguna mencoba mengakses fungsi {$title} dengan kredensial atau peran otorisasi tertentu.";
+        }
+        return "Pengguna terautentikasi dan memiliki hak akses valid pada modul {$title}.";
+    }
+
+    protected static function deriveWhenCondition(string $scenarioTitle, string $title, int $idx): string
+    {
+        $lower = strtolower($scenarioTitle);
+        if (str_contains($lower, 'validation') || str_contains($lower, 'error') || str_contains($lower, '422') || str_contains($lower, 'validasi')) {
+            return "Terdapat parameter wajib yang kosong, format data salah, atau melanggar aturan integritas form.";
+        }
+        if (str_contains($lower, 'edge') || str_contains($lower, 'concurrency') || str_contains($lower, 'race') || str_contains($lower, 'simultan')) {
+            return "Percobaan mutasi data simultan dikirimkan ke server secara paralel.";
+        }
+        if (str_contains($lower, 'auth') || str_contains($lower, 'security') || str_contains($lower, 'rbac') || str_contains($lower, 'akses')) {
+            return "Sistem melakukan evaluasi terhadap token sesi dan kebijakan izin (Spatie/Shield RBAC).";
+        }
+        return "Pengguna mengirimkan permintaan eksekusi atau transaksi ke sistem.";
+    }
+
+    protected static function deriveThenCondition(string $scenarioTitle, string $title, int $idx): string
+    {
+        $lower = strtolower($scenarioTitle);
+        if (str_contains($lower, 'validation') || str_contains($lower, 'error') || str_contains($lower, '422') || str_contains($lower, 'validasi')) {
+            return "Sistem mengembalikan respons HTTP 422 Unprocessable Content dengan detail validasi inline dan rollback transaksi.";
+        }
+        if (str_contains($lower, 'edge') || str_contains($lower, 'concurrency') || str_contains($lower, 'race') || str_contains($lower, 'simultan')) {
+            return "Sistem menerapkan database transaction locking untuk mencegah race condition dan menjamin integritas ACID.";
+        }
+        return "Sistem memproses transaksi secara akurat dengan status 200 OK dan menyimpan state ke basis data PostgreSQL Strict ULID.";
+    }
+
+    /**
      * Convert entire Vision Blueprint PRD into a complete, professional Markdown document.
      */
     public static function toMarkdown(VisionBlueprint $blueprint, array $prd): string
@@ -5651,8 +5853,9 @@ PROMPT;
             $md .= "**User Story**: *" . ($f['user_story'] ?? '-') . "*\n\n";
 
             if (!empty($f['acceptance_criteria'])) {
+                $normAc = self::normalizeAcceptanceCriteria($f['acceptance_criteria'], $ftitle, $f['user_story'] ?? '');
                 $md .= "**Acceptance Criteria (Gherkin Format)**:\n";
-                foreach ($f['acceptance_criteria'] as $ac) {
+                foreach ($normAc as $ac) {
                     $md .= "- **Skenario: " . ($ac['scenario'] ?? 'Skenario') . "**\n";
                     $md .= "  - **Given**: " . ($ac['given'] ?? '-') . "\n";
                     $md .= "  - **When**: " . ($ac['when'] ?? '-') . "\n";

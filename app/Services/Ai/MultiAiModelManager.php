@@ -224,6 +224,8 @@ class MultiAiModelManager
         }
 
         $failedAttempts = [];
+        $startTime = microtime(true);
+        $maxExecutionBudget = 38.0; // Max 38 seconds total to prevent Cloudflare 100s 524 timeout
 
         // If no providers are configured at all, return deterministic engine immediately without failing remote calls
         if (empty($chain)) {
@@ -245,6 +247,15 @@ class MultiAiModelManager
         }
 
         foreach ($chain as $provider) {
+            // Guard against Cloudflare 524 timeout: break loop if total elapsed time exceeds budget
+            if ((microtime(true) - $startTime) >= $maxExecutionBudget) {
+                $failedAttempts[] = [
+                    'provider' => $provider,
+                    'reason' => 'Total AI execution budget exceeded (preventing Cloudflare 524 timeout)',
+                ];
+                break;
+            }
+
             $status = null;
             try {
                 $status = Cache::get("ai_model_status_{$provider}");
@@ -350,7 +361,7 @@ class MultiAiModelManager
             $payload['systemInstruction'] = ['parts' => [['text' => $system]]];
         }
 
-        $timeout = $tier === 'prd' ? 60 : 30;
+        $timeout = $tier === 'prd' ? 24 : 18;
         $response = Http::timeout($timeout)->post($url, $payload);
 
         if ($response->successful()) {
@@ -383,7 +394,7 @@ class MultiAiModelManager
             $payload['system'] = $system;
         }
 
-        $timeout = $tier === 'prd' ? 60 : 30;
+        $timeout = $tier === 'prd' ? 24 : 18;
         $response = Http::timeout($timeout)
             ->withHeaders([
                 'x-api-key' => $apiKey,
@@ -434,7 +445,7 @@ class MultiAiModelManager
             $headers['X-Title'] = 'Neriah Pro Studio OS';
         }
 
-        $timeout = $tier === 'prd' ? 60 : 35;
+        $timeout = $tier === 'prd' ? 24 : 18;
         $response = Http::timeout($timeout)
             ->withHeaders($headers)
             ->post($url, $payload);

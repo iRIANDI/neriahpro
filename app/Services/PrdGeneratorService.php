@@ -5670,7 +5670,7 @@ PROMPT;
         ];
     }
 
-    protected static function deriveGivenCondition(string $scenarioTitle, string $title, int $idx): string
+    public static function deriveGivenCondition(string $scenarioTitle, string $title, int $idx): string
     {
         $lower = strtolower($scenarioTitle);
         if (str_contains($lower, 'validation') || str_contains($lower, 'error') || str_contains($lower, '422') || str_contains($lower, 'validasi')) {
@@ -5685,7 +5685,7 @@ PROMPT;
         return "Pengguna terautentikasi dan memiliki hak akses valid pada modul {$title}.";
     }
 
-    protected static function deriveWhenCondition(string $scenarioTitle, string $title, int $idx): string
+    public static function deriveWhenCondition(string $scenarioTitle, string $title, int $idx): string
     {
         $lower = strtolower($scenarioTitle);
         if (str_contains($lower, 'validation') || str_contains($lower, 'error') || str_contains($lower, '422') || str_contains($lower, 'validasi')) {
@@ -5700,7 +5700,7 @@ PROMPT;
         return "Pengguna mengirimkan permintaan eksekusi atau transaksi ke sistem.";
     }
 
-    protected static function deriveThenCondition(string $scenarioTitle, string $title, int $idx): string
+    public static function deriveThenCondition(string $scenarioTitle, string $title, int $idx): string
     {
         $lower = strtolower($scenarioTitle);
         if (str_contains($lower, 'validation') || str_contains($lower, 'error') || str_contains($lower, '422') || str_contains($lower, 'validasi')) {

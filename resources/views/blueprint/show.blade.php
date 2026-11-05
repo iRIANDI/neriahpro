@@ -77,6 +77,15 @@
             if (wasDark) {
                 document.documentElement.classList.remove('dark');
             }
+            try {
+                const root = document.querySelector('[x-data]');
+                if (root && root._x_dataStack && root._x_dataStack[0]) {
+                    const data = root._x_dataStack[0];
+                    if (typeof data.expandAllSections === 'function') {
+                        data.expandAllSections();
+                    }
+                }
+            } catch(e) {}
             setTimeout(() => {
                 window.print();
                 setTimeout(() => {
@@ -118,13 +127,29 @@
         #goog-gt-tt { display: none !important; }
         .goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
         @media print {
-            .no-print, [class*="no-print"], header, aside, footer, #goog-gt-tt, .skiptranslate, .goog-te-banner-frame, .fixed {
+            .no-print, [class*="no-print"], header, aside, footer, #goog-gt-tt, .skiptranslate, .goog-te-banner-frame, .fixed, button, [role="button"], #blueprint-toolbar {
                 display: none !important;
+            }
+            * {
+                background-image: none !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             .accordion-body, .accordion-body [x-show] {
                 display: block !important;
                 opacity: 1 !important;
                 transform: none !important;
+            }
+            /* Reveal all feature specification tabs in print preview (Complete PRD) */
+            [x-show*="specTab"] {
+                display: block !important;
+                opacity: 1 !important;
+                margin-top: 8px !important;
+                margin-bottom: 8px !important;
+            }
+            [x-show*="specTab"] > * {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
             }
             html, body {
                 background: #ffffff !important;
@@ -141,14 +166,15 @@
                 text-shadow: none !important;
                 box-shadow: none !important;
             }
-            .bg-white, .dark\:bg-zinc-900, .dark\:bg-zinc-950, .bg-zinc-900, .bg-zinc-950, .bg-zinc-800, .dark\:bg-zinc-800 {
+            .bg-white, .dark\:bg-zinc-900, .dark\:bg-zinc-950, .bg-zinc-900, .bg-zinc-950, .bg-zinc-800, .dark\:bg-zinc-800, .bg-black, [class*="bg-zinc-"], [class*="bg-black"], [class*="bg-gradient"] {
                 background-color: #ffffff !important;
+                background: #ffffff !important;
+                color: #0f172a !important;
                 border-color: #cbd5e1 !important;
             }
             pre, code, th, .bg-zinc-100, .bg-zinc-50, .dark\:bg-zinc-800\/50, .bg-zinc-900\/50 {
                 background-color: #f8fafc !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+                color: #0f172a !important;
                 border-color: #cbd5e1 !important;
             }
             .max-w-\[1480px\], main, .max-w-4xl, .lg\:max-w-5xl {
@@ -1233,8 +1259,10 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
     $erdTablesList = $prd['erd_schema']['tables'] ?? [];
     $erdSummary = [];
     foreach ($erdTablesList as $t) {
-        $cols = array_map(fn($c) => $c['name'] . ' (' . $c['type'] . ')', $t['columns'] ?? []);
-        $erdSummary[] = "- Tabel: " . $t['name'] . " [PK: " . $t['primary_key'] . "]\n  Kolom: " . implode(', ', array_slice($cols, 0, 8));
+        $tableName = $t['name'] ?? ($t['table_name'] ?? 'tabel');
+        $pkName = $t['primary_key'] ?? ($t['pk'] ?? 'id (ULID)');
+        $cols = array_map(fn($c) => ($c['name'] ?? 'col') . ' (' . ($c['type'] ?? 'varchar') . ')', $t['columns'] ?? []);
+        $erdSummary[] = "- Tabel: " . $tableName . " [PK: " . $pkName . "]\n  Kolom: " . implode(', ', array_slice($cols, 0, 8));
     }
     $erdText = implode("\n", $erdSummary);
 
@@ -2625,7 +2653,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
         }
     </script>
 </head>
-<body x-data="blueprintApp()" @open-raw-md-warning.window="openRawMdWarning($event.detail?.action)" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
+<body x-data="blueprintApp()" @open-raw-md-warning.window="openRawMdWarning($event.detail?.action)" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200 overflow-x-clip max-w-full">
 
     <!-- 1. TOP UTILITY HEADER (FULL SITE NAVIGATION + DUAL TIER LANGUAGE + THEME TOGGLE) -->
     <x-global-navigation :global-settings="$globalSettings ?? []" />
@@ -3217,7 +3245,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             </aside>
 
             <!-- MAIN PRD CONTENT -->
-            <main :class="navMode === 'focus' ? 'w-full max-w-none min-w-0' : 'flex-1 max-w-4xl lg:max-w-5xl w-full min-w-0'" class="transition-all duration-200">
+            <main :class="navMode === 'focus' ? 'w-full max-w-none min-w-0' : 'flex-1 max-w-4xl lg:max-w-5xl w-full min-w-0'" class="transition-all duration-200 overflow-x-clip">
                 
                 <!-- Document Hero Card -->
                 <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none relative">
@@ -3911,7 +3939,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             </div>
 
             <!-- EXECUTIVE AI AGENT EXECUTION WIZARD & TIMELINE SYNC BANNER -->
-            <div class="mb-8 p-5 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border-2 border-emerald-500 rounded-none shadow-xl text-white font-mono space-y-4">
+            <div class="mb-8 p-5 bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border-2 border-emerald-500 rounded-none shadow-xl text-white font-mono space-y-4 no-print">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-zinc-800 pb-3">
                     <div class="flex items-center gap-2.5">
                         <span class="w-3 h-3 bg-emerald-500 animate-pulse"></span>
@@ -4787,9 +4815,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                                     </span>
                                                 </div>
                                                 <div class="pl-3 space-y-1.5 text-zinc-700 dark:text-zinc-300 text-[11px] leading-relaxed border-l-2 border-emerald-500/40 font-mono">
-                                                    <div><strong class="text-emerald-600 dark:text-emerald-400 font-black">GIVEN:</strong> {{ $ac['given'] ?? '-' }}</div>
-                                                    <div><strong class="text-sky-600 dark:text-sky-400 font-black">WHEN:</strong> {{ $ac['when'] ?? '-' }}</div>
-                                                    <div><strong class="text-amber-600 dark:text-amber-400 font-black">THEN:</strong> {{ $ac['then'] ?? '-' }}</div>
+                                                    <div><strong class="text-emerald-600 dark:text-emerald-400 font-black">GIVEN:</strong> {{ (!empty($ac['given']) && $ac['given'] !== '-') ? $ac['given'] : \App\Services\PrdGeneratorService::deriveGivenCondition($ac['scenario'] ?? '', $spec['title'] ?? 'Fitur', $acIdx) }}</div>
+                                                    <div><strong class="text-sky-600 dark:text-sky-400 font-black">WHEN:</strong> {{ (!empty($ac['when']) && $ac['when'] !== '-') ? $ac['when'] : \App\Services\PrdGeneratorService::deriveWhenCondition($ac['scenario'] ?? '', $spec['title'] ?? 'Fitur', $acIdx) }}</div>
+                                                    <div><strong class="text-amber-600 dark:text-amber-400 font-black">THEN:</strong> {{ (!empty($ac['then']) && $ac['then'] !== '-') ? $ac['then'] : \App\Services\PrdGeneratorService::deriveThenCondition($ac['scenario'] ?? '', $spec['title'] ?? 'Fitur', $acIdx) }}</div>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -5499,9 +5527,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                                             <span class="text-[8px] font-mono px-1.5 py-0.2 bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 font-bold">VERIFIED</span>
                                                         </div>
                                                         <div class="text-[10px] text-zinc-700 dark:text-zinc-300 font-mono space-y-0.5 pl-2 border-l border-sky-500/40">
-                                                            <div><strong class="text-emerald-600 dark:text-emerald-400">Given:</strong> {{ $acItem['given'] ?? '-' }}</div>
-                                                            <div><strong class="text-sky-600 dark:text-sky-400">When:</strong> {{ $acItem['when'] ?? '-' }}</div>
-                                                            <div><strong class="text-amber-600 dark:text-amber-400">Then:</strong> {{ $acItem['then'] ?? '-' }}</div>
+                                                            <div><strong class="text-emerald-600 dark:text-emerald-400">Given:</strong> {{ (!empty($acItem['given']) && $acItem['given'] !== '-') ? $acItem['given'] : \App\Services\PrdGeneratorService::deriveGivenCondition($acItem['scenario'] ?? '', $spec['title'] ?? 'Fitur', $acIdx) }}</div>
+                                                            <div><strong class="text-sky-600 dark:text-sky-400">When:</strong> {{ (!empty($acItem['when']) && $acItem['when'] !== '-') ? $acItem['when'] : \App\Services\PrdGeneratorService::deriveWhenCondition($acItem['scenario'] ?? '', $spec['title'] ?? 'Fitur', $acIdx) }}</div>
+                                                            <div><strong class="text-amber-600 dark:text-amber-400">Then:</strong> {{ (!empty($acItem['then']) && $acItem['then'] !== '-') ? $acItem['then'] : \App\Services\PrdGeneratorService::deriveThenCondition($acItem['scenario'] ?? '', $spec['title'] ?? 'Fitur', $acIdx) }}</div>
                                                         </div>
                                                     </div>
                                                 @endforeach
@@ -8208,8 +8236,8 @@ class ProcessSecureDataset implements ShouldQueue
 
                 <!-- Software Factory OS v7.0: 15-Pillar Architectural Freeze & Repository Exporter -->
                 <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                    <div class="p-6 bg-zinc-50 dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
-                        <div class="space-y-2">
+                    <div class="p-6 bg-zinc-50 dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 shadow-sm">
+                        <div class="space-y-2 min-w-0">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase">PROJECT OS v7.0 • 100% FREEZE</span>
                                 <span class="text-zinc-700 dark:text-zinc-300 text-xs uppercase font-bold">{{ $isEn ? '15 ARCHITECTURE PILLARS: ULID PG16 PARTITION • HARDWARE <30MS • ZERO-POLL WS • SYNTAX 2026 • ROLE SOP' : '15 PILAR ARSITEKTUR: PARTISI PG16 ULID • HARDWARE <30MS • WS TANPA POLLING • SYNTAX 2026 • BUKU SOP' }}</span>
@@ -8223,7 +8251,7 @@ class ProcessSecureDataset implements ShouldQueue
                                     : 'Blueprint arsitektur PRD Anda mengekspor seluruh 15 pilar kanonikal Project OS: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), skema Strict ULID & pg16_range_partitioning.sql (0% N+1), jembatan Scanner Barcode <30ms + Layar Kedua QRIS lokal, WebSocket Tanpa Polling Reverb/Soketi, SYNTAX_LOCK_2026.md, SmartGuide.php + CLIENT_SOP_AND_TRAINING_MANUAL.md, SyntheticDataSeeder.php, ApiContractTest.php, dan verify-blueprint.sh.' }}
                             </p>
                         </div>
-                        <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
+                        <div class="flex flex-wrap items-center gap-2.5 w-full xl:w-auto shrink-0">
                             <button type="button" @click="openScaffoldModal()" class="w-full sm:w-auto px-5 py-3 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/60 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 <span>{{ $isEn ? 'PREVIEW CODE (15 PILLARS)' : 'PREVIEW KODE (15 PILAR)' }}</span>
@@ -8452,64 +8480,65 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
 
                     <!-- Pinned One-Command CLI Bootstrapper (/init/{ULID}) + Print/Day-2/v4.0 Exports + Live Audits -->
-                    <div class="mb-4 p-4 bg-zinc-950 text-zinc-100 border border-zinc-800 rounded-xs no-print">
-                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                            <div class="space-y-1 min-w-0">
-                                <div class="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase">
+                    <div class="mb-4 p-4 bg-zinc-950 text-zinc-100 border border-zinc-800 rounded-xs no-print space-y-3">
+                        <div class="space-y-2">
+                            <div class="flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase">
+                                <div class="flex items-center gap-2 flex-wrap">
                                     <span class="px-2 py-0.5 bg-emerald-500 text-zinc-950 font-black">3-SECOND CLI INIT v4.0</span>
                                     <span class="text-zinc-300">AGENTS.md + 7 Prompts (Red-Team) + DecisionMatrix match() + .env.blueprint + .mcp.json + verify-blueprint.sh</span>
                                 </div>
-                                <div class="font-mono text-xs text-emerald-300 bg-black border border-zinc-800 px-3 py-2 overflow-x-auto">
-                                    <code x-text="cliCmd"></code>
-                                </div>
-                            </div>
-                            <div class="flex flex-wrap items-center gap-1.5 shrink-0 font-mono text-[11px]">
-                                <button type="button" @click="copyCli()" class="px-3 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase cursor-pointer">
+                                <button type="button" @click="copyCli()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black uppercase cursor-pointer">
                                     {{ $isEn ? 'COPY CLI INIT' : 'SALIN CLI' }}
                                 </button>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'decision-tables']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
-                                    DECISION.MD
-                                </a>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'env-blueprint']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
-                                    .ENV.BLUEPRINT
-                                </a>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'phase-7']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
-                                    P7-REDTEAM
-                                </a>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'print-spec']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
-                                    PRINT.MD
-                                </a>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'day2-ops']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
-                                    DAY2-OPS.MD
-                                </a>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
-                                    VERIFY.SH
-                                </a>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'symbol-manifest']) }}" class="px-2.5 py-2 bg-emerald-900/80 hover:bg-emerald-800 text-emerald-100 border border-emerald-600 font-black uppercase">
-                                    SYMBOL_MANIFEST.JSON
-                                </a>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'enterprise-menu']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
-                                    MENU25.MD
-                                </a>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'syntax-lock']) }}" class="px-2.5 py-2 bg-emerald-950 hover:bg-emerald-900 text-emerald-200 border border-emerald-600 font-black uppercase">
-                                    SYNTAX_LOCK_2026.MD
-                                </a>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'client-sop']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
-                                    CLIENT_SOP.MD
-                                </a>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'pg16-partition']) }}" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
-                                    PG16_PARTITION.SQL
-                                </a>
-                                <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'sop-training']) }}" target="_blank" class="px-2.5 py-2 bg-amber-950/80 hover:bg-amber-900 text-amber-200 border border-amber-600 font-black uppercase">
-                                    {{ $isEn ? '🖨️ BAST SOP (A4)' : '🖨️ BUKU SOP BAST (A4)' }}
-                                </a>
-                                <button type="button" @click="runBlueprintDoctor()" :disabled="runningDoctor" class="px-2.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-amber-300 border border-amber-700 font-bold uppercase cursor-pointer">
-                                    <span x-text="runningDoctor ? 'DIAGNOSING...' : '🩺 DOCTOR'"></span>
-                                </button>
-                                <button type="button" @click="runSlopAudit()" :disabled="auditingSlop" class="px-2.5 py-2 bg-zinc-900 hover:bg-zinc-800 text-emerald-300 border border-emerald-700 font-bold uppercase cursor-pointer">
-                                    <span x-text="auditingSlop ? 'SCANNING...' : '{{ $isEn ? 'SLOP AUDIT' : 'AUDIT SLOP' }}'"></span>
-                                </button>
                             </div>
+                            <div class="font-mono text-xs text-emerald-300 bg-black border border-zinc-800 px-3 py-2 overflow-x-auto w-full">
+                                <code x-text="cliCmd"></code>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-zinc-800 flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'decision-tables']) }}" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                DECISION.MD
+                            </a>
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'env-blueprint']) }}" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                .ENV.BLUEPRINT
+                            </a>
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'phase-7']) }}" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                P7-REDTEAM
+                            </a>
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'print-spec']) }}" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                PRINT.MD
+                            </a>
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'day2-ops']) }}" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                DAY2-OPS.MD
+                            </a>
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint']) }}" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                VERIFY.SH
+                            </a>
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'symbol-manifest']) }}" class="px-2.5 py-1.5 bg-emerald-900/80 hover:bg-emerald-800 text-emerald-100 border border-emerald-600 font-black uppercase">
+                                SYMBOL_MANIFEST.JSON
+                            </a>
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'enterprise-menu']) }}" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                MENU25.MD
+                            </a>
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'syntax-lock']) }}" class="px-2.5 py-1.5 bg-emerald-950 hover:bg-emerald-900 text-emerald-200 border border-emerald-600 font-black uppercase">
+                                SYNTAX_LOCK_2026.MD
+                            </a>
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'client-sop']) }}" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                CLIENT_SOP.MD
+                            </a>
+                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'pg16-partition']) }}" class="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 font-bold uppercase">
+                                PG16_PARTITION.SQL
+                            </a>
+                            <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'sop-training']) }}" target="_blank" class="px-2.5 py-1.5 bg-amber-950/80 hover:bg-amber-900 text-amber-200 border border-amber-600 font-black uppercase">
+                                {{ $isEn ? '🖨️ BAST SOP (A4)' : '🖨️ BUKU SOP BAST (A4)' }}
+                            </a>
+                            <button type="button" @click="runBlueprintDoctor()" :disabled="runningDoctor" class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-amber-300 border border-amber-700 font-bold uppercase cursor-pointer">
+                                <span x-text="runningDoctor ? 'DIAGNOSING...' : '🩺 DOCTOR'"></span>
+                            </button>
+                            <button type="button" @click="runSlopAudit()" :disabled="auditingSlop" class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-emerald-300 border border-emerald-700 font-bold uppercase cursor-pointer">
+                                <span x-text="auditingSlop ? 'SCANNING...' : '{{ $isEn ? 'SLOP AUDIT' : 'AUDIT SLOP' }}'"></span>
+                            </button>
                         </div>
 
                         <template x-if="slopReport">
@@ -11442,12 +11471,17 @@ class ProcessSecureDataset implements ShouldQueue
     <div 
         x-show="showLegalTermsModal" 
         x-cloak 
+        x-data="{ legalTermsTab: 'id' }"
         @keydown.escape.window="showLegalTermsModal = false"
-        class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 no-print font-sans"
+        class="fixed inset-0 z-[120] overflow-y-auto flex items-center justify-center p-3 sm:p-6 no-print font-sans"
     >
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/80 backdrop-blur-xs" @click="showLegalTermsModal = false" x-transition.opacity></div>
+
+        <!-- Dialog Box -->
         <div 
-            @click.outside="showLegalTermsModal = false" 
-            class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 max-w-3xl w-full my-auto max-h-[88vh] flex flex-col p-6 rounded-none text-zinc-900 dark:text-zinc-100 shadow-2xl relative"
+            @click.stop
+            class="relative z-10 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 max-w-3xl w-full my-auto max-h-[88vh] flex flex-col p-6 rounded-none text-zinc-900 dark:text-zinc-100 shadow-2xl"
         >
             <!-- Header -->
             <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4 shrink-0">
@@ -11463,7 +11497,7 @@ class ProcessSecureDataset implements ShouldQueue
                 <div class="flex items-center gap-1.5 font-mono text-xs">
                     <button 
                         type="button" 
-                        @click="legalTermsTab = 'id'" 
+                        @click.stop="legalTermsTab = 'id'" 
                         :class="legalTermsTab === 'id' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
                         class="px-2.5 py-1 rounded-none border border-zinc-300 dark:border-zinc-700 cursor-pointer"
                     >
@@ -11471,7 +11505,7 @@ class ProcessSecureDataset implements ShouldQueue
                     </button>
                     <button 
                         type="button" 
-                        @click="legalTermsTab = 'en'" 
+                        @click.stop="legalTermsTab = 'en'" 
                         :class="legalTermsTab === 'en' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
                         class="px-2.5 py-1 rounded-none border border-zinc-300 dark:border-zinc-700 cursor-pointer"
                     >
@@ -11479,7 +11513,7 @@ class ProcessSecureDataset implements ShouldQueue
                     </button>
                     <button 
                         type="button" 
-                        @click="showLegalTermsModal = false" 
+                        @click.stop="showLegalTermsModal = false" 
                         class="ml-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-white text-lg font-bold px-2 cursor-pointer"
                     >
                         &times;
@@ -11573,7 +11607,7 @@ class ProcessSecureDataset implements ShouldQueue
                 <span class="text-[10px] text-zinc-500 font-mono">NERIAH PRO &bull; MIDTRANS PAYMENT COMPLIANCE</span>
                 <button 
                     type="button" 
-                    @click="showLegalTermsModal = false; agreeSignOff = true" 
+                    @click.stop="showLegalTermsModal = false; agreeSignOff = true" 
                     class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold font-mono text-xs uppercase rounded-none transition cursor-pointer"
                 >
                     Saya Mengerti &amp; Setuju

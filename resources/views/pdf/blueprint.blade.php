@@ -179,6 +179,27 @@
             font-size: 8px;
             color: #475569;
         }
+        .gherkin-box {
+            background-color: #f8fafc;
+            border-left: 2px solid #10b981;
+            padding: 3px 6px;
+            margin: 3px 0;
+            font-family: monospace;
+            font-size: 7.5px;
+            line-height: 1.35;
+        }
+        .gherkin-given { color: #047857; font-weight: bold; }
+        .gherkin-when { color: #0284c7; font-weight: bold; }
+        .gherkin-then { color: #d97706; font-weight: bold; }
+        .mini-badge {
+            display: inline-block;
+            font-size: 7px;
+            font-weight: bold;
+            padding: 1px 4px;
+            background: #e2e8f0;
+            color: #334155;
+            text-transform: uppercase;
+        }
         .footer {
             position: fixed;
             bottom: 0;
@@ -259,18 +280,88 @@
         </table>
     </div>
 
-    <!-- 3. MVP Feature Scope -->
+    <!-- 3. MVP Feature Scope & Engineering Specifications -->
     <div class="section">
-        <div class="section-title">3. Ruang Lingkup Fitur Inti (Fase 1 - Core MVP)</div>
+        <div class="section-title">3. Ruang Lingkup Fitur Inti &amp; Spesifikasi Rekayasa (Fase 1 - Core MVP)</div>
         @foreach($detailedMvp as $feat)
+            @php
+                $featTitle = is_array($feat) ? ($feat['title'] ?? $feat['name'] ?? 'Fitur Inti MVP') : 'Fitur Inti MVP';
+                $featUserStory = is_array($feat) ? ($feat['user_story'] ?? '') : '';
+                $featDesc = is_array($feat) ? ($feat['desc'] ?? $feat['description'] ?? '') : (string)$feat;
+                $featAc = is_array($feat) ? ($feat['acceptance_criteria'] ?? []) : [];
+                $normAc = \App\Services\PrdGeneratorService::normalizeAcceptanceCriteria($featAc, $featTitle, $featUserStory);
+                $featFe = is_array($feat) ? ($feat['frontend'] ?? []) : [];
+                $featBe = is_array($feat) ? ($feat['backend'] ?? []) : [];
+                $featApi = is_array($feat) ? ($feat['integration'] ?? ($feat['api_contracts'] ?? [])) : [];
+            @endphp
             <div class="feature-card">
                 <div class="feature-title">
                     <span class="badge-dark">MODUL {{ $loop->iteration }}</span> 
-                    {{ is_array($feat) ? ($feat['title'] ?? $feat['name'] ?? 'Fitur Inti MVP') : 'Fitur Inti MVP' }}
+                    <strong>{{ $featTitle }}</strong>
+                    @if(!empty($feat['category_label'] ?? $feat['category'] ?? null))
+                        <span class="mini-badge">{{ $feat['category_label'] ?? $feat['category'] }}</span>
+                    @endif
                 </div>
-                <div class="feature-desc">
-                    {{ is_array($feat) ? ($feat['desc'] ?? $feat['description'] ?? '') : (string) $feat }}
+                <div class="feature-desc" style="margin-bottom: 2px;">
+                    {{ $featDesc }}
                 </div>
+                @if(!empty($featUserStory))
+                    <div style="font-size: 7.5px; font-style: italic; color: #475569; margin-bottom: 2px;">
+                        <strong>User Story:</strong> "{{ $featUserStory }}"
+                    </div>
+                @endif
+
+                @if(!empty($normAc))
+                    <div style="font-size: 7.5px; font-weight: bold; color: #065f46; margin-top: 2px; text-transform: uppercase;">
+                        Acceptance Criteria (Gherkin Scenarios):
+                    </div>
+                    @foreach($normAc as $acIdx => $ac)
+                        <div class="gherkin-box">
+                            <strong>{{ $ac['scenario'] ?? ('Skenario ' . ($acIdx + 1)) }}:</strong><br>
+                            <span class="gherkin-given">GIVEN:</span> {{ (!empty($ac['given']) && $ac['given'] !== '-') ? $ac['given'] : \App\Services\PrdGeneratorService::deriveGivenCondition($ac['scenario'] ?? '', $featTitle, $acIdx) }}<br>
+                            <span class="gherkin-when">WHEN:</span> {{ (!empty($ac['when']) && $ac['when'] !== '-') ? $ac['when'] : \App\Services\PrdGeneratorService::deriveWhenCondition($ac['scenario'] ?? '', $featTitle, $acIdx) }}<br>
+                            <span class="gherkin-then">THEN:</span> {{ (!empty($ac['then']) && $ac['then'] !== '-') ? $ac['then'] : \App\Services\PrdGeneratorService::deriveThenCondition($ac['scenario'] ?? '', $featTitle, $acIdx) }}
+                        </div>
+                    @endforeach
+                @endif
+
+                @if(!empty($featFe['tasks']) || !empty($featBe['tasks']) || !empty($featApi['endpoint']))
+                    <table style="margin-top: 3px; font-size: 7.5px; margin-bottom: 2px;">
+                        <tr>
+                            @if(!empty($featFe))
+                                <td style="width: 33%; vertical-align: top;">
+                                    <strong>Frontend:</strong><br>
+                                    @if(is_array($featFe['tasks'] ?? null))
+                                        @foreach(array_slice($featFe['tasks'], 0, 4) as $t)
+                                            &bull; {{ $t }}<br>
+                                        @endforeach
+                                    @else
+                                        {{ $featFe['components'] ?? 'Blade / Alpine.js UI' }}
+                                    @endif
+                                </td>
+                            @endif
+                            @if(!empty($featBe))
+                                <td style="width: 33%; vertical-align: top;">
+                                    <strong>Backend &amp; Database:</strong><br>
+                                    @if(is_array($featBe['tasks'] ?? null))
+                                        @foreach(array_slice($featBe['tasks'], 0, 4) as $t)
+                                            &bull; {{ $t }}<br>
+                                        @endforeach
+                                    @else
+                                        {{ $featBe['model_and_migration'] ?? 'PostgreSQL Strict ULID Service' }}
+                                    @endif
+                                </td>
+                            @endif
+                            @if(!empty($featApi['endpoint']))
+                                <td style="width: 34%; vertical-align: top;">
+                                    <strong>API Contract:</strong><br>
+                                    <span class="code">{{ $featApi['endpoint'] }}</span><br>
+                                    <span style="color: #64748b;">Auth: Bearer ULID &bull; 200 OK</span>
+                                </td>
+                            @endif
+                        </tr>
+                    </table>
+                @endif
             </div>
         @endforeach
 
@@ -319,19 +410,26 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 25%;">Tabel Entitas</th>
-                    <th style="width: 35%;">Primary &amp; Foreign Keys</th>
-                    <th style="width: 40%;">Kolom Data &amp; Deskripsi</th>
+                    <th style="width: 20%;">Tabel Entitas</th>
+                    <th style="width: 25%;">Primary &amp; Foreign Keys</th>
+                    <th style="width: 55%;">Kolom Basis Data &amp; Keterangan</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($tables as $tbl)
+                    @php
+                        $tName = is_array($tbl) ? ($tbl['name'] ?? $tbl['table_name'] ?? 'tabel') : 'tabel';
+                        $tPk = is_array($tbl) ? ($tbl['primary_key'] ?? ($tbl['pk'] ?? 'id (ULID, PK)')) : 'id (ULID, PK)';
+                        $tFks = is_array($tbl) ? ($tbl['foreign_keys'] ?? []) : [];
+                        $tCols = is_array($tbl) ? ($tbl['columns'] ?? []) : [];
+                        $tDesc = is_array($tbl) ? ($tbl['description'] ?? $tbl['purpose'] ?? '') : (string)$tbl;
+                    @endphp
                     <tr>
-                        <td><strong>{{ is_array($tbl) ? ($tbl['table_name'] ?? $tbl['name'] ?? 'tabel') : 'tabel' }}</strong></td>
+                        <td><strong>{{ $tName }}</strong></td>
                         <td>
-                            <span class="code">id (ULID, PK)</span><br>
-                            @if(!empty($tbl['foreign_keys']) && is_array($tbl['foreign_keys']))
-                                @foreach($tbl['foreign_keys'] as $fk)
+                            <span class="code">{{ $tPk }}</span><br>
+                            @if(!empty($tFks) && is_array($tFks))
+                                @foreach($tFks as $fk)
                                     <span class="code" style="color: #0369a1;">{{ $fk }}</span><br>
                                 @endforeach
                             @else
@@ -339,7 +437,19 @@
                             @endif
                         </td>
                         <td>
-                            {{ is_array($tbl) ? ($tbl['description'] ?? $tbl['purpose'] ?? 'Tabel domain bisnis') : (string)$tbl }}
+                            @if(!empty($tDesc))
+                                <div style="font-size: 7.5px; color: #475569; margin-bottom: 2px;">{{ $tDesc }}</div>
+                            @endif
+                            @if(!empty($tCols))
+                                <div style="font-size: 7px; font-family: monospace; color: #1e293b; line-height: 1.3;">
+                                    @foreach(array_slice($tCols, 0, 10) as $c)
+                                        <span class="code">{{ $c['name'] ?? 'col' }}</span> ({{ $c['type'] ?? 'varchar' }}){{ !$loop->last ? ', ' : '' }}
+                                    @endforeach
+                                    @if(count($tCols) > 10)
+                                        <span style="color: #64748b;">+{{ count($tCols) - 10 }} kolom lainnya</span>
+                                    @endif
+                                </div>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -407,9 +517,55 @@
         </table>
     </div>
 
-    <!-- 8. Cryptographic Checksum & Contract Seal -->
+    <!-- 8. Cloud Infrastructure & Docker Containerization -->
     <div class="section">
-        <div class="section-title">8. Integritas Kriptografis &amp; Segel Scope Freeze</div>
+        <div class="section-title">8. Topologi Infrastruktur Cloud &amp; Kontainerisasi Docker</div>
+        <table>
+            <tr>
+                <th style="width: 25%;">Runtime &amp; PHP Engine</th>
+                <td>PHP 8.5+ Hardened &bull; Railpack FrankenPHP / PHP-FPM High Performance</td>
+            </tr>
+            <tr>
+                <th>Basis Data &amp; Cache</th>
+                <td>PostgreSQL 16+ Strict Mode &bull; Redis 7 (In-Memory Cache &amp; Idempotency Vault)</td>
+            </tr>
+            <tr>
+                <th>Web Server &amp; SSL</th>
+                <td>Nginx Hardened Reverse Proxy &bull; TLS 1.3 &bull; Let's Encrypt Auto-Renewal SSL</td>
+            </tr>
+            <tr>
+                <th>Arsitektur Kontainer</th>
+                <td>docker-compose.yml terisolasi (app, db, redis, web, worker queue) &bull; Zero Drift</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 9. 15-Pillar Project OS Architecture & Security Matrix -->
+    <div class="section">
+        <div class="section-title">9. Matriks 15 Pilar Project OS &amp; Pertahanan Keamanan Terpadu</div>
+        <table>
+            <tr>
+                <th style="width: 25%;">Identitas Skalabilitas</th>
+                <td>Strict ULID 26-char Primary Key &bull; Keyset Cursor Pagination O(1) Sub-10ms</td>
+            </tr>
+            <tr>
+                <th>Keamanan &amp; UU PDP</th>
+                <td>OWASP Top 10 Protections &bull; Anti-AI Scraping &bull; Honeypot Anti-Bot &bull; Masking PII</td>
+            </tr>
+            <tr>
+                <th>Idempotency &amp; Payment</th>
+                <td>Midtrans Snap ID Generator &bull; Anti-Collision DLQ &bull; SHA-256 Scope Freeze</td>
+            </tr>
+            <tr>
+                <th>Standar Koding &amp; CI/CD</th>
+                <td>Automated deploy.sh 6-Scenario &bull; Pest Contract Tests &bull; Zero CDN Latency</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- 10. Cryptographic Checksum & Contract Seal -->
+    <div class="section">
+        <div class="section-title">10. Integritas Kriptografis &amp; Segel Scope Freeze</div>
         <div class="box" style="font-family: monospace; font-size: 8px; word-break: break-all;">
             <strong>SHA-256 SPECIFICATION CHECKSUM:</strong><br>
             {{ $blueprint->document_sha256 ?: hash('sha256', $blueprint->id . $businessName . $blueprint->created_at) }}<br><br>

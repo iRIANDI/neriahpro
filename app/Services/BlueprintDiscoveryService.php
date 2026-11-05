@@ -1593,6 +1593,69 @@ class BlueprintDiscoveryService
         return self::craftFeatureFromRawItem($rawItem, $domain, $isEn);
     }
 
+    /**
+     * Polish a feature specification item array into professional architectural blueprint language.
+     * Prevents raw user quotes, conversational prefixes ("berdasarkan poin no..."), or generic descriptions.
+     */
+    public static function polishFeatureSpecification(array $fitur, string $domain = 'custom_portal', bool $isEn = false): array
+    {
+        $rawTitle = trim((string)($fitur['title'] ?? ''));
+        $rawDesc = trim((string)($fitur['desc'] ?? ''));
+
+        if (empty($rawTitle)) {
+            return $fitur;
+        }
+
+        $lowerTitle = mb_strtolower($rawTitle);
+        $lowerDesc = mb_strtolower($rawDesc);
+
+        // Check for raw conversational artifacts or generic placeholder descriptions
+        $isConversational = str_starts_with($lowerTitle, 'berdasarkan')
+            || str_contains($lowerTitle, 'poin no')
+            || str_contains($lowerTitle, 'ada juga')
+            || str_contains($lowerTitle, 'saya mau')
+            || str_contains($lowerTitle, 'kami ingin')
+            || str_contains($lowerTitle, 'sediakan fitur')
+            || str_contains($lowerTitle, 'alias wisata')
+            || str_contains($lowerTitle, 'wish list')
+            || str_contains($lowerTitle, 'day tour')
+            || str_contains($lowerTitle, 'transfer in dan out')
+            || str_contains($lowerTitle, 'overland tour')
+            || strlen($rawTitle) > 45;
+
+        $isGenericDesc = empty($rawDesc)
+            || str_contains($lowerDesc, 'spesifikasi fitur utama untuk operasional sistem')
+            || str_contains($lowerDesc, 'spesifikasi fitur utama')
+            || strlen($rawDesc) < 35
+            || $rawDesc === $rawTitle;
+
+        // If neither is conversational or generic, it is already a curated architectural feature
+        if (! $isConversational && ! $isGenericDesc) {
+            return $fitur;
+        }
+
+        // Combine title and description for intelligent synthesis (omit generic placeholders)
+        $combined = $isGenericDesc ? $rawTitle : ($rawTitle . ' ' . $rawDesc);
+        $crafted = self::craftFeatureFromRawItem($combined, $domain, $isEn);
+
+        if (str_contains($crafted, ':')) {
+            [$polishedTitle, $polishedDesc] = explode(':', $crafted, 2);
+            $fitur['title'] = trim($polishedTitle);
+            $fitur['desc'] = trim($polishedDesc);
+        }
+
+        // Sanitize or refine user story if it contains conversational artifacts
+        $userStory = trim((string)($fitur['user_story'] ?? ''));
+        $lowerStory = mb_strtolower($userStory);
+        if (empty($userStory) || str_contains($lowerStory, 'berdasarkan') || str_contains($lowerStory, 'poin no') || str_contains($lowerStory, 'ada juga') || str_contains($lowerStory, 'alias wisata') || str_contains($lowerStory, 'wish list')) {
+            $fitur['user_story'] = $isEn
+                ? "As an Authorized System User, I can operate {$fitur['title']} with real-time transactional integrity, strict validation, and centralized audit logging."
+                : "Sebagai Pengguna Sistem, saya dapat mengelola {$fitur['title']} dengan validasi data real-time, perlindungan konkurensi, dan laporan audit terpusat.";
+        }
+
+        return $fitur;
+    }
+
     public function detectDomainCategory(string $text, bool $isEn = false): string
     {
         return self::detectDomain($text, []);

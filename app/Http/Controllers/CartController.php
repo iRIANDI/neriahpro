@@ -696,4 +696,71 @@ class CartController extends Controller
 
         return redirect()->route('cart.index')->with('success', 'Seluruh proyek dalam Cart berhasil diklaim dengan Voucher Pelayanan 100% (Free Grant) dan resmi masuk ke tahap pengembangan!');
     }
+
+    /**
+     * 1-Click VIP Owner Bypass (Solo Founder / Super Admin).
+     * Grants full Active Sprint & unlocks all 15-pillar Project OS features without payment.
+     * Strictly protected by Super Admin role/email check.
+     */
+    public function vipOwnerBypass(Request $request): RedirectResponse
+    {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            abort(403, 'Akses Ditolak: Fitur 1-Click VIP Owner Bypass hanya dapat diakses oleh Super Administrator (Solo Founder).');
+        }
+
+        $cart = session()->get('neriah_cart', []);
+        if (empty($cart)) {
+            return redirect()->route('cart.index')->with('warning', 'Keranjang Anda kosong.');
+        }
+
+        $activatedCount = 0;
+        $lastSlug = null;
+
+        foreach ($cart as $slug => $item) {
+            $bp = VisionBlueprint::where('slug', $slug)->first();
+            if ($bp) {
+                $bp->update([
+                    'voucher_code' => 'VIP-OWNER-BYPASS',
+                    'is_free_grant' => true,
+                    'is_published' => true,
+                    'project_status' => 'Active Sprint',
+                    'signed_agreement' => true,
+                ]);
+
+                $bp->provisionStagingUrl();
+                $bp->recordSignOff($request->ip(), $request->userAgent());
+
+                Document::updateOrCreate(
+                    [
+                        'related_type' => VisionBlueprint::class,
+                        'related_id' => $bp->id,
+                        'document_type' => 'contract',
+                    ],
+                    [
+                        'title' => 'Kontrak VIP Founder OS - ' . ($bp->nama_bisnis ?: $bp->client_name),
+                        'status' => 'signed',
+                        'scope_locked' => true,
+                        'contract_amount' => 0.00,
+                        'dp_amount' => 0.00,
+                        'signed_at' => now(),
+                        'signer_name' => auth()->user()->name ?? ($bp->client_name ?: 'Solo Founder (Super Admin)'),
+                        'signer_email' => auth()->user()->email,
+                        'signer_ip_address' => $request->ip(),
+                        'document_hash' => $bp->document_sha256 ?: $bp->calculatePrdHash(),
+                    ]
+                );
+
+                $activatedCount++;
+                $lastSlug = $bp->slug;
+            }
+        }
+
+        session()->forget(['neriah_cart', 'neriah_cart_voucher', 'neriah_cart_pending_order']);
+
+        if ($activatedCount === 1 && $lastSlug) {
+            return redirect()->route('blueprint.show', $lastSlug)->with('success', '👑 [VIP OWNER BYPASS] Proyek berhasil diaktifkan ke status Active Sprint dengan seluruh 15 Pilar Project OS terbuka penuh!');
+        }
+
+        return redirect()->route('cart.index')->with('success', "👑 [VIP OWNER BYPASS] Sebanyak {$activatedCount} proyek dalam keranjang berhasil diaktifkan ke status Active Sprint dengan seluruh 15 Pilar Project OS terbuka penuh!");
+    }
 }

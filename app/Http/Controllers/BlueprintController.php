@@ -1493,6 +1493,71 @@ class BlueprintController extends Controller
     }
 
     /**
+     * 1-Click VIP Owner Bypass for a single blueprint.
+     * Instantly unlocks all 15-pillar Project OS features, signed contract, staging sandbox, and full active sprint status.
+     * Strictly gated to Super Administrator (Solo Founder).
+     */
+    public function vipOwnerBypass(Request $request, string $slug): JsonResponse|RedirectResponse
+    {
+        if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Akses Ditolak: Hanya Super Administrator yang berhak menggunakan VIP Bypass.'], 403);
+            }
+            abort(403, 'Akses Ditolak: Fitur 1-Click VIP Owner Bypass hanya dapat diakses oleh Super Administrator (Solo Founder).');
+        }
+
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+
+        // Record digital sign-off and SHA-256 audit hash
+        $blueprint->recordSignOff($request->ip(), $request->userAgent());
+
+        // Provision staging demo sandbox URL
+        $stagingUrl = $blueprint->provisionStagingUrl();
+
+        // Update blueprint status to Active Sprint with VIP bypass
+        $blueprint->update([
+            'voucher_code' => 'VIP-OWNER-BYPASS',
+            'is_free_grant' => true,
+            'is_published' => true,
+            'project_status' => 'Active Sprint',
+            'signed_agreement' => true,
+        ]);
+
+        // Interconnect with Document/Contract with explicit signer metadata
+        Document::updateOrCreate(
+            [
+                'related_type' => VisionBlueprint::class,
+                'related_id' => $blueprint->id,
+                'document_type' => 'contract',
+            ],
+            [
+                'title' => 'Kontrak VIP Founder OS - ' . ($blueprint->nama_bisnis ?: $blueprint->client_name),
+                'status' => 'signed',
+                'scope_locked' => true,
+                'contract_amount' => 0.00,
+                'dp_amount' => 0.00,
+                'signed_at' => now(),
+                'signer_name' => auth()->user()->name ?? ($blueprint->client_name ?: 'Solo Founder (Super Admin)'),
+                'signer_email' => auth()->user()->email,
+                'signer_ip_address' => $request->ip(),
+                'document_hash' => $blueprint->document_sha256 ?: $blueprint->calculatePrdHash(),
+            ]
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => '👑 VIP Founder Bypass Berhasil: Seluruh 15 Pilar Project OS & Active Sprint telah diaktifkan!',
+                'staging_url' => $stagingUrl,
+                'document_sha256' => $blueprint->document_sha256,
+                'redirect_url' => route('blueprint.show', $blueprint->slug),
+            ]);
+        }
+
+        return redirect()->route('blueprint.show', $blueprint->slug)->with('success', '👑 [VIP OWNER BYPASS] Proyek resmi diaktifkan ke status Active Sprint! Seluruh 15 Pilar Project OS, staging sandbox, dan kontrak digital telah terbuka.');
+    }
+
+    /**
      * Download PRD as PDF
      */
     public function downloadPdf(string $slug)

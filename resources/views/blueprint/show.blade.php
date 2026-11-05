@@ -2844,6 +2844,29 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </span>
                 @endif
 
+                @if(auth()->check() && auth()->user()->isSuperAdmin())
+                    @if(!$blueprint->isDpConfirmed())
+                        <form method="POST" action="{{ route('blueprint.vip-bypass', $blueprint->slug) }}" class="m-0 shrink-0">
+                            @csrf
+                            <button 
+                                type="submit" 
+                                class="px-2.5 sm:px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap border border-amber-600"
+                                title="Aktifkan Blueprint ini secara instan sebagai VIP Founder tanpa melalui pembayaran Midtrans"
+                            >
+                                <span>👑</span>
+                                <span class="hidden md:inline">VIP OWNER BYPASS</span>
+                                <span class="md:hidden">BYPASS</span>
+                            </button>
+                        </form>
+                    @else
+                        <span class="px-2.5 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/40 text-xs font-mono font-black uppercase flex items-center gap-1 shrink-0 whitespace-nowrap select-none" title="Proyek Aktif di Bawah Lisensi VIP Founder">
+                            <span>👑</span>
+                            <span class="hidden md:inline">VIP FOUNDER ACTIVE</span>
+                            <span class="md:hidden">VIP</span>
+                        </span>
+                    @endif
+                @endif
+
                 <!-- Relocated Accordion View Controls (Beside Cockpit & Edit Spec) -->
                 <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
                     <button type="button" @click="expandAllSections()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Buka Seluruh 13 Seksi PRD">
@@ -4576,9 +4599,12 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         </div>
                         <ul class="space-y-2">
                             @foreach($prd['features']['mvp_phase1'] ?? [] as $fitur)
+                                @php
+                                    $craftedFitur = \App\Services\BlueprintDiscoveryService::polishFeatureSpecification($fitur, $blueprint->domain_category ?? 'custom_portal', $isEn ?? false);
+                                @endphp
                                 <li class="text-xs bg-white dark:bg-zinc-900 p-2.5 border border-emerald-500/20 rounded-none">
-                                    <div class="font-bold text-zinc-900 dark:text-zinc-100">{{ $fitur['title'] ?? '-' }}</div>
-                                    <div class="text-zinc-500 dark:text-zinc-400 mt-0.5 font-sans text-[11px]">{{ $fitur['desc'] ?? '' }}</div>
+                                    <div class="font-bold text-zinc-900 dark:text-zinc-100">{{ $craftedFitur['title'] ?? '-' }}</div>
+                                    <div class="text-zinc-500 dark:text-zinc-400 mt-0.5 font-sans text-[11px]">{{ $craftedFitur['desc'] ?? '' }}</div>
                                 </li>
                             @endforeach
                         </ul>
@@ -4598,9 +4624,12 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         @else
                             <ul class="space-y-2">
                                 @foreach($prd['features']['phase2_roadmap'] as $fitur)
+                                    @php
+                                        $craftedFitur = \App\Services\BlueprintDiscoveryService::polishFeatureSpecification($fitur, $blueprint->domain_category ?? 'custom_portal', $isEn ?? false);
+                                    @endphp
                                     <li class="text-xs bg-white dark:bg-zinc-900 p-2.5 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                                        <div class="font-bold text-zinc-900 dark:text-zinc-100">{{ $fitur['title'] ?? '-' }}</div>
-                                        <div class="text-zinc-500 dark:text-zinc-400 mt-0.5 font-sans text-[11px]">{{ $fitur['desc'] ?? '' }}</div>
+                                        <div class="font-bold text-zinc-900 dark:text-zinc-100">{{ $craftedFitur['title'] ?? '-' }}</div>
+                                        <div class="text-zinc-500 dark:text-zinc-400 mt-0.5 font-sans text-[11px]">{{ $craftedFitur['desc'] ?? '' }}</div>
                                     </li>
                                 @endforeach
                             </ul>
@@ -4668,6 +4697,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         @foreach($mvpEngineeringSpecs as $specIdx => $spec)
                             @php
                                 $featKey = $spec['feature_id'] ?? ($spec['id'] ?? ('FEAT-SPEC-' . $specIdx));
+                                $craftedSpec = \App\Services\BlueprintDiscoveryService::polishFeatureSpecification($spec, $blueprint->domain_category ?? 'custom_portal', $isEn ?? false);
                             @endphp
                             <div 
                                 id="card-feat-{{ $specIdx }}"
@@ -4683,7 +4713,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                         </span>
                                         <div>
                                             <div class="flex flex-wrap items-center gap-2">
-                                                <h3 class="font-black text-sm text-zinc-900 dark:text-white uppercase tracking-tight">{{ $spec['title'] ?? 'Spesifikasi Fitur' }}</h3>
+                                                <h3 class="font-black text-sm text-zinc-900 dark:text-white uppercase tracking-tight">{{ $craftedSpec['title'] ?? ($spec['title'] ?? 'Spesifikasi Fitur') }}</h3>
                                                 <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-[10px] font-mono text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
                                                     {{ $spec['category'] ?? 'CORE DOMAIN' }}
                                                 </span>
@@ -4700,7 +4730,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                         <!-- Step Verification Toggle in Feature Card -->
                                         <button 
                                             type="button" 
-                                            @click="toggleStepCompleted('{{ $featKey }}', '{{ addslashes($spec['title'] ?? '') }}')"
+                                            @click="toggleStepCompleted('{{ $featKey }}', '{{ addslashes($craftedSpec['title'] ?? ($spec['title'] ?? '')) }}')"
                                             :class="isStepCompleted('{{ $featKey }}') ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 border-zinc-300 dark:border-zinc-700'"
                                             class="px-2.5 py-1 text-xs font-mono border flex items-center gap-1.5 transition rounded-none"
                                             title="Tandai Status Pengerjaan Fitur Ini di Cockpit Sprint"
@@ -4745,7 +4775,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     <!-- User Story Pill -->
                                     <div class="p-3 bg-zinc-100 dark:bg-zinc-900 border-l-4 border-emerald-500 font-mono text-xs text-zinc-800 dark:text-zinc-200 mb-4">
                                         <span class="text-emerald-600 dark:text-emerald-400 font-bold block mb-0.5">USER STORY:</span>
-                                        &quot;{{ $spec['user_story'] ?? '' }}&quot;
+                                        &quot;{{ $craftedSpec['user_story'] ?? ($spec['user_story'] ?? '') }}&quot;
                                     </div>
 
                                     @if(!empty($spec['target_files']))
@@ -4758,7 +4788,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                             <div class="flex flex-wrap gap-1.5">
                                                 @foreach($spec['target_files'] as $tf)
                                                     @php
-                                                        $displayTf = \App\Services\PrdGeneratorService::sanitizeFilePath($tf, $spec['title'] ?? '', $spec['related_table'] ?? null);
+                                                        $displayTf = \App\Services\PrdGeneratorService::sanitizeFilePath($tf, $craftedSpec['title'] ?? ($spec['title'] ?? ''), $spec['related_table'] ?? null);
                                                     @endphp
                                                     <span class="px-2 py-0.5 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 text-[11px] border border-zinc-300 dark:border-zinc-800 select-all font-mono">
                                                         {{ $displayTf }}
@@ -5427,7 +5457,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         @php
                             $stepNum = $specIdx + 1;
                             $featKey = $spec['feature_id'] ?? ($spec['id'] ?? ('FEAT-SPEC-' . $specIdx));
-                            $featTitle = $spec['title'] ?? ('Fitur ' . $stepNum);
+                            $craftedSpec = \App\Services\BlueprintDiscoveryService::polishFeatureSpecification($spec, $blueprint->domain_category ?? 'custom_portal', $isEn ?? false);
+                            $featTitle = $craftedSpec['title'] ?? ($spec['title'] ?? ('Fitur ' . $stepNum));
                             $cleanSlug = Str::studly(Str::slug($featTitle));
                             $testCmd = 'php artisan test --filter=' . $cleanSlug . 'Test';
                             $promptCodeId = 'prompt-step-feat-' . $specIdx;
@@ -11281,6 +11312,27 @@ class ProcessSecureDataset implements ShouldQueue
                             Simpan ke Cart Belanja
                         </button>
                     </form>
+
+                    @if(auth()->check() && auth()->user()->isSuperAdmin())
+                        <div class="pt-3 border-t-2 border-dashed border-amber-500/40 bg-amber-500/5 dark:bg-amber-500/10 p-3 text-left">
+                            <div class="flex items-center gap-1.5 mb-1.5">
+                                <span class="px-1.5 py-0.5 bg-amber-500 text-black font-mono font-black text-[10px] uppercase">👑 VIP FOUNDER ACCESS</span>
+                                <span class="text-[11px] font-mono text-amber-600 dark:text-amber-400 font-bold">1-Click Instant Activation</span>
+                            </div>
+                            <p class="text-[11px] font-mono text-zinc-600 dark:text-zinc-300 mb-2 leading-tight">
+                                Aktifkan blueprint ini langsung ke status <strong>Active Sprint</strong> &amp; buka 15 Pilar Project OS secara instan tanpa gateway pembayaran.
+                            </p>
+                            <form method="POST" action="{{ route('blueprint.vip-bypass', $blueprint->slug) }}" class="m-0">
+                                @csrf
+                                <button 
+                                    type="submit" 
+                                    class="w-full bg-zinc-900 hover:bg-black dark:bg-amber-400 dark:hover:bg-amber-300 text-white dark:text-black font-mono font-black text-xs uppercase tracking-wider py-2.5 px-3 text-center flex items-center justify-center gap-2 transition cursor-pointer border border-amber-500/60 rounded-none shadow-sm"
+                                >
+                                    <span>👑 BYPASS PEMBAYARAN (AKTIFKAN VIP OWNER) &rarr;</span>
+                                </button>
+                            </form>
+                        </div>
+                    @endif
                 </div>
             @endif
         </div>

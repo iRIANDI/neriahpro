@@ -573,6 +573,30 @@
                                 Pembayaran diamankan &amp; diverifikasi otomatis oleh Midtrans webhook.
                             </p>
                         @endif
+
+                        @if(auth()->check() && auth()->user()->isSuperAdmin())
+                            <div class="mt-4 pt-4 border-t-2 border-dashed border-amber-500/40 bg-amber-500/5 dark:bg-amber-500/10 p-3.5 border border-amber-500/30 text-left">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="px-1.5 py-0.5 bg-amber-500 text-black font-mono font-black text-[10px] uppercase tracking-wider">
+                                        👑 VIP FOUNDER ACCESS
+                                    </span>
+                                    <span class="text-[11px] font-mono text-amber-700 dark:text-amber-300 font-bold">1-Click Instant Owner Bypass</span>
+                                </div>
+                                <p class="text-[11px] font-mono text-zinc-600 dark:text-zinc-300 mb-3 leading-relaxed">
+                                    Sebagai Super Administrator (Solo Founder), Anda berhak mengaktifkan seluruh proyek di keranjang ini langsung ke status <strong>Active Sprint</strong> &amp; membuka seluruh 15 Pilar Project OS secara instan tanpa gateway pembayaran.
+                                </p>
+                                <form method="POST" action="{{ route('cart.vip-bypass') }}" class="m-0">
+                                    @csrf
+                                    <button 
+                                        type="submit" 
+                                        class="w-full bg-zinc-900 hover:bg-black dark:bg-amber-400 dark:hover:bg-amber-300 text-white dark:text-black font-mono font-black text-xs uppercase tracking-wider py-3 px-4 text-center flex items-center justify-center gap-2 transition cursor-pointer border border-amber-500/60 rounded-none shadow-sm"
+                                    >
+                                        <span>👑 BYPASS PEMBAYARAN (AKTIFKAN VIP OWNER)</span>
+                                        <span>&rarr;</span>
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

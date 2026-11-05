@@ -93,6 +93,7 @@ Route::post('/blueprint/{slug}/snap-token', [BlueprintController::class, 'getSna
 Route::post('/blueprint/{slug}/pelunasan-snap-token', [BlueprintController::class, 'getPelunasanSnapToken'])->name('blueprint.pelunasan-snap-token');
 Route::post('/blueprint/{slug}/voucher/validate', [BlueprintController::class, 'validateVoucher'])->name('blueprint.voucher.validate');
 Route::post('/blueprint/{slug}/voucher/claim', [BlueprintController::class, 'claimVoucher'])->name('blueprint.voucher.claim');
+Route::post('/blueprint/{slug}/vip-owner-bypass', [BlueprintController::class, 'vipOwnerBypass'])->name('blueprint.vip-bypass');
 Route::get('/blueprint/{slug}/download/pdf', [BlueprintController::class, 'downloadPdf'])->name('blueprint.download-pdf');
 Route::get('/blueprint/{slug}/download/md', [BlueprintController::class, 'downloadMd'])->name('blueprint.download-md')->middleware('throttle:30,1');
 Route::get('/blueprint/{slug}/download/cursorrules', [BlueprintController::class, 'downloadCursorrules'])->name('blueprint.download-cursorrules')->middleware('throttle:30,1');
@@ -156,6 +157,7 @@ Route::post('/cart/snap-token', [CartController::class, 'getSnapToken'])->name('
 Route::post('/cart/voucher/apply', [CartController::class, 'applyVoucher'])->name('cart.voucher.apply');
 Route::post('/cart/voucher/remove', [CartController::class, 'removeVoucher'])->name('cart.voucher.remove');
 Route::post('/cart/claim-free-grant', [CartController::class, 'claimFreeGrant'])->name('cart.claim-free');
+Route::post('/cart/vip-owner-bypass', [CartController::class, 'vipOwnerBypass'])->name('cart.vip-bypass');
 Route::post('/cart/reset-pending', [CartController::class, 'resetPendingOrder'])->name('cart.reset-pending');
 
 Route::get('/invite/{slug}', ClientInviteForm::class)->name('invite');

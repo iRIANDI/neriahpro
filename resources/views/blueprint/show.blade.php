@@ -248,6 +248,70 @@
         .custom-range-slider.slider-sky::-moz-range-thumb { background-color: #0ea5e9; }
         .custom-range-slider.slider-amber::-webkit-slider-thumb { background-color: #f59e0b; }
         .custom-range-slider.slider-amber::-moz-range-thumb { background-color: #f59e0b; }
+
+        /* High-Contrast Fullscreen & In-Card Mermaid Theme Fidelity */
+        .dark #mermaid-fullscreen-target svg,
+        .dark [id*="mermaid-"][id*="-target"] svg {
+            color: #f4f4f5 !important;
+        }
+        .dark #mermaid-fullscreen-target svg .er.entityBox,
+        .dark #mermaid-fullscreen-target svg rect.entityBox,
+        .dark #mermaid-fullscreen-target svg .attributeBoxOdd,
+        .dark #mermaid-fullscreen-target svg .attributeBoxEven,
+        .dark [id*="mermaid-"][id*="-target"] svg .er.entityBox,
+        .dark [id*="mermaid-"][id*="-target"] svg rect.entityBox {
+            fill: #18181b !important;
+            stroke: #10b981 !important;
+            stroke-width: 1.5px !important;
+        }
+        .dark #mermaid-fullscreen-target svg text,
+        .dark #mermaid-fullscreen-target svg .er.entityLabel,
+        .dark [id*="mermaid-"][id*="-target"] svg text {
+            fill: #f4f4f5 !important;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+        }
+        .dark #mermaid-fullscreen-target svg path.er.relationshipLine,
+        .dark [id*="mermaid-"][id*="-target"] svg path.er.relationshipLine {
+            stroke: #34d399 !important;
+            stroke-width: 1.5px !important;
+        }
+        .dark #mermaid-fullscreen-target svg .er.relationshipLabelBox,
+        .dark [id*="mermaid-"][id*="-target"] svg .er.relationshipLabelBox {
+            fill: #09090b !important;
+            stroke: #27272a !important;
+        }
+
+        /* Light Mode High-Contrast Crisp Fidelity */
+        html:not(.dark) #mermaid-fullscreen-target svg,
+        html:not(.dark) [id*="mermaid-"][id*="-target"] svg {
+            color: #09090b !important;
+        }
+        html:not(.dark) #mermaid-fullscreen-target svg .er.entityBox,
+        html:not(.dark) #mermaid-fullscreen-target svg rect.entityBox,
+        html:not(.dark) #mermaid-fullscreen-target svg .attributeBoxOdd,
+        html:not(.dark) #mermaid-fullscreen-target svg .attributeBoxEven,
+        html:not(.dark) [id*="mermaid-"][id*="-target"] svg .er.entityBox,
+        html:not(.dark) [id*="mermaid-"][id*="-target"] svg rect.entityBox {
+            fill: #ffffff !important;
+            stroke: #059669 !important;
+            stroke-width: 1.5px !important;
+        }
+        html:not(.dark) #mermaid-fullscreen-target svg text,
+        html:not(.dark) #mermaid-fullscreen-target svg .er.entityLabel,
+        html:not(.dark) [id*="mermaid-"][id*="-target"] svg text {
+            fill: #09090b !important;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+        }
+        html:not(.dark) #mermaid-fullscreen-target svg path.er.relationshipLine,
+        html:not(.dark) [id*="mermaid-"][id*="-target"] svg path.er.relationshipLine {
+            stroke: #059669 !important;
+            stroke-width: 1.5px !important;
+        }
+        html:not(.dark) #mermaid-fullscreen-target svg .er.relationshipLabelBox,
+        html:not(.dark) [id*="mermaid-"][id*="-target"] svg .er.relationshipLabelBox {
+            fill: #f4f4f5 !important;
+            stroke: #e4e4e7 !important;
+        }
     </style>
     <!-- Alpine.js & Mermaid UMD Bundle (Local Vendor JS) -->
     <script defer src="{{ asset('js/vendor/alpine.min.js') }}"></script>
@@ -679,12 +743,25 @@
                 const renderedSvg = container.querySelector('svg');
                 if (renderedSvg) {
                     if (containerId === 'mermaid-fullscreen-target') {
-                        renderedSvg.style.maxWidth = '92vw';
-                        renderedSvg.style.maxHeight = '80vh';
-                        renderedSvg.style.width = 'auto';
-                        renderedSvg.style.height = 'auto';
-                        renderedSvg.removeAttribute('width');
-                        renderedSvg.removeAttribute('height');
+                        let natW = 1200;
+                        let natH = 800;
+                        const vbAttr = renderedSvg.getAttribute('viewBox');
+                        if (vbAttr) {
+                            const parts = vbAttr.trim().split(/[\s,]+/).map(Number);
+                            if (parts.length >= 4 && parts[2] > 0 && parts[3] > 0) {
+                                natW = parts[2];
+                                natH = parts[3];
+                            }
+                        } else if (renderedSvg.viewBox && renderedSvg.viewBox.baseVal && renderedSvg.viewBox.baseVal.width > 0) {
+                            natW = renderedSvg.viewBox.baseVal.width;
+                            natH = renderedSvg.viewBox.baseVal.height;
+                        }
+                        renderedSvg.setAttribute('width', natW);
+                        renderedSvg.setAttribute('height', natH);
+                        renderedSvg.style.width = natW + 'px';
+                        renderedSvg.style.height = natH + 'px';
+                        renderedSvg.style.maxWidth = 'none';
+                        renderedSvg.style.maxHeight = 'none';
                     } else {
                         renderedSvg.style.maxWidth = '100%';
                         renderedSvg.style.height = 'auto';
@@ -1152,6 +1229,8 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 fullscreenDiagramPanX: 0,
                 fullscreenDiagramPanY: 0,
                 fullscreenDiagramDragging: false,
+                fullscreenDiagramNaturalWidth: 1200,
+                fullscreenDiagramNaturalHeight: 800,
                 fsDragStartX: 0,
                 fsDragStartY: 0,
 
@@ -1220,7 +1299,6 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 openDiagramFullscreen(title, sourceId) {
                     this.fullscreenDiagramTitle = title;
                     this.fullscreenDiagramSourceId = sourceId;
-                    this.fullscreenDiagramZoom = 1;
                     this.fullscreenDiagramPanX = 0;
                     this.fullscreenDiagramPanY = 0;
                     this.fullscreenDiagramModal = true;
@@ -1233,38 +1311,51 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         const origTarget = document.getElementById(targetId);
                         const existingSvg = origTarget ? origTarget.querySelector('svg') : null;
 
+                        let activeSvg = null;
                         if (existingSvg) {
                             const clonedSvg = existingSvg.cloneNode(true);
                             clonedSvg.id = 'fs_svg_' + Date.now();
-                            clonedSvg.removeAttribute('width');
-                            clonedSvg.removeAttribute('height');
-                            clonedSvg.style.maxWidth = '92vw';
-                            clonedSvg.style.maxHeight = '80vh';
-                            clonedSvg.style.width = '100%';
-                            clonedSvg.style.height = 'auto';
-                            clonedSvg.style.display = 'block';
-                            clonedSvg.style.margin = '0 auto';
-                            clonedSvg.style.transform = 'none';
-                            clonedSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
                             fsTarget.innerHTML = '';
                             fsTarget.appendChild(clonedSvg);
+                            activeSvg = clonedSvg;
                         } else {
                             // Fallback fresh render
-                            fsTarget.innerHTML = '<div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2"><span class="w-2 h-2 bg-emerald-500 animate-ping"></span><span>Merender diagram layar penuh...</span></div>';
+                            fsTarget.innerHTML = '<div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2"><span class="w-2 h-2 bg-emerald-500 animate-ping"></span><span>Merender diagram layar penuh...</span></div>';
                             await window.renderMermaidDiagram('mermaid-fullscreen-target', sourceId, true);
-                            const svg = fsTarget.querySelector('svg');
-                            if (svg) {
-                                svg.removeAttribute('width');
-                                svg.removeAttribute('height');
-                                svg.style.maxWidth = '92vw';
-                                svg.style.maxHeight = '80vh';
-                                svg.style.width = '100%';
-                                svg.style.height = 'auto';
-                                svg.style.display = 'block';
-                                svg.style.margin = '0 auto';
-                                svg.style.transform = 'none';
-                                svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                            activeSvg = fsTarget.querySelector('svg');
+                        }
+
+                        if (activeSvg) {
+                            // Determine natural SVG dimensions from viewBox
+                            let natW = 1200;
+                            let natH = 800;
+                            const vbAttr = activeSvg.getAttribute('viewBox');
+                            if (vbAttr) {
+                                const parts = vbAttr.trim().split(/[\s,]+/).map(Number);
+                                if (parts.length >= 4 && parts[2] > 0 && parts[3] > 0) {
+                                    natW = parts[2];
+                                    natH = parts[3];
+                                }
+                            } else if (activeSvg.viewBox && activeSvg.viewBox.baseVal && activeSvg.viewBox.baseVal.width > 0) {
+                                natW = activeSvg.viewBox.baseVal.width;
+                                natH = activeSvg.viewBox.baseVal.height;
                             }
+
+                            this.fullscreenDiagramNaturalWidth = natW;
+                            this.fullscreenDiagramNaturalHeight = natH;
+
+                            activeSvg.setAttribute('width', natW);
+                            activeSvg.setAttribute('height', natH);
+                            activeSvg.style.width = natW + 'px';
+                            activeSvg.style.height = natH + 'px';
+                            activeSvg.style.maxWidth = 'none';
+                            activeSvg.style.maxHeight = 'none';
+                            activeSvg.style.display = 'block';
+                            activeSvg.style.margin = 'auto';
+                            activeSvg.style.transform = 'none';
+                            activeSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+                            this.fitFullscreenDiagram();
                         }
                     });
                 },
@@ -1276,8 +1367,45 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     const fsTarget = document.getElementById('mermaid-fullscreen-target');
                     if (fsTarget) fsTarget.innerHTML = '';
                 },
+                fitFullscreenDiagram() {
+                    const canvas = document.getElementById('mermaid-fullscreen-canvas');
+                    if (!canvas) {
+                        this.fullscreenDiagramZoom = 1;
+                        this.fullscreenDiagramPanX = 0;
+                        this.fullscreenDiagramPanY = 0;
+                        return;
+                    }
+                    const canvasW = Math.max(300, canvas.clientWidth - 48);
+                    const canvasH = Math.max(200, canvas.clientHeight - 48);
+                    const scaleX = canvasW / (this.fullscreenDiagramNaturalWidth || 1200);
+                    const scaleY = canvasH / (this.fullscreenDiagramNaturalHeight || 800);
+                    const fitScale = Math.min(scaleX, scaleY);
+                    this.fullscreenDiagramZoom = +Math.max(0.02, Math.min(20.0, fitScale)).toFixed(3);
+                    this.fullscreenDiagramPanX = 0;
+                    this.fullscreenDiagramPanY = 0;
+                },
                 zoomFullscreenDiagram(delta) {
-                    this.fullscreenDiagramZoom = Math.min(4.0, Math.max(0.3, +(this.fullscreenDiagramZoom + delta).toFixed(2)));
+                    let newZoom;
+                    if (delta > 0) {
+                        if (this.fullscreenDiagramZoom < 0.2) newZoom = this.fullscreenDiagramZoom + 0.05;
+                        else if (this.fullscreenDiagramZoom < 1.0) newZoom = this.fullscreenDiagramZoom + 0.15;
+                        else if (this.fullscreenDiagramZoom < 3.0) newZoom = this.fullscreenDiagramZoom + 0.35;
+                        else newZoom = this.fullscreenDiagramZoom + 1.0;
+                    } else {
+                        if (this.fullscreenDiagramZoom <= 0.2) newZoom = this.fullscreenDiagramZoom - 0.05;
+                        else if (this.fullscreenDiagramZoom <= 1.0) newZoom = this.fullscreenDiagramZoom - 0.15;
+                        else if (this.fullscreenDiagramZoom <= 3.0) newZoom = this.fullscreenDiagramZoom - 0.35;
+                        else newZoom = this.fullscreenDiagramZoom - 1.0;
+                    }
+                    this.fullscreenDiagramZoom = Math.min(20.0, Math.max(0.02, +newZoom.toFixed(2)));
+                },
+                setFullscreenZoom(val) {
+                    this.fullscreenDiagramZoom = Math.min(20.0, Math.max(0.02, +val.toFixed(2)));
+                },
+                onFullscreenWheel(e) {
+                    const factor = e.deltaY < 0 ? 1.18 : 0.847;
+                    const newZoom = Math.min(20.0, Math.max(0.02, +(this.fullscreenDiagramZoom * factor).toFixed(3)));
+                    this.fullscreenDiagramZoom = newZoom;
                 },
                 resetFullscreenDiagram() {
                     this.fullscreenDiagramZoom = 1;
@@ -11867,52 +11995,91 @@ class ProcessSecureDataset implements ShouldQueue
         x-cloak 
         style="display: none;"
         @keydown.escape.window="closeDiagramFullscreen()"
-        class="fixed inset-0 z-[120] flex flex-col bg-zinc-950/95 backdrop-blur-md p-2 sm:p-4 print:hidden select-none"
+        class="fixed inset-0 z-[120] flex flex-col bg-zinc-100/98 dark:bg-zinc-950/98 backdrop-blur-md p-2 sm:p-4 print:hidden select-none transition-colors duration-200"
     >
         <!-- Fullscreen Header / Toolbar -->
-        <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-zinc-900 border border-zinc-800 text-white shrink-0 font-mono text-xs">
+        <div class="flex flex-wrap items-center justify-between gap-2 p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 shrink-0 font-mono text-xs shadow-xs rounded-none">
             <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 bg-emerald-500 rounded-none inline-block animate-pulse"></span>
-                <span class="font-black text-emerald-400 uppercase tracking-wide" x-text="fullscreenDiagramTitle || 'DIAGRAM FULLSCREEN VIEWER'"></span>
-                <span class="text-[10px] text-zinc-400 hidden md:inline">&bull; Drag mouse untuk menggeser (Pan) &bull; Scroll roda mouse untuk Zoom &bull; Dobel klik untuk Reset</span>
+                <span class="font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-wide" x-text="fullscreenDiagramTitle || 'DIAGRAM FULLSCREEN VIEWER'"></span>
+                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 hidden xl:inline">&bull; Drag mouse untuk menggeser (Pan) &bull; Scroll roda mouse untuk Zoom (0.02x s/d 20x) &bull; Dobel klik untuk Fit</span>
             </div>
+            
             <div class="flex items-center gap-1.5 flex-wrap">
-                <!-- Zoom Controls -->
-                <button type="button" @click="zoomFullscreenDiagram(-0.25)" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold transition rounded-none cursor-pointer" title="Zoom Out (-)">
+                <!-- Zoom Presets & Steppers -->
+                <button type="button" @click="fitFullscreenDiagram()" class="px-2.5 py-1.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-900 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 text-[10px] font-black uppercase transition rounded-none cursor-pointer border border-zinc-300 dark:border-zinc-700" title="Sesuaikan Diagram ke Layar (Auto-Fit)">
+                    ⛶ FIT LAYAR
+                </button>
+                <button type="button" @click="zoomFullscreenDiagram(-0.25)" class="px-3 py-1.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-900 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-white font-bold transition rounded-none cursor-pointer border border-zinc-300 dark:border-zinc-700" title="Zoom Out (-)">
                     -
                 </button>
-                <span class="px-2.5 py-1.5 bg-zinc-950 border border-zinc-800 text-emerald-400 text-[11px] font-bold tabular-nums" x-text="Math.round(fullscreenDiagramZoom * 100) + '%'">100%</span>
-                <button type="button" @click="zoomFullscreenDiagram(0.25)" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold transition rounded-none cursor-pointer" title="Zoom In (+)">
+                
+                <!-- Zoom Percentage Indicator & Presets Dropdown -->
+                <div class="relative" x-data="{ presetOpen: false }">
+                    <button type="button" @click="presetOpen = !presetOpen" class="px-2.5 py-1.5 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 text-emerald-800 dark:text-emerald-400 text-[11px] font-black tabular-nums cursor-pointer flex items-center gap-1">
+                        <span x-text="Math.round(fullscreenDiagramZoom * 100) + '%'">100%</span>
+                        <svg class="w-3 h-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <!-- Quick Zoom Dropdown -->
+                    <div x-show="presetOpen" @click.outside="presetOpen = false" x-cloak class="absolute top-full mt-1 right-0 w-28 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 shadow-xl z-30 py-1 font-mono text-[10px]">
+                        <button type="button" @click="setFullscreenZoom(0.05); presetOpen = false" class="w-full text-left px-3 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200">5% (Mini)</button>
+                        <button type="button" @click="setFullscreenZoom(0.15); presetOpen = false" class="w-full text-left px-3 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200">15%</button>
+                        <button type="button" @click="setFullscreenZoom(0.35); presetOpen = false" class="w-full text-left px-3 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200">35%</button>
+                        <button type="button" @click="setFullscreenZoom(0.50); presetOpen = false" class="w-full text-left px-3 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200">50%</button>
+                        <button type="button" @click="setFullscreenZoom(1.00); presetOpen = false" class="w-full text-left px-3 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-bold text-emerald-600 dark:text-emerald-400">100% (1:1)</button>
+                        <button type="button" @click="setFullscreenZoom(2.00); presetOpen = false" class="w-full text-left px-3 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200">200%</button>
+                        <button type="button" @click="setFullscreenZoom(4.00); presetOpen = false" class="w-full text-left px-3 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200">400%</button>
+                        <button type="button" @click="setFullscreenZoom(8.00); presetOpen = false" class="w-full text-left px-3 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200">800%</button>
+                        <button type="button" @click="setFullscreenZoom(15.00); presetOpen = false" class="w-full text-left px-3 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200">1500% (Ultra)</button>
+                    </div>
+                </div>
+
+                <button type="button" @click="zoomFullscreenDiagram(0.25)" class="px-3 py-1.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-900 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-white font-bold transition rounded-none cursor-pointer border border-zinc-300 dark:border-zinc-700" title="Zoom In (+)">
                     +
                 </button>
-                <button type="button" @click="resetFullscreenDiagram()" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom & Pan">
-                    1:1 RESET
+                <button type="button" @click="resetFullscreenDiagram()" class="px-2.5 py-1.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-900 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-300 text-[10px] font-bold transition rounded-none cursor-pointer border border-zinc-300 dark:border-zinc-700" title="Reset ke 100% (1:1)">
+                    1:1
                 </button>
-                <button type="button" @click="window.copyMermaidCode(fullscreenDiagramSourceId, this)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-black text-[10px] font-black uppercase transition rounded-none cursor-pointer flex items-center gap-1">
+
+                <!-- Copy Mermaid Button -->
+                <button type="button" @click="window.copyMermaidCode(fullscreenDiagramSourceId, this)" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase transition rounded-none cursor-pointer flex items-center gap-1 border border-emerald-600 shadow-xs">
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                    <span>SALIN MERMAID</span>
+                    <span class="hidden sm:inline">SALIN MERMAID</span>
                 </button>
-                <button type="button" @click="closeDiagramFullscreen()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-black uppercase transition rounded-none cursor-pointer ml-1">
+
+                <!-- Close Button -->
+                <button type="button" @click="closeDiagramFullscreen()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-black uppercase transition rounded-none cursor-pointer ml-1 shadow-xs">
                     &times; TUTUP (ESC)
                 </button>
             </div>
         </div>
 
-        <!-- Fullscreen Canvas Area -->
+        <!-- Fullscreen Canvas Area with Dot-Grid Texture -->
         <div 
-            class="flex-1 w-full h-full overflow-hidden bg-black/60 border-x border-b border-zinc-800 flex items-center justify-center p-4 relative cursor-grab active:cursor-grabbing"
-            @wheel.prevent="zoomFullscreenDiagram($event.deltaY < 0 ? 0.2 : -0.2)"
+            id="mermaid-fullscreen-canvas"
+            class="flex-1 w-full h-full overflow-hidden bg-zinc-50 dark:bg-zinc-950 border-x border-b border-zinc-300 dark:border-zinc-800 flex items-center justify-center p-4 relative cursor-grab active:cursor-grabbing select-none"
+            :style="document.documentElement.classList.contains('dark') ? 'background-image: radial-gradient(#27272a 1px, transparent 1px); background-size: 24px 24px;' : 'background-image: radial-gradient(#d4d4d8 1px, transparent 1px); background-size: 24px 24px;'"
+            @wheel.prevent="onFullscreenWheel($event)"
             @mousedown="startFullscreenDrag($event)"
             @mousemove="onFullscreenDrag($event)"
             @mouseup="stopFullscreenDrag()"
             @mouseleave="stopFullscreenDrag()"
-            @dblclick="resetFullscreenDiagram()"
+            @dblclick="fitFullscreenDiagram()"
         >
             <div 
                 id="mermaid-fullscreen-target" 
-                :style="`transform: translate(${fullscreenDiagramPanX}px, ${fullscreenDiagramPanY}px) scale(${fullscreenDiagramZoom}); transform-origin: center center; transition: ${fullscreenDiagramDragging ? 'none' : 'transform 0.12s ease-out'};`"
-                class="w-full h-full flex items-center justify-center text-center text-zinc-100 pointer-events-auto"
+                :style="`transform: translate(${fullscreenDiagramPanX}px, ${fullscreenDiagramPanY}px) scale(${fullscreenDiagramZoom}); transform-origin: center center; transition: ${fullscreenDiagramDragging ? 'none' : 'transform 0.08s ease-out'};`"
+                class="w-auto h-auto flex items-center justify-center text-center text-zinc-900 dark:text-zinc-100 pointer-events-auto"
             >
+            </div>
+
+            <!-- Floating Quick Zoom & Pan HUD at Bottom Center -->
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-white/95 dark:bg-zinc-900/95 border border-zinc-300 dark:border-zinc-700 backdrop-blur-md shadow-lg font-mono text-[11px] text-zinc-900 dark:text-zinc-100 rounded-none pointer-events-auto">
+                <button type="button" @click="zoomFullscreenDiagram(-0.25)" class="px-2 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 font-bold cursor-pointer" title="Perkecil Zoom (-)">-</button>
+                <button type="button" @click="fitFullscreenDiagram()" class="px-2 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-[10px] font-black uppercase text-emerald-700 dark:text-emerald-400 cursor-pointer" title="Auto-Fit Layar">FIT</button>
+                <span class="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-bold tabular-nums" x-text="Math.round(fullscreenDiagramZoom * 100) + '%'">100%</span>
+                <button type="button" @click="resetFullscreenDiagram()" class="px-2 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-[10px] font-bold cursor-pointer" title="Skala 1:1">1:1</button>
+                <button type="button" @click="zoomFullscreenDiagram(0.25)" class="px-2 py-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 font-bold cursor-pointer" title="Perbesar Zoom (+)">+</button>
             </div>
         </div>
     </div>

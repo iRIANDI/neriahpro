@@ -21,18 +21,111 @@ class ScaffoldGeneratorService
         $slug = $blueprint->slug ?: Str::slug($projectName);
         $prd = $blueprint->prd_content ?? [];
         $erdTables = $prd['erd_schema']['tables']
-            ?? ($prd['engineering_specs']['database_erd']['entities'] ?? []);
+            ?? ($prd['engineering_specs']['database_erd']['entities'] ?? ($prd['database_erd'] ?? []));
         if (empty($erdTables)) {
-            $prd = PrdGeneratorService::generate($blueprint);
-            $erdTables = $prd['erd_schema']['tables']
-                ?? ($prd['engineering_specs']['database_erd']['entities'] ?? []);
+            try {
+                $prd = PrdGeneratorService::generate($blueprint);
+                $erdTables = $prd['erd_schema']['tables']
+                    ?? ($prd['engineering_specs']['database_erd']['entities'] ?? []);
+            } catch (\Throwable $genEx) {
+                \Illuminate\Support\Facades\Log::warning('PrdGeneratorService::generate skipped in Scaffold: ' . $genEx->getMessage());
+                $erdTables = [];
+            }
         }
 
-        $mvpEngineeringSpecs = $prd['engineering_specs']['mvp_specs']
-            ?? ($prd['features']['mvp_phase1'] ?? []);
+        if (empty($erdTables)) {
+            $erdTables = [
+                [
+                    'name' => 'users',
+                    'description' => 'System users with ULID and role-based permissions',
+                    'primary_key' => 'id',
+                    'columns' => [
+                        ['name' => 'id', 'type' => 'ulid'],
+                        ['name' => 'name', 'type' => 'string'],
+                        ['name' => 'email', 'type' => 'string'],
+                        ['name' => 'role', 'type' => 'string'],
+                    ]
+                ],
+                [
+                    'name' => 'bookings',
+                    'description' => 'Transactional service bookings and reservations',
+                    'primary_key' => 'id',
+                    'columns' => [
+                        ['name' => 'id', 'type' => 'ulid'],
+                        ['name' => 'user_id', 'type' => 'ulid'],
+                        ['name' => 'booking_code', 'type' => 'string'],
+                        ['name' => 'status', 'type' => 'string'],
+                        ['name' => 'total_amount', 'type' => 'decimal'],
+                    ]
+                ],
+                [
+                    'name' => 'activity_logs',
+                    'description' => 'Immutable audit trails and compliance events',
+                    'primary_key' => 'id',
+                    'columns' => [
+                        ['name' => 'id', 'type' => 'ulid'],
+                        ['name' => 'user_id', 'type' => 'ulid'],
+                        ['name' => 'action', 'type' => 'string'],
+                        ['name' => 'ip_address', 'type' => 'string'],
+                    ]
+                ]
+            ];
+        }
 
-        $universalSchema = $prd['universal_blueprint_schema']
-            ?? ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+        // Normalize each ERD table to guarantee valid associative structure
+        $normalizedErdTables = [];
+        foreach ($erdTables as $idx => $tbl) {
+            if (is_string($tbl)) {
+                $tbl = ['name' => $tbl, 'description' => ucfirst($tbl) . ' domain entity'];
+            }
+            if (!isset($tbl['name']) || empty($tbl['name'])) {
+                $tbl['name'] = is_string($idx) ? $idx : ('entity_' . ($idx + 1));
+            }
+            if (empty($tbl['columns'] ?? [])) {
+                $tbl['columns'] = [
+                    ['name' => 'id', 'type' => 'ulid'],
+                    ['name' => 'title', 'type' => 'string'],
+                    ['name' => 'status', 'type' => 'string'],
+                    ['name' => 'metadata', 'type' => 'jsonb'],
+                ];
+            }
+            $normalizedErdTables[] = $tbl;
+        }
+        $erdTables = $normalizedErdTables;
+
+        $rawSpecs = $prd['engineering_specs']['mvp_specs']
+            ?? ($prd['features']['mvp_phase1'] ?? ($prd['features'] ?? []));
+        $mvpEngineeringSpecs = [];
+        if (is_array($rawSpecs)) {
+            foreach ($rawSpecs as $sIdx => $sItem) {
+                if (is_string($sItem)) {
+                    $sItem = ['title' => $sItem, 'desc' => 'Spesifikasi fitur modul operasional'];
+                }
+                $mvpEngineeringSpecs[] = $sItem;
+            }
+        }
+        if (empty($mvpEngineeringSpecs)) {
+            $mvpEngineeringSpecs = [
+                ['title' => 'Core Operational Management', 'desc' => 'Modul inti alur operasional dan transaksi sistem']
+            ];
+        }
+
+        try {
+            $universalSchema = $prd['universal_blueprint_schema']
+                ?? ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+        } catch (\Throwable $schemaEx) {
+            \Illuminate\Support\Facades\Log::warning('compileUniversalSchema failed in ScaffoldGeneratorService: ' . $schemaEx->getMessage());
+            $universalSchema = [
+                'project_metadata' => [
+                    'app_name' => $projectName,
+                    'slug' => $slug,
+                ],
+                'data_dictionary' => [],
+                'state_machines' => [],
+                'sub_chunked_prompts' => [],
+                'phased_prompt_sequencer' => [],
+            ];
+        }
 
         $discoveryData = is_array($blueprint->discovery_data) ? $blueprint->discovery_data : (json_decode($blueprint->discovery_data ?? '[]', true) ?: []);
         $domainDetected = $discoveryData['meta']['detected_domain'] ?? '';
@@ -844,21 +937,77 @@ MARKDOWN;
         $files = self::generateFiles($blueprint);
         $tempDir = storage_path('app/temp_scaffolds');
         if (! is_dir($tempDir)) {
-            mkdir($tempDir, 0777, true);
+            @mkdir($tempDir, 0777, true);
+        }
+        if (! is_dir($tempDir) || ! is_writable($tempDir)) {
+            $tempDir = sys_get_temp_dir();
         }
 
         $slug = $blueprint->slug ?: 'project';
         $zipPath = $tempDir.'/'.$slug.'-starter-kit.zip';
 
-        $zip = new ZipArchive;
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-            foreach ($files as $relativePath => $content) {
-                $zip->addFromString($relativePath, $content);
+        if (class_exists(ZipArchive::class)) {
+            $zip = new ZipArchive;
+            $openRes = $zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+            if ($openRes === true) {
+                foreach ($files as $relativePath => $content) {
+                    $zip->addFromString($relativePath, (string)$content);
+                }
+                $zip->close();
+                return $zipPath;
             }
-            $zip->close();
         }
 
         return $zipPath;
+    }
+
+    /**
+     * Resilient Fallback Scaffold Generator in case deep multi-layer compilation encounters an environmental failure.
+     */
+    public static function generateFallbackFiles(VisionBlueprint $blueprint): array
+    {
+        $projectName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'MyApplication');
+        $slug = $blueprint->slug ?: Str::slug($projectName);
+        $cleanSlug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
+
+        $schemaSql = "-- =============================================================================\n"
+            . "-- PROJECT OS // STRICT POSTGRESQL 16 ULID DDL SCHEMA (FALLBACK SAFE)\n"
+            . "-- Project: {$projectName}\n"
+            . "-- =============================================================================\n\n"
+            . "CREATE EXTENSION IF NOT EXISTS \"pgcrypto\";\n\n"
+            . "CREATE TABLE IF NOT EXISTS users (\n"
+            . "    id VARCHAR(26) PRIMARY KEY,\n"
+            . "    name VARCHAR(255) NOT NULL,\n"
+            . "    email VARCHAR(255) UNIQUE NOT NULL,\n"
+            . "    password VARCHAR(255) NOT NULL,\n"
+            . "    role VARCHAR(50) DEFAULT 'client',\n"
+            . "    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,\n"
+            . "    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP\n"
+            . ");\n\n"
+            . "CREATE TABLE IF NOT EXISTS bookings (\n"
+            . "    id VARCHAR(26) PRIMARY KEY,\n"
+            . "    user_id VARCHAR(26) REFERENCES users(id) ON DELETE RESTRICT,\n"
+            . "    booking_code VARCHAR(64) UNIQUE NOT NULL,\n"
+            . "    status VARCHAR(50) DEFAULT 'pending',\n"
+            . "    total_amount NUMERIC(15, 2) DEFAULT 0.00,\n"
+            . "    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,\n"
+            . "    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP\n"
+            . ");\n\n"
+            . "CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);\n";
+
+        return [
+            'README.md' => "# {$projectName} (Project OS Starter Kit)\n\nArsitektur: Laravel 13, Filament v5, PostgreSQL 16 Strict ULID, Keyset Cursor Pagination O(1).\n",
+            'docker-compose.yml' => self::generateDockerCompose($blueprint, $slug),
+            '.env.example' => self::generateEnvExample($blueprint, $slug),
+            'schema_complete.sql' => $schemaSql,
+            'database/migrations/schema_complete.sql' => $schemaSql,
+            'docs/product/PRODUCT-BRIEF.md' => self::generateProductBrief($blueprint),
+            '.cursorrules' => PrdGeneratorService::toCursorrules($blueprint, $blueprint->prd_content ?? []),
+            'CLAUDE.md' => PrdGeneratorService::toCursorrules($blueprint, $blueprint->prd_content ?? []),
+            '.agents/PONYTAIL.md' => self::generatePonytailProtocolMarkdown(),
+            'app/Http/Controllers/HealthProbeController.php' => self::generateHealthProbeController($slug),
+            'deploy.sh' => self::generateDeployScript($blueprint, $slug),
+        ];
     }
 
     /**

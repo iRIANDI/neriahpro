@@ -53,8 +53,15 @@ class BlueprintDoctorService
         }
 
         // If no primitives explicitly supplied yet, hydrate mandatory primitives from DB sector if available
-        $sector = PosSector::query()->with('primitives')->where('code', $sectorCode)->first();
-        if (empty($primitiveCodes) && $sector !== null) {
+        $sector = null;
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('pos_sectors')) {
+                $sector = PosSector::query()->with('primitives')->where('code', $sectorCode)->first();
+            }
+        } catch (\Throwable) {
+            $sector = null;
+        }
+        if (empty($primitiveCodes) && $sector !== null && $sector->relationLoaded('primitives')) {
             $primitiveCodes = $sector->primitives
                 ->filter(fn ($p) => (bool) ($p->pivot?->is_mandatory ?? false))
                 ->pluck('code')

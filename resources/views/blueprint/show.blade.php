@@ -1801,14 +1801,16 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 },
                 openTweakFeature(featKey, specIdx, customTitle = null) {
                     let spec = null;
-                    if (this.prdData?.engineering_specs?.mvp_specs?.[specIdx]) {
+                    if (this.prdData?.features?.mvp_phase1?.[specIdx]) {
+                        spec = this.prdData.features.mvp_phase1[specIdx];
+                    } else if (this.prdData?.engineering_specs?.mvp_specs?.[specIdx]) {
                         spec = this.prdData.engineering_specs.mvp_specs[specIdx];
                     } else if (this.prdData?.features?.[featKey]?.[specIdx]) {
                         spec = this.prdData.features[featKey][specIdx];
                     } else if (Array.isArray(this.prdData?.features) && this.prdData.features[specIdx]) {
                         spec = this.prdData.features[specIdx];
                     }
-                    const title = customTitle || (spec?.title ? ('Fitur: ' + spec.title) : 'Perdalam Fitur');
+                    const title = customTitle || (spec?.title ? ('Fitur: ' + spec.title) : (featKey ? ('Fitur: ' + featKey) : 'Perdalam Fitur'));
                     this.openTweakModal('feature_single', title, spec || {}, featKey, specIdx);
                 },
                 openTweakModal(key, title, content = null, featureId = null, specIndex = null) {
@@ -1976,7 +1978,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             body: JSON.stringify({
                                 segment_key: this.tweakSegmentKey,
                                 ai_provider: this.tweakAiProvider,
-                                custom_title: this.tweakSegmentTitle
+                                custom_title: this.tweakSegmentTitle,
+                                feature_id: this.tweakFeatureId,
+                                feature_content: this.tweakContent
                             })
                         });
                         const data = await res.json();
@@ -4751,7 +4755,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                         @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                                             <button 
                                                 type="button" 
-                                                @click="openTweakFeature('{{ $featKey }}', {{ $specIdx }})" 
+                                                @click="openTweakFeature('{{ $featKey }}', {{ $specIdx }}, '{{ addslashes($craftedSpec['title'] ?? ($spec['title'] ?? '')) }}')" 
                                                 class="px-2.5 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 text-xs font-mono font-bold border border-sky-500/30 flex items-center gap-1 transition cursor-pointer"
                                                 title="Perdalam rincian Gherkin, edge cases, dan Acceptance Criteria fitur ini dari Dokumen Acuan"
                                             >

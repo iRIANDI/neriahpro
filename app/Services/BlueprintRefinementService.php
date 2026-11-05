@@ -1113,7 +1113,9 @@ PROMPT;
         VisionBlueprint $blueprint,
         string $segmentKey,
         ?string $preferredAiProvider = null,
-        ?string $customTitle = null
+        ?string $customTitle = null,
+        ?string $featureId = null,
+        ?string $featureContent = null
     ): string {
         $sourceData = $this->getSourceCorpus($blueprint);
         $corpusText = $sourceData['corpus_text'] ?? '';
@@ -1140,7 +1142,28 @@ ATURAN UTAMA:
 2. Selaraskan dengan standar dunia: {$segmentStandards}
 3. Outputkan HANYA instruksi penajaman langsung (tanpa pembuka basa-basi seperti 'Berikut instruksi...', tanpa markdown codeblock). Format dalam 2-3 paragraf padat, terstruktur, profesional, dan tegas.";
 
-        $prompt = "PROYEK: {$businessName}
+        $isFeatureTweak = in_array($segmentKey, ['feature_single', 'features', 'mvp_features']) || !empty($featureId);
+        $featureName = $customTitle ?: ($featureId ?: 'Fitur Utama');
+
+        if ($isFeatureTweak) {
+            $prompt = "PROYEK: {$businessName}
+SEKTOR / ARSITEKTUR: {$sector}
+TARGET FITUR: {$featureName}" . ($featureId ? " [{$featureId}]" : "") . "
+DOKUMEN ACUAN PROYEK (MARKITDOWN CORPUS / BRIEF KLIEN):
+" . Str::limit($corpusText ?: ($rawProblems ?: 'Klien memerlukan solusi platform digital terotomasi.'), 3000) . "
+
+SPESIFIKASI FITUR SAAT INI:
+" . Str::limit($featureContent ?: 'Fitur inti operasional bisnis.', 2000) . "
+
+TUGAS:
+Rumuskan instruksi penajaman arsitektur (Directive Prompt) yang EKSKLUSIF dan SPESIFIK untuk memperdalam fitur '{$featureName}' ini.
+Instruksi harus merinci:
+1. Alur bisnis spesifik & skenario riil berdasarkan Dokumen Acuan (input parameter, formula kalkulasi, validasi).
+2. Edge cases teknis khas fitur ini (timeout, concurrency, retry, pembatalan, validasi input).
+3. Status machine / transisi status data dan kontrak API yang presisi.
+DILARANG memberikan arahan generik. Arahkan langsung pada domain teknis fitur '{$featureName}'.";
+        } else {
+            $prompt = "PROYEK: {$businessName}
 SEKTOR / ARSITEKTUR: {$sector}
 MASALAH UTAMA / KEBUTUHAN: {$rawProblems}
 SEGMEN YANG DIELABORASI: {$segmentKey}" . ($customTitle ? " ({$customTitle})" : "") . "
@@ -1149,6 +1172,7 @@ DOKUMEN ACUAN PROYEK (MARKITDOWN CORPUS / BRIEF KLIEN):
 " . Str::limit($corpusText ?: 'Klien memerlukan solusi platform digital terotomasi dengan integrasi alur bisnis, pelacakan status, dan dasbor admin.', 4000) . "
 
 Rumuskan instruksi penajaman arsitektur (Directive Prompt) yang konkret untuk segmen '{$segmentKey}' agar AI dapat memperdalam segmen ini secara maksimal tanpa asumsi fiktif.";
+        }
 
         try {
             $aiResult = MultiAiModelManager::executeWithFailover(
@@ -1170,22 +1194,40 @@ Rumuskan instruksi penajaman arsitektur (Directive Prompt) yang konkret untuk se
         }
 
         // Resilient deterministic fallback based on exact segment & business context
-        return $this->generateDeterministicDirective($blueprint, $segmentKey, $sourceData);
+        return $this->generateDeterministicDirective($blueprint, $segmentKey, $sourceData, $customTitle, $featureId, $featureContent);
     }
 
     /**
      * Resilient deterministic directive engine when AI APIs are unconfigured or unavailable.
      */
-    protected function generateDeterministicDirective(VisionBlueprint $blueprint, string $segmentKey, array $sourceData): string
-    {
-        $businessName = $blueprint->nama_bisnis ?: 'Sistem Enterprise';
+    protected function generateDeterministicDirective(
+        VisionBlueprint $blueprint,
+        string $segmentKey,
+        array $sourceData,
+        ?string $customTitle = null,
+        ?string $featureId = null,
+        ?string $featureContent = null
+    ): string {
+        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise');
+        $sector = $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
+            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform');
+
+        if (in_array($segmentKey, ['feature_single', 'features', 'mvp_features']) || !empty($featureId)) {
+            $featLabel = $customTitle ?: ($featureId ?: 'Modul Fitur');
+            $featCode = $featureId ? " [{$featureId}]" : '';
+
+            return "Perdalam spesifikasi teknis modul '{$featLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Validasi & Kontrak Request: Rinci aturan validasi FormRequest anti-XSS/SQLi, sanitasi tipe data, batas payload, dan skema respons standar RFC 9457 Problem Details.\n" .
+                   "2. Logika Bisnis & Transisi State: Rumuskan alur transaksi atomik dengan DB::transaction(), pessimistic lock (lockForUpdate) pada entitas krusial, idempotency token, serta mitigasi edge-case kegagalan atau timeout jaringan.\n" .
+                   "3. Otorisasi & UU PDP: Terapkan prinsip Least Privilege pada otorisasi peran pengguna (RBAC), enkripsi data pribadi/sensitif (UU PDP No. 27/2022), dan pastikan endpoint mendukung Keyset Cursor Pagination O(1) untuk menjamin latensi sub-10ms.";
+        }
         
         return match ($segmentKey) {
             'alurs_kerja', 'workflow' => "Perdalam seluruh alur perjalanan pengguna (User Journey) untuk {$businessName} dengan memecah setiap tahapan menjadi langkah atomic yang jelas: mulai dari intake kebutuhan/layanan, kalkulasi & rekomendasi cerdas, pemesanan & penerbitan QR E-Voucher, verifikasi & penugasan staf/armada operasional di dasbor admin, eksekusi layanan lapangan, hingga alur pembatalan, rekonsiliasi, dan pengembalian dana (refund) otomatis. Sertakan aktor penanggung jawab, trigger pemicu, komputasi basis data atomik, dan mitigasi edge cases pada setiap tahapan.",
             
             'database_erd', 'erd_schema' => "Susun dan perinci skema basis data PostgreSQL 16 Strict untuk {$businessName} dengan memastikan seluruh primary key dan foreign key menggunakan tipe data ULID (VARCHAR 26), mengeliminasi relasi fiktif, mengindeks kolom kunci untuk pencarian O(1) Keyset Cursor Pagination, serta melengkapi entitas dengan audit trail (created_at, updated_at, deleted_at, created_by).",
             
-            'features', 'feature_single', 'mvp_features' => "Perdalam spesifikasi teknis modul MVP {$businessName} dengan menjabarkan input/output request yang presisi, validasi FormRequest anti-XSS/SQLi, status machine transisi data, kepatuhan privasi data UU PDP, serta kontrak OpenAPI 3.0 yang siap pakai untuk frontend dan integrasi gateway pihak ketiga.",
+            'features', 'mvp_features' => "Perdalam spesifikasi teknis modul MVP {$businessName} dengan menjabarkan input/output request yang presisi, validasi FormRequest anti-XSS/SQLi, status machine transisi data, kepatuhan privasi data UU PDP, serta kontrak OpenAPI 3.0 yang siap pakai untuk frontend dan integrasi gateway pihak ketiga.",
             
             'system_actors' => "Strukturkan matriks hak akses pengguna (RBAC) {$businessName} berbasis peran konkret: bedakan hak akses publik/klien, operator lapangan/mitra, staf dispatcher/keuangan, hingga administrator manajemen sesuai prinsip Least Privilege dan pemisahan wewenang (Separation of Duties).",
             

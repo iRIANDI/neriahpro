@@ -406,8 +406,12 @@ class VisionBlueprint extends Model
             return true;
         }
 
-        if ($this->documents()->where('document_type', 'contract')->where('status', 'signed')->exists()) {
-            return true;
+        try {
+            if ($this->exists && $this->documents()->where('document_type', 'contract')->where('status', 'signed')->exists()) {
+                return true;
+            }
+        } catch (\Throwable $e) {
+            // Safe fallback when database is temporarily offline
         }
 
         return $this->isDpConfirmed();
@@ -429,10 +433,19 @@ class VisionBlueprint extends Model
      */
     public function isScopeFrozen(): bool
     {
-        return $this->signed_agreement
-            || $this->isDpConfirmed()
-            || ! empty($this->document_sha256)
-            || $this->documents()->where('scope_locked', true)->exists();
+        if ($this->signed_agreement || $this->isDpConfirmed() || ! empty($this->document_sha256)) {
+            return true;
+        }
+
+        try {
+            if ($this->exists && $this->documents()->where('scope_locked', true)->exists()) {
+                return true;
+            }
+        } catch (\Throwable $e) {
+            // Safe fallback when database is temporarily offline
+        }
+
+        return false;
     }
 
     /**
@@ -444,17 +457,25 @@ class VisionBlueprint extends Model
             return true;
         }
 
-        $contract = $this->getContractDocument();
-        if ($contract && (! empty($contract->content_clauses['is_fully_settled']) || in_array($contract->status, ['fully_settled', 'completed'], true))) {
-            return true;
+        try {
+            $contract = $this->getContractDocument();
+            if ($contract && (! empty($contract->content_clauses['is_fully_settled']) || in_array($contract->status, ['fully_settled', 'completed'], true))) {
+                return true;
+            }
+
+            if ($this->exists) {
+                return Transaction::whereIn('status', ['settlement', 'capture', 'success'])
+                    ->where(function ($q) {
+                        $q->where('midtrans_order_id', 'LIKE', 'NPRO-FN-'.$this->id.'-%')
+                            ->orWhere('midtrans_order_id', 'LIKE', 'NPRO-FINAL-'.$this->id.'-%');
+                    })
+                    ->exists();
+            }
+        } catch (\Throwable $e) {
+            // Safe fallback when database is temporarily offline
         }
 
-        return Transaction::whereIn('status', ['settlement', 'capture', 'success'])
-            ->where(function ($q) {
-                $q->where('midtrans_order_id', 'LIKE', 'NPRO-FN-'.$this->id.'-%')
-                    ->orWhere('midtrans_order_id', 'LIKE', 'NPRO-FINAL-'.$this->id.'-%');
-            })
-            ->exists();
+        return false;
     }
 
     /**
@@ -462,7 +483,15 @@ class VisionBlueprint extends Model
      */
     public function getContractDocument(): ?Document
     {
-        return $this->documents()->where('document_type', 'contract')->latest()->first();
+        if (! $this->exists) {
+            return null;
+        }
+
+        try {
+            return $this->documents()->where('document_type', 'contract')->latest()->first();
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**

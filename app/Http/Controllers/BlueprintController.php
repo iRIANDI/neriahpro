@@ -2126,14 +2126,20 @@ class BlueprintController extends Controller
             'segment_key' => 'required|string',
             'ai_provider' => 'nullable|string',
             'custom_title' => 'nullable|string',
+            'feature_id' => 'nullable|string',
+            'feature_content' => 'nullable',
         ]);
 
         $segmentKey = $request->input('segment_key');
         $aiProvider = $request->input('ai_provider');
         $customTitle = $request->input('custom_title');
+        $featureId = $request->input('feature_id');
+        $featureContent = is_string($request->input('feature_content')) 
+            ? $request->input('feature_content') 
+            : (is_array($request->input('feature_content')) ? json_encode($request->input('feature_content')) : null);
 
         try {
-            $directive = $refinementService->elaborateDirective($blueprint, $segmentKey, $aiProvider, $customTitle);
+            $directive = $refinementService->elaborateDirective($blueprint, $segmentKey, $aiProvider, $customTitle, $featureId, $featureContent);
 
             return response()->json([
                 'success' => true,
@@ -2212,11 +2218,19 @@ class BlueprintController extends Controller
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
 
-        $zipPath = ScaffoldGeneratorService::createZipArchive($blueprint);
+        try {
+            $zipPath = ScaffoldGeneratorService::createZipArchive($blueprint);
+            $downloadFilename = ($blueprint->slug ?: 'project').'-starter-kit.zip';
 
-        $downloadFilename = ($blueprint->slug ?: 'project').'-starter-kit.zip';
+            return response()->download($zipPath, $downloadFilename)->deleteFileAfterSend(true);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Export scaffold failed: ' . $e->getMessage(), [
+                'slug' => $slug,
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-        return response()->download($zipPath, $downloadFilename)->deleteFileAfterSend(true);
+            return back()->with('error', 'Gagal membuat arsip scaffold: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -2227,16 +2241,35 @@ class BlueprintController extends Controller
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
 
-        $files = ScaffoldGeneratorService::generateFiles($blueprint);
-        $customizations = $blueprint->user_metadata['scaffold_customizations'] ?? [];
+        try {
+            $files = ScaffoldGeneratorService::generateFiles($blueprint);
+            $customizations = $blueprint->user_metadata['scaffold_customizations'] ?? [];
 
-        return response()->json([
-            'success' => true,
-            'slug' => $blueprint->slug,
-            'project_name' => $blueprint->nama_bisnis ?: 'Proyek',
-            'files' => $files,
-            'customized_files' => array_keys($customizations),
-        ]);
+            return response()->json([
+                'success' => true,
+                'slug' => $blueprint->slug,
+                'project_name' => $blueprint->nama_bisnis ?: 'Proyek',
+                'files' => $files,
+                'customized_files' => array_keys($customizations),
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Preview scaffold failed: ' . $e->getMessage(), [
+                'slug' => $slug,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Resilient fallback so the in-browser scaffold modal NEVER fails with HTTP 500
+            $fallbackFiles = ScaffoldGeneratorService::generateFallbackFiles($blueprint);
+
+            return response()->json([
+                'success' => true,
+                'slug' => $blueprint->slug,
+                'project_name' => $blueprint->nama_bisnis ?: 'Proyek',
+                'files' => $fallbackFiles,
+                'customized_files' => [],
+                'warning' => 'Scaffold dimuat dalam mode tangguh (safe fallback).',
+            ]);
+        }
     }
 
     /**

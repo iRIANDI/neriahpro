@@ -5713,6 +5713,109 @@ PROMPT;
     }
 
     /**
+     * Sanitize entity class name to strict PSR-4 PascalCase standards (concise, 1-3 words max, anti-run-on).
+     */
+    public static function sanitizeEntityClassName(string $title, ?string $relatedTable = null): string
+    {
+        // 1. If relatedTable is provided and valid, prioritize table singular name
+        if (!empty($relatedTable) && is_string($relatedTable)) {
+            $cleanTable = preg_replace('/^(sys_|pt_|app_)/i', '', strtolower(trim($relatedTable)));
+            $singularTable = Str::studly(Str::singular($cleanTable));
+            if (!empty($singularTable) && strlen($singularTable) >= 3 && strlen($singularTable) <= 28) {
+                return $singularTable;
+            }
+        }
+
+        // 2. Strip bracketed/parenthetical explanations (e.g. "(Day Tour di Bali...)")
+        $clean = preg_replace('/\(.*?\)|\[.*?\]|\{.*?\}/u', ' ', $title);
+        
+        // Strip everything after colon, semicolon, slash, or dash with space
+        $clean = preg_replace('/[:;\/].*$/u', ' ', $clean);
+        $clean = preg_replace('/\s+-\s+.*$/u', ' ', $clean);
+
+        // Stop words (Indonesian & English connector/generic words)
+        $stopWords = [
+            'dan', 'atau', 'di', 'ke', 'dari', 'untuk', 'dengan', 'yang', 'pada', 
+            'in', 'out', 'hotel', 'and', 'or', 'of', 'for', 'with', 'by', 'the',
+            'pilihan', 'jenis', 'jumlah', 'rute', 'harga', 'sistem', 'fitur', 'modul',
+            'day', 'tour', 'bali', 'layanan', 'data', 'informasi', 'kelola', 'manajemen',
+            'spesifikasi', 'rekayasa', 'aplikasi', 'platform'
+        ];
+
+        // Split words
+        $words = preg_split('/[\s_\-]+/u', $clean, -1, PREG_SPLIT_NO_EMPTY);
+        $meaningfulWords = [];
+        foreach ($words as $w) {
+            $wClean = preg_replace('/[^a-zA-Z0-9]/', '', $w);
+            if (empty($wClean)) continue;
+            if (in_array(strtolower($wClean), $stopWords) && count($meaningfulWords) >= 1) {
+                continue;
+            }
+            $meaningfulWords[] = ucfirst(strtolower($wClean));
+            if (count($meaningfulWords) >= 2) {
+                break;
+            }
+        }
+
+        if (empty($meaningfulWords)) {
+            return 'ModulLayanan';
+        }
+
+        $result = implode('', $meaningfulWords);
+        $result = substr($result, 0, 28);
+        if (preg_match('/^[0-9]/', $result)) {
+            $result = 'Modul' . $result;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Dynamically sanitize long run-on file paths into clean PSR-4 paths.
+     */
+    public static function sanitizeFilePath(string $filePath, string $featureTitle = '', ?string $relatedTable = null): string
+    {
+        $filePath = trim($filePath);
+        $filename = basename($filePath);
+        $dirname = dirname($filePath);
+        
+        $isBlade = str_ends_with($filename, '.blade.php');
+        $baseNameWithoutExt = preg_replace('/(\.blade)?\.php$/', '', $filename);
+        
+        // If the filename without suffix is excessively long (> 30 characters), clean it
+        if (strlen($baseNameWithoutExt) > 30) {
+            // Preserve Laravel database migration files
+            if (str_contains($filePath, 'migrations') || preg_match('/^(xxxx|\d{4}_\d{2}_\d{2}_\d{6})_create_/', $filename)) {
+                $cleanTable = !empty($relatedTable) ? $relatedTable : Str::snake(Str::plural(self::sanitizeEntityClassName($featureTitle ?: $baseNameWithoutExt)));
+                $prefix = preg_match('/^(xxxx|\d{4}_\d{2}_\d{2}_\d{6})_/', $filename, $m) ? $m[1] : 'xxxx';
+                return ($dirname === '.' || $dirname === '') ? "{$prefix}_create_{$cleanTable}_table.php" : "{$dirname}/{$prefix}_create_{$cleanTable}_table.php";
+            }
+
+            $cleanEntity = self::sanitizeEntityClassName($featureTitle ?: $baseNameWithoutExt, $relatedTable);
+
+            if ($isBlade) {
+                $filename = Str::kebab($cleanEntity) . '.blade.php';
+            } elseif (str_ends_with($baseNameWithoutExt, 'Controller')) {
+                $filename = "{$cleanEntity}Controller.php";
+            } elseif (str_ends_with($baseNameWithoutExt, 'Service')) {
+                $filename = "{$cleanEntity}Service.php";
+            } elseif (str_ends_with($baseNameWithoutExt, 'ContractTest')) {
+                $filename = "{$cleanEntity}ContractTest.php";
+            } elseif (str_ends_with($baseNameWithoutExt, 'Test')) {
+                $filename = "{$cleanEntity}Test.php";
+            } elseif (str_ends_with($baseNameWithoutExt, 'Resource')) {
+                $filename = "{$cleanEntity}Resource.php";
+            } else {
+                $filename = "{$cleanEntity}.php";
+            }
+            
+            return ($dirname === '.' || $dirname === '') ? $filename : "{$dirname}/{$filename}";
+        }
+
+        return $filePath;
+    }
+
+    /**
      * Convert entire Vision Blueprint PRD into a complete, professional Markdown document.
      */
     public static function toMarkdown(VisionBlueprint $blueprint, array $prd): string

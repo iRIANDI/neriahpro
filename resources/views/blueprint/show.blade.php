@@ -177,6 +177,10 @@
                 color: #0f172a !important;
                 border-color: #cbd5e1 !important;
             }
+            @page {
+                size: A4 portrait;
+                margin: 12mm 10mm 15mm 10mm;
+            }
             .max-w-\[1480px\], main, .max-w-4xl, .lg\:max-w-5xl {
                 max-width: 100% !important;
                 width: 100% !important;
@@ -184,9 +188,15 @@
                 padding: 0 !important;
                 display: block !important;
             }
-            section, article, .print-break-inside-avoid, table, tr, pre, .border {
+            .print-break-inside-avoid, .break-inside-avoid, table, thead, tbody, tr, pre, code, blockquote,
+            .pricing-card, .feature-card,
+            .grid > *, [class*="grid"] > * {
                 break-inside: avoid !important;
                 page-break-inside: avoid !important;
+            }
+            h1, h2, h3, h4, h5, h6 {
+                break-after: avoid !important;
+                page-break-after: avoid !important;
             }
             svg, img {
                 max-width: 100% !important;
@@ -2352,6 +2362,14 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 },
                 showAiPromptModal: false,
                 showLegalTermsModal: false,
+                legalTermsTab: 'id',
+                openLegalTermsModal(tab) {
+                    this.legalTermsTab = tab || (this.locale === 'en' ? 'en' : 'id');
+                    this.showLegalTermsModal = true;
+                },
+                closeLegalTermsModal() {
+                    this.showLegalTermsModal = false;
+                },
                 showRawMdWarningModal: false,
                 rawMdActionType: 'download',
                 openRawMdWarning(action) {
@@ -4739,8 +4757,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                             </div>
                                             <div class="flex flex-wrap gap-1.5">
                                                 @foreach($spec['target_files'] as $tf)
+                                                    @php
+                                                        $displayTf = \App\Services\PrdGeneratorService::sanitizeFilePath($tf, $spec['title'] ?? '', $spec['related_table'] ?? null);
+                                                    @endphp
                                                     <span class="px-2 py-0.5 bg-white dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 text-[11px] border border-zinc-300 dark:border-zinc-800 select-all font-mono">
-                                                        {{ $tf }}
+                                                        {{ $displayTf }}
                                                     </span>
                                                 @endforeach
                                             </div>
@@ -5456,8 +5477,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                     <span class="text-amber-600 dark:text-amber-400 text-[10px] block font-bold">BOUNDED TARGET FILES (ISOLASI FILE AGENT):</span>
                                     <div class="flex flex-wrap gap-1.5">
                                         @foreach($spec['target_files'] ?? [] as $tf)
+                                            @php
+                                                $displayTf = \App\Services\PrdGeneratorService::sanitizeFilePath($tf, $spec['title'] ?? '', $spec['related_table'] ?? null);
+                                            @endphp
                                             <span class="px-2 py-0.5 bg-white dark:bg-black text-zinc-800 dark:text-zinc-300 text-[10px] font-mono border border-zinc-300 dark:border-zinc-800 select-all">
-                                                {{ $tf }}
+                                                {{ $displayTf }}
                                             </span>
                                         @endforeach
                                     </div>
@@ -9599,7 +9623,7 @@ class ProcessSecureDataset implements ShouldQueue
                             :class="selectedTier === '{{ $tierItem['id'] }}' 
                                 ? '{{ $isHighSpeed ? 'border-2 border-amber-500 bg-amber-500/10 dark:bg-amber-950/30 shadow-lg' : 'border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-950/30 shadow-lg' }}' 
                                 : 'border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 hover:border-zinc-400'"
-                            class="p-5 cursor-pointer transition relative flex flex-col justify-between"
+                            class="p-5 cursor-pointer transition relative flex flex-col justify-between pricing-card break-inside-avoid print:break-inside-avoid"
                         >
                             @if($isMiddleRecommended)
                                 <div class="absolute -top-3 right-4 px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-black uppercase tracking-wider">
@@ -11142,15 +11166,15 @@ class ProcessSecureDataset implements ShouldQueue
                         Persetujuan Syarat &amp; Ketentuan Layanan, Garansi SLA &amp; Refund Midtrans
                     </strong>
                     <span x-show="locale === 'id'">
-                        Saya menyetujui <button type="button" @click.stop.prevent="showLegalTermsModal = true" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer">Syarat &amp; Ketentuan Layanan</button>, 
-                        <button type="button" @click.stop.prevent="showLegalTermsModal = true" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer">Kebijakan Garansi 30 Hari &amp; Refund</button>, 
-                        <button type="button" @click.stop.prevent="showLegalTermsModal = true" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer">Penanganan Pembayaran Ganda</button>, serta 
+                        Saya menyetujui <button type="button" @click.stop.prevent="openLegalTermsModal('id')" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer pointer-events-auto">Syarat &amp; Ketentuan Layanan</button>, 
+                        <button type="button" @click.stop.prevent="openLegalTermsModal('id')" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer pointer-events-auto">Kebijakan Garansi 30 Hari &amp; Refund</button>, 
+                        <button type="button" @click.stop.prevent="openLegalTermsModal('id')" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer pointer-events-auto">Penanganan Pembayaran Ganda</button>, serta 
                         penguncian spesifikasi scope dokumen <span class="font-mono font-bold text-zinc-900 dark:text-zinc-100">{{ strtoupper(substr($blueprint->id, 0, 10)) }}</span> (Scope Freeze).
                     </span>
                     <span x-show="locale === 'en'">
-                        I agree to the <button type="button" @click.stop.prevent="showLegalTermsModal = true" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer">Terms of Service</button>, 
-                        <button type="button" @click.stop.prevent="showLegalTermsModal = true" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer">30-Day SLA &amp; Refund Policy</button>, 
-                        <button type="button" @click.stop.prevent="showLegalTermsModal = true" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer">Double-Payment Protection</button>, and 
+                        I agree to the <button type="button" @click.stop.prevent="openLegalTermsModal('en')" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer pointer-events-auto">Terms of Service</button>, 
+                        <button type="button" @click.stop.prevent="openLegalTermsModal('en')" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer pointer-events-auto">30-Day SLA &amp; Refund Policy</button>, 
+                        <button type="button" @click.stop.prevent="openLegalTermsModal('en')" class="text-emerald-600 dark:text-emerald-400 underline font-bold hover:text-emerald-500 cursor-pointer pointer-events-auto">Double-Payment Protection</button>, and 
                         locking scope specifications of document <span class="font-mono font-bold text-zinc-900 dark:text-zinc-100">{{ strtoupper(substr($blueprint->id, 0, 10)) }}</span> (Scope Freeze).
                     </span>
                 </span>
@@ -11471,17 +11495,14 @@ class ProcessSecureDataset implements ShouldQueue
     <div 
         x-show="showLegalTermsModal" 
         x-cloak 
-        x-data="{ legalTermsTab: 'id' }"
-        @keydown.escape.window="showLegalTermsModal = false"
-        class="fixed inset-0 z-[120] overflow-y-auto flex items-center justify-center p-3 sm:p-6 no-print font-sans"
+        @click.self="closeLegalTermsModal()"
+        @keydown.escape.window="closeLegalTermsModal()"
+        class="fixed inset-0 z-[160] overflow-y-auto bg-black/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 no-print font-sans"
+        style="display: none;"
     >
-        <!-- Backdrop -->
-        <div class="fixed inset-0 bg-black/80 backdrop-blur-xs" @click="showLegalTermsModal = false" x-transition.opacity></div>
-
         <!-- Dialog Box -->
         <div 
-            @click.stop
-            class="relative z-10 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 max-w-3xl w-full my-auto max-h-[88vh] flex flex-col p-6 rounded-none text-zinc-900 dark:text-zinc-100 shadow-2xl"
+            class="relative z-20 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 max-w-3xl w-full my-auto max-h-[88vh] flex flex-col p-6 rounded-none text-zinc-900 dark:text-zinc-100 shadow-2xl pointer-events-auto"
         >
             <!-- Header -->
             <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4 shrink-0">
@@ -11497,24 +11518,25 @@ class ProcessSecureDataset implements ShouldQueue
                 <div class="flex items-center gap-1.5 font-mono text-xs">
                     <button 
                         type="button" 
-                        @click.stop="legalTermsTab = 'id'" 
-                        :class="legalTermsTab === 'id' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
-                        class="px-2.5 py-1 rounded-none border border-zinc-300 dark:border-zinc-700 cursor-pointer"
+                        @click="legalTermsTab = 'id'" 
+                        :class="legalTermsTab === 'id' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                        class="px-2.5 py-1 rounded-none border border-zinc-300 dark:border-zinc-700 cursor-pointer pointer-events-auto transition"
                     >
                         ID
                     </button>
                     <button 
                         type="button" 
-                        @click.stop="legalTermsTab = 'en'" 
-                        :class="legalTermsTab === 'en' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
-                        class="px-2.5 py-1 rounded-none border border-zinc-300 dark:border-zinc-700 cursor-pointer"
+                        @click="legalTermsTab = 'en'" 
+                        :class="legalTermsTab === 'en' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                        class="px-2.5 py-1 rounded-none border border-zinc-300 dark:border-zinc-700 cursor-pointer pointer-events-auto transition"
                     >
                         EN
                     </button>
                     <button 
                         type="button" 
-                        @click.stop="showLegalTermsModal = false" 
-                        class="ml-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-white text-lg font-bold px-2 cursor-pointer"
+                        @click="closeLegalTermsModal()" 
+                        class="ml-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-white text-lg font-bold px-2 cursor-pointer pointer-events-auto"
+                        title="Tutup (ESC)"
                     >
                         &times;
                     </button>
@@ -11607,8 +11629,8 @@ class ProcessSecureDataset implements ShouldQueue
                 <span class="text-[10px] text-zinc-500 font-mono">NERIAH PRO &bull; MIDTRANS PAYMENT COMPLIANCE</span>
                 <button 
                     type="button" 
-                    @click.stop="showLegalTermsModal = false; agreeSignOff = true" 
-                    class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold font-mono text-xs uppercase rounded-none transition cursor-pointer"
+                    @click="agreeSignOff = true; closeLegalTermsModal()" 
+                    class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold font-mono text-xs uppercase rounded-none transition cursor-pointer pointer-events-auto"
                 >
                     Saya Mengerti &amp; Setuju
                 </button>

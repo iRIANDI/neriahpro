@@ -873,7 +873,7 @@ PROMPT;
             $catLabel = $item['category_label'] ?? 'Modul Inti';
 
             $slugTitle = Str::slug($title);
-            $pascal = Str::studly(str_replace('-', ' ', $slugTitle));
+            $pascal = PrdGeneratorService::sanitizeEntityClassName($title, $item['related_table'] ?? null);
 
             return [
                 'id' => $id,

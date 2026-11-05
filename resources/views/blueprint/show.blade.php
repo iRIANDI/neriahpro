@@ -2396,6 +2396,34 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 indexSearchQuery: '',
                 indexAccordionOpen: true,
                 floatingIndexOpen: false,
+                navMode: (() => {
+                    try {
+                        return localStorage.getItem('neriah_blueprint_nav_mode') || 'sidebar';
+                    } catch (e) {
+                        return 'sidebar';
+                    }
+                })(),
+                setNavMode(mode) {
+                    this.navMode = mode;
+                    try {
+                        localStorage.setItem('neriah_blueprint_nav_mode', mode);
+                    } catch (e) {}
+                    this.$nextTick(() => {
+                        if (window.reRenderActiveMermaid) window.reRenderActiveMermaid();
+                    });
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: mode === 'sidebar' ? 'MODE 1 AKTIF' : 'MODE 2 AKTIF',
+                            message: mode === 'sidebar' 
+                                ? 'Navigasi sticky index di kiri aktif. Dock kanan bawah disembunyikan.' 
+                                : 'Konten melebar penuh ke layar. Navigasi index berpindah ke dock kanan bawah.'
+                        });
+                    }
+                },
+                toggleNavMode() {
+                    this.setNavMode(this.navMode === 'sidebar' ? 'focus' : 'sidebar');
+                },
                 autoSyncAccordion: true,
                 sectionGroupMap: {
                     'section-1': 'scope',
@@ -2651,6 +2679,30 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     <span class="hidden sm:inline">EXPORT SCAFFOLD</span>
                     <span class="sm:hidden">SCAFFOLD</span>
+                </button>
+
+                <!-- Navigation Layout Mode Switcher (Mode 1: Sidebar Index vs Mode 2: Full Width & Floating Dock) -->
+                <button 
+                    type="button" 
+                    @click="toggleNavMode()" 
+                    class="px-2.5 sm:px-3 py-1 font-mono text-xs uppercase font-black rounded-none border transition flex items-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer shadow-none"
+                    :class="navMode === 'sidebar' 
+                        ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 border-zinc-900 dark:border-zinc-100' 
+                        : 'bg-emerald-100 text-emerald-950 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-400 dark:border-emerald-700 hover:bg-emerald-200 dark:hover:bg-emerald-900'"
+                    :title="navMode === 'sidebar' 
+                        ? 'Mode 1 Aktif: Index disematkan di kiri layar. Klik untuk beralih ke Mode 2 (Layar Penuh).' 
+                        : 'Mode 2 Aktif: Layar Penuh. Klik untuk beralih ke Mode 1 (Sidebar Kiri).'"
+                >
+                    <span x-show="navMode === 'sidebar'" class="flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h6v12H4zM12 6h8v12h-8z"/></svg>
+                        <span class="hidden md:inline">MODE 1: SIDEBAR</span>
+                        <span class="md:hidden">SIDEBAR</span>
+                    </span>
+                    <span x-show="navMode !== 'sidebar'" x-cloak class="flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                        <span class="hidden md:inline">MODE 2: LEBAR PENUH</span>
+                        <span class="md:hidden">LEBAR</span>
+                    </span>
                 </button>
 
                 <!-- Accordion View Controls (Expand / Collapse All Sections) -->
@@ -2978,10 +3030,13 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
         @endphp
 
         <!-- PUBLISHED FULL ULTIMATE PRD (SHARP BRUTALIST TECHNICAL THEME) -->
-        <div class="max-w-[1480px] mx-auto w-full px-3 sm:px-6 py-6 flex gap-6 lg:gap-8 items-start justify-center relative">
+        <div class="mx-auto w-full py-6 flex gap-6 lg:gap-8 items-start justify-center relative transition-all duration-200"
+            :class="navMode === 'focus' ? 'max-w-[1850px] px-3 sm:px-8' : 'max-w-[1480px] px-3 sm:px-6'">
             
             <!-- DESKTOP DEDICATED STICKY NAVIGATION SIDEBAR (xl:flex) -->
             <aside 
+                x-show="navMode === 'sidebar'"
+                x-cloak
                 class="w-72 xl:w-80 shrink-0 hidden xl:flex flex-col sticky z-20 font-mono shadow-sm no-print bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-none overflow-hidden"
                 style="top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 48px) + 16px); max-height: calc(100vh - var(--global-nav-h, 88px) - var(--toolbar-h, 48px) - 32px);"
                 x-on:wheel.passive="(e) => {
@@ -3006,8 +3061,19 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             </p>
                         </div>
                     </div>
-                    <div class="text-[10px] font-bold text-emerald-400 bg-zinc-800 px-2 py-0.5 border border-zinc-700 whitespace-nowrap">
-                        12 BAB // 13 BLOK
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <div class="text-[10px] font-bold text-emerald-400 bg-zinc-800 px-2 py-0.5 border border-zinc-700 whitespace-nowrap">
+                            12 BAB // 13 BLOK
+                        </div>
+                        <button 
+                            type="button" 
+                            @click="toggleNavMode()" 
+                            class="text-[10px] font-bold text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-2 py-0.5 border border-zinc-700 transition flex items-center gap-1 cursor-pointer"
+                            title="Alihkan ke Mode 2: Layar Penuh (Sembunyikan sidebar, navigasi via dock kanan bawah)"
+                        >
+                            <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                            <span class="hidden 2xl:inline">LEBAR</span>
+                        </button>
                     </div>
                 </div>
 
@@ -3151,7 +3217,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
             </aside>
 
             <!-- MAIN PRD CONTENT -->
-            <main class="flex-1 max-w-4xl lg:max-w-5xl w-full min-w-0">
+            <main :class="navMode === 'focus' ? 'w-full max-w-none min-w-0' : 'flex-1 max-w-4xl lg:max-w-5xl w-full min-w-0'" class="transition-all duration-200">
                 
                 <!-- Document Hero Card -->
                 <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none relative">
@@ -6186,8 +6252,6 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                                 >
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
                                     <span>RINCIAN LANGKAH (GRID)</span>
-                                </button>
-                            </div>
                                 </button>
                             </div>
 
@@ -10362,9 +10426,11 @@ class ProcessSecureDataset implements ShouldQueue
                 </div> <!-- END ACCORDION BODY SECTION-10 -->
             </section>
 
-            <!-- FLOATING QUICK-ACCESS DOCK & SCROLL-SPY NAVIGATOR -->
+            <!-- FLOATING QUICK-ACCESS DOCK & SCROLL-SPY NAVIGATOR (MODE 2: FOCUS FULL WIDTH / MOBILE) -->
             <aside 
-                class="fixed bottom-5 right-4 sm:right-6 z-40 font-mono no-print flex flex-col items-end"
+                :class="navMode === 'focus' ? 'flex' : 'flex xl:hidden'"
+                x-cloak
+                class="fixed bottom-5 right-4 sm:right-6 z-40 font-mono no-print flex-col items-end"
                 @keydown.escape.window="floatingIndexOpen = false"
             >
                 <!-- Floating Accordion Drawer Popover -->
@@ -10592,6 +10658,18 @@ class ProcessSecureDataset implements ShouldQueue
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
                         <span class="hidden sm:inline" x-show="locale === 'en'">INDEX</span>
                         <span class="hidden sm:inline" x-show="locale !== 'en'">DAFTAR ISI</span>
+                    </button>
+
+                    <!-- Switch Back to Mode 1 (Sidebar Mode) -->
+                    <button 
+                        type="button" 
+                        x-show="navMode === 'focus'"
+                        @click="setNavMode('sidebar')" 
+                        class="px-3 py-2 text-xs font-bold uppercase tracking-wider transition border-r border-zinc-800 flex items-center gap-1.5 text-zinc-300 hover:text-emerald-400 hover:bg-zinc-800/80 cursor-pointer"
+                        title="Beralih kembali ke Mode 1: Tampilkan index di sebelah kiri layar"
+                    >
+                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h6v12H4zM12 6h8v12h-8z"/></svg>
+                        <span class="hidden sm:inline">MODE SIDEBAR</span>
                     </button>
 
                     <!-- Scroll to Top Button -->

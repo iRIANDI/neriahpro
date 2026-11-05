@@ -2751,20 +2751,6 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     </span>
                 </button>
 
-                <!-- Accordion View Controls (Expand / Collapse All Sections) -->
-                <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
-                    <button type="button" @click="expandAllSections()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Buka Seluruh 13 Seksi PRD">
-                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        <span class="hidden xl:inline">BUKA SEMUA</span>
-                        <span class="xl:hidden">BUKA</span>
-                    </button>
-                    <button type="button" @click="collapseAllSections()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Ciutkan Seluruh Seksi PRD">
-                        <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
-                        <span class="hidden xl:inline">TUTUP SEMUA</span>
-                        <span class="xl:hidden">TUTUP</span>
-                    </button>
-                </div>
-
                 <!-- Unified Document Actions: Print, PDF, MD, .cursorrules -->
                 <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
                     <button type="button" onclick="window.printPrdDocument()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Cetak PRD (Print)">
@@ -2857,6 +2843,20 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <span class="hidden md:inline">{{ $isRetailLicense ? 'RETAIL LICENSE' : 'SCOPE LOCKED' }}</span>
                     </span>
                 @endif
+
+                <!-- Relocated Accordion View Controls (Beside Cockpit & Edit Spec) -->
+                <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
+                    <button type="button" @click="expandAllSections()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Buka Seluruh 13 Seksi PRD">
+                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <span class="hidden xl:inline">BUKA SEMUA</span>
+                        <span class="xl:hidden">BUKA</span>
+                    </button>
+                    <button type="button" @click="collapseAllSections()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Ciutkan Seluruh Seksi PRD">
+                        <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                        <span class="hidden xl:inline">TUTUP SEMUA</span>
+                        <span class="xl:hidden">TUTUP</span>
+                    </button>
+                </div>
             @endif
         </div>
     </header>

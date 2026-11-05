@@ -10,8 +10,15 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <!-- Local Alpine.js Engine (Zero External CDN Latency) -->
+    <script defer src="{{ asset('js/vendor/alpine.min.js') }}"></script>
+
     <!-- Midtrans Snap JS (In-Page Popup Modal) -->
     <script src="{{ config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/snap.js') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 
     <script>
         if (localStorage.getItem('neriah_theme') === 'dark' || (!localStorage.getItem('neriah_theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -402,12 +409,13 @@
                         <div 
                             x-show="showLegalModal" 
                             x-cloak 
+                            @click.self="showLegalModal = false"
                             @keydown.escape.window="showLegalModal = false"
-                            class="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 no-print font-sans"
+                            class="fixed inset-0 z-[160] overflow-y-auto bg-black/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 no-print font-sans pointer-events-auto"
+                            style="display: none;"
                         >
                             <div 
-                                @click.outside="showLegalModal = false" 
-                                class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 max-w-3xl w-full my-auto max-h-[88vh] flex flex-col p-6 rounded-none text-zinc-900 dark:text-zinc-100 shadow-2xl relative"
+                                class="relative z-20 bg-white dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 max-w-3xl w-full my-auto max-h-[88vh] flex flex-col p-6 rounded-none text-zinc-900 dark:text-zinc-100 shadow-2xl pointer-events-auto"
                             >
                                 <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4 shrink-0">
                                     <div>
@@ -422,23 +430,24 @@
                                         <button 
                                             type="button" 
                                             @click="legalTab = 'id'" 
-                                            :class="legalTab === 'id' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
-                                            class="px-2.5 py-1 rounded-none border border-zinc-300 dark:border-zinc-700 cursor-pointer"
+                                            :class="legalTab === 'id' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                                            class="px-2.5 py-1 rounded-none border border-zinc-300 dark:border-zinc-700 cursor-pointer pointer-events-auto transition"
                                         >
                                             ID
                                         </button>
                                         <button 
                                             type="button" 
                                             @click="legalTab = 'en'" 
-                                            :class="legalTab === 'en' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
-                                            class="px-2.5 py-1 rounded-none border border-zinc-300 dark:border-zinc-700 cursor-pointer"
+                                            :class="legalTab === 'en' ? 'bg-emerald-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+                                            class="px-2.5 py-1 rounded-none border border-zinc-300 dark:border-zinc-700 cursor-pointer pointer-events-auto transition"
                                         >
                                             EN
                                         </button>
                                         <button 
                                             type="button" 
                                             @click="showLegalModal = false" 
-                                            class="ml-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-white text-lg font-bold px-2 cursor-pointer"
+                                            class="ml-2 text-zinc-400 hover:text-zinc-700 dark:hover:text-white text-lg font-bold px-2 cursor-pointer pointer-events-auto"
+                                            title="Tutup (ESC)"
                                         >
                                             &times;
                                         </button>
@@ -527,8 +536,8 @@
                                     <span class="text-[10px] text-zinc-500 font-mono">NERIAH PRO &bull; MIDTRANS SNAP PAYMENT</span>
                                     <button 
                                         type="button" 
-                                        @click="showLegalModal = false; const c = document.getElementById('cart-terms-agree'); if(c) c.checked = true;" 
-                                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold font-mono text-xs uppercase rounded-none transition cursor-pointer"
+                                        @click="showLegalModal = false; const c = document.getElementById('cart-terms-agree'); if(c) { c.checked = true; c.dispatchEvent(new Event('change')); }" 
+                                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold font-mono text-xs uppercase rounded-none transition cursor-pointer pointer-events-auto"
                                     >
                                         Saya Mengerti &amp; Setuju
                                     </button>

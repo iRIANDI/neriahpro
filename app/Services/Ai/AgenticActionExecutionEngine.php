@@ -112,6 +112,7 @@ class AgenticActionExecutionEngine
                 'verify_project_isolation_and_clean_state' => (strtolower(trim((string) ($args['action'] ?? 'inspect'))) === 'purge_stale_drafts' ? $this->guardMutation($user, $toolName) : null) ?? $this->verifyProjectIsolationAndCleanState($args),
                 'inspect_hardware_and_websocket_runtime_contracts' => $this->inspectHardwareAndWebsocketRuntimeContracts($args),
                 'generate_syntax_lock_and_client_sop_pack' => $this->generateSyntaxLockAndClientSopPack($args),
+                'audit_tier1_multilanguage_and_schema_integrity' => $this->auditTier1MultilanguageAndSchemaIntegrity($args),
                 'audit_fifteen_pillars_architectural_freeze' => (! empty($args['persist_sync']) ? $this->guardMutation($user, $toolName) : null) ?? $this->auditFifteenPillarsArchitecturalFreeze($args),
                 'configure_visual_ui_and_jurisdiction_locale' => (! empty($args['project_ulid']) ? $this->guardMutation($user, $toolName) : null) ?? $this->configureVisualUiAndJurisdictionLocale($args),
                 'audit_living_cve_alerts_and_autopatch' => (! empty($args['project_ulid']) && ! empty($args['acknowledge_all']) ? $this->guardMutation($user, $toolName) : null) ?? $this->auditLivingCveAlertsAndAutopatch($args),
@@ -723,6 +724,140 @@ class AgenticActionExecutionEngine
         $hint = isset($args['project_hint']) ? (string) $args['project_hint'] : null;
 
         return app(BrownfieldMigrationAuditorService::class)->auditSchema($schemaText, $hint, true);
+    }
+
+    /**
+     * Audit ERD Schema compliance for Multi-Language 2-Tier Architecture (Tier 1 Native JSONB) vs Scalar Integrity.
+     */
+    protected function auditTier1MultilanguageAndSchemaIntegrity(array $args): array
+    {
+        $bpLookup = trim((string) ($args['blueprint_id'] ?? ''));
+        $autoHeal = (bool) ($args['auto_heal'] ?? false);
+
+        $blueprint = null;
+        if ($bpLookup !== '') {
+            $blueprint = VisionBlueprint::where('id', $bpLookup)->orWhere('slug', $bpLookup)->first();
+        } else {
+            $blueprint = VisionBlueprint::orderBy('updated_at', 'desc')->first();
+        }
+
+        if (! $blueprint) {
+            return [
+                'status' => 'error',
+                'message' => 'Tidak ada blueprint yang ditemukan untuk diaudit skema basis datanya.',
+            ];
+        }
+
+        $prd = $blueprint->prd_content ?? [];
+        $tables = $prd['erd_schema']['tables'] ?? ($prd['database_erd'] ?? []);
+
+        if (empty($tables)) {
+            return [
+                'status' => 'warning',
+                'blueprint_slug' => $blueprint->slug,
+                'message' => 'Blueprint belum memiliki skema ERD terdaftar.',
+            ];
+        }
+
+        $humanNarrativeCols = ['name', 'title', 'description', 'reason', 'memo', 'message_body', 'decision_note', 'threshold_reason', 'explanation_note', 'tier_name'];
+        $exemptFromHumanJson = ['users.name'];
+
+        $auditLog = [];
+        $healedCount = 0;
+        $violationCount = 0;
+        $totalEvaluatedCols = 0;
+        $updatedTables = $tables;
+
+        foreach ($updatedTables as $tIdx => &$tbl) {
+            $tName = strtolower(trim((string) ($tbl['name'] ?? '')));
+            $cols = &$tbl['columns'];
+
+            if ($tName === 'jumlah_oramgs') {
+                $auditLog[] = [
+                    'table' => $tName,
+                    'severity' => 'WARNING',
+                    'rule' => 'Domain Normalization',
+                    'finding' => 'Tabel JUMLAH_ORAMGS terdeteksi sebagai typo kata "jumlah oramg".',
+                    'recommendation' => 'Normalisasikan menjadi atribut passenger_capacity pada tabel VEHICLES atau FLEET_CAPACITIES.',
+                ];
+            }
+
+            foreach ($cols as $cIdx => &$col) {
+                $totalEvaluatedCols++;
+                $cName = strtolower(trim((string) ($col['name'] ?? '')));
+                $cType = strtolower(trim((string) ($col['type'] ?? 'string')));
+                $fullPath = "{$tName}.{$cName}";
+
+                $isPk = ($col['primary'] ?? false) || ($col['index'] ?? '') === 'PRIMARY' || $cName === 'id';
+                $isFk = ($col['foreign'] ?? false) || str_ends_with($cName, '_id') || str_contains($cType, 'foreign');
+                $isUniqueCode = ($col['unique'] ?? false) || in_array($cName, ['email', 'sku', 'code', 'code_reference', 'reference_code', 'idempotency_key', 'slug', 'batch_number', 'entry_number', 'plate_number'], true);
+                $isStateOrEnum = in_array($cName, ['status', 'role', 'movement_type', 'direction', 'channel', 'decision'], true);
+
+                if (($isPk || $isFk || $isUniqueCode || $isStateOrEnum) && str_contains($cType, 'json')) {
+                    $violationCount++;
+                    $auditLog[] = [
+                        'table' => $tName,
+                        'column' => $cName,
+                        'severity' => 'CRITICAL',
+                        'rule' => 'Scalar Relational Invariant',
+                        'finding' => "Kolom kunci/indeks/state '{$fullPath}' bertipe JSON. Hal ini melanggar integritas relasional O(1).",
+                        'action_taken' => $autoHeal ? 'Diperbaiki ke scalar VARCHAR/ULID' : 'Perlu diperbaiki ke VARCHAR',
+                    ];
+                    if ($autoHeal) {
+                        $col['type'] = $isPk || $isFk ? 'ulid' : 'string(50)';
+                        $healedCount++;
+                    }
+                }
+
+                if (in_array($cName, $humanNarrativeCols, true) && ! in_array($fullPath, $exemptFromHumanJson, true)) {
+                    if (! str_contains($cType, 'json')) {
+                        $violationCount++;
+                        $auditLog[] = [
+                            'table' => $tName,
+                            'column' => $cName,
+                            'severity' => 'TIER1_COMPLIANCE_GAP',
+                            'rule' => 'Multi-Language Tier 1 Native JSONB',
+                            'finding' => "Kolom narasi manusiawi '{$fullPath}' masih bertipe '{$cType}', belum mendukung dual-locale [ID/EN].",
+                            'action_taken' => $autoHeal ? 'Diperbarui otomatis ke jsonb' : 'Direkomendasikan diubah ke jsonb',
+                        ];
+                        if ($autoHeal) {
+                            $col['type'] = 'jsonb';
+                            $healedCount++;
+                        }
+                    }
+                }
+            }
+        }
+        unset($tbl, $col);
+
+        if ($autoHeal && $healedCount > 0) {
+            $prd['erd_schema']['tables'] = $updatedTables;
+            $prd['database_erd'] = $updatedTables;
+            try {
+                $prd['virtual_charts']['erd_mermaid'] = \App\Services\PrdGeneratorService::generateErdMermaid($updatedTables);
+            } catch (\Throwable) {}
+            $blueprint->prd_content = $prd;
+            $blueprint->save();
+        }
+
+        $complianceRate = $totalEvaluatedCols > 0 ? max(0, min(100, round((($totalEvaluatedCols - $violationCount) / $totalEvaluatedCols) * 100, 1))) : 100;
+
+        return [
+            'status' => 'success',
+            'blueprint_slug' => $blueprint->slug,
+            'blueprint_title' => $blueprint->nama_bisnis ?: $blueprint->client_name,
+            'total_tables' => count($tables),
+            'total_columns' => $totalEvaluatedCols,
+            'violations_found' => $violationCount,
+            'healed_count' => $healedCount,
+            'tier1_compliance_rate' => "{$complianceRate}%",
+            'is_fully_compliant' => $violationCount === 0 || ($autoHeal && $violationCount === $healedCount),
+            'findings' => $auditLog,
+            'guidelines' => [
+                'tier1_jsonb' => 'Kolom narasi (name, title, description, reason, memo, message_body) WAJIB JSONB {"id": "...", "en": "..."}.',
+                'scalar_invariants' => 'Primary Keys, Foreign Keys, Slugs, Unique Codes, dan State Machine Enums WAJIB skalar VARCHAR/ULID O(1).',
+            ],
+        ];
     }
 
     /**

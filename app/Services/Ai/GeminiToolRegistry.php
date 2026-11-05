@@ -537,6 +537,23 @@ class GeminiToolRegistry
                 ],
             ],
             [
+                'name' => 'audit_tier1_multilanguage_and_schema_integrity',
+                'description' => 'Audit kepatuhan skema basis data ERD terhadap standar Multi-Language 2-Tier Architecture (Tier 1 Native JSONB) vs Integritas Skalar (Strict ULID PK/FK, Unique Code/Slug/Email, State Machine Enums). Memeriksa bahwa seluruh kolom narasi/konten manusiawi (title, name, description, reason, memo, message_body, decision_note, tier_name) bertipe JSONB, dan seluruh kunci/indeks/status tetap skalar VARCHAR biasa.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'blueprint_id' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID atau slug VisionBlueprint yang ingin diaudit skema ERD-nya. Jika kosong, mengaudit blueprint aktif terakhir.',
+                        ],
+                        'auto_heal' => [
+                            'type' => 'BOOLEAN',
+                            'description' => 'Jika true, secara otomatis menyelaraskan tipe kolom narasi yang tertinggal ke JSONB dalam prd_content blueprint.',
+                        ],
+                    ],
+                ],
+            ],
+            [
                 'name' => 'audit_fifteen_pillars_architectural_freeze',
                 'description' => 'Audit status 15 Pilar Master Project OS Ultimate 100% (100% Architectural Freeze), verifikasi sinkronisasi kausalitas lintas tahap (Cross-Stage Causality Graph), dan opsional sinkronkan ulang katalog 15 pilar ke database (persist_sync = true memerlukan izin mutasi RBAC).',
                 'parameters' => [

@@ -339,6 +339,9 @@
             <a href="#sec-v12-progressive-disclosure" @click.prevent="scrollTo('sec-v12-progressive-disclosure')" :class="activeSection === 'sec-v12-progressive-disclosure' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 19. <span x-text="t[lang].nav_v12_disclosure"></span>
             </a>
+            <a href="#sec-v13-multilang-and-domain-standards" @click.prevent="scrollTo('sec-v13-multilang-and-domain-standards')" :class="activeSection === 'sec-v13-multilang-and-domain-standards' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                20. <span x-text="t[lang].nav_v13_multilang"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -1926,6 +1929,80 @@
         </div>
     </div>
 
+    <!-- 20. Section Project OS v13.0 — Multi-Bahasa Tier 1 (JSONB vs Skalar) & Normalisasi Domain Bisnis Khusus -->
+    <div id="sec-v13-multilang-and-domain-standards" class="sg-card" x-show="matchesSearch('v13.0 multi-bahasa tier 1 jsonb scalar ulid pk fk foreign key unique code slug sku status state machine enum domain tour travel gayabalical wishlist ai normalisasi armada')">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <span style="font-family: ui-monospace, monospace; font-size: 11px; color: #059669; text-transform: uppercase; font-weight: 700;">
+                    20 // PROJECT OS v13.0 — MULTI-BAHASA TIER 1 (JSONB VS SKALAR) &amp; NORMALISASI DOMAIN KHUSUS
+                </span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 4px 0 0 0;" x-text="t[lang].sec20_title"></h3>
+            </div>
+            <span class="sg-badge-active">TIER 1 DUAL-LOCALE NATIVE • ZERO-CORRUPTION RELATIONAL INTEGRITY • DOMAIN NORMALIZATION</span>
+        </div>
+
+        <p style="font-size: 13px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;" x-text="t[lang].sec20_desc"></p>
+
+        <!-- 4-Card Architectural Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px;">
+            <div class="sg-subcard" style="border-left: 3px solid #10b981;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="color: #059669; font-size: 12px; text-transform: uppercase;">1. Multi-Bahasa Tier 1 (Wajib JSONB)</strong>
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3);">HUMAN-FACING CONTENT</span>
+                </div>
+                <p style="font-size: 11.5px; color: var(--sg-text-body); line-height: 1.5; margin-bottom: 8px;">
+                    Atribut narasi yang tampil dan dibaca oleh manusia (<code style="color: #059669;">name, title, description, reason, memo, message_body, decision_note, tier_name</code>) <strong>WAJIB bertipe JSONB</strong> <code style="font-size: 10px;">{"id": "...", "en": "..."}</code> dan di-cast sebagai <code>'array'</code> di model Eloquent.
+                </p>
+                <div style="font-size: 10.5px; color: var(--sg-text-muted); line-height: 1.45;">
+                    ✓ Terintegrasi langsung dengan <code>TranslatableTabs</code> di Filament Admin (tab 🇮🇩 ID &amp; 🇬🇧 EN).<br>
+                    ✓ Auto-translate satu klik via <code>GoogleTranslateService</code> saat disimpan.
+                </div>
+            </div>
+
+            <div class="sg-subcard" style="border-left: 3px solid #ef4444;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="color: #dc2626; font-size: 12px; text-transform: uppercase;">2. Integritas Skalar (Haram JSONB)</strong>
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.3);">STRICT SCALAR O(1)</span>
+                </div>
+                <p style="font-size: 11.5px; color: var(--sg-text-body); line-height: 1.5; margin-bottom: 8px;">
+                    Primary Keys (<code style="color: #dc2626;">id PK</code>), Foreign Keys (<code style="color: #dc2626;">parent_id FK</code>), Slugs/Codes/SKUs/Emails (<code style="color: #dc2626;">code UK, sku UK, email UK</code>), State Enums (<code style="color: #dc2626;">status, role, movement_type</code>), dan Hash Kriptografi <strong>DILARANG KERAS diubah ke JSON</strong>.
+                </p>
+                <div style="font-size: 10.5px; color: var(--sg-text-muted); line-height: 1.45;">
+                    ✓ Menjaga integritas referensial foreign key PostgreSQL dan join O(1).<br>
+                    ✓ Mempertahankan performa B-Tree Index sub-10ms dan keandalan PHP state machine.
+                </div>
+            </div>
+
+            <div class="sg-subcard" style="border-left: 3px solid #3b82f6;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="color: #2563eb; font-size: 12px; text-transform: uppercase;">3. Normalisasi Domain Tour &amp; Travel</strong>
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(59, 130, 246, 0.1); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3);">PT GAYABALICAL STANDARDS</span>
+                </div>
+                <p style="font-size: 11.5px; color: var(--sg-text-body); line-height: 1.5; margin-bottom: 8px;">
+                    Normalisasi entitas armada: Eliminasi tabel typo (<code style="color: #2563eb;">JUMLAH_ORAMGS</code>) menjadi atribut kapasitas armada (<code style="color: #2563eb;">passenger_capacity INT</code> &amp; <code style="color: #2563eb;">luggage_capacity INT</code> pada tabel <code>VEHICLES</code> / <code>FLEET_CAPACITIES</code>).
+                </p>
+                <div style="font-size: 10.5px; color: var(--sg-text-muted); line-height: 1.45;">
+                    ✓ Transfer Bandara Ngurah Rai, Day Tour Bali &amp; Overland Bromo-Ijen.<br>
+                    ✓ Wish List AI Kustom dianalisis deterministik berbasis data tarif database riil tanpa asumsi.
+                </div>
+            </div>
+
+            <div class="sg-subcard" style="border-left: 3px solid #8b5cf6;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="color: #7c3aed; font-size: 12px; text-transform: uppercase;">4. Audit Kepatuhan &amp; Native Tool</strong>
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(139, 92, 246, 0.1); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.3);">NATIVE TOOL CALLING</span>
+                </div>
+                <p style="font-size: 11.5px; color: var(--sg-text-body); line-height: 1.5; margin-bottom: 8px;">
+                    Tersedia fungsi native tool calling <code style="color: #7c3aed;">audit_tier1_multilanguage_and_schema_integrity</code> untuk memeriksa kepatuhan skema ERD secara otomatis melalui Copilot AI maupun prompt komando.
+                </p>
+                <div style="font-size: 10.5px; color: var(--sg-text-muted); line-height: 1.45;">
+                    ✓ Fitur <code>auto_heal: true</code> menyelaraskan kolom tertinggal ke JSONB secara aman.<br>
+                    ✓ Umpan balik elaborasi AI instan dengan status badge dan deteksi skema paripurna (&gt;= 14 tabel).
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -1957,6 +2034,7 @@ function smartGuideApp() {
                 nav_v10_dual_zone: 'Dual-Zone UX, Aniwall & 6 Modul SaaS (v10.0)',
                 nav_v11_paripurna: 'SEO/GEO /llms.txt, UU PDP & 20 Pilar (v11.0)',
                 nav_v12_disclosure: 'Progressive Disclosure, Zero-Leak Gate & Anti-Over-Planning (v12.0)',
+                nav_v13_multilang: 'Multi-Bahasa Tier 1 & Normalisasi Domain (v13.0)',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -2071,7 +2149,9 @@ function smartGuideApp() {
                 sec18_title: 'Project OS v11.0 Paripurna Edition: Gerbang Komersial Satu Pintu SaaS, Otoritas SEO/GEO 12 Sektor (/llms.txt + Multi-Graph Schema.org), 6 Lapisan Zero-Failure & 20 Pilar Paripurna',
                 sec18_desc: 'Mengunci konsistensi komersial Satu Pintu tanpa bypass gratis ke Studio, mendominasi kutipan AI Search & Google Rich Results lintas 12 sektor (/llms.txt, /llms-full.txt, IndexNow, OG Lokal 1200x630), serta menambahkan Brankas Privasi UU PDP Blind Index O(1), Offline Outbox PWA, Triase Garansi Bug SLA 90 Hari Pasca-BAST, Rollback pg_dump Atomik, Simulator Webhook Lokal, Konsolidasi Holding Multi-PT, dan 44 Native AI Tools.',
                 sec19_title: 'Project OS v12.0: Progressive Disclosure Flow ("Show the Full Ferrari, Lock the Ignition"), Zero-Leak Server Gate, Contextual Upsell Coach & Anti-Over-Planning (Scope Paralysis) Guard',
-                sec19_desc: 'Mencegah kebingungan klien awam sekaligus mengunci konversi tinggi: Tahap A deteksi sektor otomatis dari ide, Tahap B Layar 1 Proposal Bisnis WOW View (peta 25 menu 5 divisi & kalkulator penghematan jam rekayasa), Tahap C Layar 2 Dual-View Studio dengan Zero-Leak Server Gate (0% kebocoran Fase 2–7 di HTML DOM untuk FREE_SANDBOX), tombol Rescue Konversi ke Mitra Proyek (potong DP 100%), serta pelindung Bahaya Over-Planning (Scope Paralysis) dengan 3 tombol eksekusi fondasi.'
+                sec19_desc: 'Mencegah kebingungan klien awam sekaligus mengunci konversi tinggi: Tahap A deteksi sektor otomatis dari ide, Tahap B Layar 1 Proposal Bisnis WOW View (peta 25 menu 5 divisi & kalkulator penghematan jam rekayasa), Tahap C Layar 2 Dual-View Studio dengan Zero-Leak Server Gate (0% kebocoran Fase 2–7 di HTML DOM untuk FREE_SANDBOX), tombol Rescue Konversi ke Mitra Proyek (potong DP 100%), serta pelindung Bahaya Over-Planning (Scope Paralysis) dengan 3 tombol eksekusi fondasi.',
+                sec20_title: 'Project OS v13.0: Pemisahan Skalar vs JSONB Multi-Bahasa Tier 1 (ID/EN) & Normalisasi Domain Khusus (Tour, Travel & Logistics)',
+                sec20_desc: 'Menegakkan integritas arsitektur database relasional PostgreSQL 16 & Laravel 13: Pemisahan tegas kolom narasi manusiawi (name, title, description, reason, memo, message_body) yang wajib JSONB {"id": "...", "en": "..."} dengan TranslatableTabs Filament v5 vs Integritas Skalar Relasional (Primary Keys ULID VARCHAR(26), Foreign Keys, Slugs, Unique Codes, Status State Machine) yang haram diubah ke JSONB, normalisasi kapasitas armada kendaraan (eliminasi tabel typo JUMLAH_ORAMGS ke VEHICLES/FLEET_CAPACITIES), analisis AI Wishlist tanpa asumsi berbasis data tarif riil, serta 45 Native AI Tools.'
             },
             en: {
                 nav_overview: 'Executive Summary',
@@ -2093,6 +2173,7 @@ function smartGuideApp() {
                 nav_v10_dual_zone: 'Dual-Zone UX, Aniwall & 6 SaaS Modules (v10.0)',
                 nav_v11_paripurna: 'SEO/GEO /llms.txt, UU PDP & 20 Pillars (v11.0)',
                 nav_v12_disclosure: 'Progressive Disclosure, Zero-Leak Gate & Anti-Over-Planning (v12.0)',
+                nav_v13_multilang: 'Multi-Language Tier 1 & Domain Standards (v13.0)',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',
@@ -2207,7 +2288,9 @@ function smartGuideApp() {
                 sec18_title: 'Project OS v11.0 Paripurna Edition: Unified Satu Pintu SaaS Commercial Gate, 12-Sector SEO/GEO Authority (/llms.txt + Multi-Graph Schema.org), 6 Zero-Failure Layers & 20 Locked Master Pillars',
                 sec18_desc: 'Seals commercial consistency on Satu Pintu with zero unpaid Studio bypasses, dominates Google Rich Results & AI Search citations across all 12 sectors (/llms.txt, /llms-full.txt, IndexNow, local 1200x630 QR OG), and delivers UU PDP AES-256 + O(1) Blind Index Privacy Vault, Offline Outbox PWA, Post-BAST 90-Day SLA Bug vs Paid Delta Triage, Atomic pg_dump Rollback, Webhook Chaos Console, Multi-Entity Holding Consolidation, and 44 Native AI Tools.',
                 sec19_title: 'Project OS v12.0: Progressive Disclosure Flow ("Show the Full Ferrari, Lock the Ignition"), Zero-Leak Server Gate, Contextual Upsell Coach & Anti-Over-Planning (Scope Paralysis) Guard',
-                sec19_desc: 'Eliminates client overwhelm while maximizing conversion & retention: Stage A smart sector auto-detection from free-form ideas, Stage B Screen 1 Business Proposal WOW View (25-menu 5-division map & engineering hours saved calculator), Stage C Screen 2 Dual-View Studio with Zero-Leak Server Gate (0% HTML DOM leak for Phases 2–7 in FREE_SANDBOX), 100% DP Credit Rescue Button to Mitra Turnkey, and Scope Paralysis Guard with 3 Foundation Execution Launchers.'
+                sec19_desc: 'Eliminates client overwhelm while maximizing conversion & retention: Stage A smart sector auto-detection from free-form ideas, Stage B Screen 1 Business Proposal WOW View (25-menu 5-division map & engineering hours saved calculator), Stage C Screen 2 Dual-View Studio with Zero-Leak Server Gate (0% HTML DOM leak for Phases 2–7 in FREE_SANDBOX), 100% DP Credit Rescue Button to Mitra Turnkey, and Scope Paralysis Guard with 3 Foundation Execution Launchers.',
+                sec20_title: 'Project OS v13.0: Scalar vs Tier 1 JSONB Multi-Language (ID/EN) & Domain Normalization (Tour, Travel & Logistics)',
+                sec20_desc: 'Enforces PostgreSQL 16 & Laravel 13 relational architecture integrity: Strict separation between human-facing narrative columns (name, title, description, reason, memo, message_body) requiring JSONB {"id": "...", "en": "..."} via Filament v5 TranslatableTabs vs Scalar Relational Invariants (ULID Primary Keys VARCHAR(26), Foreign Keys, Slugs, Unique Codes, State Machine Enums) strictly preserved as scalar types, fleet capacity normalization (eliminating typo tables like JUMLAH_ORAMGS into VEHICLES/FLEET_CAPACITIES), assumption-free AI Wishlist calculation from real database pricing, and 45 Native AI Tools.'
             }
         },
 

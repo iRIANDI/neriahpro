@@ -442,9 +442,12 @@ STANDAR WAJIB NERIAH PRO:
 1. Primary Keys: WAJIB gunakan ULID 26-char (->ulid('id')->primary() / VARCHAR(26)). HARAM gunakan AUTO_INCREMENT atau UUID binary.
 2. Foreign Keys: Selalu gunakan ULID foreign keys (->foreignUlid('parent_id')).
 3. Indeks: Terapkan indeks keyset O(1) untuk kolom pencarian dan foreign key.
-4. Gali seluruh entitas data dari dokumen acuan (tabel transaksi, riwayat audit, pivot matriks, approval tier, snapshot biaya).
-5. Sertakan DDL SQL PostgreSQL yang valid dan siap dieksekusi.
-6. Kembalikan HANYA array JSON valid dari objek-objek tabel.
+4. Multi-Bahasa Tier 1 (Native JSONB): Kolom narasi manusiawi (name, title, description, reason, memo, message_body, decision_note, threshold_reason, explanation_note, tier_name) WAJIB bertipe JSONB {"id": "...", "en": "..."}.
+5. Integritas Skalar: Primary Keys, Foreign Keys, Unique Codes/Slugs/Emails, State Machine Enums (status, role, movement_type, direction), dan Data Teknis/Hashes WAJIB tetap berupa VARCHAR skalar, DILARANG KERAS dijadikan JSONB.
+6. Normalisasi Domain: Jangan membuat tabel typo (misal 'jumlah oramg' dinormalisasi menjadi atribut passenger_capacity di tabel armada/vehicles, bukan tabel JUMLAH_ORAMGS).
+7. Gali seluruh entitas data dari dokumen acuan (tabel transaksi, riwayat audit, pivot matriks, approval tier, snapshot biaya).
+8. Sertakan DDL SQL PostgreSQL yang valid dan siap dieksekusi.
+9. Kembalikan HANYA array JSON valid dari objek-objek tabel.
 TXT;
 
             $prompt = <<<TXT
@@ -887,8 +890,9 @@ PROMPT;
                 if (empty($columns)) {
                     $columns = [
                         ['name' => 'id', 'type' => 'VARCHAR(26)', 'nullable' => false, 'primary' => true, 'description' => 'Strict ULID Primary Key'],
-                        ['name' => 'name', 'type' => 'VARCHAR(255)', 'nullable' => false, 'primary' => false, 'description' => 'Nama atau label entitas'],
-                        ['name' => 'status', 'type' => 'VARCHAR(50)', 'nullable' => false, 'primary' => false, 'description' => 'Status operasional record'],
+                        ['name' => 'name', 'type' => 'JSONB', 'nullable' => false, 'primary' => false, 'description' => 'Nama atau label entitas dwibahasa (ID/EN)'],
+                        ['name' => 'code_reference', 'type' => 'VARCHAR(50)', 'nullable' => false, 'primary' => false, 'description' => 'Kode referensi unik O(1)'],
+                        ['name' => 'status', 'type' => 'VARCHAR(50)', 'nullable' => false, 'primary' => false, 'description' => 'Status state machine'],
                         ['name' => 'created_at', 'type' => 'TIMESTAMPTZ', 'nullable' => false, 'primary' => false, 'description' => 'Timestamp pembuatan data'],
                         ['name' => 'updated_at', 'type' => 'TIMESTAMPTZ', 'nullable' => false, 'primary' => false, 'description' => 'Timestamp perubahan data'],
                         ['name' => 'deleted_at', 'type' => 'TIMESTAMPTZ', 'nullable' => true, 'primary' => false, 'description' => 'Soft delete timestamp'],
@@ -976,6 +980,8 @@ PROMPT;
             return "# Standar Rekayasa Perangkat Lunak Neriah Pro ({$businessName})\n\n" .
                    "- Primary Keys: Wajib ULID 26 karakter (VARCHAR(26)), dilarang auto-increment.\n" .
                    "- Pagination: Wajib Keyset Cursor Pagination O(1) (cursorPaginate()).\n" .
+                   "- Multi-Bahasa Tier 1: Kolom narasi manusiawi (name, title, description, reason, memo, message_body, decision_note, tier_name) WAJIB bertipe JSONB `{\"id\": \"...\", \"en\": \"...\"}` di-cast array.\n" .
+                   "- Integritas Skalar: PK, FK, Unique Code/Slug, Status State Machine, dan Hash WAJIB tetap VARCHAR skalar skema relasional, DILARANG dijadikan JSONB.\n" .
                    "- Clean Brutalism: Kontras tinggi, tanpa border capsule pill rounded-full.\n" .
                    "- Anti-Hardcoding: Dilarang keras magic strings atau dummy slug queries.\n" .
                    "- Petunjuk Pengguna: {$directive}\n";

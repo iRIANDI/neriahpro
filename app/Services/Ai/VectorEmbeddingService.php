@@ -410,6 +410,7 @@ class VectorEmbeddingService
                 ->orWhere('source_id', 'LIKE', 'killer-engine-%')
                 ->orWhere('source_id', 'LIKE', 'inclusive-v8-%')
                 ->orWhere('source_id', 'LIKE', 'agentshield-v9-%')
+                ->orWhere('source_id', 'LIKE', 'tier1-multilang-%')
                 ->delete();
         }
 
@@ -1121,13 +1122,43 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 17. Indeks Standar Arsitektur Database Multi-Bahasa Tier 1 vs Integritas Skalar (Strict ULID PK/FK, Slugs, Status Enums) & Domain Tour-Travel Normalization (Project OS v13.0)
+        $v13MultilangSourceId = 'tier1-multilang-jsonb-vs-scalar-and-tour-domain-v13';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v13MultilangSourceId)->exists()) {
+            $v13Content = "Project OS v13.0 — Standar Arsitektur Database Multi-Bahasa Tier 1 vs Integritas Skalar & Normalisasi Domain Bisnis Khusus (Tour, Travel & Logistics):\n"
+                ."1. Pemisahan Ketat Kolom JSONB Multi-Bahasa Tier 1 vs Kolom Skalar Relasional:\n"
+                ."   - Kolom Naratif / Human-Facing (WAJIB JSONB): Atribut yang dibaca dan ditampilkan langsung kepada pengguna (name, title, description, reason, memo, message_body, decision_note, threshold_reason, explanation_note, tier_name) WAJIB disimpan dalam format JSONB {\"id\": \"...\", \"en\": \"...\"} dan di-cast sebagai 'array' di model Eloquent untuk mendukung penyuntingan resmi dwibahasa di Filament Admin.\n"
+                ."   - Kolom Integritas Skalar Relasional (DILARANG KERAS DIBUAT JSONB): Primary Keys (id PK), Foreign Keys (parent_id FK, user_id FK, booking_id FK), Unique Slugs / Codes / SKUs / E-mails (email UK, sku UK, code_reference UK), State Machine Enums (status, role, movement_type, direction, channel, decision), serta Kredensial & Hashes Keamanan (password, sha256_seal, ip_address) WAJIB tetap berupa tipe skalar skema relasional (VARCHAR(26) ULID, VARCHAR, dsb.) guna menjamin keutuhan relasi foreign key database, efisiensi join O(1), dan B-Tree indexing sub-10ms.\n"
+                ."2. Normalisasi Domain Tour & Travel (Kasus Nyata PT Gayabalical):\n"
+                ."   - Eliminasi Tabel Typo: Kesalahan ejaan seperti 'jumlah oramg' tidak boleh dijadikan entitas tabel terpisah (JUMLAH_ORAMGS), melainkan wajib dinormalisasi menjadi atribut kapasitas armada (passenger_capacity INT dan luggage_capacity INT pada tabel VEHICLES atau FLEET_CAPACITIES).\n"
+                ."   - Layanan Terpadu: Transfer in/out hotel ke Bandara Ngurah Rai, Day Tour rute Bali, dan Overland Jawa Timur (Gunung Bromo & Kawah Ijen) dikelola dalam struktur katalog terstandar (tour_packages, vehicles, bookings, payments).\n"
+                ."   - Wish List AI Tanpa Asumsi: Fitur wish list kustom dianalisis secara deterministik oleh AI tanpa asumsi atau halusinasi harga, berpijak 100% pada data database riil untuk merumuskan daftar rute (itinerary) dan kalkulasi biaya transparan.\n"
+                ."3. Standar Tombol Elaborasi AI & Feedback UX:\n"
+                ."   - Umpan balik visual instan (toast notification & modal status badge) wajib diberikan saat tombol 'Perdalam dari Dokumen Acuan' diklik.\n"
+                ."   - Jika skema ERD telah mencapai tingkat kematangan paripurna (>= 14 tabel Strict ULID berelasi penuh), sistem menampilkan indikator kesiapan dan memungkinkan penambahan entitas kustom spesifik tanpa merusak relasi yang telah terverifikasi.";
+
+            $embedding = $this->generateEmbedding("Project OS v13.0 Multi-Language Tier 1 JSONB vs Scalar ULID PK FK Tour Travel Gayabalical Normalization Wishlist AI\n{$v13Content}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v13.0: Standar Database Multi-Bahasa Tier 1 (JSONB vs Skalar) & Normalisasi Domain Tour-Travel',
+                'source_type' => 'multilang_tier1_and_tour_domain_v13',
+                'source_id' => $v13MultilangSourceId,
+                'content' => "### Project OS v13.0: Multi-Bahasa Tier 1 (JSONB vs Skalar) & Normalisasi Domain Khusus\n\n{$v13Content}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'Database Architecture & Domain Standards',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
             'status' => 'success',
             'synced_sections' => $syncedSections,
             'total_chunks' => $totalChunks,
-            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (Project OS v9.0 AgentShield 5-Layer + Co-Design Room + 3-Sheet Crypto Audit, v8.0 36 Visual UI & 5-Layer IP Canary, 15 Pilar Master Architectural Freeze v7.0, 5 Elemen Dunia Nyata, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines, 8 Day-2 Production Layers, 5 Day-30+ Lifecycle Engines, 5 Mitra Bridges & 5 Deterministic Guarantees) ke basis pengetahuan RAG pgvector.",
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (Project OS v13.0 Multi-Bahasa Tier 1 JSONB vs Skalar & Domain Tour-Travel, v11.0 SEO/GEO Paripurna, v9.0 AgentShield 5-Layer, v8.0 36 Visual UI, 15 Pilar Master Freeze, 5 Elemen Dunia Nyata, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines) ke basis pengetahuan RAG pgvector.",
         ];
     }
 }

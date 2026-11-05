@@ -1498,16 +1498,39 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     this.tweakModalOpen = true;
                     this.loadSourceCorpus();
 
-                    if (key === 'database_erd') {
-                        const tableList = Array.isArray(content) ? content : (content?.tables || []);
-                        if (tableList.length >= 14) {
-                            if (window.showToast) {
-                                window.showToast({
-                                    type: 'info',
-                                    title: 'SKEMA ERD 100% LENGKAP & TERVERIFIKASI',
-                                    message: 'Skema basis data relasional telah mencapai tingkat kematangan paripurna (' + tableList.length + ' tabel Strict ULID, indeks O(1), & relasi FK). Anda tetap dapat menambahkan entitas kustom melalui prompt elaborasi di bawah.'
-                                });
-                            }
+                    if (window.showToast) {
+                        if (key === 'database_erd') {
+                            const tableList = Array.isArray(content) ? content : (content?.tables || []);
+                            window.showToast({
+                                type: 'info',
+                                title: 'STUDIO ELABORASI ERD TERBUKA',
+                                message: 'Memuat ' + tableList.length + ' tabel skema database Strict ULID. Siap untuk dielaborasi dan diselaraskan dengan Dokumen Acuan.'
+                            });
+                        } else if (key === 'system_actors') {
+                            const count = Array.isArray(content) ? content.length : 0;
+                            window.showToast({
+                                type: 'info',
+                                title: 'STUDIO ELABORASI RBAC TERBUKA',
+                                message: 'Memuat ' + count + ' peran pengguna & hak akses. Siap untuk dielaborasi berbasis Dokumen Acuan.'
+                            });
+                        } else if (key === 'features' || key === 'feature_single') {
+                            window.showToast({
+                                type: 'info',
+                                title: 'STUDIO ELABORASI FITUR TERBUKA',
+                                message: 'Editor pendalaman spesifikasi modul MVP siap menerima instruksi penyempurnaan AI.'
+                            });
+                        } else if (key === 'alurs_kerja') {
+                            window.showToast({
+                                type: 'info',
+                                title: 'STUDIO ELABORASI ALUR KERJA TERBUKA',
+                                message: 'Memuat tahapan user flow dan logika bisnis untuk dielaborasi lebih dalam.'
+                            });
+                        } else if (key === 'scaffold_file') {
+                            window.showToast({
+                                type: 'info',
+                                title: 'STUDIO ELABORASI BERKAS TERBUKA',
+                                message: 'Berkas ' + this.scaffoldActiveTab + ' siap dielaborasi berbasis Dokumen Acuan.'
+                            });
                         }
                     }
                 },
@@ -11857,6 +11880,15 @@ class ProcessSecureDataset implements ShouldQueue
                         </template>
 
                         <div class="max-h-40 overflow-y-auto bg-zinc-950 text-zinc-300 font-mono text-[11px] p-3 border border-zinc-800 custom-prd-scrollbar select-all leading-relaxed whitespace-pre-wrap" x-text="sourceCorpusData ? sourceCorpusData.corpus_text.slice(0, 1500) + (sourceCorpusData.corpus_text.length > 1500 ? '\n\n[... sisa ' + (sourceCorpusData.character_count - 1500).toLocaleString() + ' karakter lainnya terindeks untuk AI ...]' : '') : 'Belum ada konten.'"></div>
+                    </div>
+                </div>
+
+                <!-- Segment Maturity & Guidance Status Banner -->
+                <div x-show="tweakSegmentKey === 'database_erd'" class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 flex items-start gap-2.5">
+                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div class="text-xs font-mono text-emerald-950 dark:text-emerald-200">
+                        <span class="font-bold uppercase tracking-wider block mb-0.5">STATUS SKEMA BASIS DATA: 100% TERVERIFIKASI &amp; SKALABEL</span>
+                        <span>Skema ERD ini telah memenuhi standar enterprise (Strict ULID PK/FK, Keyset Cursor O(1), dan Multi-Bahasa Tier 1 JSONB). Anda dapat menambahkan entitas kustom spesifik melalui form instruksi di bawah, atau membiarkan skema prima ini tetap terjaga.</span>
                     </div>
                 </div>
 

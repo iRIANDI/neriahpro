@@ -814,7 +814,7 @@ class ProjectOsMatrixCatalog
                             ['name' => 'resource_id', 'type' => 'ULID', 'foreign' => 'allocatable_resources.id', 'index' => true],
                             ['name' => 'starts_at', 'type' => 'TIMESTAMP', 'nullable' => false],
                             ['name' => 'ends_at', 'type' => 'TIMESTAMP', 'nullable' => false],
-                            ['name' => 'reason', 'type' => 'VARCHAR(190)', 'nullable' => false],
+                            ['name' => 'reason', 'type' => 'JSONB', 'nullable' => false],
                         ],
                         'unique_constraints' => [],
                     ],

@@ -1629,19 +1629,16 @@ class BlueprintDiscoveryService
             || strlen($rawDesc) < 35
             || $rawDesc === $rawTitle;
 
-        // If neither is conversational or generic, it is already a curated architectural feature
-        if (! $isConversational && ! $isGenericDesc) {
-            return $fitur;
-        }
+        // Combine title and description for intelligent synthesis (omit generic placeholders) if conversational or generic
+        if ($isConversational || $isGenericDesc) {
+            $combined = $isGenericDesc ? $rawTitle : ($rawTitle . ' ' . $rawDesc);
+            $crafted = self::craftFeatureFromRawItem($combined, $domain, $isEn);
 
-        // Combine title and description for intelligent synthesis (omit generic placeholders)
-        $combined = $isGenericDesc ? $rawTitle : ($rawTitle . ' ' . $rawDesc);
-        $crafted = self::craftFeatureFromRawItem($combined, $domain, $isEn);
-
-        if (str_contains($crafted, ':')) {
-            [$polishedTitle, $polishedDesc] = explode(':', $crafted, 2);
-            $fitur['title'] = trim($polishedTitle);
-            $fitur['desc'] = trim($polishedDesc);
+            if (str_contains($crafted, ':')) {
+                [$polishedTitle, $polishedDesc] = explode(':', $crafted, 2);
+                $fitur['title'] = trim($polishedTitle);
+                $fitur['desc'] = trim($polishedDesc);
+            }
         }
 
         // Sanitize or refine user story if it contains conversational artifacts
@@ -1651,6 +1648,151 @@ class BlueprintDiscoveryService
             $fitur['user_story'] = $isEn
                 ? "As an Authorized System User, I can operate {$fitur['title']} with real-time transactional integrity, strict validation, and centralized audit logging."
                 : "Sebagai Pengguna Sistem, saya dapat mengelola {$fitur['title']} dengan validasi data real-time, perlindungan konkurensi, dan laporan audit terpusat.";
+        }
+
+        // -------------------------------------------------------------
+        // NORMALIZATION OF THE 6 SUB-DIMENSIONS (Sub-Tabs 1-5)
+        // -------------------------------------------------------------
+        $title = $fitur['title'] ?? 'Spesifikasi Fitur';
+        $pascal = \App\Services\Prd\PrdFeatureSpecificationService::sanitizeEntityClassName($title, $fitur['related_table'] ?? null);
+        $kebab = Str::kebab($pascal);
+        $snake = Str::snake(Str::plural($pascal));
+
+        // 1. Acceptance Criteria & Gherkin Scenarios
+        $fitur['acceptance_criteria'] = \App\Services\PrdGeneratorService::normalizeAcceptanceCriteria(
+            $fitur['acceptance_criteria'] ?? [],
+            $title,
+            $fitur['user_story'] ?? ''
+        );
+
+        // 2. Frontend Tasks & Component State
+        $fe = is_array($fitur['frontend'] ?? null) ? $fitur['frontend'] : [];
+        if (empty($fe['components'])) {
+            $fe['components'] = ["{$pascal}Component.blade.php", "{$pascal}Card.blade.php"];
+        }
+        if (empty($fe['tasks'])) {
+            if (!empty($fe['interactions']) && is_array($fe['interactions'])) {
+                $fe['tasks'] = $fe['interactions'];
+            } else {
+                $fe['tasks'] = $isEn ? [
+                    "Construct interactive {$title} responsive view with WCAG AAA contrast ratio.",
+                    "Implement Keyset Cursor Pagination O(1) table listing with instant search clear button.",
+                    "Integrate floating toast notification state changes without native dialog alerts."
+                ] : [
+                    "Bangun antarmuka responsif {$title} dengan rasio kontras WCAG AAA.",
+                    "Implementasikan tabel listing data Keyset Cursor Pagination O(1) dengan search box instan clear button.",
+                    "Integrasikan notifikasi floating toast untuk feedback mutasi data tanpa dialog alert native."
+                ];
+            }
+        }
+        if (empty($fe['states'])) {
+            $fe['states'] = $isEn ? 'Default, Loading Skeleton, Empty State, Error Toast, Mutating' : 'Default, Loading Skeleton, Empty State, Error Toast, Memproses';
+        }
+        if (empty($fe['anti_ai_slop'])) {
+            $fe['anti_ai_slop'] = $isEn 
+                ? 'Monochrome Zinc palette with sharp accents, border-radius max 4px (rounded-none preferred), zero capsule buttons, strictly ban window.alert().'
+                : 'Palet Zinc monokrom dengan aksen tajam, border presisi rounded-none, dilarang tombol kapsul, bebas window.alert() native.';
+        }
+        $fitur['frontend'] = $fe;
+
+        // 3. Backend Tasks & Database Strategy
+        $be = is_array($fitur['backend'] ?? null) ? $fitur['backend'] : [];
+        if (empty($be['target_files'])) {
+            $be['target_files'] = [
+                "app/Models/{$pascal}.php",
+                "app/Services/{$pascal}Service.php",
+                "app/Http/Controllers/{$pascal}Controller.php"
+            ];
+        }
+        if (empty($be['tasks'])) {
+            $be['tasks'] = $isEn ? [
+                "Execute database migration for `{$snake}` table enforcing strict 26-character ULID Primary Key.",
+                "Implement transactional `{$pascal}Service` with DB::transaction() and pessimistic locking (lockForUpdate).",
+                "Enforce FormRequest input validation anti-XSS and data type sanitization."
+            ] : [
+                "Migration tabel `{$snake}` dengan Primary Key ULID 26-karakter standar PostgreSQL 16.",
+                "Implementasikan `{$pascal}Service` atomik dibungkus DB::transaction() dengan pessimistic locking (lockForUpdate).",
+                "Terapkan validasi FormRequest anti-XSS dan sanitasi tipe data ketat."
+            ];
+        }
+        if (empty($be['ulid_migration_rules'])) {
+            $be['ulid_migration_rules'] = $isEn
+                ? "Mandatory ->ulid('id')->primary() (VARCHAR(26)) & foreignUlid. Strictly ban AUTO_INCREMENT."
+                : "Wajib gunakan ->ulid('id')->primary() (VARCHAR(26)) dan foreignUlid. Dilarang AUTO_INCREMENT.";
+        }
+        if (empty($be['query_strategy'])) {
+            $be['query_strategy'] = $isEn
+                ? "Keyset Cursor Pagination cursorPaginate() with ->orderBy('id', 'asc') for sub-10ms latency."
+                : "Keyset Cursor Pagination cursorPaginate() dengan ->orderBy('id', 'asc') untuk latensi sub-10ms.";
+        }
+        $fitur['backend'] = $be;
+
+        // 4. API & Integration Tasks
+        $int = is_array($fitur['integration'] ?? null) ? $fitur['integration'] : [];
+        if (empty($int['endpoint'])) {
+            $int['endpoint'] = "POST /api/v1/{$kebab}";
+        }
+        if (empty($int['middleware'])) {
+            $int['middleware'] = ['api', 'auth:sanctum', 'throttle:60,1'];
+        }
+        if (empty($int['tasks'])) {
+            $int['tasks'] = $isEn ? [
+                "Register RESTful API route with Sanctum token authentication and rate limiting.",
+                "Standardize RFC 9457 Problem Details error responses.",
+                "Enforce mandatory X-Idempotency-Key header to prevent duplicate request replay."
+            ] : [
+                "Daftarkan endpoint RESTful API dengan otentikasi token Sanctum dan rate limiting.",
+                "Format respons error standar RFC 9457 Problem Details.",
+                "Terapkan header X-Idempotency-Key untuk mencegah mutasi ganda."
+            ];
+        }
+        if (empty($int['request_schema']) || $int['request_schema'] === '{}') {
+            $int['request_schema'] = json_encode([
+                'title' => "Sample {$title}",
+                'status' => 'active',
+                'metadata' => ['source' => 'web_portal']
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        }
+        if (empty($int['response_schema']) || $int['response_schema'] === '{}') {
+            $int['response_schema'] = json_encode([
+                'success' => true,
+                'data' => [
+                    'id' => '01J7K9M0P1Q2R3S4T5U6V7W8X9',
+                    'title' => "Sample {$title}",
+                    'status' => 'active',
+                    'created_at' => '2026-11-06T12:00:00Z'
+                ]
+            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        }
+        $fitur['integration'] = $int;
+
+        // 5. Target Files (top-level)
+        if (empty($fitur['target_files']) || !is_array($fitur['target_files'])) {
+            $fitur['target_files'] = [
+                "app/Models/{$pascal}.php",
+                "app/Services/{$pascal}Service.php",
+                "app/Http/Controllers/{$pascal}Controller.php",
+                "tests/Feature/{$pascal}ContractTest.php"
+            ];
+        }
+
+        // 6. Code Agent Directive Prompt
+        if (empty($fitur['code_agent_directive'])) {
+            $mission = $isEn
+                ? "Implement {$title} with transactional database integrity, strict ULID primary keys, keyset cursor pagination O(1), and zero hardcoding."
+                : "Implementasikan modul {$title} dengan integritas transaksional basis data, primary key strict ULID, keyset cursor pagination O(1), dan anti-hardcoding.";
+            $verifyCommand = "php artisan test --filter={$pascal}ContractTest";
+            $fitur['code_agent_directive'] = \App\Services\Prd\PrdFeatureSpecificationService::buildAgentPrompt(
+                $fitur['id'] ?? 'FEAT-SPEC',
+                $title,
+                'Sistem Enterprise',
+                $mission,
+                $fitur['target_files'] ?? [],
+                $verifyCommand,
+                null,
+                $fitur['acceptance_criteria'] ?? [],
+                $fitur['integration'] ?? null
+            );
         }
 
         return $fitur;

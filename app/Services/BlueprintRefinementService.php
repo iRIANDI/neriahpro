@@ -395,9 +395,25 @@ Kembalikan satu objek JSON yang diperdalam dengan struktur kunci:
       "then": "Database locking mencegah race condition dan integritas ACID terjamin..."
     }
   ],
-  "frontend": { "component": "...", "interactions": ["..."] },
-  "backend": { "controller": "...", "service": "...", "validation_rules": { "field": "rules" } },
-  "integration": { "third_party": "...", "webhook": "..." },
+  "frontend": {
+    "components": ["ComponentName.blade.php", "CardComponent.blade.php"],
+    "tasks": ["Task frontend 1: Bangun antarmuka...", "Task frontend 2: Validasi..."],
+    "states": "Default, Loading Skeleton, Empty State, Error Toast",
+    "anti_ai_slop": "Palet Zinc monokrom dengan aksen tajam, border presisi rounded-none, dilarang window.alert()."
+  },
+  "backend": {
+    "target_files": ["app/Models/...", "app/Services/..."],
+    "tasks": ["Task backend 1: Migration tabel...", "Task backend 2: Service class..."],
+    "ulid_migration_rules": "Wajib gunakan ->ulid('id')->primary() (VARCHAR(26)). Dilarang AUTO_INCREMENT.",
+    "query_strategy": "Keyset Cursor Pagination cursorPaginate() dengan ->orderBy('id', 'asc')."
+  },
+  "integration": {
+    "endpoint": "POST /api/v1/resource-name",
+    "middleware": ["api", "auth:sanctum", "throttle:60,1"],
+    "tasks": ["Task integrasi 1: Daftarkan route API...", "Task integrasi 2: Verifikasi signature..."],
+    "request_schema": "{\"field\": \"value\"}",
+    "response_schema": "{\"success\": true, \"data\": {\"id\": \"01J...\"}}"
+  },
   "code_agent_directive": "Instruksi teknis langsung ke AI Coding Agent..."
 }
 TXT;
@@ -460,9 +476,25 @@ Kembalikan JSON ARRAY dari seluruh fitur MVP yang diperdalam. Format setiap item
         "then": "Database locking mencegah race condition..."
       }
     ],
-    "frontend": { "component": "...", "interactions": ["..."] },
-    "backend": { "controller": "...", "service": "...", "validation_rules": {} },
-    "integration": { "third_party": "...", "webhook": "..." },
+    "frontend": {
+      "components": ["ComponentName.blade.php"],
+      "tasks": ["Task frontend..."],
+      "states": "Default, Loading Skeleton, Empty State, Error Toast",
+      "anti_ai_slop": "Palet Zinc monokrom dengan aksen tajam, border presisi rounded-none."
+    },
+    "backend": {
+      "target_files": ["app/Models/..."],
+      "tasks": ["Task backend..."],
+      "ulid_migration_rules": "Wajib gunakan ->ulid('id')->primary().",
+      "query_strategy": "Keyset Cursor Pagination cursorPaginate()."
+    },
+    "integration": {
+      "endpoint": "POST /api/v1/resource-name",
+      "middleware": ["api"],
+      "tasks": ["Task integrasi..."],
+      "request_schema": "{}",
+      "response_schema": "{}"
+    },
     "code_agent_directive": "..."
   }
 ]
@@ -635,13 +667,11 @@ TXT;
                 if (($featureId && (($spec['id'] ?? '') === $featureId || ($spec['feature_id'] ?? '') === $featureId)) ||
                     ($specIndex !== null && $idx === (int) $specIndex)) {
                     $merged = array_merge($spec, is_array($parsedData) ? $parsedData : []);
-                    if (!empty($merged['acceptance_criteria'])) {
-                        $merged['acceptance_criteria'] = PrdGeneratorService::normalizeAcceptanceCriteria(
-                            $merged['acceptance_criteria'],
-                            $merged['title'] ?? '',
-                            $merged['user_story'] ?? ''
-                        );
-                    }
+                    $merged = BlueprintDiscoveryService::polishFeatureSpecification(
+                        $merged,
+                        $blueprint->domain_category ?? 'custom_portal',
+                        ($blueprint->user_metadata['output_locale'] ?? '') === 'en'
+                    );
                     $specs[$idx] = $merged;
                     $found = true;
                     break;
@@ -649,13 +679,11 @@ TXT;
             }
 
             if (!$found && is_array($parsedData)) {
-                if (!empty($parsedData['acceptance_criteria'])) {
-                    $parsedData['acceptance_criteria'] = PrdGeneratorService::normalizeAcceptanceCriteria(
-                        $parsedData['acceptance_criteria'],
-                        $parsedData['title'] ?? '',
-                        $parsedData['user_story'] ?? ''
-                    );
-                }
+                $parsedData = BlueprintDiscoveryService::polishFeatureSpecification(
+                    $parsedData,
+                    $blueprint->domain_category ?? 'custom_portal',
+                    ($blueprint->user_metadata['output_locale'] ?? '') === 'en'
+                );
                 $specs[] = $parsedData;
             }
 
@@ -675,11 +703,11 @@ TXT;
         if (in_array($segmentKey, ['features', 'feature_specifications', 'mvp_features'])) {
             $featuresList = is_array($parsedData) ? $parsedData : [];
             foreach ($featuresList as &$fItem) {
-                if (is_array($fItem) && !empty($fItem['acceptance_criteria'])) {
-                    $fItem['acceptance_criteria'] = PrdGeneratorService::normalizeAcceptanceCriteria(
-                        $fItem['acceptance_criteria'],
-                        $fItem['title'] ?? '',
-                        $fItem['user_story'] ?? ''
+                if (is_array($fItem)) {
+                    $fItem = BlueprintDiscoveryService::polishFeatureSpecification(
+                        $fItem,
+                        $blueprint->domain_category ?? 'custom_portal',
+                        ($blueprint->user_metadata['output_locale'] ?? '') === 'en'
                     );
                 }
             }
@@ -876,7 +904,7 @@ PROMPT;
             $slugTitle = Str::slug($title);
             $pascal = PrdGeneratorService::sanitizeEntityClassName($title, $item['related_table'] ?? null);
 
-            return [
+            $refinedItem = [
                 'id' => $id,
                 'index' => $index,
                 'tier' => 'mvp',
@@ -900,28 +928,48 @@ PROMPT;
                     "Skenario 3 (Edge Case & Concurrency): Percobaan mutasi simultan ditangani melalui database transaction locking untuk mencegah race condition.",
                 ], $title, "Sebagai Pengguna Sistem {$businessName}, saya dapat mengelola {$title}..."),
                 'frontend' => [
-                    'component' => "{$pascal}Manager.jsx",
-                    'interactions' => [
-                        'Form validasi interaktif dengan feedback visual instan',
-                        'Keyset cursor pagination O(1) dengan search box instan clear button',
-                        'Floating toast notification untuk setiap mutasi state',
+                    'components' => ["{$pascal}Component.blade.php", "{$pascal}Card.blade.php"],
+                    'tasks' => [
+                        "Bangun antarmuka responsif {$title} dengan rasio kontras WCAG AAA.",
+                        "Implementasikan tabel listing data Keyset Cursor Pagination O(1) dengan search box instan clear button.",
+                        "Integrasikan feedback visual floating toast untuk setiap mutasi state.",
                     ],
+                    'states' => 'Default, Loading Skeleton, Empty State, Error Toast, Memproses',
+                    'anti_ai_slop' => 'Palet Zinc monokrom dengan aksen tajam, border presisi rounded-none, dilarang tombol kapsul, bebas window.alert() native.',
                 ],
                 'backend' => [
-                    'controller' => "{$pascal}Controller",
-                    'service' => "{$pascal}Service",
-                    'validation_rules' => [
-                        'id' => 'sometimes|string|size:26',
-                        'name' => 'required|string|max:255',
-                        'status' => 'required|string|in:draft,active,archived',
+                    'target_files' => [
+                        "app/Models/{$pascal}.php",
+                        "app/Services/{$pascal}Service.php",
+                        "app/Http/Controllers/{$pascal}Controller.php",
                     ],
+                    'tasks' => [
+                        "Migration tabel " . Str::snake(Str::plural($pascal)) . " dengan Primary Key ULID 26-karakter standar PostgreSQL 16.",
+                        "Implementasikan {$pascal}Service atomik dibungkus DB::transaction() dengan pessimistic locking (lockForUpdate).",
+                        "Terapkan validasi FormRequest Store{$pascal}Request anti-XSS dan sanitasi tipe data ketat.",
+                    ],
+                    'ulid_migration_rules' => 'Wajib gunakan ->ulid("id")->primary() (VARCHAR(26)) dan foreignUlid. Dilarang AUTO_INCREMENT.',
+                    'query_strategy' => 'Keyset Cursor Pagination cursorPaginate() dengan ->orderBy("id", "asc") untuk latensi sub-10ms.',
                 ],
                 'integration' => [
-                    'third_party' => 'Midtrans / Notification Engine',
-                    'webhook' => "/api/webhooks/{$slugTitle}",
+                    'endpoint' => "POST /api/v1/" . Str::kebab(Str::plural($pascal)),
+                    'middleware' => ['api', 'auth:sanctum', 'throttle:60,1'],
+                    'tasks' => [
+                        "Daftarkan endpoint RESTful API dengan otentikasi token Sanctum dan rate limiting.",
+                        "Format respons error standar RFC 9457 Problem Details dengan HTTP status code presisi.",
+                        "Terapkan header X-Idempotency-Key untuk mencegah mutasi ganda.",
+                    ],
+                    'request_schema' => json_encode(['title' => "Sample {$title}", 'status' => 'active'], JSON_PRETTY_PRINT),
+                    'response_schema' => json_encode(['success' => true, 'data' => ['id' => '01J...ULID26CHARS', 'title' => "Sample {$title}", 'status' => 'active']], JSON_PRETTY_PRINT),
                 ],
                 'code_agent_directive' => "Implementasikan {$pascal}Service dengan DB::transaction, Strict ULID primary keys, cursorPaginate(), dan anti-hardcoding patterns.",
             ];
+
+            return BlueprintDiscoveryService::polishFeatureSpecification(
+                $refinedItem,
+                $blueprint->domain_category ?? 'custom_portal',
+                ($blueprint->user_metadata['output_locale'] ?? '') === 'en'
+            );
         }
 
         if (in_array($segmentKey, ['features', 'feature_specifications', 'mvp_features'])) {

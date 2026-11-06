@@ -166,7 +166,8 @@
                         @foreach($mvpEngineeringSpecs as $specIdx => $spec)
                             @php
                                 $featKey = $spec['feature_id'] ?? ($spec['id'] ?? ('FEAT-SPEC-' . $specIdx));
-                                $craftedSpec = \App\Services\BlueprintDiscoveryService::polishFeatureSpecification($spec, $blueprint->domain_category ?? 'custom_portal', $isEn ?? false);
+                                $spec = \App\Services\BlueprintDiscoveryService::polishFeatureSpecification($spec, $blueprint->domain_category ?? 'custom_portal', $isEn ?? false);
+                                $craftedSpec = $spec;
                             @endphp
                             <div 
                                 id="card-feat-{{ $specIdx }}"

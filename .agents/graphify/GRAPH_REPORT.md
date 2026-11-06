@@ -16,7 +16,15 @@ Aplikasi **Neriah Pro** beroperasi sebagai Digital Architecture Hub & Productize
 ```mermaid
 graph TD
     ClientPublic[Klien Publik & Pengunjung Web] -->|HTTP / React 19 Islands| WebRoutes[Web Routes / Frontend]
-    WebRoutes --> BlueprintCtrl[BlueprintController /blueprint]
+    WebRoutes --> BlueprintCtrl[BlueprintController Facade / SubControllers]
+    BlueprintCtrl --> BlueprintDiscoveryCtrl[BlueprintDiscoveryController]
+    BlueprintCtrl --> BlueprintViewCtrl[BlueprintViewController]
+    BlueprintCtrl --> BlueprintCommercialCtrl[BlueprintCommercialController]
+    BlueprintCtrl --> BlueprintExportCtrl[BlueprintExportController]
+    BlueprintCtrl --> BlueprintScaffoldCtrl[BlueprintScaffoldController]
+    BlueprintCtrl --> BlueprintRefinementCtrl[BlueprintRefinementController]
+    BlueprintCtrl --> BlueprintCollaborationCtrl[BlueprintCollaborationController]
+    BlueprintCtrl --> BlueprintAuditCtrl[BlueprintAuditController]
     WebRoutes --> PageCtrl[PageController Dynamic CMS]
     WebRoutes --> DocCtrl[DocumentController Digital Contract]
     WebRoutes --> CustomerDashboardCtrl[CustomerDashboardController /customer/dashboard]
@@ -208,6 +216,18 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/admin/settings`: Pengaturan Global (`ManageSettings.php`) dengan tab terisolasi rapi (General, Legal & Developer Signature, Multi-AI Model Hub, Multi-Language 2-Tier Locale, Frontend Feature Flags, Navigation & Footer, SEO Schema Markup, Anti-Malware Shield, Project OS & Pricing Strategy) dengan pre-populasi defaults kebal validasi lintas tab dan quick action top save bar.
 - `/{slug?}`: Fallback dinamis CMS page (`PageController::show`).
 - `api/vision-blueprint`: Endpoint POST penyimpanan form Project OS dengan Honeypot anti-spam (`throttle:30,1`), normalisasi nomor WhatsApp internasional dengan selector kode negara dari `config/countries.php`, dan filter anti-awalan 0.
+
+- **`App\Http\Controllers\Blueprint\*` (Decomposed Controller Architecture)**:
+  Dekomposisi God Controller `BlueprintController` (4.087 baris, 56 metode) menjadi 8 Sub-Controllers domain terspesialisasi di bawah `App\Http\Controllers\Blueprint\` dengan `BlueprintController` sebagai Lightweight Facade / Proxy (~500 baris) menjamin 100% backward-compatibility:
+  1. `BlueprintDiscoveryController` (7 metode): Inisiasi ide, form discovery, draft reset, autosave, katalog matrix composable, topological DAG preview.
+  2. `BlueprintViewController` (5 metode): Show blueprint PRD/ERD, kalkulasi ulang ROI & redirect, regenerasi penuh PRD & redirect.
+  3. `BlueprintCommercialController` (12 metode): Kontrak legal, Midtrans DP & Pelunasan snap tokens, voucher validate & claim, VIP owner bypass, pricing inquiry, kalkulator estimasi komersial scope-to-RAB, penguncian scope SPK, pembukaan scope & redirect, dokumen mitra A4 (RAB, SPK Appendix, BAST, SOP Training).
+  4. `BlueprintExportController` (5 metode): Unduh PDF, unduh Markdown, raw Markdown AI prompt clipboard, unduh `BLUEPRINT_SCHEMA.json`, unduh `.cursorrules` / LLM settings multiparameter.
+  5. `BlueprintScaffoldController` (5 metode): Ekspor arsip zip scaffold terkompilasi, preview berkas scaffold AJAX, auto-save perubahan kustom berkas scaffold, reset berkas scaffold ke default AI, AI refinement berkas per modul.
+  6. `BlueprintRefinementController` (5 metode): Ambil source corpus, tweak segmen PRD, elaborasi instruksi penajaman khusus, elaborasi kaskade KPI & slug.
+  7. `BlueprintCollaborationController` (9 metode): Pembaruan task backlog, checkpoint progress sprint, sinkronisasi kehadiran & kursor kolaborator real-time, co-sign modul, anotasi live, seremoni Dual-Key Scope Lock, toggle skenario UAT *Given-When-Then*, dan penandatanganan digital BAST.
+  8. `BlueprintAuditController` (8 metode): CLI workspace bootstrapper (`curl | bash`), brownfield database audit & shadow ULID migration, slop scanner drift detector, blueprint pre-flight doctor, slug doctor, delta change request creator, list change requests O(1), dan approval addendum berbayar.
+  - Trait Keamanan Terpadu: `App\Http\Controllers\Blueprint\Concerns\AuthorizesBlueprintAccess` mencegah kerentanan IDOR pada tier berbayar (Lite, Pro, Ultimate, MVP).
 
 ---
 

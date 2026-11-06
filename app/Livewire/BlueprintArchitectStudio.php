@@ -278,6 +278,11 @@ class BlueprintArchitectStudio extends Component
         $queryLocale = (string) request()->query('output_locale', request()->query('lang', ''));
         if ($queryLocale !== '') {
             $this->outputLocale = PosInclusiveCommercialCatalog::normalizeOutputLocale($queryLocale);
+        } else {
+            $savedLocale = session('neriah_locale') ?: request()->cookie('neriah_locale', app()->getLocale());
+            if ($savedLocale) {
+                $this->outputLocale = PosInclusiveCommercialCatalog::normalizeOutputLocale((string) $savedLocale);
+            }
         }
 
         if ($this->selectedUiVariant === '') {
@@ -548,6 +553,7 @@ class BlueprintArchitectStudio extends Component
 
         if (in_array($this->outputLocale, ['id', 'en', 'ar', 'ja', 'zh-CN', 'de', 'es'], true)) {
             session(['neriah_locale' => $this->outputLocale]);
+            cookie()->queue('neriah_locale', $this->outputLocale, 60 * 24 * 365);
             app()->setLocale($this->outputLocale);
         }
 

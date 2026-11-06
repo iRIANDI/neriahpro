@@ -60,3 +60,4 @@ class BlueprintUnlockCommand extends Command
         return 0;
     }
 }
+

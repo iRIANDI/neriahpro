@@ -61,205 +61,243 @@
     class="flex flex-col flex-1 lg:h-screen lg:overflow-hidden bg-zinc-100 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 select-none"
 >
     <!-- =================================================================== -->
-    <!-- TOP BAR: PROJECT IDENTITY + DETERMINISM SCORE + WIZARD / MCP / DIFF -->
+    <!-- TOP DECK: BRAND + RETURN TO PRD + PROJECT TITLE + TIER-1 LOCALE + CONTROLS -->
     <!-- =================================================================== -->
-    <header class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-300 dark:border-zinc-800 px-3 py-2 flex flex-wrap items-center justify-between gap-2 z-30">
-        <div class="flex flex-wrap items-center gap-2">
-            <a href="/blueprint?tier=retail_spark&amp;new=1" class="px-2 py-1 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[11px] font-black uppercase tracking-wider rounded-none hover:opacity-90 transition">
-                [NeriahPro OS v11.0 • 20-PILLAR PARIPURNA]
+    @php
+        $targetDocUrl = $slug ? route('blueprint.show', $slug) : ($blueprintId ? route('blueprint.show', $blueprintId) : route('blueprint.create'));
+    @endphp
+    <header class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 px-3 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-3 z-30 shadow-xs">
+        <!-- Left Group: Direct Return Link to PRD Document + Studio Identity + Project Input -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <a
+                href="{{ $targetDocUrl }}"
+                class="px-3 py-1.5 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 font-mono text-xs font-black uppercase tracking-wider rounded-none border border-zinc-700 dark:border-zinc-300 transition flex items-center gap-2 shadow-xs cursor-pointer group"
+                title="{{ $isEnLoc ? 'Return to Standard Formal PRD Document View' : 'Kembali ke Tampilan Dokumen Spesifikasi PRD Resmi' }}"
+            >
+                <svg class="w-4 h-4 text-emerald-400 dark:text-emerald-600 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                <span>{{ $isEnLoc ? '← PRD DOCUMENT' : '← DOKUMEN PRD' }}</span>
             </a>
+
+            <span class="px-2.5 py-1 bg-emerald-600 text-black font-mono text-[11px] font-black uppercase tracking-wider hidden md:inline-block">
+                3-PANE STUDIO v11.0
+            </span>
+
             <div class="flex items-center gap-1.5 font-mono text-xs">
                 <input
                     type="text"
                     wire:model.live.debounce.400ms="projectName"
                     aria-label="{{ $isEnLoc ? 'Project Name' : 'Nama Proyek' }}"
-                    class="px-2 py-0.5 w-40 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-black text-zinc-950 dark:text-zinc-100 rounded-xs text-xs"
+                    class="px-2.5 py-1 w-36 sm:w-52 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-black text-zinc-950 dark:text-zinc-100 rounded-none text-xs focus:ring-1 focus:ring-emerald-500"
+                    placeholder="Nama Proyek..."
                 />
-                <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 text-[10px] font-black rounded-xs tabular-nums">
+                <span class="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 text-[10px] font-mono font-bold rounded-none">
                     {{ $currentVersion }}
                 </span>
                 <button
                     type="button"
                     wire:click="startFreshIsolatedProject"
-                    class="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-700 text-[10px] font-black rounded-xs cursor-pointer transition"
-                    title="{{ $isEnLoc ? 'Reset clean 100% isolated workspace without touching previous project' : 'Reset workspace bersih 100% terisolasi tanpa menyentuh proyek sebelumnya' }}"
+                    class="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-700 text-[10px] font-mono font-black rounded-none cursor-pointer transition hidden lg:inline-block"
+                    title="{{ $isEnLoc ? 'Reset clean 100% isolated workspace' : 'Reset workspace bersih 100% terisolasi' }}"
                 >
-                    {{ $isEnLoc ? '+ Clean New Project' : '+ Proyek Baru Bersih' }}
+                    {{ $isEnLoc ? '+ New' : '+ Baru' }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Group: Tier 1 Locale Switcher + Mode + Pane Controls + Theme -->
+        <div class="flex items-center gap-2 flex-wrap font-mono text-xs">
+            <!-- Tier 1 Language Segmented Switcher (ID vs EN) -->
+            <div class="inline-flex border border-zinc-300 dark:border-zinc-700 rounded-none overflow-hidden bg-white dark:bg-zinc-950">
+                <button
+                    type="button"
+                    wire:click="selectOutputLocale('id')"
+                    class="px-2.5 py-1 transition flex items-center gap-1 font-bold cursor-pointer {{ $curLoc === 'id' ? 'bg-emerald-600 text-black font-black' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800' }}"
+                    title="Bahasa Indonesia (Tier 1)"
+                >
+                    <span>🇮🇩</span> <span>ID</span>
+                </button>
+                <button
+                    type="button"
+                    wire:click="selectOutputLocale('en')"
+                    class="px-2.5 py-1 transition flex items-center gap-1 font-bold border-l border-zinc-300 dark:border-zinc-700 cursor-pointer {{ $curLoc === 'en' ? 'bg-emerald-600 text-black font-black' : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800' }}"
+                    title="English (Tier 1)"
+                >
+                    <span>🇬🇧</span> <span>EN</span>
                 </button>
             </div>
 
-            <!-- Dual-Mode Switcher: Retail Self-Dev vs Mitra Proyek Turnkey (Satu Pintu) -->
-            <div class="inline-flex p-0.5 bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs font-mono text-[10px]">
+            <!-- Global Jurisdiction (Secondary) -->
+            <select
+                wire:change="selectOutputLocale($event.target.value)"
+                aria-label="{{ $isEnLoc ? 'More Jurisdictions' : 'Regulasi Global Lainnya' }}"
+                class="hidden 2xl:inline-block px-2 py-1 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold rounded-none"
+            >
+                <option value="id" @selected($curLoc === 'id')>🇮🇩 ID • UU PDP / PSAK</option>
+                <option value="en" @selected($curLoc === 'en')>🇺🇸 EN • SOC2 / ASC 958</option>
+                <option value="ar" @selected($curLoc === 'ar')>🇸🇦 AR • ZATCA / RTL</option>
+                <option value="ja" @selected($curLoc === 'ja')>🇯🇵 JA • APPI / JCT</option>
+                <option value="zh-CN" @selected($curLoc === 'zh-CN')>🇨🇳 ZH • PIPL / Fapiao</option>
+                <option value="de" @selected($curLoc === 'de')>🇩🇪 DE • GDPR / GoBD</option>
+                <option value="es" @selected($curLoc === 'es')>🇪🇸 ES • GDPR / CFDI</option>
+            </select>
+
+            <!-- Mode Switcher: Retail vs Mitra -->
+            <div class="inline-flex border border-zinc-300 dark:border-zinc-700 rounded-none overflow-hidden text-[11px]">
                 <button
                     type="button"
                     wire:click="switchEngagementMode('RETAIL_SELF_DEV')"
-                    class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $engagementMode === 'RETAIL_SELF_DEV' ? 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black' : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 font-bold' }}"
+                    class="px-2.5 py-1 cursor-pointer transition {{ $engagementMode === 'RETAIL_SELF_DEV' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 font-bold' }}"
+                    title="Mode Retail: Self-Dev AI / Beli Kode Jadi"
                 >
-                    {{ $isEnLoc ? 'Retail Mode (AI Self-Dev)' : 'Mode Retail (Self-Dev AI)' }}
+                    {{ $isEnLoc ? 'Retail (AI)' : 'Retail (AI)' }}
                 </button>
                 <button
                     type="button"
                     wire:click="switchEngagementMode('MITRA_TURNKEY_PROJECT')"
-                    class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $engagementMode === 'MITRA_TURNKEY_PROJECT' ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black' : 'text-zinc-700 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-zinc-100 font-bold' }}"
+                    class="px-2.5 py-1 border-l border-zinc-300 dark:border-zinc-700 cursor-pointer transition {{ $engagementMode === 'MITRA_TURNKEY_PROJECT' ? 'bg-emerald-600 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 font-bold' }}"
+                    title="Mode Mitra: Pengerjaan Tim Turnkey Neriah Pro"
                 >
-                    {{ $isEnLoc ? 'Mitra Project Mode (Contract & Handover)' : 'Mode Mitra Proyek (Kontrak & BAST)' }}
+                    {{ $isEnLoc ? 'Mitra Turnkey' : 'Mitra Turnkey' }}
                 </button>
             </div>
 
-            <!-- v8.0 Adaptive Dual-Persona UX Toggle (Business Storyboard vs Architect Pro) -->
-            <div class="inline-flex p-0.5 bg-zinc-100 dark:bg-zinc-950 border border-emerald-500/70 dark:border-emerald-700 rounded-xs font-mono text-[10px]">
+            <!-- Persona Toggle -->
+            <div class="hidden sm:inline-flex border border-zinc-300 dark:border-zinc-700 rounded-none overflow-hidden text-[10px]">
                 <button
                     type="button"
                     wire:click="switchPersonaMode('BUSINESS_WIZARD')"
-                    class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $personaMode === 'BUSINESS_WIZARD' ? 'bg-emerald-600 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black' : 'text-zinc-800 dark:text-zinc-300 font-bold' }}"
+                    class="px-2 py-1 cursor-pointer transition {{ $personaMode === 'BUSINESS_WIZARD' ? 'bg-emerald-600 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-bold' }}"
+                    title="Mode Bisnis / Awam"
                 >
-                    {{ $isEnLoc ? '🧭 Business / Simple Mode' : '🧭 Mode Bisnis / Awam' }}
+                    🧭 {{ $isEnLoc ? 'Business' : 'Bisnis' }}
                 </button>
                 <button
                     type="button"
                     wire:click="switchPersonaMode('ARCHITECT_PRO')"
-                    class="px-2 py-0.5 rounded-none cursor-pointer transition {{ $personaMode === 'ARCHITECT_PRO' ? 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black' : 'text-zinc-800 dark:text-zinc-300 font-bold' }}"
+                    class="px-2 py-1 border-l border-zinc-300 dark:border-zinc-700 cursor-pointer transition {{ $personaMode === 'ARCHITECT_PRO' ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-bold' }}"
+                    title="Mode Arsitek Pro"
                 >
-                    {{ $isEnLoc ? '⚡ Architect Pro Mode' : '⚡ Mode Arsitek Pro' }}
+                    ⚡ {{ $isEnLoc ? 'Architect' : 'Arsitek' }}
                 </button>
             </div>
 
-            <!-- v8.0 Tier-1 Jurisdiction & RTL Output Locale Selector -->
-            <select
-                wire:change="selectOutputLocale($event.target.value)"
-                aria-label="{{ $isEnLoc ? 'Language & Jurisdiction Output' : 'Bahasa & Regulasi Output Blueprint' }}"
-                class="px-2 py-1 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-[10px] font-black rounded-none"
-            >
-                @foreach([
-                    'id' => '🇮🇩 ID • UU PDP / PSAK',
-                    'en' => '🇺🇸 EN • SOC2 / ASC 958',
-                    'ar' => '🇸🇦 AR • RTL / ZATCA',
-                    'ja' => '🇯🇵 JA • APPI / JCT',
-                    'zh-CN' => '🇨🇳 ZH • PIPL / Fapiao',
-                    'de' => '🇩🇪 DE • GDPR / GoBD',
-                    'es' => '🇪🇸 ES • GDPR / CFDI',
-                ] as $locCode => $locLabel)
-                    <option value="{{ $locCode }}" @selected($outputLocale === $locCode)>{{ $locLabel }}</option>
-                @endforeach
-            </select>
-            <!-- v12.0 Server-Side Entitlement Gate Switcher -->
-            <select
-                wire:change="switchEntitlementTier($event.target.value)"
-                aria-label="{{ $isEnLoc ? 'License Tier & Server Gate' : 'Tier Lisensi & Server Gate' }}"
-                class="px-2 py-1 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-500 text-emerald-950 dark:text-emerald-200 font-mono text-[10px] font-black rounded-none"
-            >
-                <option value="FREE_SANDBOX" @selected($entitlementTier === 'FREE_SANDBOX')>{{ $isEnLoc ? '🔒 Tier: Spark Sandbox (Free • Gate P2–P7)' : '🔒 Tier: Spark Sandbox (Rp 0 • Gate P2–P7)' }}</option>
-                <option value="SINGLE_APP_PASS" @selected($entitlementTier === 'SINGLE_APP_PASS')>{{ $isEnLoc ? '🔓 Tier: Single-App Pass ($19 / Rp 299k)' : '🔓 Tier: Single-App Pass (Rp 299rb)' }}</option>
-                <option value="PRO_RETAIL" @selected($entitlementTier === 'PRO_RETAIL')>{{ $isEnLoc ? '⚡ Tier: Pro Agentic / CSR ($25 / Rp 399k)' : '⚡ Tier: Pro Agentic / CSR (Rp 399rb)' }}</option>
-                <option value="AGENCY_PARTNER" @selected($entitlementTier === 'AGENCY_PARTNER')>{{ $isEnLoc ? '👑 Tier: Agency White-Label ($65+ / Rp 990k+)' : '👑 Tier: Agency White-Label (Rp 990rb+)' }}</option>
-                <option value="MITRA_TURNKEY" @selected($entitlementTier === 'MITRA_TURNKEY')>{{ $isEnLoc ? '🤝 Tier: Mitra Turnkey Project (Contract)' : '🤝 Tier: Mitra Proyek Turnkey (SPK)' }}</option>
-            </select>
-        </div>
-
-        <!-- Screen 3: Blueprint Doctor + Scope Hash + Mitra RAB Badge + Rescue Button -->
-        <div class="flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
-            <!-- v12.0 The "Rescue" Button (100% Retail Fee Credited to Mitra DP) -->
-            <button
-                type="button"
-                wire:click="convertRetailToMitraRescue"
-                class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-500 dark:bg-amber-950/90 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-600 font-black text-[10px] rounded-none cursor-pointer transition"
-                title="{{ $rescueCreditData['guarantee_summary'] ?? '' }}"
-            >
-                {{ $isEnLoc ? '🛟 Need NeriahPro Engineers? Convert to Mitra Project (100% DP Credited)' : '🛟 Butuh Bantuan Engineer NeriahPro? Konversi ke Mitra Proyek (Potong DP 100%)' }}
-            </button>
-
-            <div class="hidden xl:flex items-center gap-1.5 px-2 py-1 bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs tabular-nums text-[10px]">
-                <span class="text-zinc-600 dark:text-zinc-400">Scope Hash:</span>
-                <code class="font-black text-zinc-950 dark:text-emerald-300">{{ $commercialQuotation['scope_hash_short'] ?? '-' }}</code>
-            </div>
-            @if($engagementMode === 'MITRA_TURNKEY_PROJECT')
+            <!-- Pane Visibility Controls (Explorer, Focus, Compiler) -->
+            <div class="hidden sm:inline-flex border border-zinc-300 dark:border-zinc-700 p-0.5 bg-zinc-50 dark:bg-zinc-950 text-xs">
                 <button
                     type="button"
-                    wire:click="$set('centerTab', 'commercial_mitra')"
-                    class="px-2 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 rounded-xs font-black tabular-nums text-[10px] cursor-pointer"
+                    @click="showLeftPane = !showLeftPane"
+                    class="px-2 py-0.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 font-bold cursor-pointer"
+                    :class="{ 'bg-zinc-200 dark:bg-zinc-800 font-black text-emerald-600 dark:text-emerald-400': showLeftPane }"
+                    title="{{ $isEnLoc ? 'Toggle Left Explorer Pane' : 'Sembunyikan / Tampilkan Panel Kiri' }}"
                 >
-                    {{ $isEnLoc ? 'Cost Est:' : 'RAB:' }} {{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }} &bull; {{ $commercialQuotation['timeline_days'] ?? 0 }} {{ $isEnLoc ? 'Days' : 'Hari' }}
+                    ◧ <span class="hidden xl:inline">{{ $isEnLoc ? 'Explorer' : 'Kiri' }}</span>
                 </button>
-            @endif
-            <div class="flex items-center gap-1.5 px-2.5 py-1 border rounded-xs tabular-nums {{ $isZeroAssumptionReady ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700' : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700' }}">
-                <span class="font-black">Determinism Score: {{ $detScore }}%</span>
-                <span>{{ $isZeroAssumptionReady ? ($isEnLoc ? 'Zero-Assumption Ready ✅' : 'Zero-Assumption Ready ✅') : ($isEnLoc ? '⚠️ Assumption Gaps Detected' : '⚠️ Celah Asumsi Terdeteksi') }}</span>
-                @if(!empty($doctor['one_click_auto_fix']['has_fixes']))
-                    <button
-                        type="button"
-                        wire:click="applyDoctorAutoFix"
-                        class="ml-1 px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-amber-400 dark:text-zinc-950 font-black text-[10px] rounded-none cursor-pointer hover:opacity-90"
-                    >
-                        {{ $isEnLoc ? '+ Auto Resolve' : '+ Buat Otomatis' }}
-                    </button>
-                @endif
+                <button
+                    type="button"
+                    @click="toggleFullCanvas()"
+                    class="px-2 py-0.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 font-bold cursor-pointer"
+                    :class="{ 'bg-emerald-600 text-black font-black': !showLeftPane && !showRightPane }"
+                    title="{{ $isEnLoc ? 'Focus Mode (Full Canvas)' : 'Mode Fokus Layar Penuh' }}"
+                >
+                    ⛶ <span class="hidden xl:inline">{{ $isEnLoc ? 'Focus' : 'Fokus' }}</span>
+                </button>
+                <button
+                    type="button"
+                    @click="showRightPane = !showRightPane"
+                    class="px-2 py-0.5 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 font-bold cursor-pointer"
+                    :class="{ 'bg-zinc-200 dark:bg-zinc-800 font-black text-emerald-600 dark:text-emerald-400': showRightPane }"
+                    title="{{ $isEnLoc ? 'Toggle Right Compiler Dock' : 'Sembunyikan / Tampilkan Panel Kanan' }}"
+                >
+                    <span class="hidden xl:inline">{{ $isEnLoc ? 'Dock' : 'Kanan' }}</span> ◨
+                </button>
             </div>
 
-            <button
-                type="button"
-                wire:click="$set('showWizardModal', true)"
-                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-700 font-bold rounded-xs cursor-pointer transition"
-            >
-                ⚡ 60s Wizard
-            </button>
-
-            <button
-                type="button"
-                wire:click="$set('showSlopDiffModal', true)"
-                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-700 font-bold rounded-xs cursor-pointer transition"
-            >
-                ⚖️ Slop Diff
-            </button>
-
-            <button
-                type="button"
-                wire:click="$set('rightDockMode', 'mcp_json')"
-                class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 font-black rounded-xs cursor-pointer transition"
-            >
-                🔌 Export / MCP
-            </button>
-
-            @if($slug)
-                <a
-                    href="{{ route('blueprint.show', $slug) }}"
-                    class="px-2.5 py-1 bg-white hover:bg-zinc-100 text-zinc-950 border border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700 font-bold rounded-xs transition"
-                >
-                    {{ $isEnLoc ? '📄 PRD Document' : '📄 Dokumen PRD' }}
-                </a>
-            @endif
-
+            <!-- Theme Toggle -->
             <button
                 type="button"
                 onclick="window.toggleStudioTheme()"
-                class="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 dark:border-zinc-700 font-bold rounded-xs cursor-pointer"
+                class="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 dark:border-zinc-700 font-bold rounded-none cursor-pointer"
                 title="Switch Dark / Light Theme"
             >
-                ◐ THEME
+                ◐
             </button>
         </div>
     </header>
 
     <!-- =================================================================== -->
-    <!-- END-TO-END 5-STEP SATU PINTU CLIENT JOURNEY STEPPER                 -->
+    <!-- SUB-DECK: TELEMETRY STATUS + QUICK ACTION DIALOGS                   -->
     <!-- =================================================================== -->
-    <div class="shrink-0 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-3 py-1 flex items-center justify-between gap-2 overflow-x-auto font-mono text-[10px]">
-        <div class="flex items-center gap-1.5 whitespace-nowrap">
-            <span class="font-black text-emerald-900 dark:text-emerald-400 uppercase">{{ $isEnLoc ? 'SATU PINTU FLOW:' : 'ALUR SATU PINTU:' }}</span>
-            <a href="/pricing" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500">{{ $isEnLoc ? '01. Select Package & Sector' : '01. Pilih Paket & Sektor' }}</a>
-            <span class="text-zinc-400">&rarr;</span>
-            <button type="button" wire:click="$set('centerTab', 'proposal_wow')" class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black cursor-pointer">{{ $isEnLoc ? '01B. Screen 1: Business Proposal (WOW View)' : '01B. Layar 1: Proposal Bisnis (WOW View)' }}</button>
-            <span class="text-zinc-400">&rarr;</span>
-            <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black">{{ $isEnLoc ? '02. Screen 2: 3-Pane Studio [ACTIVE]' : '02. Layar 2: 3-Pane Studio [AKTIF]' }}</span>
-            <span class="text-zinc-400">&rarr;</span>
-            <button type="button" wire:click="$set('centerTab', 'commercial_mitra')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">{{ $isEnLoc ? '03. Lock Contract / License' : '03. Kunci SPK SHA-256 / Lisensi' }}</button>
-            <span class="text-zinc-400">&rarr;</span>
-            <button type="button" wire:click="$set('rightDockMode', 'mcp_json')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">{{ $isEnLoc ? '04. Live 7-Phase MCP' : '04. Live 7-Fase MCP' }} ({{ $verifiedCount }}/7)</button>
-            <span class="text-zinc-400">&rarr;</span>
-            <button type="button" wire:click="$set('centerTab', 'commercial_mitra')" class="px-1.5 py-0.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-emerald-500 cursor-pointer">{{ $isEnLoc ? '05. UAT & Handover' : '05. UAT & BAST' }} ({{ $uatChecklist['progress_percent'] ?? 0 }}%)</button>
+    <div class="shrink-0 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 font-mono text-[11px]">
+        <!-- Left: Telemetry & Scope Integrity -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-black text-[10px]">
+                {{ $activeSectorObj['name'] ?? 'General Sector' }} &bull; {{ $activeStackObj['name'] ?? 'Laravel Monolith' }}
+            </span>
+
+            @if($engagementMode === 'MITRA_TURNKEY_PROJECT')
+                <button
+                    type="button"
+                    wire:click="$set('centerTab', 'commercial_mitra')"
+                    class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 font-black tabular-nums cursor-pointer"
+                >
+                    {{ $isEnLoc ? 'RAB Cost:' : 'Estimasi RAB:' }} {{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }} ({{ $commercialQuotation['timeline_days'] ?? 0 }} {{ $isEnLoc ? 'Days' : 'Hari' }})
+                </button>
+            @endif
+
+            <div class="flex items-center gap-1.5 px-2 py-0.5 border tabular-nums {{ $isZeroAssumptionReady ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700' : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700' }}">
+                <span class="font-black">Determinism: {{ $detScore }}%</span>
+                <span>{{ $isZeroAssumptionReady ? 'Zero-Assumption ✅' : ($isEnLoc ? '⚠️ Gaps' : '⚠️ Celah Asumsi') }}</span>
+                @if(!empty($doctor['one_click_auto_fix']['has_fixes']))
+                    <button
+                        type="button"
+                        wire:click="applyDoctorAutoFix"
+                        class="ml-1 px-1.5 py-0.2 bg-zinc-950 text-white dark:bg-amber-400 dark:text-zinc-950 font-black text-[10px] rounded-none cursor-pointer"
+                    >
+                        {{ $isEnLoc ? '+ Auto Fix' : '+ Perbaiki Otomatis' }}
+                    </button>
+                @endif
+            </div>
+
+            @if(!empty($commercialQuotation['scope_hash_short']))
+                <span class="hidden xl:inline-flex items-center gap-1 text-zinc-500 dark:text-zinc-400 text-[10px]">
+                    <span>Scope Hash:</span>
+                    <code class="font-black text-zinc-900 dark:text-emerald-400">{{ $commercialQuotation['scope_hash_short'] }}</code>
+                </span>
+            @endif
         </div>
-        <a href="/customer/dashboard" class="whitespace-nowrap px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black hover:opacity-90">
-            {{ $isEnLoc ? 'Client Portal' : 'Portal Klien' }} &rarr;
-        </a>
+
+        <!-- Right: Action Tools & Modal Triggers -->
+        <div class="flex items-center gap-1.5 flex-wrap">
+            <button
+                type="button"
+                wire:click="$set('showWizardModal', true)"
+                class="px-2.5 py-0.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-700 font-bold rounded-none cursor-pointer transition text-[10px]"
+            >
+                ⚡ {{ $isEnLoc ? '60s Wizard' : 'Wizard 60 Detik' }}
+            </button>
+            <button
+                type="button"
+                wire:click="$set('showSlopDiffModal', true)"
+                class="px-2.5 py-0.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-700 font-bold rounded-none cursor-pointer transition text-[10px]"
+            >
+                ⚖️ {{ $isEnLoc ? 'Slop Diff' : 'Audit Slop' }}
+            </button>
+            <button
+                type="button"
+                wire:click="$set('rightDockMode', 'mcp_json')"
+                class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black rounded-none cursor-pointer transition text-[10px]"
+            >
+                🔌 {{ $isEnLoc ? 'Export / MCP' : 'Ekspor MCP' }}
+            </button>
+            <button
+                type="button"
+                wire:click="convertRetailToMitraRescue"
+                class="px-2.5 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-500 dark:bg-amber-950/90 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-600 font-black text-[10px] rounded-none cursor-pointer transition"
+                title="{{ $rescueCreditData['guarantee_summary'] ?? '' }}"
+            >
+                🛟 {{ $isEnLoc ? 'Need Engineers? (100% DP Credit)' : 'Butuh Engineer? (Potong DP 100%)' }}
+            </button>
+        </div>
     </div>
 
     <!-- =================================================================== -->

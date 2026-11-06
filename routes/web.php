@@ -58,6 +58,8 @@ Route::post('/api/blueprint/doctor', [BlueprintController::class, 'blueprintDoct
 Route::post('/api/blueprint/{slug}/doctor', [BlueprintController::class, 'blueprintSlugDoctor'])->name('api.blueprint.slug-doctor')->middleware('throttle:30,1');
 Route::post('/api/blueprint/{slug}/slop-audit', [BlueprintController::class, 'slopAudit'])->name('api.blueprint.slop-audit')->middleware('throttle:30,1');
 Route::post('/api/blueprint/analyze-idea', [BlueprintController::class, 'analyzeIdea'])->name('api.blueprint.analyze-idea')->middleware('throttle:15,1');
+Route::post('/api/blueprint/elaborate-kpi-cascade', [BlueprintController::class, 'elaborateKpiCascade'])->name('api.blueprint.elaborate-kpi-cascade')->middleware('throttle:30,1');
+Route::post('/api/blueprint/{slug}/elaborate-kpi-cascade', [BlueprintController::class, 'elaborateKpiCascadeSlug'])->name('api.blueprint.elaborate-kpi-cascade-slug')->middleware('throttle:30,1');
 Route::post('/api/blueprint/supplement-idea', [BlueprintController::class, 'supplementIdea'])->name('api.blueprint.supplement-idea')->middleware('throttle:30,1');
 Route::post('/api/blueprint/autosave', [BlueprintController::class, 'autoSave'])->name('api.blueprint.autosave')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/tweak-segment', [BlueprintController::class, 'tweakSegment'])->name('api.blueprint.tweak-segment')->middleware('throttle:60,1');

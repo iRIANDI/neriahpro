@@ -70,7 +70,7 @@ final class BlueprintEntitlementGateService
                 ->first();
 
             if ($latestSettledTx !== null) {
-                $amount = (int) ($latestSettledTx->amount ?? 0);
+                $amount = (int) ($latestSettledTx->total_idr ?? $latestSettledTx->original_amount ?? 0);
                 if ($amount >= 2500000) {
                     return 'MITRA_TURNKEY';
                 }
@@ -465,8 +465,8 @@ final class BlueprintEntitlementGateService
             $settledRetailSum = (int) Transaction::query()
                 ->where('user_id', (string) $user->id)
                 ->where('status', 'settlement')
-                ->where('amount', '<', 2500000)
-                ->sum('amount');
+                ->where('total_idr', '<', 2500000)
+                ->sum('total_idr');
 
             if ($settledRetailSum > 0) {
                 $paidRetailCreditIdr = $settledRetailSum;

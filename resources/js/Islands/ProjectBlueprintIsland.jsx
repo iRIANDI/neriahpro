@@ -1093,6 +1093,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [selectedPaymentRailIds, setSelectedPaymentRailIds] = useState(() => new Set(['qris_national']));
   const [selectedIdeaCategory, setSelectedIdeaCategory] = useState(null);
 
+  // Dedicated AI KPI Elaboration & Cascading Engine State
+  const [isElaboratingKpi, setIsElaboratingKpi] = useState(false);
+  const [showKpiCascadeModal, setShowKpiCascadeModal] = useState(false);
+  const [kpiCascadeResult, setKpiCascadeResult] = useState(null);
+  const [selectedCascadeFeatures, setSelectedCascadeFeatures] = useState({});
+  const [selectedCascadeActors, setSelectedCascadeActors] = useState({});
+  const [includeCascadeGherkin, setIncludeCascadeGherkin] = useState(true);
+  const [activeKpiCascadeTab, setActiveKpiCascadeTab] = useState('kpis');
+
   // In-Card Interactive Add Helpers
   const [activeAddKey, setActiveAddKey] = useState(null);
   const [quickInputText, setQuickInputText] = useState('');
@@ -3116,6 +3125,148 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       return next;
     });
     showLocalToast('info', lang === 'en' ? 'Item removed.' : 'Item dihapus.');
+  };
+
+  // Dedicated AI KPI Deep-Dive & Architectural Cascade Trigger
+  const handleTriggerKpiElaboration = async () => {
+    if (isElaboratingKpi) return;
+    setIsElaboratingKpi(true);
+
+    try {
+      const url = initialData?.slug
+        ? `/api/blueprint/${initialData.slug}/elaborate-kpi-cascade`
+        : '/api/blueprint/elaborate-kpi-cascade';
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({
+          tujuanUtama: formData.tujuanUtama,
+          masalahUtama: formData.masalahUtama,
+          namaBisnis: formData.namaBisnis,
+          deskripsiBisnis: formData.deskripsiBisnis,
+          fiturUtama: formData.fiturUtama,
+          aktorSistem: formData.aktorSistem,
+          skenarioGherkin: formData.skenarioGherkin,
+          primarySector: formData.primarySector,
+          locale: lang,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || (lang === 'en' ? 'Failed to elaborate KPIs' : 'Gagal mengelaborasi KPI'));
+      }
+
+      setKpiCascadeResult(data);
+      const initialFeatMap = {};
+      (data.cascaded_impacts?.features || []).forEach((f, idx) => {
+        initialFeatMap[f.code || idx] = true;
+      });
+      setSelectedCascadeFeatures(initialFeatMap);
+
+      const initialActorMap = {};
+      (data.cascaded_impacts?.actors || []).forEach((a, idx) => {
+        initialActorMap[a.role || idx] = true;
+      });
+      setSelectedCascadeActors(initialActorMap);
+
+      setIncludeCascadeGherkin(true);
+      setShowKpiCascadeModal(true);
+      showLocalToast(
+        'success',
+        lang === 'en' ? 'KPI elaboration and architectural cascade ready for review.' : 'Elaborasi KPI dan matriks dampak arsitektur siap ditinjau.',
+        'KPI CASCADE ENGINE'
+      );
+    } catch (err) {
+      console.error('KPI Elaboration error:', err);
+      showLocalToast('error', err.message || (lang === 'en' ? 'Error elaborating KPIs' : 'Terjadi kendala saat elaborasi KPI'), 'ERROR');
+    } finally {
+      setIsElaboratingKpi(false);
+    }
+  };
+
+  // Apply elaborated KPIs and cascade features/actors/UAT to form state
+  const applyKpiCascade = () => {
+    if (!kpiCascadeResult) return;
+
+    setFormData((prev) => {
+      // 1. Elaborate tujuanUtama
+      const newKpiLines = (kpiCascadeResult.kpis || []).map((k, idx) => {
+        const text = k.synthesized_text || k.title;
+        return `${idx + 1}. ${text}`;
+      }).join('\n');
+
+      // 2. Cascade to fiturUtama (append unselected or new features)
+      const existingFeatures = prev.fiturUtama || '';
+      const selectedFeats = (kpiCascadeResult.cascaded_impacts?.features || [])
+        .filter((f, idx) => selectedCascadeFeatures[f.code || idx])
+        .map((f) => f.formatted_line || `${f.title}: ${f.spec}`)
+        .filter((line) => !existingFeatures.toLowerCase().includes(line.slice(0, 30).toLowerCase()));
+
+      let updatedFeatures = existingFeatures;
+      if (selectedFeats.length > 0) {
+        const currentFeatList = parseNumberedList(existingFeatures);
+        const startIndex = currentFeatList.length;
+        const newFeatLines = selectedFeats.map((featText, i) => `${startIndex + i + 1}. [KPI-Linked] ${featText}`);
+        updatedFeatures = currentFeatList.length > 0
+          ? `${existingFeatures}\n${newFeatLines.join('\n')}`
+          : newFeatLines.join('\n');
+      }
+
+      // 3. Cascade to aktorSistem (append unselected or new actors)
+      const existingActors = prev.aktorSistem || '';
+      const selectedActors = (kpiCascadeResult.cascaded_impacts?.actors || [])
+        .filter((a, idx) => selectedCascadeActors[a.role || idx])
+        .map((a) => a.formatted_line || `${a.role}: ${a.access}`)
+        .filter((line) => !existingActors.toLowerCase().includes(line.slice(0, 20).toLowerCase()));
+
+      let updatedActors = existingActors;
+      if (selectedActors.length > 0) {
+        const currentActorList = parseNumberedList(existingActors);
+        const startIndex = currentActorList.length;
+        const newActorLines = selectedActors.map((actorText, i) => `${startIndex + i + 1}. ${actorText}`);
+        updatedActors = currentActorList.length > 0
+          ? `${existingActors}\n${newActorLines.join('\n')}`
+          : newActorLines.join('\n');
+      }
+
+      // 4. Cascade to skenarioGherkin
+      let updatedGherkin = prev.skenarioGherkin || '';
+      if (includeCascadeGherkin && kpiCascadeResult.cascaded_impacts?.acceptance_criteria) {
+        const gherkinToAdd = kpiCascadeResult.cascaded_impacts.acceptance_criteria;
+        if (!updatedGherkin.includes(gherkinToAdd.slice(0, 30))) {
+          updatedGherkin = updatedGherkin
+            ? `${updatedGherkin}\n\n# --- KPI Acceptance Validation Scenario ---\n${gherkinToAdd}`
+            : `# --- KPI Acceptance Validation Scenario ---\n${gherkinToAdd}`;
+        }
+      }
+
+      const next = {
+        ...prev,
+        tujuanUtama: newKpiLines || prev.tujuanUtama,
+        fiturUtama: updatedFeatures,
+        aktorSistem: updatedActors,
+        skenarioGherkin: updatedGherkin,
+      };
+
+      triggerAutoSave(next);
+      return next;
+    });
+
+    setShowKpiCascadeModal(false);
+    showLocalToast(
+      'success',
+      lang === 'en'
+        ? 'KPIs elaborated and cascaded into Core Features, Actors, and UAT scenarios.'
+        : 'KPI berhasil dielaborasi dan berdampak langsung pada Modul Fitur, Aktor RBAC, dan skenario UAT.',
+      'SINKRONISASI SUKSES'
+    );
   };
 
 
@@ -5260,33 +5411,38 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 </div>
 
                 {/* Mode Switcher Buttons + 3-Pane Architect Studio Launch */}
-                <div className="shrink-0 flex flex-wrap items-center gap-1.5">
+                <div className="shrink-0 flex flex-wrap items-center gap-2">
                   <a
                     href={initialData?.slug ? `/blueprint/studio/${initialData.slug}` : '/blueprint/studio'}
-                    className="px-3 py-1.5 rounded-xs border border-emerald-500 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-[10px] font-black uppercase transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-[11px] font-black uppercase transition-all border border-emerald-500 shadow-xs cursor-pointer"
+                    title={lang === 'en' ? 'Open Full-Screen 3-Pane Studio IDE' : 'Buka IDE Layar Penuh 3-Pane Studio'}
                   >
-                    {lang === 'en' ? '🖥️ 3-Pane Studio IDE' : '🖥️ Buka 3-Pane Studio'}
+                    <span>🖥️</span>
+                    <span>{lang === 'en' ? '3-Pane Studio IDE ↗' : 'Buka 3-Pane Studio ↗'}</span>
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => setMatrixMode('express')}
-                    className={`px-3 py-1.5 rounded-xs border font-mono text-[10px] font-black uppercase transition-colors cursor-pointer ${matrixMode === 'express'
-                      ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
-                      : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
-                      }`}
-                  >
-                    {lang === 'en' ? '⚡ Guided Auto Mode' : '⚡ Mode Ringkas AI'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMatrixMode('workbench')}
-                    className={`px-3 py-1.5 rounded-xs border font-mono text-[10px] font-black uppercase transition-colors cursor-pointer ${matrixMode === 'workbench'
-                      ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-500 dark:text-zinc-950 dark:border-emerald-400'
-                      : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-900 border-zinc-300 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700'
-                      }`}
-                  >
-                    {lang === 'en' ? '🛠️ Architect Workbench (6 Tabs)' : '🛠️ Workbench Arsitek (6 Tab)'}
-                  </button>
+
+                  <div className="inline-flex items-center p-0.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none">
+                    <button
+                      type="button"
+                      onClick={() => setMatrixMode('express')}
+                      className={`px-3 py-1 font-mono text-[10px] font-black uppercase transition-all rounded-none cursor-pointer ${matrixMode === 'express'
+                        ? 'bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 shadow-xs'
+                        : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
+                        }`}
+                    >
+                      {lang === 'en' ? '⚡ Guided Auto Mode' : '⚡ Mode Ringkas AI'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMatrixMode('workbench')}
+                      className={`px-3 py-1 font-mono text-[10px] font-black uppercase transition-all rounded-none cursor-pointer ${matrixMode === 'workbench'
+                        ? 'bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 shadow-xs'
+                        : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
+                        }`}
+                    >
+                      {lang === 'en' ? '🛠️ Architect Workbench (7 Tabs)' : '🛠️ Workbench Arsitek (7 Tab)'}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -5297,16 +5453,18 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 <button
                   type="button"
                   onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('sectors'); }}
-                  className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
+                  className="text-left p-3.5 rounded-none bg-zinc-50 hover:bg-zinc-100/90 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 dark:hover:border-zinc-600 transition-all cursor-pointer flex flex-col justify-between min-h-[110px]"
                 >
-                  <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
-                    <span>1. {lang === 'en' ? 'SECTOR & INDUSTRIAL UI' : 'SEKTOR & UI INDUSTRI'}</span>
-                    <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700">
-                      {formData.primarySector ? 'MANUAL' : 'AUTO AI'}
-                    </span>
+                  <div>
+                    <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
+                      <span>01. {lang === 'en' ? 'SECTOR & INDUSTRIAL UI' : 'SEKTOR & UI INDUSTRI'}</span>
+                      <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700">
+                        {formData.primarySector ? 'MANUAL' : 'AUTO AI'}
+                      </span>
+                    </div>
+                    <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1.5 truncate">{displaySectorName}</div>
                   </div>
-                  <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate">{displaySectorName}</div>
-                  <div className="font-mono text-[10px] font-bold text-emerald-800 dark:text-emerald-300 mt-0.5 truncate">
+                  <div className="font-mono text-[10px] font-bold text-emerald-800 dark:text-emerald-300 mt-2 truncate pt-1.5 border-t border-zinc-200 dark:border-zinc-800">
                     UI: {displayUiArchetype}
                   </div>
                 </button>
@@ -5314,16 +5472,18 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 <button
                   type="button"
                   onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('primitives'); }}
-                  className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
+                  className="text-left p-3.5 rounded-none bg-zinc-50 hover:bg-zinc-100/90 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 dark:hover:border-zinc-600 transition-all cursor-pointer flex flex-col justify-between min-h-[110px]"
                 >
-                  <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
-                    <span>2. {lang === 'en' ? 'CORE PRIMITIVES' : 'CORE PRIMITIVES'}</span>
-                    <span className="tabular-nums font-black text-zinc-950 dark:text-zinc-100">{effectivePrimitiveCodes.length}/12</span>
+                  <div>
+                    <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
+                      <span>02. {lang === 'en' ? 'CORE PRIMITIVES' : 'MODUL PRIMITIF'}</span>
+                      <span className="tabular-nums font-black text-zinc-950 dark:text-zinc-100">{effectivePrimitiveCodes.length}/12</span>
+                    </div>
+                    <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1.5 tabular-nums">
+                      {effectivePrimitiveCodes.length} {lang === 'en' ? 'Modules Locked' : 'Modul Terkunci'}
+                    </div>
                   </div>
-                  <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 tabular-nums">
-                    {effectivePrimitiveCodes.length} {lang === 'en' ? 'Composable Modules Locked' : 'Modul Lintas Sektor Terkunci'}
-                  </div>
-                  <div className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 mt-0.5 truncate">
+                  <div className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 mt-2 truncate pt-1.5 border-t border-zinc-200 dark:border-zinc-800">
                     ULID • State Machine • FOR UPDATE
                   </div>
                 </button>
@@ -5331,18 +5491,20 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 <button
                   type="button"
                   onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('stacks'); }}
-                  className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
+                  className="text-left p-3.5 rounded-none bg-zinc-50 hover:bg-zinc-100/90 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 dark:hover:border-zinc-600 transition-all cursor-pointer flex flex-col justify-between min-h-[110px]"
                 >
-                  <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
-                    <span>3. {lang === 'en' ? 'TOPOLOGY & STACK' : 'TOPOLOGI & STACK'}</span>
-                    <span className="px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950">
-                      {activeStackPresetObj?.short_code || 'M1'}
-                    </span>
+                  <div>
+                    <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
+                      <span>03. {lang === 'en' ? 'TOPOLOGY & STACK' : 'TOPOLOGI & STACK'}</span>
+                      <span className="px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-bold">
+                        {activeStackPresetObj?.short_code || 'M1'}
+                      </span>
+                    </div>
+                    <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1.5 truncate">
+                      {activeStackPresetObj?.name?.[lang] || activeStackPresetObj?.name?.id || 'Laravel 13 + Filament v5 Monolith'}
+                    </div>
                   </div>
-                  <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate">
-                    {activeStackPresetObj?.name?.[lang] || activeStackPresetObj?.name?.id || 'Laravel 13 + Filament v5 Monolith'}
-                  </div>
-                  <div className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 mt-0.5 truncate">
+                  <div className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 mt-2 truncate pt-1.5 border-t border-zinc-200 dark:border-zinc-800">
                     {activeStackPresetObj?.topology || 'MONOLITH'} • Type-Safe
                   </div>
                 </button>
@@ -5350,37 +5512,41 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                 <button
                   type="button"
                   onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('doctor'); }}
-                  className="text-left p-3 rounded-xs bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 transition-colors cursor-pointer"
+                  className="text-left p-3.5 rounded-none bg-zinc-50 hover:bg-zinc-100/90 dark:bg-zinc-950 dark:hover:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 hover:border-zinc-500 dark:hover:border-zinc-600 transition-all cursor-pointer flex flex-col justify-between min-h-[110px]"
                 >
-                  <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
-                    <span>4. {lang === 'en' ? 'DAY-2 OPS & PRINT' : 'DAY-2 OPS & CETAK'}</span>
-                    <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700">
-                      {lang === 'en' ? '8 LAYERS ACTIVE' : '8 LAYER AKTIF'}
-                    </span>
+                  <div>
+                    <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-zinc-700 dark:text-zinc-400">
+                      <span>04. {lang === 'en' ? 'DAY-2 OPS & PRINT' : 'DAY-2 OPS & CETAK'}</span>
+                      <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700">
+                        {lang === 'en' ? '8 LAYERS' : '8 LAYER'}
+                      </span>
+                    </div>
+                    <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1.5 truncate">
+                      {thermalMode === 'A4_OFFICIAL_ONLY' ? 'Official A4 + SVG QR' : 'Thermal 58/80mm + A4 QR'}
+                    </div>
                   </div>
-                  <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate">
-                    {thermalMode === 'A4_OFFICIAL_ONLY' ? 'Official A4 + Inline SVG QR' : 'Thermal 58/80mm + A4 QR'}
-                  </div>
-                  <div className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 mt-0.5 truncate tabular-nums">
-                    {officialDocsCount} {lang === 'en' ? 'Official Documents • *_snapshot • CSV Staging' : 'Dokumen Resmi • *_snapshot • CSV Staging'}
+                  <div className="font-mono text-[10px] text-zinc-700 dark:text-zinc-300 mt-2 truncate pt-1.5 border-t border-zinc-200 dark:border-zinc-800 tabular-nums">
+                    {officialDocsCount} {lang === 'en' ? 'Official Docs • *_snapshot' : 'Dokumen Resmi • *_snapshot'}
                   </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => { setMatrixMode('workbench'); setActiveWorkbenchTab('menus_glue'); }}
-                  className="text-left p-3 rounded-xs bg-emerald-50/70 hover:bg-emerald-100/70 dark:bg-emerald-950/35 dark:hover:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-700 hover:border-emerald-600 transition-colors cursor-pointer"
+                  className="text-left p-3.5 rounded-none bg-emerald-50/70 hover:bg-emerald-100/70 dark:bg-emerald-950/35 dark:hover:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-700 hover:border-emerald-600 transition-all cursor-pointer flex flex-col justify-between min-h-[110px]"
                 >
-                  <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-emerald-950 dark:text-emerald-200">
-                    <span>5. {lang === 'en' ? 'L1–L4 MENUS & GLUE' : 'MENU L1–L4 & GLUE'}</span>
-                    <span className="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 tabular-nums">
-                      {effectiveSelectedMenus.length}/25
-                    </span>
+                  <div>
+                    <div className="flex items-center justify-between gap-1 font-mono text-[9px] font-black uppercase text-emerald-950 dark:text-emerald-200">
+                      <span>05. {lang === 'en' ? 'L1–L4 MENUS & GLUE' : 'MENU L1–L4 & GLUE'}</span>
+                      <span className="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 tabular-nums font-black">
+                        {effectiveSelectedMenus.length}/25
+                      </span>
+                    </div>
+                    <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1.5 truncate tabular-nums">
+                      {effectiveSelectedMenus.length} {lang === 'en' ? 'v1.0 Sub-Menus + 5 Glue' : 'Sub-Menu v1.0 + 5 Glue'}
+                    </div>
                   </div>
-                  <div className="text-xs font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate tabular-nums">
-                    {effectiveSelectedMenus.length} {lang === 'en' ? 'v1.0 Sub-Menus + 5 Glue' : 'Sub-Menu v1.0 + 5 Glue'}
-                  </div>
-                  <div className="font-mono text-[10px] font-bold text-emerald-900 dark:text-emerald-300 mt-0.5 truncate">
+                  <div className="font-mono text-[10px] font-bold text-emerald-900 dark:text-emerald-300 mt-2 truncate pt-1.5 border-t border-emerald-300 dark:border-emerald-800">
                     SYMBOL LOCK • Kahn DAG
                   </div>
                 </button>
@@ -6830,17 +6996,39 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
             {/* Field 3: tujuanUtama (KPIs) */}
             <div id="field-tujuanUtama">
-              <div className="flex items-center justify-between mb-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <label className={labelClass}>
                   {lang === 'en' ? '3. Key Success Metrics (Business KPIs)' : '3. Tolak Ukur Keberhasilan (Target KPI Bisnis)'}
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setActiveAddKey(activeAddKey === 'tujuanUtama' ? null : 'tujuanUtama')}
-                  className="text-xs font-mono text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold"
-                >
-                  <Plus className="w-3.5 h-3.5" /> {lang === 'en' ? 'Add KPI' : 'Tambah KPI'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleTriggerKpiElaboration}
+                    disabled={isElaboratingKpi}
+                    className="px-2.5 py-1 rounded-xs bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-[10px] font-black uppercase flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 border border-emerald-500 shadow-xs"
+                    title={lang === 'en' ? 'Deep-dive KPIs and cascade impact to features & actors' : 'Elaborasi KPI & sinkronkan dampak ke modul dan aktor'}
+                  >
+                    {isElaboratingKpi ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>{lang === 'en' ? 'Calculating Cascade...' : 'Menganalisis Cascade...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{lang === 'en' ? '✨ AI KPI Deep-Dive (Cascade Impact)' : '✨ Elaborasi KPI dengan AI (Cascade Impact)'}</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveAddKey(activeAddKey === 'tujuanUtama' ? null : 'tujuanUtama')}
+                    className="px-2.5 py-1 rounded-xs bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 text-[10px] font-mono font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> {lang === 'en' ? 'Add KPI' : 'Tambah KPI'}
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-1.5 mb-2">
@@ -8133,6 +8321,245 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
                     : 'Pilih Minimal 1 Rel'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dedicated AI KPI Deep-Dive & Architectural Cascade Modal */}
+      {showKpiCascadeModal && kpiCascadeResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/75 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-4xl bg-white dark:bg-zinc-950 border-2 border-zinc-900 dark:border-zinc-700 shadow-2xl flex flex-col max-h-[90vh] my-auto rounded-none">
+            {/* Modal Header */}
+            <div className="p-4 bg-zinc-950 text-white border-b border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-none bg-emerald-500/20 border border-emerald-400 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="font-mono text-xs sm:text-sm font-black uppercase tracking-tight text-white flex flex-wrap items-center gap-2">
+                    <span>{lang === 'en' ? 'AI KPI Deep-Dive & Architectural Cascade Matrix' : 'Elaborasi KPI & Matriks Dampak Arsitektur Sistem'}</span>
+                    <span className="px-1.5 py-0.5 bg-emerald-500 text-zinc-950 text-[9px] font-black uppercase">
+                      {kpiCascadeResult.mode === 'ai_synthesis' ? 'MULTI-AI REASONING' : 'DETERMINISTIC HEURISTIC'}
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    {lang === 'en'
+                      ? 'Target KPIs are enriched with concrete baselines, targets & verifiers, directly mutating linked modules and RBAC actors.'
+                      : 'Target KPI diperdalam dengan baseline, target numerik, dan verifier, serta otomatis berdampak pada modul fitur dan aktor sistem.'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowKpiCascadeModal(false)}
+                className="p-1.5 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Sub-Tabs */}
+            <div className="flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 px-4 pt-2 gap-2 font-mono text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setActiveKpiCascadeTab('kpis')}
+                className={`px-3 py-2 border-b-2 transition-colors cursor-pointer ${
+                  activeKpiCascadeTab === 'kpis'
+                    ? 'border-emerald-600 dark:border-emerald-400 text-zinc-950 dark:text-white font-black bg-white dark:bg-zinc-950'
+                    : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-zinc-950'
+                }`}
+              >
+                1. {lang === 'en' ? `Smart Quantitative KPIs (${(kpiCascadeResult.kpis || []).length})` : `Target KPI SMART (${(kpiCascadeResult.kpis || []).length})`}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveKpiCascadeTab('cascades')}
+                className={`px-3 py-2 border-b-2 transition-colors cursor-pointer ${
+                  activeKpiCascadeTab === 'cascades'
+                    ? 'border-emerald-600 dark:border-emerald-400 text-zinc-950 dark:text-white font-black bg-white dark:bg-zinc-950'
+                    : 'border-transparent text-zinc-600 dark:text-zinc-400 hover:text-zinc-950'
+                }`}
+              >
+                2. {lang === 'en' ? 'Cascading System Impacts (Modules, RBAC & UAT)' : 'Dampak ke Area Terkait (Modul, RBAC & UAT)'}
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 overflow-y-auto space-y-4 flex-1 text-xs">
+              {activeKpiCascadeTab === 'kpis' ? (
+                <div className="space-y-3">
+                  {(kpiCascadeResult.kpis || []).map((kpi, idx) => (
+                    <div key={idx} className="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-xs font-black text-emerald-800 dark:text-emerald-400 uppercase">
+                          KPI #{idx + 1}: {kpi.title}
+                        </span>
+                        <span className="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-mono text-[9px] font-bold">
+                          SMART METRIC
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
+                        <div className="p-2 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                          <span className="text-zinc-500 block text-[9px] uppercase font-bold">Baseline:</span>
+                          <span className="text-zinc-800 dark:text-zinc-200 font-semibold">{kpi.baseline}</span>
+                        </div>
+                        <div className="p-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800">
+                          <span className="text-emerald-900 dark:text-emerald-300 block text-[9px] uppercase font-bold">Target &amp; SLA:</span>
+                          <span className="text-emerald-950 dark:text-emerald-100 font-bold">{kpi.target}</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-mono">
+                        <div className="p-2 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                          <span className="text-zinc-500 block text-[9px] uppercase font-bold">Indikator Terukur:</span>
+                          <span className="text-zinc-800 dark:text-zinc-200">{kpi.metric}</span>
+                        </div>
+                        <div className="p-2 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                          <span className="text-zinc-500 block text-[9px] uppercase font-bold">Instrumen Verifikasi:</span>
+                          <span className="text-zinc-800 dark:text-zinc-200">{kpi.verification}</span>
+                        </div>
+                      </div>
+                      <div className="p-2 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-[11px]">
+                        <span className="text-zinc-500 font-mono text-[9px] uppercase font-bold block mb-0.5">Teks Narasi Blueprint:</span>
+                        <p className="font-sans text-zinc-900 dark:text-zinc-100 leading-relaxed font-semibold">{kpi.synthesized_text || kpi.title}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Features Cascade */}
+                  <div>
+                    <div className="font-mono text-xs font-black uppercase text-zinc-950 dark:text-zinc-100 mb-2 flex flex-wrap items-center justify-between gap-1">
+                      <span>📦 Modul Fitur Arsitektur yang Diciptakan / Diperkaya</span>
+                      <span className="text-[10px] text-zinc-500">Pilih modul yang akan dimasukkan ke Field 7 (Fitur Utama)</span>
+                    </div>
+                    <div className="space-y-2">
+                      {(kpiCascadeResult.cascaded_impacts?.features || []).map((feat, idx) => {
+                        const featKey = feat.code || idx;
+                        const isChecked = !!selectedCascadeFeatures[featKey];
+                        return (
+                          <label
+                            key={idx}
+                            className={`flex items-start gap-2.5 p-3 border transition cursor-pointer ${
+                              isChecked
+                                ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-500 text-zinc-950 dark:text-zinc-100'
+                                : 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 opacity-60 text-zinc-600 dark:text-zinc-400'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                setSelectedCascadeFeatures((prev) => ({ ...prev, [featKey]: e.target.checked }));
+                              }}
+                              className="mt-0.5 rounded-none"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-[10px] font-black uppercase px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-emerald-400 dark:text-zinc-950">
+                                  {feat.code || `FEAT-0${idx + 1}`}
+                                </span>
+                                <span className="font-bold text-xs">{feat.title}</span>
+                                <span className="text-[10px] text-zinc-500 font-mono">({feat.category || 'Core'})</span>
+                              </div>
+                              <p className="text-[11px] mt-1 text-zinc-700 dark:text-zinc-300">{feat.spec}</p>
+                              <p className="text-[10px] text-emerald-800 dark:text-emerald-400 mt-1 font-mono italic">
+                                ↳ Dampak: {feat.rationale}
+                              </p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Actors Cascade */}
+                  <div>
+                    <div className="font-mono text-xs font-black uppercase text-zinc-950 dark:text-zinc-100 mb-2">
+                      👥 Matriks Wewenang &amp; Aktor Terkait (RBAC)
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {(kpiCascadeResult.cascaded_impacts?.actors || []).map((actor, idx) => {
+                        const actorKey = actor.role || idx;
+                        const isChecked = !!selectedCascadeActors[actorKey];
+                        return (
+                          <label
+                            key={idx}
+                            className={`flex items-start gap-2 p-2.5 border transition cursor-pointer ${
+                              isChecked
+                                ? 'bg-zinc-50 dark:bg-zinc-900 border-zinc-900 dark:border-emerald-400'
+                                : 'bg-zinc-100 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 opacity-60'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                setSelectedCascadeActors((prev) => ({ ...prev, [actorKey]: e.target.checked }));
+                              }}
+                              className="mt-0.5 rounded-none"
+                            />
+                            <div>
+                              <div className="font-black text-xs text-zinc-950 dark:text-zinc-100">{actor.role}</div>
+                              <div className="text-[10px] text-zinc-600 dark:text-zinc-400 mt-0.5">{actor.access}</div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* UAT Scenario */}
+                  {kpiCascadeResult.cascaded_impacts?.acceptance_criteria && (
+                    <div>
+                      <div className="font-mono text-xs font-black uppercase text-zinc-950 dark:text-zinc-100 mb-1 flex items-center justify-between">
+                        <span>🧪 Skenario Kriteria Penerimaan (Gherkin UAT)</span>
+                        <label className="flex items-center gap-1.5 cursor-pointer text-[10px] font-mono">
+                          <input
+                            type="checkbox"
+                            checked={includeCascadeGherkin}
+                            onChange={(e) => setIncludeCascadeGherkin(e.target.checked)}
+                            className="rounded-none"
+                          />
+                          <span>Sertakan ke Skenario Gherkin</span>
+                        </label>
+                      </div>
+                      <pre className="p-3 bg-zinc-900 text-emerald-400 font-mono text-[10px] leading-relaxed overflow-x-auto border border-zinc-800 whitespace-pre-wrap">
+                        {kpiCascadeResult.cascaded_impacts.acceptance_criteria}
+                      </pre>
+                    </div>
+                  )}
+
+                  {/* ROI Summary */}
+                  {kpiCascadeResult.cascaded_impacts?.roi_summary && (
+                    <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-400 dark:border-amber-700 text-amber-950 dark:text-amber-100 font-mono text-[11px]">
+                      <strong className="block text-[10px] font-black uppercase mb-0.5">💰 Proyeksi Nilai Bisnis &amp; Efisiensi Finansial:</strong>
+                      {kpiCascadeResult.cascaded_impacts.roi_summary}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-3 bg-zinc-100 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setShowKpiCascadeModal(false)}
+                className="px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 font-mono text-xs font-bold uppercase transition-colors cursor-pointer"
+              >
+                {lang === 'en' ? 'Cancel' : 'Tutup'}
+              </button>
+
+              <button
+                type="button"
+                onClick={applyKpiCascade}
+                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-xs font-black uppercase transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>{lang === 'en' ? 'Apply KPIs & Synchronize Architecture' : 'Terapkan KPI & Sinkronkan Arsitektur'}</span>
+              </button>
             </div>
           </div>
         </div>

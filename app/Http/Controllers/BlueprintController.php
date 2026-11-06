@@ -17,6 +17,7 @@ use App\Models\VisionBlueprint;
 use App\Services\BlueprintDeltaEvolutionService;
 use App\Services\BlueprintDiscoveryService;
 use App\Services\BlueprintDoctorService;
+use App\Services\BlueprintKpiCascadeService;
 use App\Services\BlueprintRefinementService;
 use App\Services\BlueprintSlopScannerService;
 use App\Services\BrownfieldMigrationAuditorService;
@@ -2175,6 +2176,64 @@ class BlueprintController extends Controller
                 'message' => 'Gagal mengelaborasi instruksi: '.$e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Dedicated AI KPI Elaboration Engine with Cascading Architectural Impact.
+     * Deep-dives into business metrics and cascades changes to Features, Actors, and UAT.
+     */
+    public function elaborateKpiCascade(Request $request, BlueprintKpiCascadeService $kpiCascadeService, ?string $slug = null): JsonResponse
+    {
+        $blueprint = null;
+        if (!empty($slug)) {
+            $blueprint = VisionBlueprint::where('slug', $slug)->first();
+            if ($blueprint) {
+                $this->authorizeBlueprintAccess($blueprint);
+            }
+        }
+
+        $payload = $request->validate([
+            'tujuanUtama' => 'nullable|string|max:50000',
+            'tujuan_utama' => 'nullable|string|max:50000',
+            'masalahUtama' => 'nullable|string|max:50000',
+            'masalah_utama' => 'nullable|string|max:50000',
+            'namaBisnis' => 'nullable|string|max:255',
+            'nama_bisnis' => 'nullable|string|max:255',
+            'deskripsiBisnis' => 'nullable|string|max:50000',
+            'deskripsi_bisnis' => 'nullable|string|max:50000',
+            'fiturUtama' => 'nullable|string|max:100000',
+            'fitur_utama' => 'nullable|string|max:100000',
+            'aktorSistem' => 'nullable|string|max:50000',
+            'aktor_sistem' => 'nullable|string|max:50000',
+            'skenarioGherkin' => 'nullable|string|max:50000',
+            'skenario_gherkin' => 'nullable|string|max:50000',
+            'primarySector' => 'nullable|string|max:120',
+            'primary_sector' => 'nullable|string|max:120',
+            'locale' => 'nullable|string|in:id,en',
+        ]);
+
+        try {
+            $result = $kpiCascadeService->elaborateAndCascade($payload, $blueprint);
+
+            return response()->json($result);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Elaborate KPI Cascade failed: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengelaborasi KPI: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Slug-specific wrapper for KPI Cascade elaboration.
+     */
+    public function elaborateKpiCascadeSlug(Request $request, string $slug, BlueprintKpiCascadeService $kpiCascadeService): JsonResponse
+    {
+        return $this->elaborateKpiCascade($request, $kpiCascadeService, $slug);
     }
 
     /**

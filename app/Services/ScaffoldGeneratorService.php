@@ -350,6 +350,11 @@ class ScaffoldGeneratorService
 
             foreach ($customizations as $file => $customContent) {
                 if (is_string($customContent)) {
+                    $trimmed = trim($customContent);
+                    // Reject corrupted placeholders or loading text from corrupting real file scaffolds
+                    if ($trimmed === '' || $trimmed === 'Memuat berkas...' || str_starts_with($trimmed, '// Berkas ') || str_starts_with($trimmed, '// Memuat berkas')) {
+                        continue;
+                    }
                     $files[$file] = $customContent;
                     if (isset($aliasPairs[$file])) {
                         $files[$aliasPairs[$file]] = $customContent;

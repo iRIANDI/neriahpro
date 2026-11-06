@@ -2021,7 +2021,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                 collaborators: [],
                 collaboratorCursor: { x: 0, y: 0, visible: false, name: '' },
                 getScaffoldCode(tabId) {
-                    if (this.scaffoldFiles && this.scaffoldFiles[tabId] !== undefined && this.scaffoldFiles[tabId] !== null && this.scaffoldFiles[tabId] !== '') {
+                    if (this.scaffoldFiles && this.scaffoldFiles[tabId] && this.scaffoldFiles[tabId] !== 'Memuat berkas...') {
                         return this.scaffoldFiles[tabId];
                     }
                     const aliasMap = {
@@ -2033,14 +2033,14 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         'docs/disaster-recovery-runbook.md': 'docs/runbooks/disaster-recovery.md',
                     };
                     const alias = aliasMap[tabId];
-                    if (alias && this.scaffoldFiles && this.scaffoldFiles[alias] !== undefined && this.scaffoldFiles[alias] !== null && this.scaffoldFiles[alias] !== '') {
+                    if (alias && this.scaffoldFiles && this.scaffoldFiles[alias] && this.scaffoldFiles[alias] !== 'Memuat berkas...') {
                         this.scaffoldFiles[tabId] = this.scaffoldFiles[alias];
                         return this.scaffoldFiles[tabId];
                     }
                     if (this.scaffoldLoading) {
-                        return 'Memuat berkas...';
+                        return '// Memuat berkas ' + tabId + '...';
                     }
-                    return '// Berkas ' + tabId + ' belum tersedia atau dalam proses sintesis.';
+                    return '// Berkas ' + tabId + ' siap dikompilasi atau diekspor.';
                 },
                 async openScaffoldModal() {
                     this.scaffoldModalOpen = true;
@@ -2050,6 +2050,11 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             const res = await fetch('{{ route('blueprint.scaffold.preview', $blueprint->slug) }}');
                             const data = await res.json();
                             if (data && data.files) {
+                                for (const [k, v] of Object.entries(data.files)) {
+                                    if (v === 'Memuat berkas...' || !v) {
+                                        delete data.files[k];
+                                    }
+                                }
                                 this.scaffoldFiles = data.files;
                                 this.scaffoldCustomizedFiles = data.customized_files || [];
                                 const keys = Object.keys(data.files);
@@ -2078,6 +2083,9 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     if (this.scaffoldIsScopeLocked) return;
                     const filename = this.scaffoldActiveTab;
                     const content = this.scaffoldFiles[filename] !== undefined ? this.scaffoldFiles[filename] : this.getScaffoldCode(filename);
+                    if (!content || typeof content !== 'string' || content.trim() === 'Memuat berkas...' || content.trim().startsWith('// Berkas ') || content.trim().startsWith('// Memuat berkas')) {
+                        return;
+                    }
                     this.scaffoldSaveStatus = 'saving';
 
                     try {
@@ -2384,7 +2392,7 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         window.dispatchEvent(new Event('theme-changed'));
                     }
                 },
-                locale: localStorage.getItem('neriah_blueprint_lang') || '{{ app()->getLocale() === "en" ? "en" : "id" }}',
+                locale: '{{ $blueprint->user_metadata['output_locale'] ?? '' }}' || localStorage.getItem('neriah_blueprint_lang') || '{{ ($isEn ?? false) ? "en" : "id" }}',
                 setLocale(l) {
                     this.locale = l;
                     try { localStorage.setItem('neriah_blueprint_lang', l); } catch(e){}

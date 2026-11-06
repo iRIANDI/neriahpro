@@ -1661,6 +1661,55 @@ class BlueprintDiscoveryService
         return self::detectDomain($text, []);
     }
 
+    /**
+     * Craft a raw workflow step action sentence into concise, punchy, and complete architectural language.
+     * Guarantees zero trailing ellipses ("..."), no chopped words, and optimal length for Mermaid rendering.
+     */
+    public static function craftWorkflowStepAction(string $rawAction, string $domain = 'custom_portal', bool $isEn = false): string
+    {
+        $clean = trim($rawAction, " \t\n\r\0\x0B-•*1234567890.)");
+        if (empty($clean)) {
+            return $isEn ? 'Execute primary operational step' : 'Mengeksekusi tahapan operasional utama';
+        }
+
+        // Repair known chopped patterns (e.g. "Transfer Ban...", "Transfer Ban", "Refund Otom...", "Pembayaran V...")
+        $repairMap = [
+            '/\btransfer\s+ban(?:\.\.\.|\b)/i' => $isEn ? 'airport transfer or tour' : 'transfer bandara atau wisata',
+            '/\brefund\s+ot(?:om)?(?:\.\.\.|\b)/i' => $isEn ? 'automated refund' : 'refund otomatis',
+            '/\bverifikasi\s+keab(?:\.\.\.|\b)/i' => $isEn ? 'verify transaction validity' : 'memverifikasi keabsahan transaksi',
+            '/\bpenyesuaian\s+sal(?:\.\.\.|\b)/i' => $isEn ? 'balance adjustment' : 'penyesuaian saldo',
+        ];
+        foreach ($repairMap as $pattern => $replacement) {
+            $clean = preg_replace($pattern, $replacement, $clean);
+        }
+
+        // Strip any remaining ellipses or trailing dots
+        $clean = preg_replace('/\s*\.{2,}\s*/', ' ', $clean);
+        $clean = preg_replace('/\s+dll\.?$/i', '', $clean);
+        $clean = preg_replace('/\s+etc\.?$/i', '', $clean);
+        $clean = rtrim($clean, " .,;:!?-");
+
+        // Condense overly long parenthetical expressions: e.g. "(Transfer Bandara Ngurah Rai, Day Tour Bali...)" -> "(Transfer Bandara)"
+        $clean = preg_replace_callback('/\(([^)]{25,})\)/', function($m) use ($isEn) {
+            $parts = explode(',', $m[1]);
+            return count($parts) > 1 ? '(' . trim($parts[0]) . ($isEn ? ' & others)' : ' & lainnya)') : '(' . trim($m[1]) . ')';
+        }, $clean);
+
+        // If the sentence is still too long (> 140 chars), summarize cleanly at word boundary
+        if (mb_strlen($clean) > 140) {
+            $cut = mb_substr($clean, 0, 135);
+            $lastSpace = mb_strrpos($cut, ' ');
+            if ($lastSpace !== false && $lastSpace > 80) {
+                $clean = mb_substr($cut, 0, $lastSpace);
+            } else {
+                $clean = $cut;
+            }
+            $clean = rtrim($clean, " .,;:!?-");
+        }
+
+        return $clean;
+    }
+
     protected function synthesizeRoadmapFeatures(string $corpus, string $domain, bool $isEn): string
     {
         $roadmapId = [
@@ -2472,11 +2521,26 @@ PROMPT;
                             if (is_array($parsed[$listField])) {
                                 $lines = [];
                                 foreach ($parsed[$listField] as $i => $item) {
-                                    $lines[] = ($i + 1) . '. ' . ltrim(preg_replace('/^\d+[\.\)]\s*/', '', (string)$item));
+                                    $rawStr = ltrim(preg_replace('/^\d+[\.\)]\s*/', '', (string)$item));
+                                    if ($listField === 'alurKerja') {
+                                        $rawStr = self::craftWorkflowStepAction($rawStr, $result['domain'] ?? 'custom_portal', $isEn);
+                                    }
+                                    $lines[] = ($i + 1) . '. ' . $rawStr;
                                 }
                                 $val = implode("\n", $lines);
                             } elseif (is_string($parsed[$listField])) {
-                                $val = trim($parsed[$listField]);
+                                if ($listField === 'alurKerja') {
+                                    $rawLines = preg_split('/[\r\n]+/', trim($parsed[$listField]));
+                                    $craftedLines = [];
+                                    foreach ($rawLines as $idx => $rLine) {
+                                        $trimmed = ltrim(preg_replace('/^\d+[\.\)]\s*/', '', trim($rLine)));
+                                        if (empty($trimmed)) continue;
+                                        $craftedLines[] = ($idx + 1) . '. ' . self::craftWorkflowStepAction($trimmed, $result['domain'] ?? 'custom_portal', $isEn);
+                                    }
+                                    $val = implode("\n", $craftedLines);
+                                } else {
+                                    $val = trim($parsed[$listField]);
+                                }
                             }
 
                             if ($val !== null) {

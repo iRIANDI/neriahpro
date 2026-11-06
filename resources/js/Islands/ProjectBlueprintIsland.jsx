@@ -1223,9 +1223,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     })(),
     outputLocale: initialData.outputLocale || (() => {
       try {
-        return new URLSearchParams(window.location.search).get('output_locale') || 'id';
+        return new URLSearchParams(window.location.search).get('output_locale') || initialLang || 'id';
       } catch {
-        return 'id';
+        return initialLang || 'id';
       }
     })(),
     personaMode: initialData.personaMode || (() => {
@@ -2719,6 +2719,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       formDataUpload.append('_hp_check', honeypot);
       formDataUpload.append('_website', honeypotWebsite);
       formDataUpload.append('locale', lang);
+      formDataUpload.append('output_locale', lang);
+      formDataUpload.append('outputLocale', lang);
       formDataUpload.append('ai_model', selectedAiModel);
       if (formData.namaBisnis && formData.namaBisnis.trim()) {
         formDataUpload.append('nama_bisnis', formData.namaBisnis.trim());
@@ -3237,6 +3239,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       const resolvedPubUx = formData.publicUxPreset || resolveDefaultPublicUxForSector(formData.primarySector);
       const payload = {
         ...formData,
+        outputLocale: lang,
+        output_locale: lang,
         publicUxPreset: resolvedPubUx,
         public_ux_preset: resolvedPubUx,
         selectedMenus: effectiveSelectedMenus,
@@ -4306,7 +4310,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           <div className="flex border border-zinc-300 dark:border-zinc-700 rounded-none overflow-hidden font-mono text-xs">
             <button
               type="button"
-              onClick={() => setLang('id')}
+              onClick={() => {
+                setLang('id');
+                setFormData(prev => ({ ...prev, outputLocale: 'id', output_locale: 'id' }));
+              }}
               className={`px-2.5 py-1 font-bold transition ${lang === 'id'
                 ? 'bg-zinc-900 text-white dark:bg-emerald-500 dark:text-black'
                 : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
@@ -4316,7 +4323,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             </button>
             <button
               type="button"
-              onClick={() => setLang('en')}
+              onClick={() => {
+                setLang('en');
+                setFormData(prev => ({ ...prev, outputLocale: 'en', output_locale: 'en' }));
+              }}
               className={`px-2.5 py-1 font-bold transition ${lang === 'en'
                 ? 'bg-zinc-900 text-white dark:bg-emerald-500 dark:text-black'
                 : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'

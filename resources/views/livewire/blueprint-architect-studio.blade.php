@@ -1508,27 +1508,27 @@
                                     1. ALGORITHMIC SCOPE-TO-QUOTATION &amp; WBS ESTIMATOR (ANTI-UNDERPRICING)
                                 </div>
                                 <div class="text-xs font-bold text-zinc-950 dark:text-zinc-100">
-                                    Estimasi Kontrak &amp; Jadwal Pengerjaan Tim Mitra Proyek (Satu Pintu)
+                                    {{ $isEnLoc ? 'Mitra Project Team Contract & Schedule Estimation (Single Door)' : 'Estimasi Kontrak & Jadwal Pengerjaan Tim Mitra Proyek (Satu Pintu)' }}
                                 </div>
                             </div>
                             <span class="px-2 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[11px] font-black tabular-nums rounded-none">
-                                Durasi: {{ $commercialQuotation['timeline_days'] ?? 0 }} Hari Kerja ({{ $commercialQuotation['stack_multiplier'] ?? 1 }}x Stack)
+                                {{ $isEnLoc ? 'Duration' : 'Durasi' }}: {{ $commercialQuotation['timeline_days'] ?? 0 }} {{ $isEnLoc ? 'Business Days' : 'Hari Kerja' }} ({{ $commercialQuotation['stack_multiplier'] ?? 1 }}x Stack)
                             </span>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono tabular-nums">
                             <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs">
-                                <div class="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400">Total Beban Kerja</div>
-                                <div class="text-base font-black text-zinc-950 dark:text-zinc-100 mt-0.5">{{ $commercialQuotation['man_hours'] ?? 0 }} Jam</div>
+                                <div class="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400">{{ $isEnLoc ? 'Total Workload' : 'Total Beban Kerja' }}</div>
+                                <div class="text-base font-black text-zinc-950 dark:text-zinc-100 mt-0.5">{{ $commercialQuotation['man_hours'] ?? 0 }} {{ $isEnLoc ? 'Hours' : 'Jam' }}</div>
                                 <div class="text-[9px] text-zinc-600 dark:text-zinc-400">{{ $commercialQuotation['formatted_man_hour_rate'] ?? '' }}</div>
                             </div>
                             <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-700 rounded-xs">
-                                <div class="text-[10px] font-bold uppercase text-emerald-900 dark:text-emerald-300">Nilai Proyek (RAB)</div>
+                                <div class="text-[10px] font-bold uppercase text-emerald-900 dark:text-emerald-300">{{ $isEnLoc ? 'Project Value (Quotation)' : 'Nilai Proyek (RAB)' }}</div>
                                 <div class="text-base font-black text-emerald-950 dark:text-emerald-200 mt-0.5">{{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }}</div>
-                                <div class="text-[9px] text-emerald-900 dark:text-emerald-300">{{ $commercialQuotation['counts']['tables'] ?? 0 }} Tabel &bull; {{ $commercialQuotation['counts']['states'] ?? 0 }} State &bull; {{ $commercialQuotation['counts']['locks'] ?? 0 }} Lock</div>
+                                <div class="text-[9px] text-emerald-900 dark:text-emerald-300">{{ $commercialQuotation['counts']['tables'] ?? 0 }} {{ $isEnLoc ? 'Tables' : 'Tabel' }} &bull; {{ $commercialQuotation['counts']['states'] ?? 0 }} States &bull; {{ $commercialQuotation['counts']['locks'] ?? 0 }} Locks</div>
                             </div>
                             <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs">
-                                <div class="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400">Kunci Scope SPK</div>
+                                <div class="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400">{{ $isEnLoc ? 'Scope Contract Seal' : 'Kunci Scope SPK' }}</div>
                                 <div class="text-[11px] font-black text-zinc-950 dark:text-zinc-100 mt-1 truncate">SHA256:{{ $commercialQuotation['scope_hash_short'] ?? '-' }}</div>
                                 <div class="text-[9px] text-zinc-600 dark:text-zinc-400">Anti-Scope Creep Seal</div>
                             </div>
@@ -1537,7 +1537,7 @@
                         <!-- Termin Payment Schedule -->
                         <div class="space-y-1.5">
                             <div class="font-mono text-[10px] font-black uppercase text-zinc-800 dark:text-zinc-300">
-                                Tahapan Termin Pembayaran &amp; Milestone Serah Terima
+                                {{ $isEnLoc ? 'Payment Term Schedule & Handover Milestones' : 'Tahapan Termin Pembayaran & Milestone Serah Terima' }}
                             </div>
                             @foreach(($commercialQuotation['termin_schedule'] ?? []) as $tItem)
                                 <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono tabular-nums">
@@ -1554,28 +1554,28 @@
                                 wire:click="freezeScopeAndIssueSpk"
                                 class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[11px] font-black rounded-xs cursor-pointer"
                             >
-                                🔒 Kunci Scope SHA-256 &amp; Terbitkan Kontrak SPK
+                                🔒 {{ $isEnLoc ? 'Freeze Scope SHA-256 & Issue SPK Contract' : 'Kunci Scope SHA-256 & Terbitkan Kontrak SPK' }}
                             </button>
                             @if($slug)
                                 <a href="{{ url('/blueprint/' . $slug . '/mitra-document/rab') }}" target="_blank" class="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs">
-                                    🖨️ Cetak RAB A4
+                                    🖨️ {{ $isEnLoc ? 'Print RAB A4' : 'Cetak RAB A4' }}
                                 </a>
                                 <a href="{{ url('/blueprint/' . $slug . '/mitra-document/spk-appendix') }}" target="_blank" class="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs">
-                                    📜 Lampiran SPK SHA-256
+                                    📜 {{ $isEnLoc ? 'SPK Appendix SHA-256' : 'Lampiran SPK SHA-256' }}
                                 </a>
                                 <a href="{{ url('/blueprint/' . $slug . '/mitra-document/bast') }}" target="_blank" class="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs">
-                                    ✅ Cetak BAST &amp; UAT
+                                    ✅ {{ $isEnLoc ? 'Print BAST & UAT' : 'Cetak BAST & UAT' }}
                                 </a>
                             @endif
                         </div>
 
                         @if(!empty($latestSpkResult['scope_hash_full']))
                             <div class="p-2.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-700 font-mono text-[10px] text-emerald-950 dark:text-emerald-200 space-y-1">
-                                <div class="font-black">✓ SCOPE TERKUNCI KRIPTOGRAFIS: {{ $latestSpkResult['document_title'] ?? '' }}</div>
+                                <div class="font-black">✓ {{ $isEnLoc ? 'CRYPTOGRAPHIC SCOPE LOCKED' : 'SCOPE TERKUNCI KRIPTOGRAFIS' }}: {{ $latestSpkResult['document_title'] ?? '' }}</div>
                                 <div class="break-all">SHA-256: {{ $latestSpkResult['scope_hash_full'] }}</div>
                                 @if(!empty($latestSpkResult['sign_url']))
                                     <div>
-                                        <a href="{{ $latestSpkResult['sign_url'] }}" target="_blank" class="underline font-black">Buka Halaman E-Sign Kontrak SPK &rarr;</a>
+                                        <a href="{{ $latestSpkResult['sign_url'] }}" target="_blank" class="underline font-black">{{ $isEnLoc ? 'Open SPK Contract E-Sign Page' : 'Buka Halaman E-Sign Kontrak SPK' }} &rarr;</a>
                                     </div>
                                 @endif
                             </div>
@@ -1612,7 +1612,7 @@
                                     3. INTERACTIVE UAT CHECKLIST (GIVEN-WHEN-THEN) &amp; DIGITAL BAST
                                 </div>
                                 <div class="text-xs font-bold text-zinc-950 dark:text-zinc-100 tabular-nums">
-                                    Progres Uji Terima Klien: {{ $uatChecklist['passed_scenarios'] ?? 0 }}/{{ $uatChecklist['total_scenarios'] ?? 0 }} Skenario ({{ $uatChecklist['progress_percent'] ?? 0 }}%)
+                                    {{ $isEnLoc ? 'Client Acceptance Test Progress' : 'Progres Uji Terima Klien' }}: {{ $uatChecklist['passed_scenarios'] ?? 0 }}/{{ $uatChecklist['total_scenarios'] ?? 0 }} {{ $isEnLoc ? 'Scenarios' : 'Skenario' }} ({{ $uatChecklist['progress_percent'] ?? 0 }}%)
                                 </div>
                             </div>
                             <button
@@ -1620,7 +1620,7 @@
                                 wire:click="toggleStudioUatScenario('ALL')"
                                 class="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-none cursor-pointer"
                             >
-                                Centang Semua UAT
+                                {{ $isEnLoc ? 'Check All UAT' : 'Centang Semua UAT' }}
                             </button>
                         </div>
 
@@ -1642,8 +1642,8 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
-                            <input type="text" wire:model="bastSignerName" placeholder="Nama PIC Penandatangan BAST" class="px-2 py-1 text-xs font-mono bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xs" />
-                            <input type="email" wire:model="bastSignerEmail" placeholder="Email Resmi PIC Klien" class="px-2 py-1 text-xs font-mono bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xs" />
+                            <input type="text" wire:model="bastSignerName" placeholder="{{ $isEnLoc ? 'BAST Signer PIC Name' : 'Nama PIC Penandatangan BAST' }}" class="px-2 py-1 text-xs font-mono bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xs" />
+                            <input type="email" wire:model="bastSignerEmail" placeholder="{{ $isEnLoc ? 'Client PIC Official Email' : 'Email Resmi PIC Klien' }}" class="px-2 py-1 text-xs font-mono bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 rounded-xs" />
                         </div>
 
                         <button
@@ -1651,13 +1651,13 @@
                             wire:click="signStudioDigitalBast"
                             class="w-full py-2 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 font-mono text-xs font-black rounded-xs cursor-pointer"
                         >
-                            ✍️ Sahkan UAT 100%, Terbitkan BAST Digital Resmi &amp; Tagihkan Termin Akhir
+                            ✍️ {{ $isEnLoc ? 'Validate 100% UAT, Issue Official Digital BAST & Invoice Final Term' : 'Sahkan UAT 100%, Terbitkan BAST Digital Resmi & Tagihkan Termin Akhir' }}
                         </button>
 
                         @if(!empty($bastSignoffState['bast_number']))
                             <div class="p-2.5 bg-emerald-100 text-emerald-950 border border-emerald-500 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-600 font-mono text-[10px] space-y-1">
-                                <div class="font-black">🎉 BAST DIGITAL RESMI DITERBITKAN: {{ $bastSignoffState['bast_number'] }}</div>
-                                <div>Disahkan oleh: {{ $bastSignoffState['signer_name'] ?? '-' }} &bull; Termin Akhir: <strong>{{ $bastSignoffState['formatted_final_termin'] ?? '-' }}</strong></div>
+                                <div class="font-black">🎉 {{ $isEnLoc ? 'OFFICIAL DIGITAL BAST ISSUED' : 'BAST DIGITAL RESMI DITERBITKAN' }}: {{ $bastSignoffState['bast_number'] }}</div>
+                                <div>{{ $isEnLoc ? 'Authorized by' : 'Disahkan oleh' }}: {{ $bastSignoffState['signer_name'] ?? '-' }} &bull; {{ $isEnLoc ? 'Final Term' : 'Termin Akhir' }}: <strong>{{ $bastSignoffState['formatted_final_termin'] ?? '-' }}</strong></div>
                                 <div class="break-all">SHA-256 BAST Seal: {{ $bastSignoffState['bast_sha256'] ?? '-' }}</div>
                             </div>
                         @endif

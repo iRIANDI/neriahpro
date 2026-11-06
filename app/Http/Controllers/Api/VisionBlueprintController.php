@@ -150,7 +150,7 @@ class VisionBlueprintController extends Controller
             'navigation_shell' => $request->input('navigation_shell') ?: $request->input('navigationShell'),
             'public_ux_preset' => $request->input('public_ux_preset') ?: $request->input('publicUxPreset'),
             'output_locale' => \App\Support\PosInclusiveCommercialCatalog::normalizeOutputLocale(
-                $request->input('output_locale') ?: $request->input('outputLocale') ?: $request->input('locale')
+                $request->input('output_locale') ?: $request->input('outputLocale') ?: $request->input('locale') ?: ($request->input('lang') ?: app()->getLocale())
             ),
             'persona_mode' => \App\Support\PosInclusiveCommercialCatalog::normalizePersonaMode(
                 $request->input('persona_mode') ?: $request->input('personaMode')

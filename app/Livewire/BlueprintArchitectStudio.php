@@ -275,7 +275,7 @@ class BlueprintArchitectStudio extends Component
             $this->navigationShell = strtoupper(trim($queryShell));
         }
 
-        $queryLocale = (string) request()->query('output_locale', '');
+        $queryLocale = (string) request()->query('output_locale', request()->query('lang', ''));
         if ($queryLocale !== '') {
             $this->outputLocale = PosInclusiveCommercialCatalog::normalizeOutputLocale($queryLocale);
         }
@@ -558,6 +558,17 @@ class BlueprintArchitectStudio extends Component
                     'output_locale' => $this->outputLocale,
                     'jurisdiction_profile' => (string) ($jurisdiction['jurisdiction_code'] ?? 'ID_UU_PDP_PSAK'),
                 ])->saveQuietly();
+            }
+        }
+
+        if ($this->blueprintId) {
+            $bp = VisionBlueprint::query()->find($this->blueprintId);
+            if ($bp) {
+                $meta = is_array($bp->user_metadata) ? $bp->user_metadata : [];
+                $meta['output_locale'] = $this->outputLocale;
+                $meta['locale'] = $this->outputLocale;
+                $bp->user_metadata = $meta;
+                $bp->saveQuietly();
             }
         }
     }

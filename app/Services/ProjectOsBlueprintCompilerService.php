@@ -2194,6 +2194,7 @@ MD;
         $secondaryArch = $secUi['secondary_archetype'] ?? 'DENSE_SKU_MATRIX';
         $ergonomicsBullets = implode("\n", array_map(fn ($e) => "- {$e}", $secUi['ergonomics_and_layout'] ?? []));
         $seederBullets = implode("\n", array_map(fn ($f) => "- {$f}", $seeder['realistic_fixtures'] ?? []));
+        $seederClass = (string) ($seeder['seeder_class'] ?? 'DomainRealisticSeeder');
         $vUi = is_array($schema['visual_frontend_ui_contract'] ?? null) ? $schema['visual_frontend_ui_contract'] : [];
         $vUiCode = $vUi['selected_variant_code'] ?? $primaryArch;
         $vUiLabel = $vUi['selected_variant_name']['id'] ?? ($vUi['selected_variant_name']['en'] ?? $vUiCode);
@@ -2207,6 +2208,7 @@ MD;
         $jProf = is_array($schema['jurisdiction_compliance_profile'] ?? null) ? $schema['jurisdiction_compliance_profile'] : [];
         $jCode = $jProf['jurisdiction_code'] ?? 'ID_NKRI_STATUTORY';
         $jOutputLocale = $meta['output_locale'] ?? 'id';
+        $isEn = ($jOutputLocale === 'en');
         $jStatutoryRules = implode(' • ', array_merge(
             (array) ($jProf['accounting_standards'] ?? []),
             (array) ($jProf['tax_and_invoicing_rules'] ?? []),
@@ -2229,9 +2231,27 @@ MD;
             [
                 'phase' => 1,
                 'filename' => '01-foundation.md',
-                'title' => 'Fase 1: Foundation, Guardrails & Multi-Tenant ULID Architecture',
-                'objective' => 'Memasang AGENTS.md, SYMBOL_MANIFEST.json, graph.json awal, adapter stack ['.$stackShort.'], konfigurasi PostgreSQL 16 Strict ULID, dan isolasi organization_id.',
-                'prompt' => <<<PROMPT
+                'title' => $isEn ? 'Phase 1: Foundation, Guardrails & Multi-Tenant ULID Architecture' : 'Fase 1: Foundation, Guardrails & Multi-Tenant ULID Architecture',
+                'objective' => $isEn
+                    ? 'Setup AGENTS.md, SYMBOL_MANIFEST.json, initial graph.json, stack adapter ['.$stackShort.'], PostgreSQL 16 Strict ULID configuration, and organization_id tenant isolation.'
+                    : 'Memasang AGENTS.md, SYMBOL_MANIFEST.json, graph.json awal, adapter stack ['.$stackShort.'], konfigurasi PostgreSQL 16 Strict ULID, dan isolasi organization_id.',
+                'prompt' => $isEn ? <<<PROMPT
+# PROJECT OS EXECUTION — PHASE 1/7: FOUNDATION, SYMBOL LOCK & GUARDRAILS ({$appName})
+Read first: `AGENTS.md`, `.agents/SYMBOL_MANIFEST.json`, `.agents/STACK_TOPOLOGY_CONTRACT.md`, and `.agents/graphify/graph.json`.
+
+**Target Sector:** `{$sectorCode}` ({$sectorLabel})
+**Target Topology & Stack:** `[{$stackShort}] {$topology}` — `{$stackCode}`
+**Active Primitive Modules:** `{$primitivesList}`
+
+## Phase 1 Execution Instructions (DO NOT touch UI or Domain Logic yet!):
+1. Prepare directory structure per `.agents/STACK_TOPOLOGY_CONTRACT.md`, ensure `.agents/SYMBOL_MANIFEST.json` serves as the single symbol source of truth, and configure PostgreSQL 16 Strict Mode (`CHAR(26)` ULID Primary Keys).
+2. Create Multi-Tenancy foundation (`organizations` anchor table + `organization_id` isolation trait/middleware) and standard error response format `RFC 9457 (application/problem+json)` with mandatory headers (`X-Request-ID`, `X-Tenant-ID`, `X-Idempotency-Key`).
+3. Ensure zero external CDN packages or scripts; all dependencies must be locally configured.
+4. Once completed, report the list of created foundation files and update `.agents/graphify/graph.json`.
+
+{$gateP1}
+PROMPT
+: <<<PROMPT
 # PROJECT OS EXECUTION — FASE 1/7: FOUNDATION, SYMBOL LOCK & GUARDRAILS ({$appName})
 Baca terlebih dahulu `AGENTS.md`, `.agents/SYMBOL_MANIFEST.json`, `.agents/STACK_TOPOLOGY_CONTRACT.md`, dan `.agents/graphify/graph.json`.
 
@@ -2251,9 +2271,30 @@ PROMPT,
             [
                 'phase' => 2,
                 'filename' => '02-database-states.md',
-                'title' => 'Fase 2: Topological Database Migrations, 5 Enterprise Glue Tables & State Enums',
-                'objective' => 'Mengeksekusi seluruh migrasi ULID urut DAG Kahn, DECIMAL(19,4), ON DELETE RESTRICT, 5 Enterprise Glue tables, dan Enum status sesuai SYMBOL_MANIFEST.json.',
-                'prompt' => <<<PROMPT
+                'title' => $isEn ? 'Phase 2: Topological Database Migrations, 5 Enterprise Glue Tables & State Enums' : 'Fase 2: Topological Database Migrations, 5 Enterprise Glue Tables & State Enums',
+                'objective' => $isEn
+                    ? 'Execute all ULID migrations following Kahn DAG order, DECIMAL(19,4), ON DELETE RESTRICT, 5 Enterprise Glue tables, and status Enums matching SYMBOL_MANIFEST.json.'
+                    : 'Mengeksekusi seluruh migrasi ULID urut DAG Kahn, DECIMAL(19,4), ON DELETE RESTRICT, 5 Enterprise Glue tables, dan Enum status sesuai SYMBOL_MANIFEST.json.',
+                'prompt' => $isEn ? <<<PROMPT
+# PROJECT OS EXECUTION — PHASE 2/7: TOPOLOGICAL DATABASE SCHEMA & STATE MACHINES ({$appName})
+Read Sections 2 & 3 in `PROJECT_OS_EXECUTION_BLUEPRINT.md`, `.agents/SYMBOL_MANIFEST.json`, and `.agents/BLUEPRINT_SCHEMA.json`.
+*(Anti-Truncation Notice: If schema > 6 tables, execute progressively by Sub-Part `02.1`, `02.2`, etc. in `.agents/prompts/subparts/`!)*
+
+**Mandatory Tables to Create (Kahn DAG Topological Order):** `{$tableNames}`
+**Mandatory State Machines:** `{$stateEntities}`
+
+## Phase 2 Execution Instructions (ZERO UI — 100% Data & State Layer Focus):
+1. Create all migrations for the tables above following `topological_migration_order` in `.agents/SYMBOL_MANIFEST.json` with strict rules:
+   - 26-character ULID Primary Key (`->ulid('id')->primary()` / `CHAR(26)`), strictly **FORBIDDEN** to use `AUTO_INCREMENT` or `uuid('id')`.
+   - All monetary/quantity columns must use `DECIMAL(19,4)`.
+   - Mandatory **Historical Snapshot Columns** (`item_name_snapshot`, `sku_or_code_snapshot`, `unit_price_snapshot`, `tax_rate_snapshot`, `counterparty_snapshot`) on transaction line-item tables.
+   - All transactional Foreign Keys must use `ON DELETE RESTRICT` per `deletion_policy`.
+   - Include 5 **Enterprise Glue** tables (`sys_document_sequences`, `sys_accounting_periods`, `sys_approval_requests`, `sys_reason_evidences`, `sys_integration_logs`) along with `outbox_messages`, `webhook_inbound_logs`, `import_staging_batches`, `import_staging_rows`, and `audit_logs`.
+2. Create all Backed Enums for State Machines and Models/Entities exactly matching class names & relations in `.agents/SYMBOL_MANIFEST.json`.
+
+{$gateP2}
+PROMPT
+: <<<PROMPT
 # PROJECT OS EXECUTION — FASE 2/7: TOPOLOGICAL DATABASE SCHEMA & STATE MACHINES ({$appName})
 Baca Bagian 2 & Bagian 3 di `PROJECT_OS_EXECUTION_BLUEPRINT.md`, `.agents/SYMBOL_MANIFEST.json`, serta `.agents/BLUEPRINT_SCHEMA.json`.
 *(Catatan Anti-Truncation: Bila skema > 6 tabel, eksekusi secara bertahap per Sub-Part `02.1`, `02.2`, dst. di folder `.agents/prompts/subparts/`!)*
@@ -2276,9 +2317,25 @@ PROMPT,
             [
                 'phase' => 3,
                 'filename' => '03-domain-actions.md',
-                'title' => 'Fase 3: Deterministic Domain Actions (__invoke), 5 Glue Guards & Realistic Seeder',
-                'objective' => 'Membangun Action Classes (__invoke + DB::transaction + lockForUpdate), 5 Enterprise Glue Actions, rumus Penny Allocation, dan Realistic Domain Seeder.',
-                'prompt' => <<<PROMPT
+                'title' => $isEn ? 'Phase 3: Deterministic Domain Actions (__invoke), 5 Glue Guards & Realistic Seeder' : 'Fase 3: Deterministic Domain Actions (__invoke), 5 Glue Guards & Realistic Seeder',
+                'objective' => $isEn
+                    ? 'Build Action Classes (__invoke + DB::transaction + lockForUpdate), 5 Enterprise Glue Actions, exact Penny Allocation formulas, and Realistic Domain Seeder.'
+                    : 'Membangun Action Classes (__invoke + DB::transaction + lockForUpdate), 5 Enterprise Glue Actions, rumus Penny Allocation, dan Realistic Domain Seeder.',
+                'prompt' => $isEn ? <<<PROMPT
+# PROJECT OS EXECUTION — PHASE 3/7: DETERMINISTIC ACTIONS, 5 ENTERPRISE GLUE & SEEDER ({$appName})
+Read `.agents/SYMBOL_MANIFEST.json` and Sections 3, 6, 7 in `PROJECT_OS_EXECUTION_BLUEPRINT.md`.
+*(Anti-Truncation Notice: Execute per Sub-Part `03.1`, `03.2`, etc. in `.agents/prompts/subparts/` if modules are dense!)*
+
+## Phase 3 Execution Instructions:
+1. Implement each Action Class using method **`__invoke(...)`** matching the exact signature in `.agents/SYMBOL_MANIFEST.json` wrapped in `DB::transaction()` with `SELECT ... FOR UPDATE` (`lockForUpdate()`).
+2. Implement 5 **Enterprise Glue Guards** (Atomic Document Numbering free of `rand()`, Accounting Period Cut-Off `CLOSED_FINAL`, Maker-Checker Segregation `maker_id !== checker_id`, Private Vault `disk="private"`, and Outbox/Webhook Vault).
+3. Apply exact mathematical formula `DECIMAL(19,4)` rounding `HALF_UP` and **Penny Allocation** (`Rp 100,000 / 3 = [33333, 33333, 33334]`) ensuring zero penny discrepancy.
+4. Build **`InitializeNewTenantAction`** and **Domain-Realistic Seeder (`{$seederClass}`)**:
+{$seederBullets}
+
+{$gateP3}
+PROMPT
+: <<<PROMPT
 # PROJECT OS EXECUTION — FASE 3/7: DETERMINISTIC ACTIONS, 5 ENTERPRISE GLUE & SEEDER ({$appName})
 Baca `.agents/SYMBOL_MANIFEST.json` dan Bagian 3, 6, 7 di `PROJECT_OS_EXECUTION_BLUEPRINT.md`.
 *(Catatan Anti-Truncation: Eksekusi per Sub-Part `03.1`, `03.2`, dst. di `.agents/prompts/subparts/` jika modul padat!)*
@@ -2287,7 +2344,7 @@ Baca `.agents/SYMBOL_MANIFEST.json` dan Bagian 3, 6, 7 di `PROJECT_OS_EXECUTION_
 1. Implementasikan setiap Action Class menggunakan method **`__invoke(...)`** persis sesuai signature di `.agents/SYMBOL_MANIFEST.json` di dalam `DB::transaction()` dengan `SELECT ... FOR UPDATE` (`lockForUpdate()`).
 2. Implementasikan 5 **Enterprise Glue Guards** (Penomoran Dokumen Atomik bebas `rand()`, Cut-Off Periode Akuntansi `CLOSED_FINAL`, Persetujuan Berjenjang Maker-Checker `maker_id !== checker_id`, Brankas Alasan & Bukti `disk="private"`, dan Outbox/Webhook Vault).
 3. Terapkan rumus matematika eksak `DECIMAL(19,4)` pembulatan `HALF_UP` dan **Penny Allocation** (`Rp 100.000 / 3 = [33333, 33333, 33334]`) agar 0 selisih sen.
-4. Bangun **`InitializeNewTenantAction`** serta **Domain-Realistic Seeder (`{$seeder['seeder_class']}`)**:
+4. Bangun **`InitializeNewTenantAction`** serta **Domain-Realistic Seeder (`{$seederClass}`)**:
 {$seederBullets}
 
 {$gateP3}
@@ -2296,9 +2353,25 @@ PROMPT,
             [
                 'phase' => 4,
                 'filename' => '04-verification-suite.md',
-                'title' => 'Fase 4: Automated Acceptance Test Suite (100% Green Before Any UI)',
-                'objective' => 'Menulis dan menjalankan Pest PHP / Integration Tests untuk semua skenario Given-When-Then sampai 100% hijau sebelum menyentuh satu baris UI pun.',
-                'prompt' => <<<PROMPT
+                'title' => $isEn ? 'Phase 4: Automated Acceptance Test Suite (100% Green Before Any UI)' : 'Fase 4: Automated Acceptance Test Suite (100% Green Before Any UI)',
+                'objective' => $isEn
+                    ? 'Write and run Pest PHP / Integration Tests for all Given-When-Then scenarios until 100% green before touching a single line of UI.'
+                    : 'Menulis dan menjalankan Pest PHP / Integration Tests untuk semua skenario Given-When-Then sampai 100% hijau sebelum menyentuh satu baris UI pun.',
+                'prompt' => $isEn ? <<<PROMPT
+# PROJECT OS EXECUTION — PHASE 4/7: AUTOMATED VERIFICATION SUITE BEFORE UI ({$appName})
+Read Section 9 (`Pre-Built Acceptance Test Matrix`) in `PROJECT_OS_EXECUTION_BLUEPRINT.md`.
+
+## Phase 4 Execution Instructions (TDD GATEKEEPER):
+1. Implement all `Given-When-Then` scenarios in the automated test suite (`ZeroAssumptionAcceptanceMatrixTest`), covering:
+   - Race-condition / double-spending / double-booking prevention on concurrent actions.
+   - Tax rounding accuracy & Penny Allocation balance guarantee.
+   - Rejection of backdating in `sys_accounting_periods` `CLOSED_FINAL`, rejection of self-approval `maker_id === checker_id`, and deletion rejection on `IMMUTABLE_LEDGER` tables.
+   - Multi-tenant boundary isolation (`organization_id`) and RBAC authorization.
+2. Run test runner until **100% PASSED (0 failures, 0 errors)**. FORBIDDEN to proceed to UI if even 1 test fails!
+
+{$gateP4}
+PROMPT
+: <<<PROMPT
 # PROJECT OS EXECUTION — FASE 4/7: AUTOMATED VERIFICATION SUITE BEFORE UI ({$appName})
 Baca Bagian 9 (`Pre-Built Acceptance Test Matrix`) di `PROJECT_OS_EXECUTION_BLUEPRINT.md`.
 
@@ -2316,9 +2389,40 @@ PROMPT,
             [
                 'phase' => 5,
                 'filename' => '05-sectoral-ui-ux.md',
-                'title' => "Fase 5: L1–L4 Enterprise Menu Divisions (25 Layar), Visual UI ({$vUiCode}) & Archetypes ({$primaryArch})",
-                'objective' => 'Membangun 5 Divisi Menu L1–L4 sesuai ENTERPRISE_MENU_MATRIX.md, tata letak Visual UI terpilih, & ergonomi industri tanpa merusak signature SYMBOL_MANIFEST.json.',
-                'prompt' => <<<PROMPT
+                'title' => $isEn
+                    ? "Phase 5: L1–L4 Enterprise Menu Divisions (25 Screens), Visual UI ({$vUiCode}) & Archetypes ({$primaryArch})"
+                    : "Fase 5: L1–L4 Enterprise Menu Divisions (25 Layar), Visual UI ({$vUiCode}) & Archetypes ({$primaryArch})",
+                'objective' => $isEn
+                    ? 'Build 5 Menu Divisions L1–L4 matching ENTERPRISE_MENU_MATRIX.md, selected Visual UI layout, & industrial ergonomics without breaking SYMBOL_MANIFEST.json signatures.'
+                    : 'Membangun 5 Divisi Menu L1–L4 sesuai ENTERPRISE_MENU_MATRIX.md, tata letak Visual UI terpilih, & ergonomi industri tanpa merusak signature SYMBOL_MANIFEST.json.',
+                'prompt' => $isEn ? <<<PROMPT
+# PROJECT OS EXECUTION — PHASE 5/7: L1–L4 ENTERPRISE MENU, VISUAL FRONTEND UI & SECTORAL UX ({$appName})
+Read `.agents/ENTERPRISE_MENU_MATRIX.md`, `.agents/SYMBOL_MANIFEST.json`, and `.agents/UI_UX_CONTRACT.md`.
+*(Anti-Truncation Notice: Build screens per Division `05.1` through `05.5` in `.agents/prompts/subparts/`!)*
+
+**Mandatory Industrial Archetype (Zone A Operational Back-Stage):** `{$primaryArch}` & `{$secondaryArch}`
+**Operational Visual Frontend Design (Zone A):** `{$vUiCode}` ({$vUiLabel}) | **Navigation Shell:** `{$vShellCode}` *(FORBIDDEN Scrollytelling/Parallax in Zone A)*
+**Public Front-Stage UX Preset (Zone B):** `{$pubUxCode}` — {$pubUxName} (`{$pubUxStack}` + `PRIMITIVE_VERIFIED_SOCIAL_PROOF` Aniwall)
+**5 Iron Laws of Enterprise Animation (Zone B):** 100% Local `@vite` (0% CDN), GPU `translate3d()/scale()/opacity` Only, `CLS = 0.00` aspect-ratio lock, `@media (prefers-reduced-motion: reduce)`, & `IntersectionObserver` FCP `< 0.8s`.
+**Mandatory Input Hygiene Standards:** Email pure `[a-zA-Z0-9._%+\-@]`, numbers/currencies `>= 1,000` must use regional thousand separators (`.` ID / `,` EN) + `tabular-nums`, and phone inputs must use `config/country_zones.php` + auto-strip leading `0`.
+**Output Language & Jurisdiction:** `{$jOutputLocale}` (`{$vHtmlDir}` — `{$jCode}`)
+**Jurisdiction Accounting, Tax & Privacy Rules:** {$jStatutoryRules}
+**Text Direction / RTL Contract:** {$vRtlRule}
+
+## Selected Visual Screen Panes Composition (`{$vUiCode}`):
+{$vPanesBullets}
+
+## Mandatory Industry-Specific Layout & Ergonomics to Build:
+{$ergonomicsBullets}
+
+## Strict Zero-Slop UI & Exact Symbol Binding Rules:
+1. All UI forms/buttons MUST invoke Action `__invoke()` and Eloquent columns exactly per `.agents/SYMBOL_MANIFEST.json` (0% fabricated method names!).
+2. **FORBIDDEN:** `rounded-full`, gaudy gradients `bg-gradient-to-*`, low-contrast pastel text on light cards, external CDNs, and native dialogs `alert()`/`confirm()`.
+3. **MANDATORY:** Subtle/thin radius (`rounded-none` / `rounded-xs` / `rounded-sm`), high-contrast light & dark modes (WCAG AA/AAA), `tabular-nums` + thousand separators, Keyset Cursor Pagination `O(1)` (`cursorPaginate()`), `GuidedSetupChecklistWidget`, and **Printable Thermal Receipt (58mm/80mm ESC/POS)** & **Official A4 PDF**.
+
+{$gateP5}
+PROMPT
+: <<<PROMPT
 # PROJECT OS EXECUTION — FASE 5/7: L1–L4 ENTERPRISE MENU, VISUAL FRONTEND UI & SECTORAL UX ({$appName})
 Baca `.agents/ENTERPRISE_MENU_MATRIX.md`, `.agents/SYMBOL_MANIFEST.json`, dan `.agents/UI_UX_CONTRACT.md`.
 *(Catatan Anti-Truncation: Bangun layar per Divisi `05.1` s/d `05.5` di `.agents/prompts/subparts/`!)*
@@ -2349,9 +2453,28 @@ PROMPT,
             [
                 'phase' => 6,
                 'filename' => '06-deployment.md',
-                'title' => 'Fase 6: 4-Pillar AI Copilot (RAG+CAG+KAG), Slop Audit & Production Pack',
-                'objective' => 'Menyinkronkan pgvector RAG, Native Tools, Smart Guide, SHA-256 Audit Log, menjalankan ./verify-blueprint.sh, dan menyiapkan deploy.sh + Caddyfile.',
-                'prompt' => <<<PROMPT
+                'title' => $isEn ? 'Phase 6: 4-Pillar AI Copilot (RAG+CAG+KAG), Slop Audit & Production Pack' : 'Fase 6: 4-Pillar AI Copilot (RAG+CAG+KAG), Slop Audit & Production Pack',
+                'objective' => $isEn
+                    ? 'Synchronize pgvector RAG, Native Tools, Smart Guide, SHA-256 Audit Log, run ./verify-blueprint.sh, and prepare deploy.sh + Caddyfile.'
+                    : 'Menyinkronkan pgvector RAG, Native Tools, Smart Guide, SHA-256 Audit Log, menjalankan ./verify-blueprint.sh, dan menyiapkan deploy.sh + Caddyfile.',
+                'prompt' => $isEn ? <<<PROMPT
+# PROJECT OS EXECUTION — PHASE 6/7: AI COPILOT RAG, SLOP SCANNER & PRODUCTION DEPLOY ({$appName})
+Read `.agents/AGENT_HARNESS_ECC.md` and `STACK_TOPOLOGY_CONTRACT.md`.
+
+## Production Finalization Instructions:
+1. Synchronize **4 Pillars of Enterprise Governance**:
+   - **Tri-Hybrid AI Copilot (RAG `pgvector` 768-dim RRF + CAG Live Telemetry + KAG Rule Graph)** with RBAC-validated `gemini_native_tools` declarations.
+   - **Smart Guide Admin** & internal operational documentation.
+   - **RBAC Policies** for every role & tenant.
+   - **Tamper-Evident SHA-256 Audit Log** across all critical mutations + 1-Click Replay interface for `sys_integration_logs`.
+2. Activate **Day-2 Operations & Defense-in-Depth Security**:
+   - **4-Lane Redis Queue Priority** (`queue:critical`, `queue:default`, `queue:ai-rag`, `queue:low-batch`) + deterministic schedules in `routes/console.php`.
+   - **Global Scope `BelongsToOrganization`** (anti-IDOR `404`), **4-Tier Rate Limiter**, and **`disk = "private"`** isolation with `URL::temporarySignedRoute()` 5 minutes for sensitive docs & `sys_reason_evidences`.
+   - `deploy.sh` (6-scenario zero-downtime), `Caddyfile` / `railpack.json`, and health probes (`/healthz`, `/livez`, `/readyz`).
+
+{$gateP6}
+PROMPT
+: <<<PROMPT
 # PROJECT OS EXECUTION — FASE 6/7: AI COPILOT RAG, SLOP SCANNER & PRODUCTION DEPLOY ({$appName})
 Baca `.agents/AGENT_HARNESS_ECC.md` dan `STACK_TOPOLOGY_CONTRACT.md`.
 
@@ -2372,9 +2495,27 @@ PROMPT,
             [
                 'phase' => 7,
                 'filename' => '07-security-redteam.md',
-                'title' => 'Fase 7: Automated Security Red-Team, Tenant-Leakage & Enterprise Glue Suite',
-                'objective' => 'Membangun dan menjalankan TenantIsolationSecurityTest.php (IDOR, Livewire tamper, Private Disk, Prompt Injection, Fiscal Lock & Maker-Checker) serta melaporkan ke MCP Bridge.',
-                'prompt' => <<<PROMPT
+                'title' => $isEn ? 'Phase 7: Automated Security Red-Team, Tenant-Leakage & Enterprise Glue Suite' : 'Fase 7: Automated Security Red-Team, Tenant-Leakage & Enterprise Glue Suite',
+                'objective' => $isEn
+                    ? 'Build and run TenantIsolationSecurityTest.php (IDOR, Livewire tamper, Private Disk, Prompt Injection, Fiscal Lock & Maker-Checker) and report to MCP Bridge.'
+                    : 'Membangun dan menjalankan TenantIsolationSecurityTest.php (IDOR, Livewire tamper, Private Disk, Prompt Injection, Fiscal Lock & Maker-Checker) serta melaporkan ke MCP Bridge.',
+                'prompt' => $isEn ? <<<PROMPT
+# PROJECT OS EXECUTION — PHASE 7/7: SECURITY RED-TEAM & TENANT-LEAKAGE SUITE ({$appName})
+Read `.agents/DAY2_OPERATIONS_AND_SECURITY.md`, `.agents/DECISION_TABLES_CONTRACT.md`, and `tests/Feature/Security/TenantIsolationSecurityTest.php`.
+
+## Automated Red-Team Security Audit Instructions (Zero-Trust Gatekeeper):
+1. Ensure all branching business rules run through `App\Domains\Rules\DeterministicDecisionMatrix` based on PHP 8.4+ `match()` — **0 lines of nested if-else spaghetti**.
+2. Complete and execute `tests/Feature/Security/TenantIsolationSecurityTest.php` testing 5 real attack vectors:
+   - **REDTEAM-01 (Cross-Tenant IDOR)**: User `ORG-ALPHA` attempts to GET/POST/PATCH a ULID record belonging to `ORG-BETA` -> MUST be rejected with HTTP `404 Not Found`.
+   - **REDTEAM-02 (Livewire `wire:snapshot` Tampering)**: Manipulating `organization_id` / `role` properties -> MUST be locked via `#[Locked]`.
+   - **REDTEAM-03 (Private Media Disk Bypass)**: Accessing sensitive document URL / `sys_reason_evidences` without 5-minute signature -> MUST return HTTP `403 Forbidden`.
+   - **REDTEAM-04 (AI Copilot Prompt Injection)**: Standard user injecting mutation instructions -> MUST be blocked by `guardMutation()` & logged in `AuditLog`.
+   - **REDTEAM-05 (Fiscal Lock & Maker-Checker Bypass)**: Backdating to a month in `CLOSED_FINAL` & self-approval `maker_id === checker_id` -> MUST be 100% rejected.
+3. If IDE is connected to `neriahpro-mcp`, call `neriahpro_report_completion(phase_number: 7)` to change project status in Studio to **Green (Verified ✅)**.
+
+{$gateP7}
+PROMPT
+: <<<PROMPT
 # PROJECT OS EXECUTION — FASE 7/7: SECURITY RED-TEAM & TENANT-LEAKAGE SUITE ({$appName})
 Baca `.agents/DAY2_OPERATIONS_AND_SECURITY.md`, `.agents/DECISION_TABLES_CONTRACT.md`, dan `tests/Feature/Security/TenantIsolationSecurityTest.php`.
 

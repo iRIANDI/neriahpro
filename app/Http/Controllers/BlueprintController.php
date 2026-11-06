@@ -673,6 +673,7 @@ class BlueprintController extends Controller
         // Ensure PRD content is populated or regenerate if requested and scope is not locked
         if (empty($blueprint->prd_content) || ! isset($blueprint->prd_content['engineering_specs']) || (request()->has('regenerate') && ! $isScopeLocked)) {
             if (!empty($blueprint->fitur_wajib)) {
+                $isEn = ($blueprint->user_metadata['output_locale'] ?? app()->getLocale()) === 'en';
                 $dom = BlueprintDiscoveryService::detectDomain(
                     $blueprint->nama_bisnis . ' ' . $blueprint->masalah_utama . ' ' . $blueprint->fitur_wajib . ' ' . $blueprint->fitur_tambahan
                 );
@@ -681,7 +682,7 @@ class BlueprintController extends Controller
                 foreach ($lines as $idx => $line) {
                     $trimmed = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
                     if (empty($trimmed)) continue;
-                    $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $dom, false);
+                    $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $dom, $isEn);
                     $craftedLines[] = ($idx + 1) . '. ' . $crafted;
                 }
                 if (!empty($craftedLines)) {
@@ -697,6 +698,7 @@ class BlueprintController extends Controller
         if (! $isScopeLocked && ! empty($blueprint->prd_content)) {
             $prd = $blueprint->prd_content;
             $needsPrdSave = false;
+            $isEn = ($blueprint->user_metadata['output_locale'] ?? app()->getLocale()) === 'en';
 
             // 1. Check ROI Domain Mismatch (e.g. Tour & Travel showing Villa/Real Estate)
             $corpus = strtolower($blueprint->nama_bisnis . ' ' . ($blueprint->masalah_utama ?? '') . ' ' . ($blueprint->tujuan_utama ?? '') . ' ' . ($blueprint->fitur_wajib ?? ''));
@@ -710,15 +712,25 @@ class BlueprintController extends Controller
             if ($isRoiMismatched || request()->has('regenerate_roi') || request()->has('refresh_roi')) {
                 $prd['business_roi_analysis'] = PrdGeneratorService::generateBusinessRoiAnalysis(
                     $blueprint,
-                    $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint)
+                    $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint),
+                    $isEn
                 );
                 $needsPrdSave = true;
             }
 
-            // 1.5 Auto-repair single-step workflow if raw alur_kerja contains multiple numbered/bulleted points
-            if (count($prd['workflow'] ?? []) <= 1 && !empty($blueprint->alur_kerja)) {
-                $reparsedWorkflow = PrdGeneratorService::parseWorkflow($blueprint->alur_kerja, $blueprint->nama_bisnis ?? '');
-                if (count($reparsedWorkflow) > 1) {
+            // 1.5 Auto-repair single-step workflow or workflow with truncated "..." words
+            $hasWorkflowTruncation = false;
+            foreach (($prd['workflow'] ?? []) as $wfStep) {
+                $actText = $wfStep['action'] ?? '';
+                if (str_contains($actText, '...') || str_contains($actText, 'Ban...') || preg_match('/\b\w+\.\.\./', $actText)) {
+                    $hasWorkflowTruncation = true;
+                    break;
+                }
+            }
+
+            if ((count($prd['workflow'] ?? []) <= 1 || $hasWorkflowTruncation) && !empty($blueprint->alur_kerja)) {
+                $reparsedWorkflow = PrdGeneratorService::parseWorkflow($blueprint->alur_kerja, $blueprint->nama_bisnis ?? '', $isEn);
+                if (count($reparsedWorkflow) >= 1) {
                     $prd['workflow'] = $reparsedWorkflow;
                     $needsPrdSave = true;
                 }
@@ -824,8 +836,10 @@ class BlueprintController extends Controller
         }
 
         $prd = $blueprint->prd_content ?? [];
-        $itemized = $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint);
-        $newRoi = PrdGeneratorService::generateBusinessRoiAnalysis($blueprint, $itemized);
+        $outputLoc = $blueprint->user_metadata['output_locale'] ?? $blueprint->user_metadata['locale'] ?? app()->getLocale();
+        $isEn = ($outputLoc === 'en' || request('lang') === 'en');
+        $itemized = $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint, [], $isEn);
+        $newRoi = PrdGeneratorService::generateBusinessRoiAnalysis($blueprint, $itemized, $isEn);
 
         $prd['business_roi_analysis'] = $newRoi;
         
@@ -861,8 +875,10 @@ class BlueprintController extends Controller
 
         if (! $blueprint->isScopeFrozen()) {
             $prd = $blueprint->prd_content ?? [];
-            $itemized = $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint);
-            $newRoi = PrdGeneratorService::generateBusinessRoiAnalysis($blueprint, $itemized);
+            $outputLoc = $blueprint->user_metadata['output_locale'] ?? $blueprint->user_metadata['locale'] ?? app()->getLocale();
+            $isEn = ($outputLoc === 'en' || request('lang') === 'en');
+            $itemized = $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint, [], $isEn);
+            $newRoi = PrdGeneratorService::generateBusinessRoiAnalysis($blueprint, $itemized, $isEn);
             $prd['business_roi_analysis'] = $newRoi;
             $erdTables = $prd['erd_schema']['tables'] ?? [];
             $prd['virtual_charts']['erd_mermaid'] = PrdGeneratorService::generateErdMermaid($erdTables);
@@ -898,6 +914,7 @@ class BlueprintController extends Controller
         }
 
         // 1. Detect Domain accurately
+        $isEn = ($blueprint->user_metadata['output_locale'] ?? app()->getLocale()) === 'en';
         $domain = BlueprintDiscoveryService::detectDomain(
             $blueprint->nama_bisnis . ' ' . $blueprint->masalah_utama . ' ' . $blueprint->fitur_wajib . ' ' . $blueprint->fitur_tambahan
         );
@@ -909,7 +926,7 @@ class BlueprintController extends Controller
             foreach ($lines as $idx => $line) {
                 $trimmed = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
                 if (empty($trimmed)) continue;
-                $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, false);
+                $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, $isEn);
                 $craftedLines[] = ($idx + 1) . '. ' . $crafted;
             }
             if (!empty($craftedLines)) {
@@ -923,7 +940,7 @@ class BlueprintController extends Controller
             foreach ($lines as $idx => $line) {
                 $trimmed = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
                 if (empty($trimmed)) continue;
-                $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, false);
+                $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, $isEn);
                 $craftedLines[] = ($idx + 1) . '. ' . $crafted;
             }
             if (!empty($craftedLines)) {
@@ -959,6 +976,7 @@ class BlueprintController extends Controller
         $this->authorizeBlueprintAccess($blueprint);
 
         if (!$blueprint->signed_agreement && !$blueprint->isDpConfirmed() && !$blueprint->isRetailLicense()) {
+            $isEn = ($blueprint->user_metadata['output_locale'] ?? app()->getLocale()) === 'en';
             $domain = BlueprintDiscoveryService::detectDomain(
                 $blueprint->nama_bisnis . ' ' . $blueprint->masalah_utama . ' ' . $blueprint->fitur_wajib . ' ' . $blueprint->fitur_tambahan
             );
@@ -969,7 +987,7 @@ class BlueprintController extends Controller
                 foreach ($lines as $idx => $line) {
                     $trimmed = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
                     if (empty($trimmed)) continue;
-                    $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, false);
+                    $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, $isEn);
                     $craftedLines[] = ($idx + 1) . '. ' . $crafted;
                 }
                 if (!empty($craftedLines)) {
@@ -983,7 +1001,7 @@ class BlueprintController extends Controller
                 foreach ($lines as $idx => $line) {
                     $trimmed = trim($line, " \t\n\r\0\x0B-•*1234567890.)");
                     if (empty($trimmed)) continue;
-                    $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, false);
+                    $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($trimmed, $domain, $isEn);
                     $craftedLines[] = ($idx + 1) . '. ' . $crafted;
                 }
                 if (!empty($craftedLines)) {
@@ -2246,6 +2264,61 @@ class BlueprintController extends Controller
             $files = ScaffoldGeneratorService::generateFiles($blueprint);
             $customizations = $blueprint->user_metadata['scaffold_customizations'] ?? [];
 
+            // Auto-clean any corrupted customization placeholders in database
+            $cleanedCustom = [];
+            $needsMetaClean = false;
+            foreach ($customizations as $cKey => $cVal) {
+                $trimmed = is_string($cVal) ? trim($cVal) : '';
+                if ($trimmed === '' || $trimmed === 'Memuat berkas...' || str_starts_with($trimmed, '// Berkas ') || str_starts_with($trimmed, '// Memuat berkas')) {
+                    $needsMetaClean = true;
+                    continue;
+                }
+                $cleanedCustom[$cKey] = $cVal;
+            }
+
+            if ($needsMetaClean) {
+                $uMeta = $blueprint->user_metadata ?? [];
+                $uMeta['scaffold_customizations'] = $cleanedCustom;
+                $blueprint->update(['user_metadata' => $uMeta]);
+                $customizations = $cleanedCustom;
+            }
+
+            // Guaranteed presence of all 22 required preview tabs
+            $requiredTabs = [
+                'docs/product/PRODUCT-BRIEF.md' => fn() => ScaffoldGeneratorService::generateProductBrief($blueprint),
+                'docs/architecture/ADR-001-postgresql-ulid.md' => fn() => ScaffoldGeneratorService::generateAdr001($blueprint),
+                'docs/adr/ADR-001-architectural-paradigm.md' => fn() => ScaffoldGeneratorService::generateAdr001($blueprint),
+                'docker-compose.yml' => fn() => ScaffoldGeneratorService::generateDockerCompose($blueprint, $blueprint->slug ?: 'app'),
+                'openapi.json' => fn() => ScaffoldGeneratorService::generateOpenApiSpec($blueprint, []),
+                'schema_complete.sql' => fn() => ScaffoldGeneratorService::generateDatabaseMigrationsSql($blueprint, []),
+                'database/migrations/schema_complete.sql' => fn() => ScaffoldGeneratorService::generateDatabaseMigrationsSql($blueprint, []),
+                'design/wireframes/screens.md' => fn() => ScaffoldGeneratorService::generateWireframeBlueprints($blueprint, []),
+                'design/tokens.json' => fn() => ScaffoldGeneratorService::generateDesignTokens($blueprint),
+                'routes/web.php' => fn() => ScaffoldGeneratorService::generateLaravelRoutes($blueprint, []),
+                'routes/api.php' => fn() => ScaffoldGeneratorService::generateLaravelApiRoutes($blueprint, []),
+                'app/Http/Controllers/HealthProbeController.php' => fn() => ScaffoldGeneratorService::generateHealthProbeController($blueprint->slug ?: 'app'),
+                'app/api/route.ts' => fn() => ScaffoldGeneratorService::generateNextJsRoute($blueprint, []),
+                'database/seeders/SyntheticDataSeeder.php' => fn() => ScaffoldGeneratorService::generateSyntheticDataSeeder($blueprint, []),
+                '.cursorrules' => fn() => PrdGeneratorService::toCursorrules($blueprint, $blueprint->prd_content ?? []),
+                'AGENTS.md' => fn() => PrdGeneratorService::toCursorrules($blueprint, $blueprint->prd_content ?? []),
+                'tests/Feature/ApiContractTest.php' => fn() => ScaffoldGeneratorService::generateContractTest($blueprint, []),
+                'tests/e2e/smoke.spec.ts' => fn() => ScaffoldGeneratorService::generatePlaywrightE2ETest($blueprint, []),
+                'tests/e2e/critical-flows.spec.ts' => fn() => ScaffoldGeneratorService::generatePlaywrightE2ETest($blueprint, []),
+                'deploy.sh' => fn() => ScaffoldGeneratorService::generateDeployScript($blueprint, $blueprint->slug ?: 'app'),
+                '.github/workflows/deploy.yml' => fn() => ScaffoldGeneratorService::generateCiCdWorkflow($blueprint, $blueprint->slug ?: 'app'),
+                'scripts/backup.sh' => fn() => ScaffoldGeneratorService::generateBackupScript($blueprint, $blueprint->slug ?: 'app'),
+                'scripts/restore.sh' => fn() => ScaffoldGeneratorService::generateRestoreScript($blueprint, $blueprint->slug ?: 'app'),
+                'docs/runbooks/disaster-recovery.md' => fn() => ScaffoldGeneratorService::generateDisasterRecoveryRunbook($blueprint, $blueprint->slug ?: 'app'),
+                'docs/disaster-recovery-runbook.md' => fn() => ScaffoldGeneratorService::generateDisasterRecoveryRunbook($blueprint, $blueprint->slug ?: 'app'),
+                'README.md' => fn() => ScaffoldGeneratorService::generateReadme($blueprint, $blueprint->nama_bisnis ?: 'Proyek', $blueprint->slug ?: 'app'),
+            ];
+
+            foreach ($requiredTabs as $reqKey => $generator) {
+                if (empty($files[$reqKey]) || $files[$reqKey] === 'Memuat berkas...' || str_starts_with(trim($files[$reqKey]), '// Berkas ')) {
+                    $files[$reqKey] = $generator();
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'slug' => $blueprint->slug,
@@ -2294,6 +2367,15 @@ class BlueprintController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Nama file tidak valid.',
+            ], 422);
+        }
+
+        // Prevent saving temporary loading state or placeholder comments into database
+        $trimmedContent = trim($content);
+        if ($trimmedContent === '' || $trimmedContent === 'Memuat berkas...' || str_starts_with($trimmedContent, '// Berkas ') || str_starts_with($trimmedContent, '// Memuat berkas')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Konten tidak valid (placeholder tidak dapat disimpan).',
             ], 422);
         }
 

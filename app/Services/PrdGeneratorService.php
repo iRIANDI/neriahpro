@@ -12,21 +12,26 @@ class PrdGeneratorService
      */
     public static function generate(VisionBlueprint $blueprint, ?string $preferredAiProvider = null): array
     {
+        $outputLocale = \App\Support\PosInclusiveCommercialCatalog::normalizeOutputLocale(
+            $blueprint->user_metadata['output_locale'] ?? $blueprint->user_metadata['locale'] ?? app()->getLocale() ?? 'id'
+        );
+        $isEn = ($outputLocale === 'en');
+
         $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name . "'s Project");
-        $masalah = $blueprint->masalah_utama ?: 'Otomatisasi proses bisnis manual dan sentralisasi data.';
-        $tujuan = $blueprint->tujuan_utama ?: 'Meningkatkan efisiensi operasional dan akurasi pelaporan.';
-        $audiens = $blueprint->target_audiens ?: 'Pengguna internal organisasi dan klien eksternal.';
-        $aktor = $blueprint->aktor_sistem ?: 'Superadmin (Full Control), Staff/Operator (Input & Review), Pengunjung/Klien (Pengisian Form).';
-        $fiturWajib = $blueprint->fitur_wajib ?: 'Manajemen Pengguna & RBAC, Input Formulir Data, Rekap Database Dinamis, Ekspor PDF/Excel.';
-        $fiturTambahan = $blueprint->fitur_tambahan ?: 'Notifikasi WhatsApp/Email otomatis, Audit Trail Log, Dark Mode.';
-        $alurKerja = $blueprint->alur_kerja ?: 'Pengguna membuka web -> Mengisi Formulir -> Sistem memvalidasi & menyimpan data -> Admin menerima notifikasi -> Verifikasi di Dasbor.';
-        $integrasi = $blueprint->kebutuhan_integrasi ?: 'Payment Gateway, WhatsApp Gateway, Cloud Storage S3.';
-        $referensiDesain = $blueprint->referensi_desain ?: 'Clean, modern minimalist dengan estetika Linear / Stripe.';
-        $kesiapanAset = $blueprint->kesiapan_aset ?: 'Sedang Disiapkan';
-        $targetWaktu = $blueprint->target_waktu ?: 'Fase 1 rilis dalam 3-4 pekan kerja.';
+        $masalah = $blueprint->masalah_utama ?: ($isEn ? 'Automation of manual business operations and centralized data management.' : 'Otomatisasi proses bisnis manual dan sentralisasi data.');
+        $tujuan = $blueprint->tujuan_utama ?: ($isEn ? 'Increase operational velocity, eliminate redundant data silos, and enhance reporting precision.' : 'Meningkatkan efisiensi operasional dan akurasi pelaporan.');
+        $audiens = $blueprint->target_audiens ?: ($isEn ? 'Internal organizational staff, operators, and external clients.' : 'Pengguna internal organisasi dan klien eksternal.');
+        $aktor = $blueprint->aktor_sistem ?: ($isEn ? 'Superadmin (Full Control), Staff/Operator (Input & Review), Visitors/Clients (Public Interaction).' : 'Superadmin (Full Control), Staff/Operator (Input & Review), Pengunjung/Klien (Pengisian Form).');
+        $fiturWajib = $blueprint->fitur_wajib ?: ($isEn ? 'User Management & RBAC, Structured Intake Forms, Real-Time Database Ledger, PDF/Excel Export.' : 'Manajemen Pengguna & RBAC, Input Formulir Data, Rekap Database Dinamis, Ekspor PDF/Excel.');
+        $fiturTambahan = $blueprint->fitur_tambahan ?: ($isEn ? 'Automated WhatsApp & Email Notifications, Cryptographic Audit Trail, Dark/Light Mode Theme.' : 'Notifikasi WhatsApp/Email otomatis, Audit Trail Log, Dark Mode.');
+        $alurKerja = $blueprint->alur_kerja ?: ($isEn ? 'User visits web portal -> Submits request -> System validates and persists record -> Admin receives instant alert -> Reviews on dashboard.' : 'Pengguna membuka web -> Mengisi Formulir -> Sistem memvalidasi & menyimpan data -> Admin menerima notifikasi -> Verifikasi di Dasbor.');
+        $integrasi = $blueprint->kebutuhan_integrasi ?: ($isEn ? 'Payment Rails, WhatsApp Gateway API, S3 Cloud Storage.' : 'Payment Gateway, WhatsApp Gateway, Cloud Storage S3.');
+        $referensiDesain = $blueprint->referensi_desain ?: ($isEn ? 'Clean modern monolith with Linear / Stripe aesthetics, dark/light mode fidelity.' : 'Clean, modern minimalist dengan estetika Linear / Stripe.');
+        $kesiapanAset = $blueprint->kesiapan_aset ?: ($isEn ? 'Currently In Preparation' : 'Sedang Disiapkan');
+        $targetWaktu = $blueprint->target_waktu ?: ($isEn ? 'Phase 1 release within 3-4 working weeks.' : 'Fase 1 rilis dalam 3-4 pekan kerja.');
 
         // Parse actors into structured array with intelligent role inference & RBAC normalization
-        $actorItems = self::parseActors($aktor, $businessName, $audiens);
+        $actorItems = self::parseActors($aktor, $businessName, $audiens, $isEn);
 
         // Detect domain for intelligent feature crafting & schema topology
         $domain = BlueprintDiscoveryService::detectDomain(
@@ -34,9 +39,14 @@ class PrdGeneratorService
         );
 
         // Parse MVP Features with automatic crafting of conversational raw items
-        $mvpItems = self::parseItems($fiturWajib, $domain);
+        $mvpItems = self::parseItems($fiturWajib, $domain, $isEn);
         if (empty($mvpItems)) {
-            $mvpItems = [
+            $mvpItems = $isEn ? [
+                ['title' => 'Authentication & RBAC', 'desc' => 'Secure sign-in with Role-Based Access Control and ULID identifiers.'],
+                ['title' => 'Structured Intake Form', 'desc' => 'Validated data collection with anti-spam and sanitization protection.'],
+                ['title' => 'Administration Dashboard', 'desc' => 'Centralized cockpit powered by Filament PHP with instant filterable tables.'],
+                ['title' => 'Reports & Data Export', 'desc' => 'Export capabilities in PDF and Excel formats for daily operational reconciliation.'],
+            ] : [
                 ['title' => 'Autentikasi & RBAC', 'desc' => 'Login aman dengan Role-Based Access Control dan ULID identifiers.'],
                 ['title' => 'Formulir Intake Terstruktur', 'desc' => 'Pengumpulan data tervalidasi dengan proteksi Anti-Spam.'],
                 ['title' => 'Dasbor Administrasi', 'desc' => 'Pusat kendali berbasis Filament PHP dengan tabel filter data instan.'],
@@ -45,35 +55,37 @@ class PrdGeneratorService
         }
 
         // Parse Phase 2 Features
-        $phase2Items = self::parseItems($fiturTambahan, $domain);
+        $phase2Items = self::parseItems($fiturTambahan, $domain, $isEn);
 
         // Compile 12-Sector Composable Matrix & Universal Blueprint Schema v1.0 (Zero-Assumption Engine)
-        $universalSchema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+        $universalSchema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, [
+            'output_locale' => $outputLocale,
+        ]);
 
         // Generate tailored ERD Database Schema with strict ULID standards, Composable Primitives & LLM reasoning
-        $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems, $blueprint, $preferredAiProvider, $universalSchema);
+        $erdTables = self::generateErdSchema($businessName, $mvpItems, $actorItems, $blueprint, $preferredAiProvider, $universalSchema, $isEn);
 
         // Generate Deep Granular Engineering Specs for MVP & Phase 2 (with dynamic AI reasoning and ERD column injection)
-        $detailedMvpSpecs = self::generateDetailedFeatureSpecs($mvpItems, $businessName, $actorItems, 'mvp', $blueprint, $erdTables, $preferredAiProvider);
-        $detailedPhase2Specs = self::generateDetailedFeatureSpecs($phase2Items, $businessName, $actorItems, 'phase2', $blueprint, $erdTables, $preferredAiProvider);
+        $detailedMvpSpecs = self::generateDetailedFeatureSpecs($mvpItems, $businessName, $actorItems, 'mvp', $blueprint, $erdTables, $preferredAiProvider, $isEn);
+        $detailedPhase2Specs = self::generateDetailedFeatureSpecs($phase2Items, $businessName, $actorItems, 'phase2', $blueprint, $erdTables, $preferredAiProvider, $isEn);
 
         // Parse Workflow Stages with granular engineering decomposition
-        $workflowStages = self::parseWorkflow($alurKerja, $businessName);
+        $workflowStages = self::parseWorkflow($alurKerja, $businessName, $isEn);
 
         // Extract ultimate blueprint context from metadata
         $metadata = $blueprint->user_metadata ?? [];
         $extraContext = [
             'architecture_preference' => $metadata['architecture_preference'] ?? null,
-            'skala_pengguna' => $metadata['skala_pengguna'] ?? '0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)',
-            'jangkauan_pasar' => $metadata['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
+            'skala_pengguna' => $metadata['skala_pengguna'] ?? ($isEn ? '0 - 100,000 Users / Month (Dedicated VPS Monolith)' : '0 - 100.000 Pengguna / Bulan (Dedicated VPS Monolith)'),
+            'jangkauan_pasar' => $metadata['jangkauan_pasar'] ?? ($isEn ? 'Global & Regional (Multi-Currency / Multi-Zone)' : 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)'),
             'out_of_scope' => $metadata['out_of_scope'] ?? null,
-            'kepatuhan_keamanan' => $metadata['kepatuhan_keamanan'] ?? 'Standar Web Application & OWASP Top 10',
+            'kepatuhan_keamanan' => $metadata['kepatuhan_keamanan'] ?? ($isEn ? 'Standard Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)' : 'Standar Web Application & OWASP Top 10'),
             'kisaran_budget' => $metadata['kisaran_budget'] ?? null,
-            'target_platform' => $metadata['target_platform'] ?? 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)',
-            'migrasi_data' => $metadata['migrasi_data'] ?? 'Database Baru Bersih (Input Mandiri & Template CSV)',
-            'preferensi_hosting' => $metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup)',
-            'garansi_sla' => $metadata['garansi_sla'] ?? '30 Hari Garansi Bug Pascameluncur + Penyerahan Akses Penuh Private Repo GitHub',
-            'termin_pembayaran' => $metadata['termin_pembayaran'] ?? 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+            'target_platform' => $metadata['target_platform'] ?? ($isEn ? 'Responsive Modern Web Application & PWA (Desktop, Tablet & Mobile)' : 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)'),
+            'migrasi_data' => $metadata['migrasi_data'] ?? ($isEn ? 'Clean Database Start (Form Intake & Standard CSV Template)' : 'Database Baru Bersih (Input Mandiri & Template CSV)'),
+            'preferensi_hosting' => $metadata['preferensi_hosting'] ?? ($isEn ? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Automated Backups)' : 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup)'),
+            'garansi_sla' => $metadata['garansi_sla'] ?? ($isEn ? '30 Days Post-Launch Bug Warranty + Full Private GitHub Repository Handover' : '30 Hari Garansi Bug Pascameluncur + Penyerahan Akses Penuh Private Repo GitHub'),
+            'termin_pembayaran' => $metadata['termin_pembayaran'] ?? ($isEn ? 'Standard 50/50 Milestones: 50% Kickoff Down Payment & 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap / Bank Transfer)' : 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)'),
         ];
 
         // Dynamic Decoupled & Multi-Platform Architecture Detection
@@ -200,7 +212,9 @@ class PrdGeneratorService
                     'role' => 'Hardware isolation, dedicated swap space, Nginx reverse proxy with token-bucket rate limiting, and systemd daemons',
                 ],
             ];
-            $architecturePhilosophy = 'Untuk menghadirkan platform SaaS WhatsApp API Gateway dengan throughput tinggi dan keandalan tingkat enterprise, sistem ini menggunakan arsitektur Decoupled Event-Driven Microservices (Node.js High-Concurrency Engine, OpenWA/Baileys isolated sessions, dan Redis BullMQ). Seluruh pengiriman pesan di-buffer secara asinkron dengan proteksi anti-ban, diverifikasi menggunakan HMAC cryptographic signatures, dan dikelola via Filament v5 Operations Cockpit.';
+            $architecturePhilosophy = $isEn
+                ? 'To deliver an enterprise-grade WhatsApp API Gateway SaaS with massive throughput and reliability, this system utilizes a Decoupled Event-Driven Microservices architecture (Node.js High-Concurrency Engine, OpenWA/Baileys isolated sessions, and Redis BullMQ). All outbound messaging is buffered asynchronously with anti-ban protections, cryptographically verified using HMAC signatures, and managed via the Filament v5 Operations Cockpit.'
+                : 'Untuk menghadirkan platform SaaS WhatsApp API Gateway dengan throughput tinggi dan keandalan tingkat enterprise, sistem ini menggunakan arsitektur Decoupled Event-Driven Microservices (Node.js High-Concurrency Engine, OpenWA/Baileys isolated sessions, dan Redis BullMQ). Seluruh pengiriman pesan di-buffer secara asinkron dengan proteksi anti-ban, diverifikasi menggunakan HMAC cryptographic signatures, dan dikelola via Filament v5 Operations Cockpit.';
         } elseif ($isDecoupledRequested) {
             $techStack = [
                 'frontend' => [
@@ -244,7 +258,9 @@ class PrdGeneratorService
                     'role' => '300+ Edge POPs (<20ms global latency) + 100% Resource Isolation Backend + Cloudflare R2 ($0 Egress)',
                 ],
             ];
-            $architecturePhilosophy = 'Untuk mendukung tim rekayasa multi-disiplin, multi-channel mobile & web apps, serta performa edge global sub-20ms, sistem ini dirancang menggunakan arsitektur Enterprise Decoupled & Headless (Next.js 15 App Router / Nuxt 3, Flutter Mobile Client, dan Headless Laravel 13 RESTful/OpenAPI 3.1). Seluruh data transaksi diorkestrasi dengan PostgreSQL Strict ULID dan protokol sinkronisasi delta dengan proteksi idempotency.';
+            $architecturePhilosophy = $isEn
+                ? 'To support cross-disciplinary engineering teams, multi-channel mobile & web clients, and sub-20ms edge latency, this system is architected as an Enterprise Decoupled & Headless suite (Next.js 15 App Router / Nuxt 3, Flutter Mobile Client, and Headless Laravel 13 RESTful/OpenAPI 3.1). All transactional states are orchestrated with PostgreSQL Strict ULID and delta sync protocols with idempotency protection.'
+                : 'Untuk mendukung tim rekayasa multi-disiplin, multi-channel mobile & web apps, serta performa edge global sub-20ms, sistem ini dirancang menggunakan arsitektur Enterprise Decoupled & Headless (Next.js 15 App Router / Nuxt 3, Flutter Mobile Client, dan Headless Laravel 13 RESTful/OpenAPI 3.1). Seluruh data transaksi diorkestrasi dengan PostgreSQL Strict ULID dan protokol sinkronisasi delta dengan proteksi idempotency.';
         } else {
             $techStack = [
                 'backend' => [
@@ -284,7 +300,9 @@ class PrdGeneratorService
                     'role' => 'Isolasi resource 100%, Cloudflare CDN fronting, FrankenPHP/Caddy HTTP/3 reverse-proxy',
                 ],
             ];
-            $architecturePhilosophy = 'Untuk menjamin efisiensi biaya server, ketahanan jangka panjang, dan kecepatan peluncuran (Rapid Time-to-Market), sistem ini dirancang menggunakan arsitektur Modern Monolith (Laravel 13 & Filament PHP) yang Decoupled-Ready. Seluruh tabel bisnis menggunakan Primary Key ULID untuk skalabilitas terdistribusi dan kompatibilitas penuh PostgreSQL.';
+            $architecturePhilosophy = $isEn
+                ? 'To guarantee server cost efficiency, long-term architectural durability, and rapid time-to-market, this system is designed using the Modern Monolith architecture (Laravel 13 & Filament PHP) that is decoupled-ready. All business tables use 26-character ULID Primary Keys for distributed scalability and 100% strict PostgreSQL compatibility.'
+                : 'Untuk menjamin efisiensi biaya server, ketahanan jangka panjang, dan kecepatan peluncuran (Rapid Time-to-Market), sistem ini dirancang menggunakan arsitektur Modern Monolith (Laravel 13 & Filament PHP) yang Decoupled-Ready. Seluruh tabel bisnis menggunakan Primary Key ULID untuk skalabilitas terdistribusi dan kompatibilitas penuh PostgreSQL.';
         }
 
         // Override / enrich tech_stack & architecture_philosophy when a curated PosStackPreset (M2..S2) is explicitly selected
@@ -292,7 +310,7 @@ class PrdGeneratorService
         $activePresetCode = (string) ($activeStackContract['preset_code'] ?? 'STACK_M1_LARAVEL_MONOLITH');
         if (! $isGame3D && ! $isApiGateway && $activePresetCode !== 'STACK_M1_LARAVEL_MONOLITH' && ! empty($activeStackContract['layer_technologies'])) {
             $stackDef = (array) $activeStackContract['layer_technologies'];
-            $presetNameId = (string) ($universalSchema['project_metadata']['stack_preset_name']['id'] ?? $activePresetCode);
+            $presetNameId = (string) ($universalSchema['project_metadata']['stack_preset_name'][$isEn ? 'en' : 'id'] ?? ($universalSchema['project_metadata']['stack_preset_name']['id'] ?? $activePresetCode));
             $topologyLabel = (string) ($activeStackContract['topology'] ?? 'MONOLITH');
             $customTechStack = [];
             foreach ($stackDef as $layerKey => $layerVal) {
@@ -304,7 +322,9 @@ class PrdGeneratorService
             if (! empty($customTechStack)) {
                 $techStack = $customTechStack;
             }
-            $architecturePhilosophy = 'Sistem ini dikompilasi menggunakan Preset Arsitektur Terkurasi [' . ($activeStackContract['short_code'] ?? '') . '] ' . $presetNameId . ' (Topologi: ' . $topologyLabel . '). Kontrak domain bisnis (Data Dictionary, State Machine, Formula Pajak/Pembulatan, dan Saga Compensation) dipisahkan 100% dari adapter stack serta mengikat kontrak tipe antar-layer melalui: ' . ((string) ($activeStackContract['inter_layer_type_contract']['mechanism'] ?? 'Type-Safe Schema Contract')) . '.';
+            $architecturePhilosophy = $isEn
+                ? 'This system is compiled using the Curated Architecture Preset [' . ($activeStackContract['short_code'] ?? '') . '] ' . $presetNameId . ' (Topology: ' . $topologyLabel . '). Domain business contracts (Data Dictionary, State Machine, Tax/Rounding Formulas, and Saga Compensation) are 100% decoupled from stack adapters, enforcing cross-layer type contracts through: ' . ((string) ($activeStackContract['inter_layer_type_contract']['mechanism'] ?? 'Type-Safe Schema Contract')) . '.'
+                : 'Sistem ini dikompilasi menggunakan Preset Arsitektur Terkurasi [' . ($activeStackContract['short_code'] ?? '') . '] ' . $presetNameId . ' (Topologi: ' . $topologyLabel . '). Kontrak domain bisnis (Data Dictionary, State Machine, Formula Pajak/Pembulatan, dan Saga Compensation) dipisahkan 100% dari adapter stack serta mengikat kontrak tipe antar-layer melalui: ' . ((string) ($activeStackContract['inter_layer_type_contract']['mechanism'] ?? 'Type-Safe Schema Contract')) . '.';
         }
 
         return [
@@ -349,7 +369,9 @@ class PrdGeneratorService
             'workflow' => $workflowStages,
             'erd_schema' => [
                 'standard' => 'PostgreSQL Strict / Laravel 13 ULID Architecture',
-                'description' => 'Skema basis data dengan kompleksitas O(1) keystone pagination, UUID-agnostic ULID 26-char string primary keys, dan integritas relasi foreign key terisolasi.',
+                'description' => $isEn
+                    ? 'Database schema with O(1) keyset cursor pagination, UUID-agnostic 26-char ULID primary keys, and isolated relational foreign key integrity.'
+                    : 'Skema basis data dengan kompleksitas O(1) keystone pagination, UUID-agnostic ULID 26-char string primary keys, dan integritas relasi foreign key terisolasi.',
                 'tables' => $erdTables,
             ],
             'virtual_charts' => [
@@ -368,7 +390,9 @@ class PrdGeneratorService
             'tech_stack' => $techStack,
             'integrations' => [
                 'requested' => $integrasi,
-                'notes' => 'Akan dihubungkan melalui service providers terisolasi dengan fallback retry mechanism.',
+                'notes' => $isEn
+                    ? 'Connected via isolated service providers with automated retry and circuit-breaker mechanisms.'
+                    : 'Akan dihubungkan melalui service providers terisolasi dengan fallback retry mechanism.',
             ],
             'architecture_evaluation' => self::evaluateArchitecture($businessName, $masalah, $mvpItems, $alurKerja, $extraContext),
             'decoupled_tooling_strategy' => self::generateDecoupledToolingStrategy($businessName, $extraContext, $erdTables, $mvpItems),
@@ -376,15 +400,23 @@ class PrdGeneratorService
             'agentic_ai_matrix' => self::generateAgenticAiConceptsMatrix($businessName, $mvpItems),
             'server_hardware_sizing' => self::calculateServerHardwareSizing($businessName, $masalah, $mvpItems, $extraContext),
             'itemized_cost_breakdown' => $itemizedEstimation,
-            'business_roi_analysis' => self::generateBusinessRoiAnalysis($blueprint, $itemizedEstimation),
+            'business_roi_analysis' => self::generateBusinessRoiAnalysis($blueprint, $itemizedEstimation, $isEn),
             'velocity_pricing_options' => !empty($itemizedEstimation['velocity_tiers']) ? $itemizedEstimation['velocity_tiers'] : (self::generateVelocityPricingOptions($targetWaktu, $extraContext['kisaran_budget'] ?? null, $businessName, $masalah) ?: []),
-            'software_factory_os_pillars' => self::generateSoftwareFactoryOsPillars($businessName),
-            'world_class_standard_advisory' => self::generateWorldClassStandardAdvisory($businessName),
+            'software_factory_os_pillars' => self::generateSoftwareFactoryOsPillars($businessName, $isEn),
+            'world_class_standard_advisory' => self::generateWorldClassStandardAdvisory($businessName, $isEn),
             'composable_matrix' => $universalSchema['project_metadata'] ?? [],
             'universal_blueprint_schema' => $universalSchema,
             'governance_and_sla' => [
-                'title' => 'Tata Kelola, Standar Kualitas & SLA Serah Terima (Strict Governance & Handoff)',
-                'definition_of_done' => [
+                'title' => $isEn
+                    ? 'Governance, Quality Standards & Handoff SLA (Strict Governance & Handoff)'
+                    : 'Tata Kelola, Standar Kualitas & SLA Serah Terima (Strict Governance & Handoff)',
+                'definition_of_done' => $isEn ? [
+                    'All Phase 1 MVP features operate according to specifications on Staging & Production servers.',
+                    'Passed baseline security audit (CSRF tokens, input XSS sanitization, SQL Injection protection, & HTTPS SSL).',
+                    'PostgreSQL relational database schema with verified ULID primary keys.',
+                    'Filament v5 administration cockpit accessible to designated Superadmin / Staff roles.',
+                    'Administrative training walkthrough and official credentials handoff.',
+                ] : [
                     'Seluruh fitur MVP Fase 1 berjalan sesuai spesifikasi di server Staging & Production.',
                     'Lolos audit keamanan dasar (CSRF token, sanitasi input XSS, proteksi SQL Injection, & HTTPS SSL).',
                     'Skema basis data relasional PostgreSQL dengan Primary Key ULID terverifikasi.',
@@ -392,25 +424,45 @@ class PrdGeneratorService
                     'Sesi pelatihan administrasi singkat dan serah terima kredensial resmi sistem.',
                 ],
                 'browser_device_matrix' => [
-                    'supported' => 'Google Chrome, Apple Safari, Mozilla Firefox, Microsoft Edge (rilis 2 tahun terakhir); iOS Safari 15+; Android Chrome 100+.',
-                    'unsupported' => 'Internet Explorer 11, Opera Mini data-saving mode, UC Browser legacy rendering engine, dan peramban ponsel non-standar.',
+                    'supported' => $isEn
+                        ? 'Google Chrome, Apple Safari, Mozilla Firefox, Microsoft Edge (latest 2 releases); iOS Safari 15+; Android Chrome 100+.'
+                        : 'Google Chrome, Apple Safari, Mozilla Firefox, Microsoft Edge (rilis 2 tahun terakhir); iOS Safari 15+; Android Chrome 100+.',
+                    'unsupported' => $isEn
+                        ? 'Internet Explorer 11, Opera Mini data-saving mode, UC Browser legacy rendering engines, and non-standard mobile browsers.'
+                        : 'Internet Explorer 11, Opera Mini data-saving mode, UC Browser legacy rendering engine, dan peramban ponsel non-standar.',
                 ],
                 'warranty_policy' => [
-                    'duration' => '30 Hari Kalender Sejak Tanggal Peluncuran (Go-Live)',
-                    'coverage' => 'Perbaikan bug, error sistem, atau ketidaksesuaian fungsi dari ruang lingkup MVP Fase 1 tanpa biaya tambahan.',
-                    'exclusions' => 'Permintaan desain baru, penambahan field/tabel baru di luar PRD, atau kerusakan akibat modifikasi pihak ketiga di luar tim Neriah Pro.',
+                    'duration' => $isEn
+                        ? '30 Calendar Days Following Production Go-Live'
+                        : '30 Hari Kalender Sejak Tanggal Peluncuran (Go-Live)',
+                    'coverage' => $isEn
+                        ? 'Resolution of bugs, system faults, or functional discrepancies within the Phase 1 MVP scope at zero additional cost.'
+                        : 'Perbaikan bug, error sistem, atau ketidaksesuaian fungsi dari ruang lingkup MVP Fase 1 tanpa biaya tambahan.',
+                    'exclusions' => $isEn
+                        ? 'New design requests, additional fields/tables outside PRD, or damage caused by third-party modifications outside Neriah Pro team.'
+                        : 'Permintaan desain baru, penambahan field/tabel baru di luar PRD, atau kerusakan akibat modifikasi pihak ketiga di luar tim Neriah Pro.',
                 ],
                 'content_handoff_clause' => [
-                    'rule' => 'Klien wajib menyerahkan aset konten resmi (teks, logo, foto) maksimal 7 hari kerja sejak approval blueprint.',
-                    'fallback' => 'Apabila terjadi keterlambatan dari pihak klien, tim pengembang berhak menggunakan dummy/placeholder text standar industri agar timeline rilis dan jadwal serah terima tidak tertunda.',
+                    'rule' => $isEn
+                        ? 'Client must provide official content assets (text, branding, photography) within a maximum of 7 business days following blueprint approval.'
+                        : 'Klien wajib menyerahkan aset konten resmi (teks, logo, foto) maksimal 7 hari kerja sejak approval blueprint.',
+                    'fallback' => $isEn
+                        ? 'In the event of client asset delays, engineering team will utilize industry-standard placeholder assets to prevent delivery milestones from slipping.'
+                        : 'Apabila terjadi keterlambatan dari pihak klien, tim pengembang berhak menggunakan dummy/placeholder text standar industri agar timeline rilis dan jadwal serah terima tidak tertunda.',
                 ],
                 'recurring_cost_transparency' => [
-                    'domain' => 'Rp 150.000 - Rp 250.000 / tahun (Dibayarkan langsung ke registrar domain resmi)',
-                    'hosting_starter' => 'Rp 50.000 - Rp 150.000 / bulan (Untuk paket non-profit/komunitas pada cloud server efisien)',
-                    'hosting_enterprise' => 'Rp 350.000 - Rp 1.500.000 / bulan (Dedicated VPS Railpack FrankenPHP & Docker untuk high-traffic scale)',
+                    'domain' => $isEn ? '$10 - $20 / year (Payable directly to accredited domain registrar)' : 'Rp 150.000 - Rp 250.000 / tahun (Dibayarkan langsung ke registrar domain resmi)',
+                    'hosting_starter' => $isEn ? '$5 - $15 / month (For efficient cloud instance tiers)' : 'Rp 50.000 - Rp 150.000 / bulan (Untuk paket non-profit/komunitas pada cloud server efisien)',
+                    'hosting_enterprise' => $isEn ? '$30 - $120 / month (Dedicated Railpack FrankenPHP & Docker VPS for high-traffic workloads)' : 'Rp 350.000 - Rp 1.500.000 / bulan (Dedicated VPS Railpack FrankenPHP & Docker untuk high-traffic scale)',
                 ],
             ],
-            'action_plan' => [
+            'action_plan' => $isEn ? [
+                ['phase' => 'Phase 0: Blueprint & Schema Approval', 'duration' => 'Days 1-3', 'status' => 'Active'],
+                ['phase' => 'Phase 1: Database Migrations & Filament CRUD Cockpit', 'duration' => 'Week 1', 'status' => 'Pending'],
+                ['phase' => 'Phase 2: Frontend Interactive UI & Client Form', 'duration' => 'Week 2', 'status' => 'Pending'],
+                ['phase' => 'Phase 3: API Integrations, Notifications & Report Exports', 'duration' => 'Week 3', 'status' => 'Pending'],
+                ['phase' => 'Phase 4: UAT, Stress Benchmark & Production VPS Deployment', 'duration' => 'Week 4', 'status' => 'Pending'],
+            ] : [
                 ['phase' => 'Fase 0: Blueprint & Skema Approval', 'duration' => 'Hari ke 1-3', 'status' => 'Active'],
                 ['phase' => 'Fase 1: Database Migration & Admin Filament CRUD', 'duration' => 'Pekan 1', 'status' => 'Pending'],
                 ['phase' => 'Fase 2: Frontend Interactive UI & Client Form', 'duration' => 'Pekan 2', 'status' => 'Pending'],
@@ -487,7 +539,7 @@ class PrdGeneratorService
     /**
      * Parse system actors with intelligent role inference and RBAC normalization.
      */
-    protected static function parseActors(string $text, string $businessName = '', string $audiens = ''): array
+    protected static function parseActors(string $text, string $businessName = '', string $audiens = '', bool $isEn = false): array
     {
         $rawLines = preg_split('/[\r\n;]+/', trim($text));
         $normalizedLines = [];
@@ -551,43 +603,67 @@ class PrdGeneratorService
 
             if (empty($role) || strlen($role) < 10) {
                 if (str_contains($lower, 'pembeli') || str_contains($lower, 'buyer') || str_contains($lower, 'konsumen') || str_contains($lower, 'pelanggan')) {
-                    $role = "Menjelajahi katalog {$businessName}, melakukan pencarian & filter spesifikasi mendalam, mengajukan penawaran/inquiry, serta menerima notifikasi status pesanan secara real-time.";
-                    $badge = 'PEMBELI / KLIEN';
-                    $permissions = ['Katalog Publik', 'Filter Pencarian', 'Ajukan Order / Inquiry', 'Riwayat Pesanan'];
+                    $role = $isEn
+                        ? "Explore {$businessName} public catalog, perform structured search & filters, submit inquiries/orders, and track transaction status in real-time."
+                        : "Menjelajahi katalog {$businessName}, melakukan pencarian & filter spesifikasi mendalam, mengajukan penawaran/inquiry, serta menerima notifikasi status pesanan secara real-time.";
+                    $badge = $isEn ? 'BUYER / CLIENT' : 'PEMBELI / KLIEN';
+                    $permissions = $isEn
+                        ? ['Public Catalog', 'Search Filters', 'Submit Order / Inquiry', 'Order History']
+                        : ['Katalog Publik', 'Filter Pencarian', 'Ajukan Order / Inquiry', 'Riwayat Pesanan'];
                 } elseif (str_contains($lower, 'member') || str_contains($lower, 'mitra') || str_contains($lower, 'partner') || str_contains($lower, 'agen') || str_contains($lower, 'penjual')) {
-                    $role = "Mengelola profil mitra terverifikasi, mempublikasikan listing/produk, memantau analitik performa komisi, dan berinteraksi langsung dengan calon pembeli.";
-                    $badge = 'MITRA / MEMBER';
-                    $permissions = ['Manajemen Profil', 'Posting Listing / Aset', 'Dasbor Mitra', 'Chat / Inquiry Inbound'];
+                    $role = $isEn
+                        ? "Manage verified partner profile, publish listings/assets, monitor performance metrics, and handle inbound inquiries."
+                        : "Mengelola profil mitra terverifikasi, mempublikasikan listing/produk, memantau analitik performa komisi, dan berinteraksi langsung dengan calon pembeli.";
+                    $badge = $isEn ? 'PARTNER / MEMBER' : 'MITRA / MEMBER';
+                    $permissions = $isEn
+                        ? ['Profile Management', 'Publish Listings', 'Partner Cockpit', 'Inbound Inquiries']
+                        : ['Manajemen Profil', 'Posting Listing / Aset', 'Dasbor Mitra', 'Chat / Inquiry Inbound'];
                 } elseif (str_contains($lower, 'superadmin') || str_contains($lower, 'owner') || str_contains($lower, 'direktur')) {
-                    $role = "Memegang kendali penuh atas konfigurasi platform {$businessName}, manajemen peran Spatie Shield RBAC, audit log forensik, dan rekonsiliasi keuangan.";
+                    $role = $isEn
+                        ? "Full control over {$businessName} platform configuration, Spatie Shield RBAC permissions, forensic audit trail, and billing settlement."
+                        : "Memegang kendali penuh atas konfigurasi platform {$businessName}, manajemen peran Spatie Shield RBAC, audit log forensik, dan rekonsiliasi keuangan.";
                     $badge = 'SUPERADMIN';
-                    $permissions = ['Full Access', 'Konfigurasi Sistem', 'RBAC Shield', 'Audit Log', 'Billing Settlement'];
+                    $permissions = $isEn
+                        ? ['Full Access', 'System Config', 'RBAC Shield', 'Audit Log', 'Billing Settlement']
+                        : ['Full Access', 'Konfigurasi Sistem', 'RBAC Shield', 'Audit Log', 'Billing Settlement'];
                 } elseif (str_contains($lower, 'staff') || str_contains($lower, 'operator') || str_contains($lower, 'admin')) {
-                    $role = "Memproses validasi berkas pengguna harian, memverifikasi kelaikan transaksi, menindaklanjuti keluhan layanan, dan mengekspor laporan berkala.";
+                    $role = $isEn
+                        ? "Process daily operational submissions, verify document validity, handle service inquiries, and export compliance reports."
+                        : "Memproses validasi berkas pengguna harian, memverifikasi kelaikan transaksi, menindaklanjuti keluhan layanan, dan mengekspor laporan berkala.";
                     $badge = 'OPERATOR';
-                    $permissions = ['Review Data Masuk', 'Verifikasi Dokumen', 'Ekspor PDF/Excel', 'Update Status Operasional'];
+                    $permissions = $isEn
+                        ? ['Submission Review', 'Document Verification', 'PDF/Excel Export', 'Operational Updates']
+                        : ['Review Data Masuk', 'Verifikasi Dokumen', 'Ekspor PDF/Excel', 'Update Status Operasional'];
                 } elseif (str_contains($lower, 'tamu') || str_contains($lower, 'guest') || str_contains($lower, 'pengunjung')) {
-                    $role = "Mengakses halaman pendaratan (landing page), mengecek informasi umum, dan melakukan registrasi akun awal.";
-                    $badge = 'GUEST / PUBLIK';
-                    $permissions = ['Akses Landing Page', 'Baca Dokumentasi', 'Registrasi Akun'];
+                    $role = $isEn
+                        ? "Access landing page, review general product information, and initiate account registration."
+                        : "Mengakses halaman pendaratan (landing page), mengecek informasi umum, dan melakukan registrasi akun awal.";
+                    $badge = $isEn ? 'GUEST / PUBLIC' : 'GUEST / PUBLIK';
+                    $permissions = $isEn
+                        ? ['Landing Page Access', 'Documentation', 'Account Registration']
+                        : ['Akses Landing Page', 'Baca Dokumentasi', 'Registrasi Akun'];
                 } else {
-                    $role = "Pengguna terdaftar dengan hak akses interaktif terhadap modul sistem {$businessName} sesuai batasan otorisasi.";
-                    $badge = 'PENGGUNA';
-                    $permissions = ['Akses Modul Inti', 'Input Form', 'Lihat Notifikasi'];
+                    $role = $isEn
+                        ? "Registered user operating authorized interactive features within {$businessName}."
+                        : "Pengguna terdaftar dengan hak akses interaktif terhadap modul sistem {$businessName} sesuai batasan otorisasi.";
+                    $badge = $isEn ? 'USER' : 'PENGGUNA';
+                    $permissions = $isEn
+                        ? ['Core Modules', 'Form Submission', 'Notification Stream']
+                        : ['Akses Modul Inti', 'Input Form', 'Lihat Notifikasi'];
                 }
             } else {
                 if (str_contains($lower, 'superadmin')) {
                     $badge = 'SUPERADMIN';
-                    $permissions = ['Full Access', 'Konfigurasi Sistem', 'RBAC Shield', 'Audit Log'];
+                    $permissions = $isEn ? ['Full Access', 'System Config', 'RBAC Shield', 'Audit Log'] : ['Full Access', 'Konfigurasi Sistem', 'RBAC Shield', 'Audit Log'];
                 } elseif (str_contains($lower, 'admin') || str_contains($lower, 'staff') || str_contains($lower, 'operator')) {
-                    $badge = 'ADMIN / STAFF';
-                    $permissions = ['Review Data', 'Verifikasi Berkas', 'Ekspor Laporan'];
+                    $badge = $isEn ? 'ADMIN / STAFF' : 'ADMIN / STAFF';
+                    $permissions = $isEn ? ['Review Submissions', 'Document Verification', 'Report Export'] : ['Review Data', 'Verifikasi Berkas', 'Ekspor Laporan'];
                 } elseif (str_contains($lower, 'mitra') || str_contains($lower, 'member')) {
-                    $badge = 'MITRA / MEMBER';
-                    $permissions = ['Dasbor Mitra', 'Kelola Listing', 'Inquiry Inbound'];
+                    $badge = $isEn ? 'PARTNER / MEMBER' : 'MITRA / MEMBER';
+                    $permissions = $isEn ? ['Partner Dashboard', 'Manage Listings', 'Inbound Inquiries'] : ['Dasbor Mitra', 'Kelola Listing', 'Inquiry Inbound'];
                 } else {
-                    $badge = 'KLIEN / USER';
-                    $permissions = ['Akses Formulir', 'Lihat Status', 'Riwayat Transaksi'];
+                    $badge = $isEn ? 'CLIENT / USER' : 'KLIEN / USER';
+                    $permissions = $isEn ? ['Form Access', 'Status Tracker', 'Transaction History'] : ['Akses Formulir', 'Lihat Status', 'Riwayat Transaksi'];
                 }
             }
 
@@ -606,24 +682,24 @@ class PrdGeneratorService
                 [
                     'name' => 'Superadmin',
                     'title' => 'Superadmin',
-                    'role' => 'Akses penuh seluruh konfigurasi, audit log, otorisasi peran, dan data sistem.',
-                    'desc' => 'Akses penuh seluruh konfigurasi, audit log, otorisasi peran, dan data sistem.',
+                    'role' => $isEn ? 'Full control over system configuration, audit logs, role authorizations, and platform data.' : 'Akses penuh seluruh konfigurasi, audit log, otorisasi peran, dan data sistem.',
+                    'desc' => $isEn ? 'Full control over system configuration, audit logs, role authorizations, and platform data.' : 'Akses penuh seluruh konfigurasi, audit log, otorisasi peran, dan data sistem.',
                     'badge' => 'SUPERADMIN',
                     'permissions' => ['Full Control', 'System Config', 'RBAC Shield', 'Audit Log'],
                 ],
                 [
-                    'name' => 'Staff / Operator',
-                    'title' => 'Staff / Operator',
-                    'role' => 'Memproses data masuk harian, verifikasi kelayakan berkas, dan ekspor laporan berkala.',
-                    'desc' => 'Memproses data masuk harian, verifikasi kelayakan berkas, dan ekspor laporan berkala.',
+                    'name' => $isEn ? 'Staff / Operator' : 'Staff / Operator',
+                    'title' => $isEn ? 'Staff / Operator' : 'Staff / Operator',
+                    'role' => $isEn ? 'Process daily transactional submissions, verify document compliance, and export periodical reports.' : 'Memproses data masuk harian, verifikasi kelayakan berkas, dan ekspor laporan berkala.',
+                    'desc' => $isEn ? 'Process daily transactional submissions, verify document compliance, and export periodical reports.' : 'Memproses data masuk harian, verifikasi kelayakan berkas, dan ekspor laporan berkala.',
                     'badge' => 'OPERATOR',
                     'permissions' => ['Data Processing', 'Document Verification', 'Report Export'],
                 ],
                 [
-                    'name' => 'Pengguna / Klien',
-                    'title' => 'Pengguna / Klien',
-                    'role' => 'Mengakses fitur publik/portal, mengisi data formulir, dan melihat status riwayat transaksi.',
-                    'desc' => 'Mengakses fitur publik/portal, mengisi data formulir, dan melihat status riwayat transaksi.',
+                    'name' => $isEn ? 'User / Client' : 'Pengguna / Klien',
+                    'title' => $isEn ? 'User / Client' : 'Pengguna / Klien',
+                    'role' => $isEn ? 'Access public portal features, submit structured forms, and track transaction histories.' : 'Mengakses fitur publik/portal, mengisi data formulir, dan melihat status riwayat transaksi.',
+                    'desc' => $isEn ? 'Access public portal features, submit structured forms, and track transaction histories.' : 'Mengakses fitur publik/portal, mengisi data formulir, dan melihat status riwayat transaksi.',
                     'badge' => 'CLIENT',
                     'permissions' => ['Portal Access', 'Form Submission', 'Notification Stream'],
                 ],
@@ -634,12 +710,12 @@ class PrdGeneratorService
         // Always ensure Superadmin is present for enterprise RBAC compliance
         if (!$hasAdmin) {
             array_unshift($actors, [
-                'name' => 'Superadmin Platform',
-                'title' => 'Superadmin Platform',
-                'role' => "Kendali penuh atas seluruh tata kelola {$businessName}, verifikasi akun pengguna, pengaturan modul, pemantauan transaksi, dan audit trail.",
-                'desc' => "Kendali penuh atas seluruh tata kelola {$businessName}, verifikasi akun pengguna, pengaturan modul, pemantauan transaksi, dan audit trail.",
+                'name' => $isEn ? 'Platform Superadmin' : 'Superadmin Platform',
+                'title' => $isEn ? 'Platform Superadmin' : 'Superadmin Platform',
+                'role' => $isEn ? "Full governance over {$businessName}, account verifications, module configurations, transaction oversight, and audit logs." : "Kendali penuh atas seluruh tata kelola {$businessName}, verifikasi akun pengguna, pengaturan modul, pemantauan transaksi, dan audit trail.",
+                'desc' => $isEn ? "Full governance over {$businessName}, account verifications, module configurations, transaction oversight, and audit logs." : "Kendali penuh atas seluruh tata kelola {$businessName}, verifikasi akun pengguna, pengaturan modul, pemantauan transaksi, dan audit trail.",
                 'badge' => 'SUPERADMIN',
-                'permissions' => ['Akses Penuh / Root', 'Konfigurasi Global', 'RBAC Security Shield', 'Audit Forensik'],
+                'permissions' => $isEn ? ['Full Root Access', 'Global Config', 'RBAC Security Shield', 'Forensic Audit'] : ['Akses Penuh / Root', 'Konfigurasi Global', 'RBAC Security Shield', 'Audit Forensik'],
             ]);
         }
 
@@ -649,7 +725,7 @@ class PrdGeneratorService
     /**
      * Parse workflow text into sequenced step cards with deep engineering parameters.
      */
-    public static function parseWorkflow(string $text, string $businessName = ''): array
+    public static function parseWorkflow(string $text, string $businessName = '', bool $isEn = false): array
     {
         // 1. First attempt split by -> or => or newlines or numbered patterns (1. ... 2. ...)
         if (str_contains($text, '->')) {
@@ -666,14 +742,17 @@ class PrdGeneratorService
         foreach ($rawSteps as $s) {
             $cleaned = trim($s, " \t\n\r\0\x0B-•*1234567890.)");
             if (!empty($cleaned)) {
-                $steps[] = $cleaned;
+                $crafted = BlueprintDiscoveryService::craftWorkflowStepAction($cleaned, 'custom_portal', $isEn);
+                if (!empty($crafted)) {
+                    $steps[] = $crafted;
+                }
             }
         }
 
         // 2. Filter out introductory preambles (e.g. "saya mau buat website berupa...", "Konsep antara lain...")
         if (count($steps) > 1) {
             $firstLower = strtolower($steps[0]);
-            if (str_contains($firstLower, 'buat website') || str_contains($firstLower, 'konsep antara lain') || str_contains($firstLower, 'berupa') || str_contains($firstLower, 'atas nama')) {
+            if (str_contains($firstLower, 'buat website') || str_contains($firstLower, 'konsep antara lain') || str_contains($firstLower, 'berupa') || str_contains($firstLower, 'atas nama') || str_contains($firstLower, 'build website') || str_contains($firstLower, 'i want')) {
                 array_shift($steps);
             }
         }
@@ -681,13 +760,13 @@ class PrdGeneratorService
         // 3. If it resulted in only 1 long step, intelligently split by numbered patterns or transitional keywords
         if (count($steps) === 1 && strlen($steps[0]) > 35) {
             $textSingle = $steps[0];
-            $splitParts = preg_split('/(?:\r?\n|\s+)(?=\d+[\.\)]\s+)|\s*;\s*|,\s*(?:lalu\s+|kemudian\s+|setelah itu\s+|selanjutnya\s+)?|\s+(?:lalu|kemudian|setelah itu|selanjutnya)\s+/i', $textSingle);
+            $splitParts = preg_split('/(?:\r?\n|\s+)(?=\d+[\.\)]\s+)|\s*;\s*|,\s*(?:lalu\s+|kemudian\s+|setelah itu\s+|selanjutnya\s+|then\s+|after that\s+)?|\s+(?:lalu|kemudian|setelah itu|selanjutnya|then|after that)\s+/i', $textSingle);
             
             $refined = [];
             foreach ($splitParts as $part) {
                 $part = trim($part, " \t\n\r\0\x0B-•*1234567890.),");
                 if (strlen($part) > 3) {
-                    $refined[] = $part;
+                    $refined[] = BlueprintDiscoveryService::craftWorkflowStepAction($part, 'custom_portal', $isEn);
                 }
             }
             if (count($refined) > 1) {
@@ -698,76 +777,146 @@ class PrdGeneratorService
         $stages = [];
         $index = 1;
         foreach ($steps as $step) {
-            $step = trim($step, " \t\n\r\0\x0B-•*1234567890.)");
+            $step = BlueprintDiscoveryService::craftWorkflowStepAction($step, 'custom_portal', $isEn);
             if (empty($step)) {
                 continue;
             }
 
             $lower = strtolower($step);
-            $actor = 'Pengguna / Pengunjung';
+            $actor = $isEn ? 'User / Visitor' : 'Pengguna / Pengunjung';
             $badge = 'INTERACTION';
             $type = 'client';
 
-            $description = "Interaksi pengguna pada modul {$businessName} dengan transmisi data tervalidasi.";
-            $trigger = "Pengguna menjalankan aksi '{$step}' melalui antarmuka web.";
-            $systemProcess = "Controller memvalidasi request FormRequest, menjalankan query Eloquent berindeks, dan memperbarui state.";
-            $outputState = "Antarmuka diperbarui secara reaktif (HTTP 200 OK) dengan notifikasi visual.";
-            $edgeCase = "Penanganan validasi gagal dengan error state inline dan retry mechanism.";
+            $description = $isEn
+                ? "User interaction within {$businessName} module with validated data transmission."
+                : "Interaksi pengguna pada modul {$businessName} dengan transmisi data tervalidasi.";
+            $trigger = $isEn
+                ? "User executes action '{$step}' through the web interface."
+                : "Pengguna menjalankan aksi '{$step}' melalui antarmuka web.";
+            $systemProcess = $isEn
+                ? "Controller validates FormRequest payload, executes indexed Eloquent query, and updates state machine."
+                : "Controller memvalidasi request FormRequest, menjalankan query Eloquent berindeks, dan memperbarui state.";
+            $outputState = $isEn
+                ? "Interface updates reactively (HTTP 200 OK) with visual confirmation."
+                : "Antarmuka diperbarui secara reaktif (HTTP 200 OK) dengan notifikasi visual.";
+            $edgeCase = $isEn
+                ? "Validation errors handled inline with automated retry mechanism."
+                : "Penanganan validasi gagal dengan error state inline dan retry mechanism.";
 
-            if (str_contains($lower, 'buka') || str_contains($lower, 'katalog') || str_contains($lower, 'lihat') || str_contains($lower, 'daftar')) {
-                $actor = 'Pengguna / Pengunjung';
+            if (str_contains($lower, 'buka') || str_contains($lower, 'katalog') || str_contains($lower, 'lihat') || str_contains($lower, 'daftar') || str_contains($lower, 'browse') || str_contains($lower, 'catalog') || str_contains($lower, 'view') || str_contains($lower, 'explore')) {
+                $actor = $isEn ? 'User / Visitor' : 'Pengguna / Pengunjung';
                 $badge = 'DISCOVERY';
                 $type = 'client';
-                $description = "Pengguna mengakses portal publik {$businessName}, sistem memuat katalog dinamis dengan skeleton loader, dan melakukan prefetching aset CDN.";
-                $trigger = "Pengunjung membuka URL beranda / katalog dari peramban desktop maupun ponsel.";
-                $systemProcess = "HTTP GET route memanggil Controller, membaca Cache::rememberForever() untuk konfigurasi CMS & Schema.org JSON-LD, render Blade & React Islands.";
-                $outputState = "Halaman ter-render instan (<100ms TTFB) dengan Core Web Vitals optimal (LCP < 1.2s, CLS = 0).";
-                $edgeCase = "Jika terjadi gangguan jaringan, service worker menampilkan graceful offline fallback dan tombol muat ulang.";
+                $description = $isEn
+                    ? "User accesses {$businessName} public portal; system renders dynamic catalog with skeleton loaders and pre-fetches CDN assets."
+                    : "Pengguna mengakses portal publik {$businessName}, sistem memuat katalog dinamis dengan skeleton loader, dan melakukan prefetching aset CDN.";
+                $trigger = $isEn
+                    ? "Visitor opens catalog URL on desktop or mobile device."
+                    : "Pengunjung membuka URL beranda / katalog dari peramban desktop maupun ponsel.";
+                $systemProcess = $isEn
+                    ? "HTTP GET route invokes controller, reads Cache::rememberForever() for CMS & Schema.org JSON-LD, renders reactive components."
+                    : "HTTP GET route memanggil Controller, membaca Cache::rememberForever() untuk konfigurasi CMS & Schema.org JSON-LD, render Blade & React Islands.";
+                $outputState = $isEn
+                    ? "Instant sub-100ms TTFB page load with optimized Core Web Vitals (LCP < 1.2s, CLS = 0)."
+                    : "Halaman ter-render instan (<100ms TTFB) dengan Core Web Vitals optimal (LCP < 1.2s, CLS = 0).";
+                $edgeCase = $isEn
+                    ? "Graceful offline fallback displayed via Service Worker if network connection drops."
+                    : "Jika terjadi gangguan jaringan, service worker menampilkan graceful offline fallback dan tombol muat ulang.";
             } elseif (str_contains($lower, 'filter') || str_contains($lower, 'cari') || str_contains($lower, 'search') || str_contains($lower, 'advance')) {
-                $actor = 'Sistem / Search Engine';
+                $actor = $isEn ? 'System / Search Engine' : 'Sistem / Search Engine';
                 $badge = 'QUERY_FILTER';
                 $type = 'filter';
-                $description = "Pengguna menerapkan parameter filter lanjutan (kategori, rentang budget, spesifikasi). Sistem mengeksekusi query database terindeks secara instan.";
-                $trigger = "Input teks pada kolom pencarian atau interaksi toggle/chip filter oleh pengguna.";
-                $systemProcess = "Eksekusi Keyset Cursor Pagination O(1) dengan PostgreSQL B-Tree Indexing, debounce 300ms untuk menekan beban server.";
-                $outputState = "Daftar entitas hasil filter diperbarui secara reaktif tanpa reload halaman penuh (Full Page Refresh = 0).";
-                $edgeCase = "Jika hasil pencarian 0 record, sistem menampilkan rekomendasi cerdas dan tombol 'Reset Semua Filter'.";
-            } elseif (str_contains($lower, 'langganan') || str_contains($lower, 'berlangganan') || str_contains($lower, 'order') || str_contains($lower, 'beli') || str_contains($lower, 'transaksi')) {
-                $actor = 'Payment & Transaction Engine';
+                $description = $isEn
+                    ? "User applies advanced filter criteria; system executes sub-10ms indexed queries."
+                    : "Pengguna menerapkan parameter filter lanjutan (kategori, rentang budget, spesifikasi). Sistem mengeksekusi query database terindeks secara instan.";
+                $trigger = $isEn
+                    ? "Keystroke input on search field or interactive filter chip selection."
+                    : "Input teks pada kolom pencarian atau interaksi toggle/chip filter oleh pengguna.";
+                $systemProcess = $isEn
+                    ? "Keyset Cursor Pagination O(1) executed with PostgreSQL B-Tree indexes and 300ms debounce."
+                    : "Eksekusi Keyset Cursor Pagination O(1) dengan PostgreSQL B-Tree Indexing, debounce 300ms untuk menekan beban server.";
+                $outputState = $isEn
+                    ? "Filtered records update reactively without full page reloads."
+                    : "Daftar entitas hasil filter diperbarui secara reaktif tanpa reload halaman penuh (Full Page Refresh = 0).";
+                $edgeCase = $isEn
+                    ? "Displays smart recommendations and 'Reset Filters' CTA if 0 records match."
+                    : "Jika hasil pencarian 0 record, sistem menampilkan rekomendasi cerdas dan tombol 'Reset Semua Filter'.";
+            } elseif (str_contains($lower, 'langganan') || str_contains($lower, 'berlangganan') || str_contains($lower, 'order') || str_contains($lower, 'beli') || str_contains($lower, 'transaksi') || str_contains($lower, 'pay') || str_contains($lower, 'checkout') || str_contains($lower, 'subscribe')) {
+                $actor = $isEn ? 'Payment & Transaction Engine' : 'Payment & Transaction Engine';
                 $badge = 'TRANSACTION';
                 $type = 'billing';
-                $description = "Pengguna memilih paket berlangganan atau mengajukan transaksi. Sistem mengunci kalkulasi harga, menerbitkan invoice ber-ULID, dan membuka gateway pembayaran.";
-                $trigger = "Klik tombol 'Berlangganan Sekarang' atau 'Checkout' oleh pengguna terautentikasi.";
-                $systemProcess = "Penerbitan ULID transaksi baru, verifikasi kuota/stok dengan ACID database transaction, handshake API ke Payment Gateway (Midtrans Snap).";
-                $outputState = "Snap payment modal terbuka di layar klien; database mencatat status PENDING_PAYMENT.";
-                $edgeCase = "Idempotency key mencegah double charge jika klien menekan tombol bayar berulang kali.";
-            } elseif (str_contains($lower, 'notifikasi') || str_contains($lower, 'email') || str_contains($lower, 'alert') || str_contains($lower, 'wa')) {
-                $actor = 'Notification Engine';
+                $description = $isEn
+                    ? "User initiates booking or transaction; system locks calculation, issues ULID invoice, and opens payment gateway."
+                    : "Pengguna memilih paket berlangganan atau mengajukan transaksi. Sistem mengunci kalkulasi harga, menerbitkan invoice ber-ULID, dan membuka gateway pembayaran.";
+                $trigger = $isEn
+                    ? "User clicks 'Checkout' or 'Pay Now' button."
+                    : "Klik tombol 'Berlangganan Sekarang' atau 'Checkout' oleh pengguna terautentikasi.";
+                $systemProcess = $isEn
+                    ? "Issues new transactional ULID, verifies inventory with ACID transaction, and initiates payment gateway handshake."
+                    : "Penerbitan ULID transaksi baru, verifikasi kuota/stok dengan ACID database transaction, handshake API ke Payment Gateway (Midtrans Snap).";
+                $outputState = $isEn
+                    ? "Payment modal renders on client screen; database registers PENDING_PAYMENT status."
+                    : "Snap payment modal terbuka di layar klien; database mencatat status PENDING_PAYMENT.";
+                $edgeCase = $isEn
+                    ? "Idempotency key prevents duplicate charges if client clicks repeatedly."
+                    : "Idempotency key mencegah double charge jika klien menekan tombol bayar berulang kali.";
+            } elseif (str_contains($lower, 'notifikasi') || str_contains($lower, 'email') || str_contains($lower, 'alert') || str_contains($lower, 'wa') || str_contains($lower, 'notify')) {
+                $actor = $isEn ? 'Notification Engine' : 'Notification Engine';
                 $badge = 'NOTIFICATION';
                 $type = 'notification';
-                $description = "Sistem mendistribusikan notifikasi status transaksi otomatis ke email profesional pengguna (Resend API) dan nomor WhatsApp.";
-                $trigger = "Event model tersimpan (OrderSettled, InquiryCreated, atau StatusUpdated).";
-                $systemProcess = "Dispatched asynchronous Job ke Redis Queue Workers, render email template responsif, fallback retry 3x dengan backoff eksponensial.";
-                $outputState = "Notifikasi terkirim ke inbox email dan nomor kontak pengguna dalam tempo <5 detik.";
-                $edgeCase = "Pencatatan kegagalan transmisi ke tabel `notification_logs` dan tombol Resend otomatis di panel admin.";
-            } elseif (str_contains($lower, 'validasi') || str_contains($lower, 'simpan') || str_contains($lower, 'database') || str_contains($lower, 'isi')) {
-                $actor = 'PostgreSQL / Laravel ORM';
+                $description = $isEn
+                    ? "System dispatches automated notifications via transactional email and WhatsApp."
+                    : "Sistem mendistribusikan notifikasi status transaksi otomatis ke email profesional pengguna (Resend API) dan nomor WhatsApp.";
+                $trigger = $isEn
+                    ? "Domain model event fired (e.g. OrderSettled, InquiryCreated)."
+                    : "Event model tersimpan (OrderSettled, InquiryCreated, atau StatusUpdated).";
+                $systemProcess = $isEn
+                    ? "Dispatches asynchronous job to Redis queue workers, renders responsive template, retries up to 3x."
+                    : "Dispatched asynchronous Job ke Redis Queue Workers, render email template responsif, fallback retry 3x dengan backoff eksponensial.";
+                $outputState = $isEn
+                    ? "Notification delivered to user contact channels within <5 seconds."
+                    : "Notifikasi terkirim ke inbox email dan nomor kontak pengguna dalam tempo <5 detik.";
+                $edgeCase = $isEn
+                    ? "Delivery failures recorded in notification_logs with automated resend capability in admin."
+                    : "Pencatatan kegagalan transmisi ke tabel `notification_logs` dan tombol Resend otomatis di panel admin.";
+            } elseif (str_contains($lower, 'validasi') || str_contains($lower, 'simpan') || str_contains($lower, 'database') || str_contains($lower, 'isi') || str_contains($lower, 'save') || str_contains($lower, 'store')) {
+                $actor = $isEn ? 'PostgreSQL / Laravel ORM' : 'PostgreSQL / Laravel ORM';
                 $badge = 'DATABASE';
                 $type = 'database';
-                $description = "Penyimpanan data formulir terstruktur dengan validasi ketat, sanitasi anti-XSS, dan penguncian relasi foreign key ber-ULID.";
-                $trigger = "Pengiriman formulir via HTTP POST / Action Handler.";
-                $systemProcess = "Sanitasi payload input, hashing berkas sensitif, penyimpanan ke tabel PostgreSQL Strict dengan ULID primary key.";
-                $outputState = "Flash session atau toast notifikasi sukses muncul, audit trail log mencatat IP dan timestamp pengirim.";
-                $edgeCase = "Penolakan instan dengan HTTP 422 Unprocessable Entity dan pemetaan pesan error spesifik jika input tidak valid.";
-            } elseif (str_contains($lower, 'admin') || str_contains($lower, 'verifikasi') || str_contains($lower, 'dasbor') || str_contains($lower, 'approval')) {
-                $actor = 'Administrator / Operator';
+                $description = $isEn
+                    ? "Structured form data persisted with strict validation, anti-XSS sanitization, and ULID foreign key integrity."
+                    : "Penyimpanan data formulir terstruktur dengan validasi ketat, sanitasi anti-XSS, dan penguncian relasi foreign key ber-ULID.";
+                $trigger = $isEn
+                    ? "Form transmission via HTTP POST / Action Handler."
+                    : "Pengiriman formulir via HTTP POST / Action Handler.";
+                $systemProcess = $isEn
+                    ? "Sanitizes input payload, hashes sensitive fields, and executes atomic write to PostgreSQL with ULID primary key."
+                    : "Sanitasi payload input, hashing berkas sensitif, penyimpanan ke tabel PostgreSQL Strict dengan ULID primary key.";
+                $outputState = $isEn
+                    ? "Toast confirmation appears; audit trail records timestamp and client IP."
+                    : "Flash session atau toast notifikasi sukses muncul, audit trail log mencatat IP dan timestamp pengirim.";
+                $edgeCase = $isEn
+                    ? "HTTP 422 Unprocessable Entity response with specific field error mapping on invalid input."
+                    : "Penolakan instan dengan HTTP 422 Unprocessable Entity dan pemetaan pesan error spesifik jika input tidak valid.";
+            } elseif (str_contains($lower, 'admin') || str_contains($lower, 'verifikasi') || str_contains($lower, 'dasbor') || str_contains($lower, 'approval') || str_contains($lower, 'verify') || str_contains($lower, 'review')) {
+                $actor = $isEn ? 'Administrator / Operator' : 'Administrator / Operator';
                 $badge = 'APPROVAL';
                 $type = 'admin';
-                $description = "Pengelola meninjau dan memverifikasi data transaksi atau berkas masuk melalui panel kendali Filament v5 enterprise.";
-                $trigger = "Admin membuka antarmuka manajemen data di dashboard `/admin`.";
-                $systemProcess = "Verifikasi otorisasi Spatie Shield RBAC, evaluasi integritas dokumen, eksekusi approval dengan database lock.";
-                $outputState = "Status record diperbarui menjadi APPROVED / ACTIVE, memicu event notifikasi tahap berikutnya.";
-                $edgeCase = "Jika data ditolak, admin wajib menyertakan alasan penolakan yang otomatis diteruskan ke pengguna.";
+                $description = $isEn
+                    ? "Management reviews and verifies inbound submissions through the Filament v5 administrative cockpit."
+                    : "Pengelola meninjau dan memverifikasi data transaksi atau berkas masuk melalui panel kendali Filament v5 enterprise.";
+                $trigger = $isEn
+                    ? "Admin accesses management dashboard at /admin."
+                    : "Admin membuka antarmuka manajemen data di dashboard `/admin`.";
+                $systemProcess = $isEn
+                    ? "Verifies RBAC authorization, checks document integrity, and executes approval with database lock."
+                    : "Verifikasi otorisasi Spatie Shield RBAC, evaluasi integritas dokumen, eksekusi approval dengan database lock.";
+                $outputState = $isEn
+                    ? "Record status updates to APPROVED / ACTIVE and triggers next workflow phase."
+                    : "Status record diperbarui menjadi APPROVED / ACTIVE, memicu event notifikasi tahap berikutnya.";
+                $edgeCase = $isEn
+                    ? "Rejection requires mandatory explanation note forwarded to client."
+                    : "Jika data ditolak, admin wajib menyertakan alasan penolakan yang otomatis diteruskan ke pengguna.";
             }
 
             $stages[] = [
@@ -788,51 +937,51 @@ class PrdGeneratorService
             $stages = [
                 [
                     'step' => 1,
-                    'action' => 'Akses Portal & Registrasi Akun',
-                    'description' => 'Pengguna membuka aplikasi dan memasukkan kredensial identitas terotentikasi.',
-                    'actor' => 'Pengguna',
+                    'action' => $isEn ? 'Portal Access & Account Authentication' : 'Akses Portal & Registrasi Akun',
+                    'description' => $isEn ? 'User accesses application and authenticates with credentials.' : 'Pengguna membuka aplikasi dan memasukkan kredensial identitas terotentikasi.',
+                    'actor' => $isEn ? 'User / Visitor' : 'Pengguna',
                     'badge' => 'AUTH',
                     'type' => 'client',
-                    'trigger' => 'Pengguna mengakses halaman login / register.',
-                    'system_process' => 'Sanitasi kredensial, verifikasi password bcrypt, penerbitan session terenkripsi.',
-                    'output_state' => 'Pengguna diarahkan ke dasbor utama dengan token sesi valid.',
-                    'edge_case' => 'Rate limiter membatasi percobaan login maksimal 5x per menit.',
+                    'trigger' => $isEn ? 'User accesses login / register page.' : 'Pengguna mengakses halaman login / register.',
+                    'system_process' => $isEn ? 'Credential sanitization, bcrypt verification, encrypted session issuance.' : 'Sanitasi kredensial, verifikasi password bcrypt, penerbitan session terenkripsi.',
+                    'output_state' => $isEn ? 'User directed to primary dashboard with valid session token.' : 'Pengguna diarahkan ke dasbor utama dengan token sesi valid.',
+                    'edge_case' => $isEn ? 'Rate limiter restricts login attempts to max 5x per minute.' : 'Rate limiter membatasi percobaan login maksimal 5x per menit.',
                 ],
                 [
                     'step' => 2,
-                    'action' => 'Pengisian Data / Form Transaksi',
-                    'description' => 'Validasi sisi klien dan transmisi data ke backend Laravel.',
-                    'actor' => 'Klien / Sistem',
+                    'action' => $isEn ? 'Service Selection & Structured Form Submission' : 'Pengisian Data / Form Transaksi',
+                    'description' => $isEn ? 'Client-side validation and structured data transmission to Laravel backend.' : 'Validasi sisi klien dan transmisi data ke backend Laravel.',
+                    'actor' => $isEn ? 'Client / System' : 'Klien / Sistem',
                     'badge' => 'INPUT',
                     'type' => 'client',
-                    'trigger' => 'Pengguna mengisi formulir dan menekan submit.',
-                    'system_process' => 'Validasi FormRequest, sanitasi XSS, penyimpanan ACID database.',
-                    'output_state' => 'Toast sukses muncul dan record baru ber-ULID terbit.',
-                    'edge_case' => 'Penolakan HTTP 422 jika format data tidak sesuai spesifikasi.',
+                    'trigger' => $isEn ? 'User completes form and clicks submit.' : 'Pengguna mengisi formulir dan menekan submit.',
+                    'system_process' => $isEn ? 'FormRequest validation, XSS sanitization, ACID database write.' : 'Validasi FormRequest, sanitasi XSS, penyimpanan ACID database.',
+                    'output_state' => $isEn ? 'Success toast displays and new ULID record is persisted.' : 'Toast sukses muncul dan record baru ber-ULID terbit.',
+                    'edge_case' => $isEn ? 'HTTP 422 rejection if payload fails validation criteria.' : 'Penolakan HTTP 422 jika format data tidak sesuai spesifikasi.',
                 ],
                 [
                     'step' => 3,
-                    'action' => 'Verifikasi & Notifikasi Otomatis',
-                    'description' => 'Sistem mengirimkan konfirmasi instan via email Resend dan mencatat audit trail.',
-                    'actor' => 'Notification Engine',
+                    'action' => $isEn ? 'Automated Verification & Notification Dispatch' : 'Verifikasi & Notifikasi Otomatis',
+                    'description' => $isEn ? 'System dispatches instant notification via email and records audit log.' : 'Sistem mengirimkan konfirmasi instan via email Resend dan mencatat audit trail.',
+                    'actor' => $isEn ? 'Notification Engine' : 'Notification Engine',
                     'badge' => 'NOTIFICATION',
                     'type' => 'notification',
-                    'trigger' => 'Event model tersimpan di database.',
-                    'system_process' => 'Queue worker memproses pengiriman email asinkron.',
-                    'output_state' => 'Email konfirmasi mendarat di inbox pengguna dalam hitungan detik.',
-                    'edge_case' => 'Retry otomatis 3x jika koneksi API gateway mengalami timeout.',
+                    'trigger' => $isEn ? 'Model saved domain event dispatched.' : 'Event model tersimpan di database.',
+                    'system_process' => $isEn ? 'Queue worker processes asynchronous email dispatch.' : 'Queue worker memproses pengiriman email asinkron.',
+                    'output_state' => $isEn ? 'Confirmation email arrives in user inbox within seconds.' : 'Email konfirmasi mendarat di inbox pengguna dalam hitungan detik.',
+                    'edge_case' => $isEn ? 'Automatic 3x retry if notification gateway times out.' : 'Retry otomatis 3x jika koneksi API gateway mengalami timeout.',
                 ],
                 [
                     'step' => 4,
-                    'action' => 'Approval & Manajemen Dasbor Admin',
-                    'description' => 'Pengelola memproses data melalui tabel Filament berkecepatan tinggi.',
-                    'actor' => 'Admin / Operator',
+                    'action' => $isEn ? 'Operational Cockpit Review & Approval' : 'Approval & Manajemen Dasbor Admin',
+                    'description' => $isEn ? 'Staff processes submissions through high-speed Filament tables.' : 'Pengelola memproses data melalui tabel Filament berkecepatan tinggi.',
+                    'actor' => $isEn ? 'Admin / Operator' : 'Admin / Operator',
                     'badge' => 'APPROVAL',
                     'type' => 'admin',
-                    'trigger' => 'Operator membuka panel antrean data baru.',
-                    'system_process' => 'Pengecekan RBAC, review berkas, pembaruan status transaksi.',
-                    'output_state' => 'Status berubah menjadi VERIFIED dan tercatat di audit log.',
-                    'edge_case' => 'Log audit forensik mencatat alasan penolakan jika verifikasi dibatalkan.',
+                    'trigger' => $isEn ? 'Operator loads new submissions queue panel.' : 'Operator membuka panel antrean data baru.',
+                    'system_process' => $isEn ? 'RBAC validation, file inspection, and transaction status update.' : 'Pengecekan RBAC, review berkas, pembaruan status transaksi.',
+                    'output_state' => $isEn ? 'Status transitions to VERIFIED with forensic audit log.' : 'Status berubah menjadi VERIFIED dan tercatat di audit log.',
+                    'edge_case' => $isEn ? 'Audit log records explicit rejection reason if verification is denied.' : 'Log audit forensik mencatat alasan penolakan jika verifikasi dibatalkan.',
                 ],
             ];
         }
@@ -2095,7 +2244,7 @@ PROMPT;
      * Synthesize world-class domain business feasibility, killer ROI equation,
      * cost of inaction, and Neriah Pro no-regret guarantees.
      */
-    public static function generateBusinessRoiAnalysis(VisionBlueprint $blueprint, array $itemizedEstimation): array
+    public static function generateBusinessRoiAnalysis(VisionBlueprint $blueprint, array $itemizedEstimation, bool $isEn = false): array
     {
         $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name . "'s Project");
         $masalah = strtolower($blueprint->masalah_utama ?? '');
@@ -2136,133 +2285,201 @@ PROMPT;
         if ($isTravel) {
             $domainCategory = 'Tour & Travel, Ground Transport & Smart Itinerary Hub';
             $domainBadge = 'HIGH_VOLUME_TOURISM_EXPERIENCE';
-            $ticketBenchmark = 'Rp 650.000 - Rp 18.500.000 / paket tour & sewa armada';
-            $roiHeadline = 'Otomatisasi Booking Langsung Bebas Komisi OTA (15-25%) = Balik Modal dalam 1-2 Bulan Musim Liburan!';
-            $roiFormula = 'Hemat Potongan OTA 20% + Efisiensi Armada & Itinerary AI = Rp 12.000.000 - Rp 35.000.000 / bulan';
-            $roiNarrative = 'Dalam industri pariwisata Bali & Jawa Timur, platform OTA pihak ketiga (seperti Traveloka, Viator, Klook) memotong komisi 15% s/d 25% untuk setiap pemesanan. Dengan memiliki platform reservasi mandiri terpadu (' . $businessName . '), setiap pemesanan transfer bandara Ngurah Rai, paket day tour Bali, dan overland Bromo/Ijen langsung masuk 100% ke kas perusahaan. Fitur Wish List Itinerary AI mempercepat penutupan booking wisatawan dari hitungan hari menjadi hitungan menit, melunasi total investasi sistem (Rp ' . number_format($totalInvestasi, 0, ',', '.') . ') hanya dari 15-25 transaksi reservasi tour pertama.';
-            $projectedAnnualRoi = '380% - 950% dari penghematan komisi OTA dan lonjakan closing booking wisatawan';
-            $inactionRisks = [
+            $ticketBenchmark = $isEn ? '$45 - $1,250 / tour package & fleet rental (Rp 650K - Rp 18.5M)' : 'Rp 650.000 - Rp 18.500.000 / paket tour & sewa armada';
+            $roiHeadline = $isEn ? 'Direct Booking Automation with 0% OTA Commissions (15-25% saved) = Full ROI in 1-2 Holiday Season Months!' : 'Otomatisasi Booking Langsung Bebas Komisi OTA (15-25%) = Balik Modal dalam 1-2 Bulan Musim Liburan!';
+            $roiFormula = $isEn ? 'Save 20% OTA Fee + Fleet & AI Itinerary Efficiency = $800 - $2,300 / month' : 'Hemat Potongan OTA 20% + Efisiensi Armada & Itinerary AI = Rp 12.000.000 - Rp 35.000.000 / bulan';
+            $roiNarrative = $isEn
+                ? ('In the tourism industry, third-party OTA platforms (such as Viator, Klook, Traveloka) take 15% to 25% commissions on every booking. By operating a self-hosted unified reservation platform (' . $businessName . '), 100% of revenue from airport transfers, day tours, and overland trips flows directly to the business treasury. The AI Itinerary Wish List generator accelerates traveler booking conversions from days to minutes, recouping the entire system investment (Rp ' . number_format($totalInvestasi, 0, ',', '.') . ') within the first 15-25 tour transactions.')
+                : ('Dalam industri pariwisata Bali & Jawa Timur, platform OTA pihak ketiga (seperti Traveloka, Viator, Klook) memotong komisi 15% s/d 25% untuk setiap pemesanan. Dengan memiliki platform reservasi mandiri terpadu (' . $businessName . '), setiap pemesanan transfer bandara Ngurah Rai, paket day tour Bali, dan overland Bromo/Ijen langsung masuk 100% ke kas perusahaan. Fitur Wish List Itinerary AI mempercepat penutupan booking wisatawan dari hitungan hari menjadi hitungan menit, melunasi total investasi sistem (Rp ' . number_format($totalInvestasi, 0, ',', '.') . ') hanya dari 15-25 transaksi reservasi tour pertama.');
+            $projectedAnnualRoi = $isEn ? '380% - 950% from saved OTA commissions and accelerated booking conversions' : '380% - 950% dari penghematan komisi OTA dan lonjakan closing booking wisatawan';
+            $inactionRisks = $isEn ? [
+                'Loss of International & Domestic Travelers: Tourists require an online catalog with vehicle types, luggage capacities, and transparent pricing. The absence of a professional website drives prospective clients to competitors.',
+                'Manual Itinerary Planning Is Excessively Slow: Calculating overland routes, distances, and pricing manually keeps clients waiting for hours until they book elsewhere.',
+                'Schedule Collision & No-Show Risks: Without a centralized fleet management system and automated booking deposits, driver scheduling conflicts and uncompensated cancellations harm daily operations.',
+            ] : [
                 'Kehilangan Wisatawan Mancanegara & Domestik: Turis menuntut katalog online dengan pilihan jenis kendaraan, kapasitas penumpang/bagasi, dan harga transparan. Ketiadaan website profesional membuat calon klien beralih ke biro perjalanan lain.',
                 'Proses Penyusunan Itinerary Manual Sangat Lambat: Menghitung rute, jarak, dan harga overland Jawa Timur secara manual membuat calon wisatawan menunggu berjam-jam hingga akhirnya memesan di tempat lain.',
                 'Risiko Jadwal Bentrok & No-Show: Tanpa sistem pencatatan armada terpadu dan pembayaran uang muka (DP) otomatis, risiko jadwal supir bentrok dan pembatalan sepihak merugikan operasional harian.',
             ];
-            $phasedStrategy = 'Mulai dengan Fase 1 Turnkey MVP (Reservasi Transfer Bandara, Paket Day Tour Bali, Overland Bromo-Ijen, Generator Wish List AI, Integrasi WhatsApp, & Dasbor Armada Filament v5) dengan termin 50/50. Sistem siap go-live dalam 14-21 hari kerja.';
+            $phasedStrategy = $isEn
+                ? 'Start with Phase 1 Turnkey MVP (Airport Transfer Reservations, Day Tour Packages, Overland Trips, AI Wish List Generator, WhatsApp Integration, & Filament v5 Fleet Dashboard) with 50/50 milestones. Production-ready within 14-21 business days.'
+                : 'Mulai dengan Fase 1 Turnkey MVP (Reservasi Transfer Bandara, Paket Day Tour Bali, Overland Bromo-Ijen, Generator Wish List AI, Integrasi WhatsApp, & Dasbor Armada Filament v5) dengan termin 50/50. Sistem siap go-live dalam 14-21 hari kerja.';
         } elseif ($isProperty) {
             $domainCategory = 'Villa Rental & Real Estate Agency';
             $domainBadge = 'HIGH_TICKET_COMMERCIAL';
-            $ticketBenchmark = 'Rp 180.000.000 - Rp 650.000.000 / transaksi sewa/jual';
-            $roiHeadline = 'Cukup 1 Transaksi Closing Sewa Villa = 100% BEP Lunas!';
-            $roiFormula = 'Komisi 5% - 10% dari 1 Villa Sewa Tahunan (Rp 220M) = Rp 11.000.000 - Rp 22.000.000';
-            $roiNarrative = 'Dalam industri real estate & rental villa di Bali, komisi rata-rata broker adalah 5% s/d 10%. Sekali Anda berhasil melakukan closing pada 1 unit villa sewa tahunan standar (misal: villa di Sanur seharga Rp 220 juta/tahun), komisi yang Anda kantongi (Rp 11 juta s/d Rp 22 juta) langsung melunasi 100% total biaya investasi pembuatan sistem Neriah Pro (Rp ' . number_format($totalInvestasi, 0, ',', '.') . '). Setiap closing berikutnya adalah 100% keuntungan murni Anda.';
-            $projectedAnnualRoi = '450% - 1.200% (Estimasi realistis 3 - 6 transaksi closing di tahun pertama)';
-            $inactionRisks = [
+            $ticketBenchmark = $isEn ? '$12,000 - $45,000 / sale or rental deal' : 'Rp 180.000.000 - Rp 650.000.000 / transaksi sewa/jual';
+            $roiHeadline = $isEn ? 'Just 1 Closed Villa Rental Deal = 100% System Investment Breakeven!' : 'Cukup 1 Transaksi Closing Sewa Villa = 100% BEP Lunas!';
+            $roiFormula = $isEn ? '5% - 10% Commission on 1 Annual Villa Lease ($15k) = $750 - $1,500' : 'Komisi 5% - 10% dari 1 Villa Sewa Tahunan (Rp 220M) = Rp 11.000.000 - Rp 22.000.000';
+            $roiNarrative = $isEn
+                ? ('In the real estate and villa rental industry, average agency commissions range from 5% to 10%. Closing just one standard annual villa lease pays off 100% of the entire Neriah Pro system investment. Every closing thereafter is 100% pure profit.')
+                : ('Dalam industri real estate & rental villa di Bali, komisi rata-rata broker adalah 5% s/d 10%. Sekali Anda berhasil melakukan closing pada 1 unit villa sewa tahunan standar (misal: villa di Sanur seharga Rp 220 juta/tahun), komisi yang Anda kantongi (Rp 11 juta s/d Rp 22 juta) langsung melunasi 100% total biaya investasi pembuatan sistem Neriah Pro (Rp ' . number_format($totalInvestasi, 0, ',', '.') . '). Setiap closing berikutnya adalah 100% keuntungan murni Anda.');
+            $projectedAnnualRoi = $isEn ? '450% - 1,200% (Realistic estimate of 3 - 6 closed deals in Year 1)' : '450% - 1.200% (Estimasi realistis 3 - 6 transaksi closing di tahun pertama)';
+            $inactionRisks = $isEn ? [
+                'Loss of Expat / High-Net-Worth Renters: High-value clients demand a verified online catalog with HD photography and transparent amenities. Without a professional web platform, they immediately turn to licensed agencies.',
+                'Villa Owners Reluctant to Entrust Listings: Multi-million dollar property owners will not entrust valuable listings to agents relying only on personal WhatsApp status or social media feeds.',
+                'Unstructured & Lost Leads: Buyer inquiries get buried in personal chat histories with zero pipeline visibility into property availability status (Available / Rented / Sold).',
+            ] : [
                 'Kehilangan Calon Penyewa Expat / Turis: Wisatawan mancanegara menuntut katalog online dengan galeri foto jernih dan detail fasilitas transparan. Ketiadaan website membuat mereka langsung lari ke broker berlisensi lain.',
                 'Pemilik Villa (Owner) Enggan Menitipkan Listing: Pemilik villa mewah ratusan juta ragu mempercayakan aset berharganya kepada agen yang hanya mengandalkan status WhatsApp atau feed Instagram pribadi.',
                 'Lead Tercecer & Tidak Terekam: Pertanyaan calon penyewa hilang di tumpukan obrolan chat pribadi tanpa pipeline status ketersediaan (Available / Rented / Sold).',
             ];
-            $phasedStrategy = 'Mulai dengan Fase 1 Lean Catalog MVP (Listing Properti, Detail Fasilitas, Galeri HD, Direct WhatsApp Concierge, & Dasbor Admin Filament v5) dengan termin 50/50. Website langsung beroperasi dalam 14-21 hari kerja untuk menangkap momentum sewa tanpa beban modal besar di awal.';
+            $phasedStrategy = $isEn
+                ? 'Start with Phase 1 Lean Catalog MVP (Property Listings, Amenities Breakdown, HD Gallery, Direct WhatsApp Concierge, & Filament v5 Admin) with 50/50 milestones. Live within 14-21 business days.'
+                : 'Mulai dengan Fase 1 Lean Catalog MVP (Listing Properti, Detail Fasilitas, Galeri HD, Direct WhatsApp Concierge, & Dasbor Admin Filament v5) dengan termin 50/50. Website langsung beroperasi dalam 14-21 hari kerja untuk menangkap momentum sewa tanpa beban modal besar di awal.';
         } elseif ($isClinic) {
             $domainCategory = 'Healthcare & Clinical Information System';
             $domainBadge = 'HIGH_IMPACT_HEALTHCARE';
-            $ticketBenchmark = 'Ratusan kunjungan pasien & resep obat harian';
-            $roiHeadline = 'Efisiensi Waktu & Pengendalian Selisih Stok Obat = Balik Modal dalam 2-3 Bulan';
-            $roiFormula = 'Penghematan Jam Antrean + Pengendalian Kebocoran Obat = Rp 5.000.000 - Rp 15.000.000 / bulan';
-            $roiNarrative = 'Digitalisasi pendaftaran pasien memangkas waktu tunggu hingga 70%, memungkinkan klinik melayani 20% lebih banyak pasien harian. Otomatisasi mutasi stok obat apotek mencegah selisih persediaan dan obat kedaluwarsa yang kerap merugikan klinik belasan juta per bulan.';
-            $projectedAnnualRoi = '250% - 500% dari efisiensi operasional dan peningkatan retensi pasien';
-            $inactionRisks = [
+            $ticketBenchmark = $isEn ? 'Hundreds of daily patient visits & prescriptions' : 'Ratusan kunjungan pasien & resep obat harian';
+            $roiHeadline = $isEn ? 'Time Savings & Pharmacy Inventory Leakage Control = Full ROI in 2-3 Months' : 'Efisiensi Waktu & Pengendalian Selisih Stok Obat = Balik Modal dalam 2-3 Bulan';
+            $roiFormula = $isEn ? 'Reduced Waiting Hours + Pharmacy Loss Elimination = $400 - $1,100 / month' : 'Penghematan Jam Antrean + Pengendalian Kebocoran Obat = Rp 5.000.000 - Rp 15.000.000 / bulan';
+            $roiNarrative = $isEn
+                ? 'Digitalized patient intake slashes wait times by 70%, allowing the clinic to serve 20% more patients daily. Automated pharmacy stock reconciliation eliminates inventory discrepancies and expired drug write-offs that cost clinics thousands monthly.'
+                : 'Digitalisasi pendaftaran pasien memangkas waktu tunggu hingga 70%, memungkinkan klinik melayani 20% lebih banyak pasien harian. Otomatisasi mutasi stok obat apotek mencegah selisih persediaan dan obat kedaluwarsa yang kerap merugikan klinik belasan juta per bulan.';
+            $projectedAnnualRoi = $isEn ? '250% - 500% from operational efficiency and enhanced patient retention' : '250% - 500% dari efisiensi operasional dan peningkatan retensi pasien';
+            $inactionRisks = $isEn ? [
+                'Paper Medical Records Vulnerable to Damage / Loss: Regulatory non-compliance risks and slow cross-physician referrals.',
+                'Overcrowded Waiting Rooms: Patients frustrated by manual queues switch to competing medical facilities.',
+                'Undetected Pharmacy Inventory Discrepancies: Financial losses from manual registry books prone to accounting errors.',
+            ] : [
                 'Rekam Medis Kertas Rentan Rusak / Hilang: Risiko pelanggaran kepatuhan hukum dan lambatnya rujukan antar-dokter.',
                 'Antrean Menumpuk di Ruang Tunggu: Pasien frustrasi menunggu pendaftaran manual dan beralih ke fasilitas kesehatan lain.',
                 'Selisih Stok Obat Tidak Terdeteksi: Kerugian finansial akibat pencatatan manual buku apotek yang rentan salah hitung.',
             ];
-            $phasedStrategy = 'Fase 1 memfokuskan pada Pendaftaran Pasien, Rekam Medis Terproteksi (RME), dan Mutasi Stok Apotek dengan termin 50/50 sebelum melangkah ke integrasi BPJS/SatuSehat di Fase 2.';
+            $phasedStrategy = $isEn
+                ? 'Phase 1 focuses on Patient Registration, Protected Electronic Medical Records (EMR), and Pharmacy Stock Audits with 50/50 milestones before scaling to external health network integrations in Phase 2.'
+                : 'Fase 1 memfokuskan pada Pendaftaran Pasien, Rekam Medis Terproteksi (RME), dan Mutasi Stok Apotek dengan termin 50/50 sebelum melangkah ke integrasi BPJS/SatuSehat di Fase 2.';
         } elseif ($isLogistics) {
             $domainCategory = 'Logistics & Fleet Operations Hub';
             $domainBadge = 'HIGH_CONCURRENCY_SUPPLY_CHAIN';
-            $ticketBenchmark = 'Ribuan surat jalan & manifes pengiriman bulanan';
-            $roiHeadline = 'Otomatisasi Surat Jalan & Eliminasi Selisih Klaim = Balik Modal dalam 1-2 Bulan';
-            $roiFormula = 'Pencegahan Klaim Keterlambatan + Penghematan Waktu Admin = Rp 8.000.000 - Rp 20.000.000 / bulan';
-            $roiNarrative = 'Memangkas waktu rekonsiliasi manifes dan bukti serah terima (Proof of Delivery) dari 3 hari menjadi real-time. Membebaskan ratusan jam kerja staf operasional dan mengeliminasi klaim biaya akibat paket hilang atau salah antar.';
-            $projectedAnnualRoi = '350% - 700% dari efisiensi armada dan kecepatan penagihan invoice';
-            $inactionRisks = [
+            $ticketBenchmark = $isEn ? 'Thousands of monthly waybills and shipping manifests' : 'Ribuan surat jalan & manifes pengiriman bulanan';
+            $roiHeadline = $isEn ? 'Automated Waybills & Elimination of Disputed Claims = Full ROI in 1-2 Months' : 'Otomatisasi Surat Jalan & Eliminasi Selisih Klaim = Balik Modal dalam 1-2 Bulan';
+            $roiFormula = $isEn ? 'Dispute Prevention + Admin Labor Savings = $600 - $1,500 / month' : 'Pencegahan Klaim Keterlambatan + Penghematan Waktu Admin = Rp 8.000.000 - Rp 20.000.000 / bulan';
+            $roiNarrative = $isEn
+                ? 'Slashes manifest reconciliation and Proof of Delivery (POD) processing from 3 days to real-time. Frees hundreds of staff hours and eliminates costly lost or misdelivered freight claims.'
+                : 'Memangkas waktu rekonsiliasi manifes dan bukti serah terima (Proof of Delivery) dari 3 hari menjadi real-time. Membebaskan ratusan jam kerja staf operasional dan mengeliminasi klaim biaya akibat paket hilang atau salah antar.';
+            $projectedAnnualRoi = $isEn ? '350% - 700% from fleet utilization and faster invoice collections' : '350% - 700% dari efisiensi armada dan kecepatan penagihan invoice';
+            $inactionRisks = $isEn ? [
+                'Paper Waybills Lost in Transit: Delays invoice collections and triggers payment disputes from corporate shippers.',
+                'Support Team Paralyzed by Manual Inquiries: Valuable operational hours wasted answering "where is my shipment?".',
+            ] : [
                 'Surat Jalan Kertas Hilang di Lapangan: Menghambat proses penagihan faktur dan memicu komplain pembayaran dari klien korporat.',
                 'Staf Lumpuh Meladeni Chat Manual: Waktu terbuang hanya untuk menjawab "paket saya sudah sampai mana?".',
             ];
-            $phasedStrategy = 'Fase 1 mengotomatisasi pencatatan resi, tracking armada digital, dan portal tanda terima supir sebelum scale-up ke multi-cabang.';
+            $phasedStrategy = $isEn
+                ? 'Phase 1 automates digital waybills, GPS fleet tracking, and driver POD portal before scaling to multi-hub networks.'
+                : 'Fase 1 mengotomatisasi pencatatan resi, tracking armada digital, dan portal tanda terima supir sebelum scale-up ke multi-cabang.';
         } elseif ($isChurch) {
             $domainCategory = 'Church Management & Faith Community OS';
             $domainBadge = 'COMMUNITY_STEWARDSHIP';
-            $ticketBenchmark = 'Pelayanan ratusan hingga ribuan jemaat';
-            $roiHeadline = 'Efisiensi Warta Kertas & Bebas Biaya Langganan Bulanan Software Asing';
-            $roiFormula = 'Hemat Cetak Kertas Warta + Hemat Biaya Software Asing = Rp 15.000.000 - Rp 35.000.000 / tahun';
-            $roiNarrative = 'Menghilangkan beban cetak warta mingguan fisik dan membebaskan gereja dari biaya langganan bulanan software asing (seperti Elvanto/Planning Center) yang menguras kas pelayanan. Sekali bayar, sistem menjadi milik gereja selamanya.';
-            $projectedAnnualRoi = 'Stewardship Efisien: 100% alokasi persembahan kembali untuk pelayanan jemaat';
-            $inactionRisks = [
+            $ticketBenchmark = $isEn ? 'Ministry serving hundreds to thousands of congregants' : 'Pelayanan ratusan hingga ribuan jemaat';
+            $roiHeadline = $isEn ? 'Paperless Bulletins & Elimination of Expensive Recurring Foreign SaaS Subscriptions' : 'Efisiensi Warta Kertas & Bebas Biaya Langganan Bulanan Software Asing';
+            $roiFormula = $isEn ? 'Saved Bulletin Printing + Zero Monthly SaaS Fees = $1,000 - $2,500 / year' : 'Hemat Cetak Kertas Warta + Hemat Biaya Software Asing = Rp 15.000.000 - Rp 35.000.000 / tahun';
+            $roiNarrative = $isEn
+                ? 'Eliminates weekly bulletin printing overhead and liberates the church from expensive recurring subscriptions to foreign software. Pay once, and the platform belongs to the church permanently.'
+                : 'Menghilangkan beban cetak warta mingguan fisik dan membebaskan gereja dari biaya langganan bulanan software asing (seperti Elvanto/Planning Center) yang menguras kas pelayanan. Sekali bayar, sistem menjadi milik gereja selamanya.';
+            $projectedAnnualRoi = $isEn ? 'Stewardship Efficiency: 100% of ministry resources directed back to community pastoral care' : 'Stewardship Efisien: 100% alokasi persembahan kembali untuk pelayanan jemaat';
+            $inactionRisks = $isEn ? [
+                'Wasted Physical Bulletins: Reams of discarded paper after every Sunday service.',
+                'Fragmented Congregant Records: Family and baptismal records scattered across personal laptops of volunteers.',
+            ] : [
                 'Warta Cetak Mubazir: Puluhan rim kertas terbuang setiap minggu setelah ibadah selesai.',
                 'Database Jemaat Terfragmentasi: Data keluarga dan baptisan tercecer di laptop pribadi masing-masing pengurus.',
             ];
-            $phasedStrategy = 'Menerapkan Subsidi Efisiensi Komunitas Neriah Pro dengan termin 50/50 agar pelayanan digital dapat langsung melayani jemaat tanpa kendala anggaran.';
+            $phasedStrategy = $isEn
+                ? 'Apply Neriah Pro Community Stewardship Subsidy with 50/50 milestones so digital ministry can launch immediately without financial strain.'
+                : 'Menerapkan Subsidi Efisiensi Komunitas Neriah Pro dengan termin 50/50 agar pelayanan digital dapat langsung melayani jemaat tanpa kendala anggaran.';
         } elseif ($isCommerce) {
             $domainCategory = 'Independent Commercial Commerce Platform';
             $domainBadge = 'DIRECT_TO_CONSUMER';
-            $ticketBenchmark = 'Volume transaksi ritel harian';
-            $roiHeadline = 'Bebas Potongan Komisi Marketplace (15-20%) = Balik Modal dalam 1-3 Bulan';
-            $roiFormula = 'Penghematan 15% Fee Marketplace dari Omzet Rp 50M = Rp 7.500.000 / bulan';
-            $roiNarrative = 'Setiap transaksi yang dialihkan ke portal mandiri langsung menghemat potongan fee pihak ketiga. Membangun basis data pelanggan milik sendiri tanpa perang harga.';
-            $projectedAnnualRoi = '300% - 600% dari margin keuntungan yang terselamatkan';
-            $inactionRisks = [
+            $ticketBenchmark = $isEn ? 'Daily retail transaction volume' : 'Volume transaksi ritel harian';
+            $roiHeadline = $isEn ? 'Zero Marketplace Commission Cuts (15-20% saved) = Full ROI in 1-3 Months' : 'Bebas Potongan Komisi Marketplace (15-20%) = Balik Modal dalam 1-3 Bulan';
+            $roiFormula = $isEn ? 'Save 15% Marketplace Fees on Gross Volume = $600 / month' : 'Penghematan 15% Fee Marketplace dari Omzet Rp 50M = Rp 7.500.000 / bulan';
+            $roiNarrative = $isEn
+                ? 'Every purchase routed through your independent portal preserves third-party platform cuts. Build a proprietary customer database with zero price wars.'
+                : 'Setiap transaksi yang dialihkan ke portal mandiri langsung menghemat potongan fee pihak ketiga. Membangun basis data pelanggan milik sendiri tanpa perang harga.';
+            $projectedAnnualRoi = $isEn ? '300% - 600% from preserved gross operating margins' : '300% - 600% dari margin keuntungan yang terselamatkan';
+            $inactionRisks = $isEn ? [
+                'Third-Party Marketplace Vulnerability: Risk of sudden account suspensions or algorithmic downranking.',
+                'Zero Customer Data Ownership: Inability to run direct retention campaigns or private loyalty rewards.',
+            ] : [
                 'Ketergantungan Akun Pihak Ketiga: Risiko akun ditutup sepihak atau algoritma berubah mendadak.',
                 'Data Pelanggan Bukan Milik Anda: Tidak bisa melakukan promosi langsung atau retensi pelanggan setia.',
             ];
-            $phasedStrategy = 'Peluncuran toko mandiri dengan integrasi Midtrans Snap & Kurir Ekspedisi dalam 14 hari kerja.';
+            $phasedStrategy = $isEn
+                ? 'Independent storefront launch with integrated Payment Gateway & Express Logistics within 14 business days.'
+                : 'Peluncuran toko mandiri dengan integrasi Midtrans Snap & Kurir Ekspedisi dalam 14 hari kerja.';
         } else {
             $domainCategory = 'Custom Business Operations & Client Management Engine';
             $domainBadge = 'ENTERPRISE_OPERATIONS';
-            $ticketBenchmark = 'Operasional komersial terpadu';
-            $roiHeadline = 'Kredibilitas Nilai Jual & Otomatisasi Alur Kerja = Balik Modal dari 1-2 Klien Pertama';
-            $roiFormula = '1 Klien Baru Tertutup Berkat Kredibilitas Sistem = 100% BEP Investasi';
-            $roiNarrative = 'Sistem operasional modern meningkatkan positioning dan nilai tawar brand Anda di mata calon klien bernilai tinggi. Efisiensi pencatatan otomatis menghemat puluhan jam kerja tim setiap pekan.';
-            $projectedAnnualRoi = '250% - 500% dalam tahun pertama operasional';
-            $inactionRisks = [
+            $ticketBenchmark = $isEn ? 'Unified commercial operations' : 'Operasional komersial terpadu';
+            $roiHeadline = $isEn ? 'Brand Credibility & Workflow Automation = Full ROI from First 1-2 Clients' : 'Kredibilitas Nilai Jual & Otomatisasi Alur Kerja = Balik Modal dari 1-2 Klien Pertama';
+            $roiFormula = $isEn ? '1 New Enterprise Client Won via System Credibility = 100% System Investment Breakeven' : '1 Klien Baru Tertutup Berkat Kredibilitas Sistem = 100% BEP Investasi';
+            $roiNarrative = $isEn
+                ? 'A modern operational platform elevates your brand positioning before high-value enterprise clients. Automated record-keeping saves dozens of manual staff hours every week.'
+                : 'Sistem operasional modern meningkatkan positioning dan nilai tawar brand Anda di mata calon klien bernilai tinggi. Efisiensi pencatatan otomatis menghemat puluhan jam kerja tim setiap pekan.';
+            $projectedAnnualRoi = $isEn ? '250% - 500% within the first operational year' : '250% - 500% dalam tahun pertama operasional';
+            $inactionRisks = $isEn ? [
+                'Unprofessional Brand Impression: High-value clients hesitate to pay premium rates to businesses relying on manual spreadsheets.',
+                'Human-Error Repetitive Workload: Valuable leadership time lost to manual data re-entry that machines should execute.',
+            ] : [
                 'Citra Usaha Terlihat Kurang Profesional: Klien ragu membayar mahal pada bisnis yang pencatatannya masih serba manual.',
                 'Beban Kerja Berulang (Human-Error): Waktu berharga terbuang untuk rekap data rutin yang seharusnya bisa dikerjakan mesin.',
             ];
-            $phasedStrategy = 'Mulai dengan arsitektur Modern Monolith teruji yang siap pakai dalam 14-21 hari kerja.';
+            $phasedStrategy = $isEn
+                ? 'Launch with battle-tested Modern Monolith architecture ready for deployment in 14-21 business days.'
+                : 'Mulai dengan arsitektur Modern Monolith teruji yang siap pakai dalam 14-21 hari kerja.';
         }
 
         $isRetail = $blueprint->isRetailLicense();
 
         $noRegretGuarantees = [
             [
-                'title' => 'Kepemilikan Penuh 100% (Zero Vendor Lock-in)',
+                'title' => $isEn ? '100% Full IP Ownership (Zero Vendor Lock-in)' : 'Kepemilikan Penuh 100% (Zero Vendor Lock-in)',
                 'desc' => $isRetail
-                    ? 'Seluruh hak pakai blueprint arsitektur, DDL database, dan starter code diserahkan penuh kepada Anda. Anda bebas mengembangkannya bersama tim internal tanpa ketergantungan sewa platform tertutup.'
-                    : 'Seluruh hak akses repositori privat GitHub dan basis data diserahkan penuh kepada Anda. Anda memegang kunci aset digital Anda sendiri tanpa ketergantungan sewa platform tertutup.',
+                    ? ($isEn
+                        ? 'All architecture blueprint rights, database DDL, and starter code are 100% transferred to you. Free to develop with your internal team with zero recurring proprietary lock-in.'
+                        : 'Seluruh hak pakai blueprint arsitektur, DDL database, dan starter code diserahkan penuh kepada Anda. Anda bebas mengembangkannya bersama tim internal tanpa ketergantungan sewa platform tertutup.')
+                    : ($isEn
+                        ? 'All private GitHub repository access and database rights are 100% transferred to you. You hold the keys to your digital assets with zero vendor lock-in.'
+                        : 'Seluruh hak akses repositori privat GitHub dan basis data diserahkan penuh kepada Anda. Anda memegang kunci aset digital Anda sendiri tanpa ketergantungan sewa platform tertutup.'),
                 'badge' => 'FULL_IP_OWNERSHIP',
             ],
             [
-                'title' => 'Garansi Scope Freeze SHA-256 (Nol Biaya Tersembunyi)',
+                'title' => $isEn ? 'Cryptographic Scope Freeze SHA-256 (Zero Hidden Fees)' : 'Garansi Scope Freeze SHA-256 (Nol Biaya Tersembunyi)',
                 'desc' => $isRetail
-                    ? 'Seluruh rincian fitur pada PRD ini dikunci secara kriptografis. Spesifikasi arsitektur yang Anda beli bersifat final, terverifikasi integritasnya, dan bebas biaya lisensi siluman.'
-                    : 'Seluruh rincian fitur pada PRD ini dikunci secara kriptografis. Anda tidak akan pernah mengalami tagihan biaya tambahan siluman di tengah pengerjaan sprint.',
+                    ? ($isEn
+                        ? 'All feature specifications in this PRD are cryptographically hashed. The architecture specifications you purchase are final, tamper-proof, and free of stealth license fees.'
+                        : 'Seluruh rincian fitur pada PRD ini dikunci secara kriptografis. Spesifikasi arsitektur yang Anda beli bersifat final, terverifikasi integritasnya, dan bebas biaya lisensi siluman.')
+                    : ($isEn
+                        ? 'All feature specifications in this PRD are cryptographically hashed. You will never experience surprise change-order invoices mid-sprint.'
+                        : 'Seluruh rincian fitur pada PRD ini dikunci secara kriptografis. Anda tidak akan pernah mengalami tagihan biaya tambahan siluman di tengah pengerjaan sprint.'),
                 'badge' => 'ZERO_HIDDEN_COSTS',
             ],
             [
-                'title' => 'Arsitektur Modern Monolith O(1) Tanpa Lemot',
-                'desc' => 'Ditenagai Laravel 13, Filament v5 Enterprise, dan PostgreSQL Strict ULID. Website tetap cepat diakses sub-detik bahkan saat data atau galeri foto bertambah ribuan.',
+                'title' => $isEn ? 'Modern Monolith O(1) Architecture Without Performance Degradation' : 'Arsitektur Modern Monolith O(1) Tanpa Lemot',
+                'desc' => $isEn
+                    ? 'Powered by Laravel 13, Filament v5 Enterprise, and PostgreSQL Strict ULID. The application stays sub-second fast even as records and photo galleries grow into the tens of thousands.'
+                    : 'Ditenagai Laravel 13, Filament v5 Enterprise, dan PostgreSQL Strict ULID. Website tetap cepat diakses sub-detik bahkan saat data atau galeri foto bertambah ribuan.',
                 'badge' => 'O(1)_SCALABILITY',
             ],
             [
-                'title' => 'Desain Anti-AI-Slop & Tampilan Berkelas Internasional',
-                'desc' => 'Antarmuka dibangun dengan estetika berstandar Silicon Valley (Clean Typography, Subtle Radius, Zero Pop-up Murahan) yang menaikkan martabat brand Anda di hadapan klien kelas atas.',
+                'title' => $isEn ? 'Anti-AI-Slop Design & International-Class Aesthetics' : 'Desain Anti-AI-Slop & Tampilan Berkelas Internasional',
+                'desc' => $isEn
+                    ? 'Crafted with Silicon Valley tier aesthetics (Clean Typography, Subtle Radius, Zero cheap popups) elevating your brand credibility before enterprise clients.'
+                    : 'Antarmuka dibangun dengan estetika berstandar Silicon Valley (Clean Typography, Subtle Radius, Zero Pop-up Murahan) yang menaikkan martabat brand Anda di hadapan klien kelas atas.',
                 'badge' => 'PREMIUM_AESTHETICS',
             ],
             [
                 'title' => $isRetail
-                    ? 'Lisensi Digital 1x Bayar & Bebas Utang Termin (100% Lunas)'
-                    : 'Termin 50/50 Midtrans & Garansi 30 Hari Bug-Free',
+                    ? ($isEn ? 'One-Time Digital Architecture License (100% Debt-Free)' : 'Lisensi Digital 1x Bayar & Bebas Utang Termin (100% Lunas)')
+                    : ($isEn ? '50/50 Milestones & 30-Day Bug-Free Guarantee' : 'Termin 50/50 Midtrans & Garansi 30 Hari Bug-Free'),
                 'desc' => $isRetail
-                    ? 'Pembelian lisensi kode arsitektur mandiri 1x bayar tanpa cicilan termin DP 50%, tanpa biaya tersembunyi, dan tanpa langganan bulanan. Anda langsung mengunduh seluruh spesifikasi PRD, DDL SQL Strict ULID, Docker scaffold, dan rules AI coding agent secara permanen.'
-                    : 'DP 50% diamankan via payment gateway resmi berizin Bank Indonesia. Pelunasan 50% hanya dibayarkan setelah Anda menguji dan menerima sistem secara nyata dengan garansi bug 30 hari penuh.',
+                    ? ($isEn
+                        ? 'One-time independent code license purchase with zero recurring installment debt, zero hidden fees, and zero monthly subscriptions. You immediately download the complete PRD, Strict ULID SQL DDL, Docker scaffolding, and AI coding agent rules permanently.'
+                        : 'Pembelian lisensi kode arsitektur mandiri 1x bayar tanpa cicilan termin DP 50%, tanpa biaya tersembunyi, dan tanpa langganan bulanan. Anda langsung mengunduh seluruh spesifikasi PRD, DDL SQL Strict ULID, Docker scaffold, dan rules AI coding agent secara permanen.')
+                    : ($isEn
+                        ? '50% initial milestone secured via authorized payment gateway. The remaining 50% is only payable after you thoroughly test and accept the working system with a comprehensive 30-day warranty.'
+                        : 'DP 50% diamankan via payment gateway resmi berizin Bank Indonesia. Pelunasan 50% hanya dibayarkan setelah Anda menguji dan menerima sistem secara nyata dengan garansi bug 30 hari penuh.'),
                 'badge' => $isRetail ? 'ONE_TIME_LICENSE' : '100%_RISK_PROTECTION',
             ],
         ];
@@ -2278,11 +2495,11 @@ PROMPT;
                 'projected_annual_roi' => $projectedAnnualRoi,
             ],
             'cost_of_inaction' => [
-                'title' => 'Biaya Fatal Menunda: Risiko & Kerugian Jika Tetap Membiarkan Proses Manual',
+                'title' => $isEn ? 'Fatal Cost of Inaction: Risks & Losses of Maintaining Manual Workflows' : 'Biaya Fatal Menunda: Risiko & Kerugian Jika Tetap Membiarkan Proses Manual',
                 'risks' => $inactionRisks,
             ],
             'win_win_strategy' => [
-                'title' => 'Strategi Investasi Menang-Menang (Win-Win Phased Kickoff)',
+                'title' => $isEn ? 'Win-Win Phased Kickoff Strategy' : 'Strategi Investasi Menang-Menang (Win-Win Phased Kickoff)',
                 'recommendation' => $phasedStrategy,
             ],
             'why_neriah_pro_guarantees' => $noRegretGuarantees,
@@ -2293,24 +2510,31 @@ PROMPT;
      * Calculate transparent, professional itemized scope cost breakdown
      * derived 100% from client questionnaire inputs.
      */
-    public static function calculateItemizedEstimation(VisionBlueprint $blueprint, array $options = []): array
+    public static function calculateItemizedEstimation(VisionBlueprint $blueprint, array $options = [], bool $isEn = false): array
     {
         $items = [];
 
         // 1. Fondasi Arsitektur Monolith (Base Core)
         $items[] = [
-            'category' => 'Fondasi Arsitektur',
+            'category' => $isEn ? 'Architectural Foundation' : 'Fondasi Arsitektur',
             'code' => 'BASE-CORE',
-            'title' => 'Pondasi Modern Monolith & Setup Keamanan Enterprise',
-            'desc' => 'Arsitektur Laravel 13, Filament v5 Enterprise, Database PostgreSQL 16+ Strict ULID, Sanitasi OWASP Top 10, Dark/Light Mode, dan Deploy Container VPS Docker/Nixpacks.',
-            'complexity' => 'Standar Wajib',
+            'title' => $isEn ? 'Modern Monolith Foundation & Enterprise Security Setup' : 'Pondasi Modern Monolith & Setup Keamanan Enterprise',
+            'desc' => $isEn
+                ? 'Laravel 13 architecture, Filament v5 Enterprise, PostgreSQL 16+ Strict ULID database, OWASP Top 10 sanitization, Dark/Light Mode, and Docker/Nixpacks VPS container deployment.'
+                : 'Arsitektur Laravel 13, Filament v5 Enterprise, Database PostgreSQL 16+ Strict ULID, Sanitasi OWASP Top 10, Dark/Light Mode, dan Deploy Container VPS Docker/Nixpacks.',
+            'complexity' => $isEn ? 'Mandatory Standard' : 'Standar Wajib',
             'amount' => 5000000.00,
         ];
 
         // 2. Dekomposisi Fitur MVP (Poin per Fitur Wajib yang Diinput Klien)
-        $rawMvp = self::parseItems($blueprint->fitur_wajib ?: 'Manajemen Pengguna & RBAC, Input Formulir Data, Rekap Database Dinamis, Ekspor PDF/Excel.');
+        $rawMvp = self::parseItems($blueprint->fitur_wajib ?: ($isEn ? 'User Management & RBAC, Structured Intake Forms, Dynamic Database Recap, PDF/Excel Export.' : 'Manajemen Pengguna & RBAC, Input Formulir Data, Rekap Database Dinamis, Ekspor PDF/Excel.'));
         if (empty($rawMvp)) {
-            $rawMvp = [
+            $rawMvp = $isEn ? [
+                ['title' => 'Authentication & RBAC', 'desc' => 'Secure authentication with Role-Based Access Control and ULID identifiers.'],
+                ['title' => 'Structured Intake Forms', 'desc' => 'Validated data collection with Anti-Spam protection.'],
+                ['title' => 'Administrative Dashboard', 'desc' => 'Filament PHP control center with instant data filter tables.'],
+                ['title' => 'Reporting & Data Export', 'desc' => 'PDF and Excel export features for daily reconciliation needs.'],
+            ] : [
                 ['title' => 'Autentikasi & RBAC', 'desc' => 'Login aman dengan Role-Based Access Control dan ULID identifiers.'],
                 ['title' => 'Formulir Intake Terstruktur', 'desc' => 'Pengumpulan data tervalidasi dengan proteksi Anti-Spam.'],
                 ['title' => 'Dasbor Administrasi', 'desc' => 'Pusat kendali berbasis Filament PHP dengan tabel filter data instan.'],
@@ -2326,47 +2550,49 @@ PROMPT;
                       str_contains($t, 'booking') || str_contains($t, 'rekam medis') || str_contains($t, 'escrow') ||
                       str_contains($t, 'chat') || str_contains($t, 'real-time') || str_contains($t, 'realtime') ||
                       str_contains($t, 'payroll') || str_contains($t, 'pos') || str_contains($t, 'kasir') ||
-                      str_contains($t, 'tracking') || str_contains($t, 'pelacakan');
+                      str_contains($t, 'tracking') || str_contains($t, 'pelacakan') || str_contains($t, 'payment');
             
             $isLow = str_contains($t, 'kontak') || str_contains($t, 'faq') || str_contains($t, 'profil') ||
                      str_contains($t, 'banner') || str_contains($t, 'about') || str_contains($t, 'tentang') ||
-                     str_contains($t, 'galeri') || str_contains($t, 'buku tamu');
+                     str_contains($t, 'galeri') || str_contains($t, 'buku tamu') || str_contains($t, 'contact');
 
             if ($isHigh) {
-                $featComplexity = 'Kompleks / Transaksional';
+                $featComplexity = $isEn ? 'Complex / Transactional' : 'Kompleks / Transaksional';
                 $featAmount = 4500000.00;
             } elseif ($isLow) {
-                $featComplexity = 'Ringan / Informasi Dasar';
+                $featComplexity = $isEn ? 'Light / Informational' : 'Ringan / Informasi Dasar';
                 $featAmount = 1500000.00;
             } else {
-                $featComplexity = 'Menengah / Alur Interaktif';
+                $featComplexity = $isEn ? 'Medium / Interactive Workflow' : 'Menengah / Alur Interaktif';
                 $featAmount = 3000000.00;
             }
 
             $items[] = [
-                'category' => 'Fitur MVP Spesifik',
+                'category' => $isEn ? 'Specific MVP Features' : 'Fitur MVP Spesifik',
                 'code' => 'FEAT-MVP-' . ($idx + 1),
                 'title' => $feat['title'],
-                'desc' => $feat['desc'] ?: 'Spesifikasi fungsional operasional sistem.',
+                'desc' => $feat['desc'] ?: ($isEn ? 'System functional operational specification.' : 'Spesifikasi fungsional operasional sistem.'),
                 'complexity' => $featComplexity,
                 'amount' => $featAmount,
             ];
         }
 
         // 3. Aktor Sistem & Portal Hak Akses (Multi-Role)
-        $rawActors = self::parseActors($blueprint->aktor_sistem ?: 'Superadmin, Klien', $blueprint->nama_bisnis ?? '', $blueprint->target_audiens ?? '');
+        $rawActors = self::parseActors($blueprint->aktor_sistem ?: ($isEn ? 'Superadmin, Client' : 'Superadmin, Klien'), $blueprint->nama_bisnis ?? '', $blueprint->target_audiens ?? '', $isEn);
         $actorCount = count($rawActors);
         // 1-2 Role sudah tercover di Base Core. Role ke-3 dan seterusnya dihitung per portal
         if ($actorCount > 2) {
             $extraRoles = array_slice($rawActors, 2);
             foreach ($extraRoles as $rIdx => $role) {
-                $roleName = is_array($role) ? ($role['name'] ?? 'Peran Tambahan') : (string) $role;
+                $roleName = is_array($role) ? ($role['name'] ?? ($isEn ? 'Additional Role' : 'Peran Tambahan')) : (string) $role;
                 $items[] = [
-                    'category' => 'Aktor & Hak Akses',
+                    'category' => $isEn ? 'Actors & Access Rights' : 'Aktor & Hak Akses',
                     'code' => 'ROLE-PORTAL-' . ($rIdx + 1),
-                    'title' => 'Portal & Guard Otorisasi: ' . $roleName,
-                    'desc' => 'Penyediaan navigasi terpisah, filter data terisolasi, dan authorization policy khusus untuk peran ' . $roleName . '.',
-                    'complexity' => 'Menengah',
+                    'title' => ($isEn ? 'Portal & Authorization Guard: ' : 'Portal & Guard Otorisasi: ') . $roleName,
+                    'desc' => $isEn
+                        ? ('Dedicated navigation, isolated data scope, and specific authorization policies for the ' . $roleName . ' role.')
+                        : ('Penyediaan navigasi terpisah, filter data terisolasi, dan authorization policy khusus untuk peran ' . $roleName . '.'),
+                    'complexity' => $isEn ? 'Medium' : 'Menengah',
                     'amount' => 1500000.00,
                 ];
             }
@@ -2375,46 +2601,54 @@ PROMPT;
         // 4. Kebutuhan Integrasi Pihak Ketiga
         $rawIntegrasi = strtolower($blueprint->kebutuhan_integrasi ?: '');
         if (!empty($rawIntegrasi) && $rawIntegrasi !== 'tidak ada' && $rawIntegrasi !== 'none') {
-            if (str_contains($rawIntegrasi, 'payment') || str_contains($rawIntegrasi, 'midtrans') || str_contains($rawIntegrasi, 'xendit') || str_contains($rawIntegrasi, 'qris') || str_contains($rawIntegrasi, 'virtual account')) {
+            if (str_contains($rawIntegrasi, 'payment') || str_contains($rawIntegrasi, 'midtrans') || str_contains($rawIntegrasi, 'xendit') || str_contains($rawIntegrasi, 'qris') || str_contains($rawIntegrasi, 'virtual account') || str_contains($rawIntegrasi, 'stripe')) {
                 $items[] = [
-                    'category' => 'Integrasi Pihak Ketiga',
+                    'category' => $isEn ? 'Third-Party Integrations' : 'Integrasi Pihak Ketiga',
                     'code' => 'INT-PAYMENT',
-                    'title' => 'Payment Gateway Integration (Midtrans Snap / QRIS / VA)',
-                    'desc' => 'Integrasi HTTP Basic Auth Snap Token, penerima Webhook callback otomatis, log rekonsiliasi audit trail, dan perlindungan replay attack.',
-                    'complexity' => 'Menengah',
+                    'title' => $isEn ? 'Payment Gateway Integration (Midtrans Snap / Stripe / QRIS / VA)' : 'Payment Gateway Integration (Midtrans Snap / QRIS / VA)',
+                    'desc' => $isEn
+                        ? 'Snap Token HTTP Basic Auth, automatic Webhook callback listener, audit trail reconciliation logs, and replay attack prevention.'
+                        : 'Integrasi HTTP Basic Auth Snap Token, penerima Webhook callback otomatis, log rekonsiliasi audit trail, dan perlindungan replay attack.',
+                    'complexity' => $isEn ? 'Medium' : 'Menengah',
                     'amount' => 2500000.00,
                 ];
             }
 
             if (str_contains($rawIntegrasi, 'whatsapp') || str_contains($rawIntegrasi, 'wa') || str_contains($rawIntegrasi, 'fonnte') || str_contains($rawIntegrasi, 'notifikasi')) {
                 $items[] = [
-                    'category' => 'Integrasi Pihak Ketiga',
+                    'category' => $isEn ? 'Third-Party Integrations' : 'Integrasi Pihak Ketiga',
                     'code' => 'INT-WHATSAPP',
-                    'title' => 'WhatsApp Gateway & Queue Worker Notifikasi Real-time',
-                    'desc' => 'Pengiriman pesan transaksi/warta otomatis dengan background worker Redis untuk mencegah lag pada UI klien.',
-                    'complexity' => 'Menengah',
+                    'title' => $isEn ? 'WhatsApp Gateway & Real-Time Notification Queue Worker' : 'WhatsApp Gateway & Queue Worker Notifikasi Real-time',
+                    'desc' => $isEn
+                        ? 'Automated transactional messaging via background Redis queues preventing client UI lag.'
+                        : 'Pengiriman pesan transaksi/warta otomatis dengan background worker Redis untuk mencegah lag pada UI klien.',
+                    'complexity' => $isEn ? 'Medium' : 'Menengah',
                     'amount' => 2000000.00,
                 ];
             }
 
             if (str_contains($rawIntegrasi, 'maps') || str_contains($rawIntegrasi, 'ongkir') || str_contains($rawIntegrasi, 'kurir') || str_contains($rawIntegrasi, 'rajaongkir') || str_contains($rawIntegrasi, 'lokasi')) {
                 $items[] = [
-                    'category' => 'Integrasi Pihak Ketiga',
+                    'category' => $isEn ? 'Third-Party Integrations' : 'Integrasi Pihak Ketiga',
                     'code' => 'INT-LOGISTICS',
-                    'title' => 'Logistik Ekspedisi & Geocoding Maps Platform',
-                    'desc' => 'Koneksi tarif kurir instan (JNE/TIKI/POS) dan penanda koordinat lokasi pelanggan pada peta interaktif.',
-                    'complexity' => 'Menengah',
+                    'title' => $isEn ? 'Logistics Courier & Geocoding Maps Platform' : 'Logistik Ekspedisi & Geocoding Maps Platform',
+                    'desc' => $isEn
+                        ? 'Instant courier rates connection and interactive customer location pinning.'
+                        : 'Koneksi tarif kurir instan (JNE/TIKI/POS) dan penanda koordinat lokasi pelanggan pada peta interaktif.',
+                    'complexity' => $isEn ? 'Medium' : 'Menengah',
                     'amount' => 2500000.00,
                 ];
             }
 
             if (str_contains($rawIntegrasi, 'ai') || str_contains($rawIntegrasi, 'gemini') || str_contains($rawIntegrasi, 'openai') || str_contains($rawIntegrasi, 'vector') || str_contains($rawIntegrasi, 'rag')) {
                 $items[] = [
-                    'category' => 'Integrasi Pihak Ketiga',
+                    'category' => $isEn ? 'Third-Party Integrations' : 'Integrasi Pihak Ketiga',
                     'code' => 'INT-AI-COPILOT',
-                    'title' => 'AI Copilot RAG & Basis Data Semantik (pgvector)',
-                    'desc' => 'Penyimpanan vector embeddings dan pencarian similaritas semantik HNSW langsung di basis data relasional PostgreSQL.',
-                    'complexity' => 'Tinggi',
+                    'title' => $isEn ? 'AI Copilot RAG & Semantic Database (pgvector)' : 'AI Copilot RAG & Basis Data Semantik (pgvector)',
+                    'desc' => $isEn
+                        ? 'Vector embeddings storage and HNSW semantic similarity search directly in PostgreSQL relational database.'
+                        : 'Penyimpanan vector embeddings dan pencarian similaritas semantik HNSW langsung di basis data relasional PostgreSQL.',
+                    'complexity' => $isEn ? 'High' : 'Tinggi',
                     'amount' => 5000000.00,
                 ];
             }
@@ -2425,11 +2659,13 @@ PROMPT;
         $rawScale = strtolower($metadata['skala_pengguna'] ?? '');
         if (str_contains($rawScale, '100.000') || str_contains($rawScale, '1.000.000') || str_contains($rawScale, 'jutaan') || str_contains($rawScale, 'high concurrency')) {
             $items[] = [
-                'category' => 'Infrastruktur & Skala',
+                'category' => $isEn ? 'Infrastructure & Scale' : 'Infrastruktur & Skala',
                 'code' => 'INFRA-CONCURRENCY',
-                'title' => 'High-Concurrency Redis Caching & Keyset Keystone O(1)',
-                'desc' => 'Optimasi query database anti-lemot dengan cursor keyset pagination O(1) dan caching agresif untuk melayani ratusan ribu pengguna.',
-                'complexity' => 'Menengah',
+                'title' => $isEn ? 'High-Concurrency Redis Caching & Keyset Keystone O(1)' : 'High-Concurrency Redis Caching & Keyset Keystone O(1)',
+                'desc' => $isEn
+                    ? 'Sub-10ms query optimization with keyset cursor pagination O(1) and aggressive caching to serve hundreds of thousands of users.'
+                    : 'Optimasi query database anti-lemot dengan cursor keyset pagination O(1) dan caching agresif untuk melayani ratusan ribu pengguna.',
+                'complexity' => $isEn ? 'Medium' : 'Menengah',
                 'amount' => 3500000.00,
             ];
         }
@@ -2439,11 +2675,13 @@ PROMPT;
         $isMobileClient = str_contains($rawPlatform, 'flutter') || str_contains($rawPlatform, 'mobile') || str_contains($rawPlatform, 'ios') || str_contains($rawPlatform, 'android');
         if ($isMobileClient) {
             $items[] = [
-                'category' => 'Multi-Platform Client',
+                'category' => $isEn ? 'Multi-Platform Client' : 'Multi-Platform Client',
                 'code' => 'PLATFORM-MOBILE',
-                'title' => 'Cross-Platform Native Client (Flutter / Mobile iOS & Android)',
-                'desc' => 'Pengembangan antarmuka mobile native dengan SQLite offline-first sync engine terpadu.',
-                'complexity' => 'Tinggi',
+                'title' => $isEn ? 'Cross-Platform Native Client (Flutter / Mobile iOS & Android)' : 'Cross-Platform Native Client (Flutter / Mobile iOS & Android)',
+                'desc' => $isEn
+                    ? 'Cross-platform native mobile interface with integrated SQLite offline-first sync engine.'
+                    : 'Pengembangan antarmuka mobile native dengan SQLite offline-first sync engine terpadu.',
+                'complexity' => $isEn ? 'High' : 'Tinggi',
                 'amount' => 8500000.00,
             ];
         }
@@ -2463,11 +2701,13 @@ PROMPT;
         if ($isChurch && $baseSubtotal > 15000000) {
             $discount = round(($baseSubtotal - 10000000) * 0.4, -5);
             $items[] = [
-                'category' => 'Subsidi & Penyesuaian',
+                'category' => $isEn ? 'Subsidies & Adjustments' : 'Subsidi & Penyesuaian',
                 'code' => 'GRANT-COMMUNITY',
-                'title' => 'Subsidi Efisiensi Komunitas / Pelayanan Non-Profit',
-                'desc' => 'Penyesuaian biaya efisiensi arsitektur modular Neriah Pro untuk institusi keagamaan dan komunitas sosial.',
-                'complexity' => 'Pengurang Biaya',
+                'title' => $isEn ? 'Community Efficiency Subsidy / Non-Profit Ministry' : 'Subsidi Efisiensi Komunitas / Pelayanan Non-Profit',
+                'desc' => $isEn
+                    ? 'Neriah Pro modular architecture cost adjustment for religious institutions and social non-profits.'
+                    : 'Penyesuaian biaya efisiensi arsitektur modular Neriah Pro untuk institusi keagamaan dan komunitas sosial.',
+                'complexity' => $isEn ? 'Fee Reduction' : 'Pengurang Biaya',
                 'amount' => -$discount,
             ];
             $baseSubtotal -= $discount;
@@ -2504,62 +2744,88 @@ PROMPT;
         $velocityTiers = [
             [
                 'id' => 'standard',
-                'name' => 'Standard Velocity (30 Hari Kerja)',
-                'duration' => '30 Hari Kerja',
+                'name' => $isEn ? 'Standard Velocity (30 Business Days)' : 'Standard Velocity (30 Hari Kerja)',
+                'duration' => $isEn ? '30 Business Days' : '30 Hari Kerja',
                 'badge' => 'STANDARD_PACE // BEST_VALUE',
-                'speed_multiplier' => '1.0x (Pace Terencana)',
+                'speed_multiplier' => $isEn ? '1.0x (Planned Pace)' : '1.0x (Pace Terencana)',
                 'contract_amount' => $standardContract,
                 'dp_amount' => $standardDp,
                 'pelunasan_amount' => $standardPelunasan,
                 'ai_quota_spec' => 'Modern Monolith Blueprint Engine',
-                'squad_allocation' => '1 Dedicated Fullstack Engineer + QA Reviewer',
-                'cost_formula' => 'Nilai Riil Itemized Scope (' . count($items) . ' Komponen Teranalisis)',
-                'ai_swarm_specs' => [
+                'squad_allocation' => $isEn ? '1 Dedicated Fullstack Engineer + QA Reviewer' : '1 Dedicated Fullstack Engineer + QA Reviewer',
+                'cost_formula' => $isEn
+                    ? ('Real Itemized Scope Value (' . count($items) . ' Analyzed Components)')
+                    : ('Nilai Riil Itemized Scope (' . count($items) . ' Komponen Teranalisis)'),
+                'ai_swarm_specs' => $isEn ? [
+                    'Architecture: Laravel 13, Filament v5, PostgreSQL ULID, Docker VPS',
+                    'Feature List: Exact match of ' . count($rawMvp) . ' requested MVP features',
+                    'Access Control: Multi-role isolated with strict authorization',
+                    'Warranty: 30-Day Bug-free Support + Full Private GitHub Repo Access',
+                ] : [
                     'Arsitektur: Laravel 13, Filament v5, PostgreSQL ULID, Docker VPS',
                     'Daftar Fitur: Terhitung persis dari ' . count($rawMvp) . ' fitur MVP yang diajukan',
                     'Hak Akses: Multi-role terisolasi dengan otorisasi ketat',
                     'Garansi: 30 Hari Bug-free Support + Akses Penuh Private Repo GitHub',
                 ],
-                'description' => 'Kecepatan pengerjaan standar terencana dengan biaya investasi paling efisien dan transparan.',
+                'description' => $isEn
+                    ? 'Planned standard velocity with the most transparent and cost-efficient investment.'
+                    : 'Kecepatan pengerjaan standar terencana dengan biaya investasi paling efisien dan transparan.',
             ],
             [
                 'id' => 'fast_track',
                 'name' => 'Gemini Ultra Swarm Parallel Sprint',
-                'duration' => '14 Hari Kerja',
+                'duration' => $isEn ? '14 Business Days' : '14 Hari Kerja',
                 'badge' => 'RECOMMENDED // ULTRA_SWARM',
-                'speed_multiplier' => '1.5x (Akselerasi 2 Pekan)',
+                'speed_multiplier' => $isEn ? '1.5x (2-Week Acceleration)' : '1.5x (Akselerasi 2 Pekan)',
                 'contract_amount' => $fastTrackContract,
                 'dp_amount' => $fastTrackDp,
                 'pelunasan_amount' => $fastTrackPelunasan,
                 'ai_quota_spec' => 'Gemini Ultra 8-Agent Swarm Cluster + High-Reasoning Token Pipeline',
-                'squad_allocation' => 'Lead Architect + 2 Dedicated Senior Engineers + AI Agentic Pair',
-                'cost_formula' => 'Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + Sewa Swarm AI Ultra Cluster (Rp ' . number_format(max(0, $fastTrackContract - $standardContract), 0, ',', '.') . ')',
-                'ai_swarm_specs' => [
+                'squad_allocation' => $isEn ? 'Lead Architect + 2 Dedicated Senior Engineers + AI Agentic Pair' : 'Lead Architect + 2 Dedicated Senior Engineers + AI Agentic Pair',
+                'cost_formula' => $isEn
+                    ? ('Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + Swarm AI Ultra Cluster (Rp ' . number_format(max(0, $fastTrackContract - $standardContract), 0, ',', '.') . ')')
+                    : ('Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + Sewa Swarm AI Ultra Cluster (Rp ' . number_format(max(0, $fastTrackContract - $standardContract), 0, ',', '.') . ')'),
+                'ai_swarm_specs' => $isEn ? [
+                    'All feature specifications included in Standard tier',
+                    'Parallelized Frontend Island & Backend DB Migration simultaneously',
+                    'Uncapped Gemini Ultra inference quota for zero-queue code synthesis',
+                    'Priority Review and automated Staging deployment at each sprint end',
+                ] : [
                     'Seluruh cakupan rincian fitur paket Standard',
                     'Paralelisasi Frontend Island & Backend DB Migration serentak',
                     'Kuota inferensi Gemini Ultra Uncapped untuk sintesis kode tanpa antrean',
                     'Prioritas Review dan Deploy Staging otomatis setiap akhir sprint',
                 ],
-                'description' => 'Akselerasi pengerjaan 14 hari kerja dengan bantuan kluster komputasi Swarm AI untuk memangkas waktu rilis hingga 50%.',
+                'description' => $isEn
+                    ? 'Accelerated 14 business days execution powered by Swarm AI compute cluster to cut delivery time by 50%.'
+                    : 'Akselerasi pengerjaan 14 hari kerja dengan bantuan kluster komputasi Swarm AI untuk memangkas waktu rilis hingga 50%.',
             ],
             [
                 'id' => 'hyper_sprint',
                 'name' => 'Hyper-Sprint Emergency (24/7 War Room)',
-                'duration' => '7 Hari Kalender',
+                'duration' => $isEn ? '7 Calendar Days' : '7 Hari Kalender',
                 'badge' => 'TOP_SPEED // 24_7_WAR_ROOM',
-                'speed_multiplier' => '3.0x (Rilis 1 Pekan Kalender)',
+                'speed_multiplier' => $isEn ? '3.0x (1 Calendar Week Release)' : '3.0x (Rilis 1 Pekan Kalender)',
                 'contract_amount' => $hyperSprintContract,
                 'dp_amount' => $hyperSprintDp,
                 'pelunasan_amount' => $hyperSprintPelunasan,
                 'ai_quota_spec' => 'Gemini Ultra Uncapped Swarm + Dedicated 24/7 Engineering Shift',
-                'squad_allocation' => 'Dedicated Tri-Engineer War Room (24/7 Shift Rotation)',
-                'cost_formula' => 'Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + 24/7 War Room Shift Squad (Rp ' . number_format(max(0, $hyperSprintContract - $standardContract), 0, ',', '.') . ')',
-                'ai_swarm_specs' => [
+                'squad_allocation' => $isEn ? 'Dedicated Tri-Engineer War Room (24/7 Shift Rotation)' : 'Dedicated Tri-Engineer War Room (24/7 Shift Rotation)',
+                'cost_formula' => $isEn
+                    ? ('Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + 24/7 War Room Shift Squad (Rp ' . number_format(max(0, $hyperSprintContract - $standardContract), 0, ',', '.') . ')')
+                    : ('Base Scope (Rp ' . number_format($standardContract, 0, ',', '.') . ') + 24/7 War Room Shift Squad (Rp ' . number_format(max(0, $hyperSprintContract - $standardContract), 0, ',', '.') . ')'),
+                'ai_swarm_specs' => $isEn ? [
+                    'Non-stop 24-hour engineer rotation with continuous staging deployment',
+                    '99.9% Uptime SLA & Emergency Response with dedicated on-call DevOps',
+                    'Maximum inference throughput for instant code synthesis',
+                ] : [
                     'Rotasi engineer 24 jam non-stop dengan deployment kontinyu ke Staging',
                     'SLA Uptime & Respons Darurat 99.9% dengan dedicated DevOps on-call',
                     'Throughput inferensi maksimum untuk sintesis kode instan',
                 ],
-                'description' => 'Pengerjaan prioritas darurat 1 pekan kalender untuk kebutuhan bisnis dengan urgensi kritis absolut.',
+                'description' => $isEn
+                    ? 'Emergency 1 calendar week sprint for business needs with absolute critical urgency.'
+                    : 'Pengerjaan prioritas darurat 1 pekan kalender untuk kebutuhan bisnis dengan urgensi kritis absolut.',
             ],
         ];
 
@@ -4662,12 +4928,18 @@ PROMPT;
         $clean = trim(preg_replace('/["\r\n]+/', ' ', $text));
         $clean = str_replace(['"', '`', '$', '[', ']', '{', '}'], ["'", '', '', '', '', '', ''], $clean);
 
-        // Strip trailing dots/ellipses from legacy or cached input
-        $clean = preg_replace('/\s*\.{2,}\s*$/', '', $clean);
+        // Auto-heal chopped words if present
+        $clean = preg_replace('/\btransfer\s+ban(?:\.\.\.|\b)/i', 'Transfer Bandara / Wisata', $clean);
+        $clean = preg_replace('/\brefund\s+ot(?:om)?(?:\.\.\.|\b)/i', 'Refund Otomatis', $clean);
 
-        // If sentence contains lengthy parenthetical lists like "(Transfer Bandara Ngurah Rai, Day Tour Bali...)",
-        // condense the parentheses so the action sentence stays concise and punchy
-        $clean = preg_replace_callback('/\(([^)]{30,})\)/', function($m) {
+        // Strip all dots/ellipses (both inline and trailing)
+        $clean = preg_replace('/\s*\.{2,}\s*/', ' ', $clean);
+        $clean = preg_replace('/\s+dll\.?$/i', '', $clean);
+        $clean = preg_replace('/\s+etc\.?$/i', '', $clean);
+        $clean = rtrim($clean, " .,;:!?-");
+
+        // If sentence contains lengthy parenthetical lists, condense them cleanly
+        $clean = preg_replace_callback('/\(([^)]{25,})\)/', function($m) {
             $inside = $m[1];
             $parts = explode(',', $inside);
             if (count($parts) > 1) {
@@ -4676,7 +4948,7 @@ PROMPT;
             return '(' . trim($inside) . ')';
         }, $clean);
 
-        // If text still exceeds maxTotalLength, truncate gracefully at word boundary without slicing words in half
+        // If text still exceeds maxTotalLength, truncate gracefully at word boundary without slicing words in half and WITHOUT trailing dots
         if (mb_strlen($clean) > $maxTotalLength) {
             $truncated = mb_substr($clean, 0, $maxTotalLength);
             $lastSpace = mb_strrpos($truncated, ' ');
@@ -4685,6 +4957,7 @@ PROMPT;
             } else {
                 $clean = $truncated;
             }
+            $clean = rtrim($clean, " .,;:!?-");
         }
 
         if (mb_strlen($clean) <= $width) {
@@ -6796,7 +7069,7 @@ PROMPT;
     /**
      * Synthesize 10 Pillars of Software Factory OS at 100% Maturity.
      */
-    public static function generateSoftwareFactoryOsPillars(string $projectName): array
+    public static function generateSoftwareFactoryOsPillars(string $projectName, bool $isEn = false): array
     {
         return [
             [
@@ -6804,7 +7077,9 @@ PROMPT;
                 'name' => 'Intake & Discovery Engine (Zero-Loss Idea Intake & Multi-Format Intelligence)',
                 'maturity_score' => '100% Ultimate Maturity',
                 'status' => 'BULLETPROOF_PROVEN',
-                'description' => 'Mampu menyerap 100% ide bisnis mentah, proposal, sketsa, dokumen multi-format (PDF, DOCX, XLSX, TXT, MD), serta gambar diagram OCR tanpa kehilangan satu parameter atau nuansa fitur pun.',
+                'description' => $isEn
+                    ? 'Absorbs 100% of raw business ideas, proposals, sketches, multi-format documents (PDF, DOCX, XLSX, TXT, MD), and OCR diagrams without losing a single parameter or feature nuance.'
+                    : 'Mampu menyerap 100% ide bisnis mentah, proposal, sketsa, dokumen multi-format (PDF, DOCX, XLSX, TXT, MD), serta gambar diagram OCR tanpa kehilangan satu parameter atau nuansa fitur pun.',
                 'capabilities' => [
                     'Multi-format file digestion via MarkItDown (PDF, Word, Excel, PPTX, Image OCR)',
                     'Zero-Loss Idea Intake directive enforcing full requirement extraction',
@@ -6818,7 +7093,9 @@ PROMPT;
                 'name' => 'PRD & Architecture Blueprint Synthesis (26 Parameter Enterprise Standard)',
                 'maturity_score' => '100% Ultimate Maturity',
                 'status' => 'BULLETPROOF_PROVEN',
-                'description' => 'Sintesis dokumen kebutuhan teknis level konsultan tier-1: Executive Summary, Target Persona, Strict ULID Schema, Keyset Cursor O(1), OWASP Top 10, PDP/UU ITE Legal Compliance, WBS 5 Sprint Mermaid Gantt, dan API Contract Matrix.',
+                'description' => $isEn
+                    ? 'Tier-1 consulting-grade technical synthesis: Executive Summary, Target Persona, Strict ULID Schema, Keyset Cursor O(1), OWASP Top 10, PDP/GDPR Legal Compliance, WBS 5 Sprint Mermaid Gantt, and API Contract Matrix.'
+                    : 'Sintesis dokumen kebutuhan teknis level konsultan tier-1: Executive Summary, Target Persona, Strict ULID Schema, Keyset Cursor O(1), OWASP Top 10, PDP/UU ITE Legal Compliance, WBS 5 Sprint Mermaid Gantt, dan API Contract Matrix.',
                 'capabilities' => [
                     'Structured Gherkin (Given-When-Then) behavior contracts for every feature',
                     'Mermaid.js interactive sequence, workflow, ERD, and Gantt charts',
@@ -6832,7 +7109,9 @@ PROMPT;
                 'name' => 'Deterministic Database & ORM Engine (PostgreSQL 16 Strict ULID & Keyset Cursor O(1))',
                 'maturity_score' => '100% Ultimate Maturity',
                 'status' => 'BULLETPROOF_PROVEN',
-                'description' => 'Skema basis data relasional enterprise PostgreSQL 16 dengan Primary Key ULID 26 karakter, foreignUlid relasional konkret, zero auto-increment, dan indexing Keyset Cursor O(1) kebal degradasi performa hingga jutaan baris data.',
+                'description' => $isEn
+                    ? 'Enterprise PostgreSQL 16 relational database schema with 26-char ULID primary keys, concrete foreignUlid relations, zero auto-increment, and Keyset Cursor O(1) indexing immune to performance degradation at millions of records.'
+                    : 'Skema basis data relasional enterprise PostgreSQL 16 dengan Primary Key ULID 26 karakter, foreignUlid relasional konkret, zero auto-increment, dan indexing Keyset Cursor O(1) kebal degradasi performa hingga jutaan baris data.',
                 'capabilities' => [
                     'Strict ULID 26-char string primary keys (distributed sortable, zero collision)',
                     'Keyset Cursor Pagination O(1) eliminating costly OFFSET SQL queries',
@@ -6846,7 +7125,9 @@ PROMPT;
                 'name' => 'Automated Scaffolding & Code Export (Full-Stack Architecture Skeleton)',
                 'maturity_score' => '100% Ultimate Maturity',
                 'status' => 'BULLETPROOF_PROVEN',
-                'description' => 'Generator kode otomatis yang memproduksi 25+ file arsitektur siap pakai: Eloquent Models with HasUlids, Migrations Strict ULID, API Controllers Keyset Cursor O(1), Form Requests, Pest API Contract Test skeleton, .cursorrules & AGENTS.md, serta OpenAPI 3.0 specs.',
+                'description' => $isEn
+                    ? 'Automated code generator producing 25+ production-ready architectural files: Eloquent Models with HasUlids, Strict ULID Migrations, Keyset Cursor O(1) API Controllers, Form Requests, Pest API Contract Test skeleton, .cursorrules & AGENTS.md, and OpenAPI 3.0 specs.'
+                    : 'Generator kode otomatis yang memproduksi 25+ file arsitektur siap pakai: Eloquent Models with HasUlids, Migrations Strict ULID, API Controllers Keyset Cursor O(1), Form Requests, Pest API Contract Test skeleton, .cursorrules & AGENTS.md, serta OpenAPI 3.0 specs.',
                 'capabilities' => [
                     'Full Laravel 13 & Filament v5 scaffolding with typed contracts',
                     'Production-ready API V1 controllers with cursor pagination and validation rules',
@@ -6860,7 +7141,9 @@ PROMPT;
                 'name' => 'Containerization & Cloud Infrastructure (Docker, PHP 8.5+, PG 16, Redis 7, Nginx Hardened)',
                 'maturity_score' => '100% Ultimate Maturity',
                 'status' => 'BULLETPROOF_PROVEN',
-                'description' => 'Arsitektur infrastruktur terisolasi: Docker Compose multi-service, Nginx reverse proxy hardened dengan Content Security Policy (CSP), HTTP/2, rate limiting, serta Redis 7 cache & queue broker.',
+                'description' => $isEn
+                    ? 'Isolated infrastructure architecture: multi-service Docker Compose, hardened Nginx reverse proxy with Content Security Policy (CSP), HTTP/2, rate limiting, and Redis 7 cache & queue broker.'
+                    : 'Arsitektur infrastruktur terisolasi: Docker Compose multi-service, Nginx reverse proxy hardened dengan Content Security Policy (CSP), HTTP/2, rate limiting, serta Redis 7 cache & queue broker.',
                 'capabilities' => [
                     'Docker multi-stage build optimization for PHP 8.5+ with OPcache Preloading',
                     'PostgreSQL 16 container with tuned shared_buffers and work_mem',
@@ -6874,7 +7157,9 @@ PROMPT;
                 'name' => 'Automated Testing & Synthetic Seeder (Pest API Contract Tests & 100+ Synthetic Rows)',
                 'maturity_score' => '100% Ultimate Maturity',
                 'status' => 'BULLETPROOF_PROVEN',
-                'description' => 'Suite pengujian otomatis berbasis Pest PHP: healthcheck endpoint, Keyset Cursor pagination validation, RBAC privilege escalation tests, double-payment idempotency tests, serta seeder 100+ baris data realistis untuk stress-testing.',
+                'description' => $isEn
+                    ? 'Automated test suite powered by Pest PHP: healthcheck probe, Keyset Cursor pagination validation, RBAC privilege escalation tests, double-payment idempotency tests, and synthetic seeder with 100+ realistic rows for load testing.'
+                    : 'Suite pengujian otomatis berbasis Pest PHP: healthcheck endpoint, Keyset Cursor pagination validation, RBAC privilege escalation tests, double-payment idempotency tests, serta seeder 100+ baris data realistis untuk stress-testing.',
                 'capabilities' => [
                     'Comprehensive Feature & Unit tests covering 8+ critical API contract dimensions',
                     'SyntheticDataSeeder generating 100+ realistic enterprise rows with valid ULIDs',
@@ -6888,7 +7173,9 @@ PROMPT;
                 'name' => 'CI/CD Pipeline & Zero-Downtime Deployment (Automated deploy.sh 6-Scenario & Health Check)',
                 'maturity_score' => '100% Ultimate Maturity',
                 'status' => 'BULLETPROOF_PROVEN',
-                'description' => 'Otomasi deployment shell script cerdas dengan 6 skenario presisi (UI/Blade, Migrasi Aman, Fresh DB Staging, Package Install, Dump Autoload, Asset Build) yang kompatibel dengan Nixpacks/Railpacks serta pre-flight backup database.',
+                'description' => $isEn
+                    ? 'Intelligent automated shell deployment with 6 precise scenarios (UI/Blade, Safe Migration, Fresh DB Staging, Package Install, Dump Autoload, Asset Build) compatible with Nixpacks/Railpacks and automated pre-flight database backups.'
+                    : 'Otomasi deployment shell script cerdas dengan 6 skenario presisi (UI/Blade, Migrasi Aman, Fresh DB Staging, Package Install, Dump Autoload, Asset Build) yang kompatibel dengan Nixpacks/Railpacks serta pre-flight backup database.',
                 'capabilities' => [
                     'Automated pre-migration database snapshot backup and rollback runbook',
                     'Zero-downtime OPcache reset and atomic symlink deployment compatibility',
@@ -6902,7 +7189,9 @@ PROMPT;
                 'name' => 'Legal Contract & Cryptographic Scope Lock (SHA-256 Hash Tamper-Proof & Scope Freeze)',
                 'maturity_score' => '100% Ultimate Maturity',
                 'status' => 'BULLETPROOF_PROVEN',
-                'description' => 'Pencegahan scope creep melalui penguncian ruang lingkup (scope freeze) bersegel hash kriptografis SHA-256 yang mengikat secara hukum, dilengkapi syarat serah terima, SLA garansi, dan hak cipta kekayaan intelektual.',
+                'description' => $isEn
+                    ? 'Scope creep elimination through cryptographically sealed SHA-256 scope freeze contracts with clear acceptance criteria, warranty SLAs, and intellectual property protection.'
+                    : 'Pencegahan scope creep melalui penguncian ruang lingkup (scope freeze) bersegel hash kriptografis SHA-256 yang mengikat secara hukum, dilengkapi syarat serah terima, SLA garansi, dan hak cipta kekayaan intelektual.',
                 'capabilities' => [
                     'SHA-256 cryptographic digest calculation over finalized PRD specifications',
                     'Digital timestamping and audit trail recording contract acceptance',
@@ -6916,7 +7205,9 @@ PROMPT;
                 'name' => 'Managed Sprint Capacity & Anti-Collision Engine (Midtrans Idempotency & Batch Isolation)',
                 'maturity_score' => '100% Ultimate Maturity',
                 'status' => 'BULLETPROOF_PROVEN',
-                'description' => 'Filosofi kapasitas terkendali (maksimal 2–3 proyek paralel per batch) untuk menjaga fokus engineer, didukung webhook Midtrans idempoten yang mencegah transaksi ganda (double-payment prevention) dan benturan timeline jadwal.',
+                'description' => $isEn
+                    ? 'Managed capacity philosophy (max 2-3 parallel projects per batch) preserving engineer focus, backed by idempotent Midtrans webhooks preventing double-payments and scheduling timeline collisions.'
+                    : 'Filosofi kapasitas terkendali (maksimal 2–3 proyek paralel per batch) untuk menjaga fokus engineer, didukung webhook Midtrans idempoten yang mencegah transaksi ganda (double-payment prevention) dan benturan timeline jadwal.',
                 'capabilities' => [
                     'Strict parallel batch capacity limiting to prevent developer burnout and ensure quality',
                     'Midtrans Snap webhook idempotency with atomic database transactions',
@@ -6930,7 +7221,9 @@ PROMPT;
                 'name' => 'Client Transparency Portal & Asset Lifecycle Governance (Customer Dashboard & Auto Expiry Alert)',
                 'maturity_score' => '100% Ultimate Maturity',
                 'status' => 'BULLETPROOF_PROVEN',
-                'description' => 'Portal klien transparan real-time (`/customer/dashboard`) untuk memantau status sprint, unduhan deliverable, serta sistem pemantauan masa aktif server, domain, dan SSL dengan peringatan kedaluwarsa otomatis.',
+                'description' => $isEn
+                    ? 'Real-time client transparency portal (`/customer/dashboard`) for sprint tracking and deliverable downloads, combined with automated asset lifecycle monitoring for server, domain, and SSL certificates with proactive expiration alerts.'
+                    : 'Portal klien transparan real-time (`/customer/dashboard`) untuk memantau status sprint, unduhan deliverable, serta sistem pemantauan masa aktif server, domain, dan SSL dengan peringatan kedaluwarsa otomatis.',
                 'capabilities' => [
                     'Real-time sprint progress tracking with live milestone check-ins',
                     'Centralized asset lifecycle manager with automated WhatsApp/Email renewal alerts',
@@ -6945,43 +7238,69 @@ PROMPT;
     /**
      * Synthesize actionable options and recommendations to reach World Class Enterprise Standard.
      */
-    public static function generateWorldClassStandardAdvisory(string $projectName): array
+    public static function generateWorldClassStandardAdvisory(string $projectName, bool $isEn = false): array
     {
         return [
-            'overview' => 'Rekomendasi strategis berikut dirancang untuk mentransformasi sistem ' . $projectName . ' dari standar aplikasi komersial biasa menuju World Class Enterprise Standard (standar rekayasa perangkat lunak kelas dunia yang diadopsi oleh perusahaan teknologi terdepan).',
+            'overview' => $isEn
+                ? ('The following strategic recommendations are designed to elevate ' . $projectName . ' from standard commercial software into a World Class Enterprise System adopting engineering benchmarks used by leading technology enterprises.')
+                : ('Rekomendasi strategis berikut dirancang untuk mentransformasi sistem ' . $projectName . ' dari standar aplikasi komersial biasa menuju World Class Enterprise Standard (standar rekayasa perangkat lunak kelas dunia yang diadopsi oleh perusahaan teknologi terdepan).'),
             'strategic_pillars' => [
                 [
-                    'area' => '1. Skalabilitas & Kinerja Ekstrem (Sub-10ms Latency & High Throughput)',
+                    'area' => $isEn ? '1. Extreme Scalability & Performance (Sub-10ms Latency & High Throughput)' : '1. Skalabilitas & Kinerja Ekstrem (Sub-10ms Latency & High Throughput)',
                     'current_capability' => 'Modern Monolith Laravel 13 + PostgreSQL Strict ULID',
-                    'world_class_option' => 'Terapkan Keyset Cursor Pagination O(1) di seluruh tabel transaksi dan integrasikan Redis Sentinel / Redis Cluster untuk caching query berat dengan event-driven invalidation. Siapkan read-replica database PostgreSQL untuk memisahkan beban baca analitik dari beban tulis transaksi OLTP.',
-                    'benefit' => 'Sistem mampu melayani 100.000+ request per detik tanpa lonjakan latensi (P99 < 50ms) dan kebal terhadap degradasi performa pada volume jutaan record.',
+                    'world_class_option' => $isEn
+                        ? 'Implement Keyset Cursor Pagination O(1) across all transactional tables and integrate Redis Sentinel / Redis Cluster for heavy query caching with event-driven invalidation. Provision PostgreSQL read-replicas to decouple analytical read queries from transactional OLTP writes.'
+                        : 'Terapkan Keyset Cursor Pagination O(1) di seluruh tabel transaksi dan integrasikan Redis Sentinel / Redis Cluster untuk caching query berat dengan event-driven invalidation. Siapkan read-replica database PostgreSQL untuk memisahkan beban baca analitik dari beban tulis transaksi OLTP.',
+                    'benefit' => $isEn
+                        ? 'The system effortlessly handles 100,000+ requests per second without latency spikes (P99 < 50ms) and remains immune to performance degradation at multi-million row scale.'
+                        : 'Sistem mampu melayani 100.000+ request per detik tanpa lonjakan latensi (P99 < 50ms) dan kebal terhadap degradasi performa pada volume jutaan record.',
                 ],
                 [
-                    'area' => '2. Keamanan Tingkat FinTech & Kepatuhan Regulasi (Zero-Trust Security)',
+                    'area' => $isEn ? '2. FinTech-Grade Security & Regulatory Compliance (Zero-Trust Security)' : '2. Keamanan Tingkat FinTech & Kepatuhan Regulasi (Zero-Trust Security)',
                     'current_capability' => 'Sanitasi input, CSRF, Password Hashing Argon2id, Role-Based Access Control',
-                    'world_class_option' => 'Terapkan Zero-Trust Architecture: Enkripsi at-rest menggunakan AES-256-GCM pada data pribadi (PII), audit log dengan tamper-proof cryptographic chaining (SHA-256 seal), Two-Factor Authentication (2FA TOTP), serta rate limiting berlapis dengan Cloudflare WAF dan middleware AiThreatShield.',
-                    'benefit' => 'Lolos audit kepatuhan ISO 27001 dan UU PDP (Pelindungan Data Pribadi) No. 27 Tahun 2022, melindungi reputasi bisnis dari ancaman kebocoran data dan tuntutan hukum.',
+                    'world_class_option' => $isEn
+                        ? 'Implement Zero-Trust Architecture: AES-256-GCM encryption at rest for personally identifiable information (PII), audit trails with cryptographic chaining (SHA-256 seal), Two-Factor Authentication (2FA TOTP), and multi-layered rate limiting with Cloudflare WAF and AiThreatShield middleware.'
+                        : 'Terapkan Zero-Trust Architecture: Enkripsi at-rest menggunakan AES-256-GCM pada data pribadi (PII), audit log dengan tamper-proof cryptographic chaining (SHA-256 seal), Two-Factor Authentication (2FA TOTP), serta rate limiting berlapis dengan Cloudflare WAF dan middleware AiThreatShield.',
+                    'benefit' => $isEn
+                        ? 'Passes ISO 27001 and Personal Data Protection (PDP) compliance audits, safeguarding business reputation against data breaches and legal liabilities.'
+                        : 'Lolos audit kepatuhan ISO 27001 dan UU PDP (Pelindungan Data Pribadi) No. 27 Tahun 2022, melindungi reputasi bisnis dari ancaman kebocoran data dan tuntutan hukum.',
                 ],
                 [
-                    'area' => '3. Ketahanan & Ketersediaan Sistem (99.99% High Availability & Disaster Recovery)',
+                    'area' => $isEn ? '3. System Resilience & High Availability (99.99% SLA & Disaster Recovery)' : '3. Ketahanan & Ketersediaan Sistem (99.99% High Availability & Disaster Recovery)',
                     'current_capability' => 'Single-node deployment dengan automated backup script',
-                    'world_class_option' => 'Terapkan strategi Multi-Region Disaster Recovery (RPO < 5 menit, RTO < 15 menit) menggunakan automated WAL shipping / Barman untuk PostgreSQL, Object Storage terdistribusi (Cloudflare R2 / AWS S3), serta Circuit Breaker Pattern pada seluruh panggilan API pihak ketiga (WhatsApp Gateway, Midtrans).',
-                    'benefit' => 'Kegagalan pada salah satu penyedia infrastruktur atau gateway eksternal tidak melumpuhkan operasional inti sistem klien (Fail-Safe & Self-Healing).',
+                    'world_class_option' => $isEn
+                        ? 'Implement Multi-Region Disaster Recovery (RPO < 5 min, RTO < 15 min) with automated WAL shipping / Barman for PostgreSQL, distributed Object Storage (Cloudflare R2 / AWS S3), and Circuit Breaker Pattern on all third-party external APIs (WhatsApp Gateway, Midtrans).'
+                        : 'Terapkan strategi Multi-Region Disaster Recovery (RPO < 5 menit, RTO < 15 menit) menggunakan automated WAL shipping / Barman untuk PostgreSQL, Object Storage terdistribusi (Cloudflare R2 / AWS S3), serta Circuit Breaker Pattern pada seluruh panggilan API pihak ketiga (WhatsApp Gateway, Midtrans).',
+                    'benefit' => $isEn
+                        ? 'Failures in any single upstream provider or external gateway will not disrupt core business operations (Fail-Safe & Self-Healing).'
+                        : 'Kegagalan pada salah satu penyedia infrastruktur atau gateway eksternal tidak melumpuhkan operasional inti sistem klien (Fail-Safe & Self-Healing).',
                 ],
                 [
-                    'area' => '4. Inteligensi Bisnis Berbasis AI Agentic (Autonomous Agentic Workflow)',
+                    'area' => $isEn ? '4. Agentic AI Business Intelligence (Autonomous Agentic Workflow)' : '4. Inteligensi Bisnis Berbasis AI Agentic (Autonomous Agentic Workflow)',
                     'current_capability' => 'Multi-AI LLM Router (DeepSeek, Claude, Gemini, OpenAI, Grok) dengan failover',
-                    'world_class_option' => 'Evolusikan sistem dengan arsitektur Tri-Hybrid AI: RAG pgvector 768-dim dengan Dense + Sparse Reciprocal Rank Fusion (RRF), CAG (Context Augmented Generation) Cache O(1), KAG (Knowledge Augmented Graph Rules), serta Native Tool Calling Functions untuk mengeksekusi aksi bisnis otonom (pembuatan faktur, rekonsiliasi pembayaran, dsb).',
-                    'benefit' => 'Mengurangi 85% biaya operasional manual layanan pelanggan dan pemrosesan data dengan akurasi 100% tanpa risiko halusinasi AI.',
+                    'world_class_option' => $isEn
+                        ? 'Evolve the system into Tri-Hybrid AI architecture: pgvector 768-dim RAG with Dense + Sparse Reciprocal Rank Fusion (RRF), O(1) Context Augmented Generation (CAG) Cache, Knowledge Augmented Graph (KAG) Rules, and Native Tool Calling Functions to execute autonomous business actions (invoice generation, payment reconciliation, etc.).'
+                        : 'Evolusikan sistem dengan arsitektur Tri-Hybrid AI: RAG pgvector 768-dim dengan Dense + Sparse Reciprocal Rank Fusion (RRF), CAG (Context Augmented Generation) Cache O(1), KAG (Knowledge Augmented Graph Rules), serta Native Tool Calling Functions untuk mengeksekusi aksi bisnis otonom (pembuatan faktur, rekonsiliasi pembayaran, dsb).',
+                    'benefit' => $isEn
+                        ? 'Reduces 85% of manual customer service and data processing costs with 100% accuracy and zero AI hallucination risk.'
+                        : 'Mengurangi 85% biaya operasional manual layanan pelanggan dan pemrosesan data dengan akurasi 100% tanpa risiko halusinasi AI.',
                 ],
                 [
-                    'area' => '5. Tata Kelola Rekayasa Perangkat Lunak (DevOps & GitOps Pipeline)',
+                    'area' => $isEn ? '5. Software Engineering Governance (DevOps & GitOps Pipeline)' : '5. Tata Kelola Rekayasa Perangkat Lunak (DevOps & GitOps Pipeline)',
                     'current_capability' => 'deploy.sh 6-skenario dan Pest API test skeleton',
-                    'world_class_option' => 'Terapkan GitOps berbasis Trunk-Based Development: Pull Request otomatis divalidasi oleh AI Code Reviewer, Static Analysis (PHPStan level 8, Pint, ESLint), Pest mutation testing (min. 85% coverage), serta Canary Deployment bertahap dengan automated rollback berbasis metrik Prometheus/Grafana.',
-                    'benefit' => 'Siklus rilis fitur baru berlangsung dalam hitungan menit secara aman tanpa risiko regresi atau bug di lingkungan produksi.',
+                    'world_class_option' => $isEn
+                        ? 'Adopt GitOps Trunk-Based Development: Pull Requests automatically vetted by AI Code Reviewer, Static Analysis (PHPStan level 8, Pint, ESLint), Pest mutation testing (min. 85% coverage), and progressive Canary Deployments with automated metric-based rollbacks via Prometheus/Grafana.'
+                        : 'Terapkan GitOps berbasis Trunk-Based Development: Pull Request otomatis divalidasi oleh AI Code Reviewer, Static Analysis (PHPStan level 8, Pint, ESLint), Pest mutation testing (min. 85% coverage), serta Canary Deployment bertahap dengan automated rollback berbasis metrik Prometheus/Grafana.',
+                    'benefit' => $isEn
+                        ? 'New feature release cycles take minutes safely with zero regression risks in production.'
+                        : 'Siklus rilis fitur baru berlangsung dalam hitungan menit secara aman tanpa risiko regresi atau bug di lingkungan produksi.',
                 ],
             ],
-            'implementation_roadmap' => [
+            'implementation_roadmap' => $isEn ? [
+                'Phase 1 (Months 1-2)' => 'Core MVP Foundation: Strict ULID PostgreSQL, Keyset Cursor O(1), Midtrans Snap Idempotency, Filament Admin, and 10 Pillars Software Factory OS.',
+                'Phase 2 (Months 3-4)' => 'Scalability Acceleration: Redis caching layer, Third-Party Circuit Breakers, Automated Health Checks, and Customer Transparency Portal.',
+                'Phase 3 (Months 5-6)' => 'Enterprise Hardening: Tri-Hybrid AI Copilot integration, 2FA TOTP authentication, ISO 27001 audit preparation, and Multi-Region automated backup.',
+            ] : [
                 'Fase 1 (Bulan 1-2)' => 'Fondasi Core MVP: Strict ULID PostgreSQL, Keyset Cursor O(1), Midtrans Snap Idempotency, Filament Admin, dan 10 Pilar Software Factory OS.',
                 'Fase 2 (Bulan 3-4)' => 'Akselerasi Skalabilitas: Redis caching layer, Circuit Breaker integrasi pihak ketiga, Automated Health Checks, dan Customer Transparency Portal.',
                 'Fase 3 (Bulan 5-6)' => 'Enterprise Hardening: Tri-Hybrid AI Copilot integration, 2FA TOTP authentication, ISO 27001 audit preparation, dan Multi-Region automated backup.',

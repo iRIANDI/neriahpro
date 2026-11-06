@@ -5392,56 +5392,68 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
           return (
             <section id="section-composable-matrix" className={panelClass}>
-              {/* Header + Progressive Disclosure Mode Switcher */}
-              <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                <div>
-                  <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-800 dark:text-emerald-400 font-black block mb-1">
-                    PROJECT OS V12.0 ULTIMATE // 12 SEKTOR + 25 MENU L1–L4 + 5 ENTERPRISE GLUE + DAG SUB-PARTS + SYMBOL LOCK
-                  </span>
-                  <h3 className="text-lg font-black uppercase tracking-tight text-zinc-950 dark:text-zinc-100">
-                    {lang === 'en'
-                      ? 'Zero-Assumption Architecture, L1–L4 Enterprise Menus & 5 Guarantee Engines'
-                      : 'Kokpit Arsitektur Tanpa Asumsi, 25 Menu L1–L4 & 5 Mesin Penjamin Enterprise'}
-                  </h3>
-                  <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1 font-sans">
-                    {lang === 'en'
-                      ? 'Even a 5-word idea automatically blooms 25 L1–L4 Enterprise Sub-Menus + 5 Corporate Glue modules, compiled via Kahn\'s DAG Sub-Parts and SYMBOL_MANIFEST.json.'
-                      : 'Bahkan ide singkat 5 kata otomatis dimekarkan menjadi 25 Sub-Menu Operasional L1–L4 + 5 Modul Enterprise Glue setara SAP/Odoo, dikompilasi dengan Kahn DAG Sub-Part & SYMBOL_MANIFEST.json.'}
-                  </p>
-                </div>
+              {/* Header: Command Cockpit Layout with Full-Breathing Typography & Balanced Controls */}
+              <div className="border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4 space-y-2.5">
+                {/* Top Deck: Specification Pill & Studio IDE Quick Launch */}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider">
+                      PROJECT OS V12.0 ULTIMATE
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] font-mono text-zinc-600 dark:text-zinc-400 font-bold">
+                      12 SEKTOR • 25 MENU L1–L4 • 5 ENTERPRISE GLUE • DAG SUB-PARTS • SYMBOL LOCK
+                    </span>
+                  </div>
 
-                {/* Mode Switcher Buttons + 3-Pane Architect Studio Launch */}
-                <div className="shrink-0 flex flex-wrap items-center gap-2">
                   <a
                     href={initialData?.slug ? `/blueprint/studio/${initialData.slug}` : '/blueprint/studio'}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-[11px] font-black uppercase transition-all border border-emerald-500 shadow-xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-mono text-[10px] sm:text-[11px] font-black uppercase transition-all border border-emerald-500 shadow-xs cursor-pointer"
                     title={lang === 'en' ? 'Open Full-Screen 3-Pane Studio IDE' : 'Buka IDE Layar Penuh 3-Pane Studio'}
                   >
                     <span>🖥️</span>
                     <span>{lang === 'en' ? '3-Pane Studio IDE ↗' : 'Buka 3-Pane Studio ↗'}</span>
                   </a>
+                </div>
 
-                  <div className="inline-flex items-center p-0.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none">
-                    <button
-                      type="button"
-                      onClick={() => setMatrixMode('express')}
-                      className={`px-3 py-1 font-mono text-[10px] font-black uppercase transition-all rounded-none cursor-pointer ${matrixMode === 'express'
-                        ? 'bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 shadow-xs'
-                        : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
-                        }`}
-                    >
-                      {lang === 'en' ? '⚡ Guided Auto Mode' : '⚡ Mode Ringkas AI'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMatrixMode('workbench')}
-                      className={`px-3 py-1 font-mono text-[10px] font-black uppercase transition-all rounded-none cursor-pointer ${matrixMode === 'workbench'
-                        ? 'bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 shadow-xs'
-                        : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
-                        }`}
-                    >
-                      {lang === 'en' ? '🛠️ Architect Workbench (7 Tabs)' : '🛠️ Workbench Arsitek (7 Tab)'}
-                    </button>
+                {/* Main Deck: Wide Title + Subtitle & In-Page Mode Segmented Switcher */}
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3 pt-1">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-zinc-950 dark:text-zinc-100 leading-snug">
+                      {lang === 'en'
+                        ? 'Zero-Assumption Architecture, L1–L4 Enterprise Menus & 5 Guarantee Engines'
+                        : 'Kokpit Arsitektur Tanpa Asumsi, 25 Menu L1–L4 & 5 Mesin Penjamin Enterprise'}
+                    </h3>
+                    <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1 font-sans leading-relaxed max-w-4xl">
+                      {lang === 'en'
+                        ? 'Even a 5-word idea automatically blooms 25 L1–L4 Enterprise Sub-Menus + 5 Corporate Glue modules, compiled via Kahn\'s DAG Sub-Parts and SYMBOL_MANIFEST.json.'
+                        : 'Bahkan ide singkat 5 kata otomatis dimekarkan menjadi 25 Sub-Menu Operasional L1–L4 + 5 Modul Enterprise Glue setara SAP/Odoo, dikompilasi dengan Kahn DAG Sub-Part & SYMBOL_MANIFEST.json.'}
+                    </p>
+                  </div>
+
+                  {/* Mode Switcher Buttons */}
+                  <div className="shrink-0 flex items-center">
+                    <div className="inline-flex items-center p-0.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs">
+                      <button
+                        type="button"
+                        onClick={() => setMatrixMode('express')}
+                        className={`px-3 py-1.5 font-mono text-[10px] font-black uppercase transition-all rounded-none cursor-pointer ${matrixMode === 'express'
+                          ? 'bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 shadow-xs'
+                          : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
+                          }`}
+                      >
+                        {lang === 'en' ? '⚡ Guided Auto Mode' : '⚡ Mode Ringkas AI'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMatrixMode('workbench')}
+                        className={`px-3 py-1.5 font-mono text-[10px] font-black uppercase transition-all rounded-none cursor-pointer ${matrixMode === 'workbench'
+                          ? 'bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 shadow-xs'
+                          : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
+                          }`}
+                      >
+                        {lang === 'en' ? '🛠️ Architect Workbench (7 Tabs)' : '🛠️ Workbench Arsitek (7 Tab)'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -368,6 +368,10 @@ ATURAN KETAT:
 5. Pertahankan ID Fitur, tier ('mvp'), dan index yang sama.
 6. Kembalikan HANYA objek JSON valid (tanpa wrapper ```json).
 7. {$langMandate}
+8. STANDAR TEKNOLOGI TERKINI & IMPLEMENTASI TERBAIK:
+   Jika fitur melibatkan pencarian, filter katalog, rekomendasi, atau kecerdasan buatan, Anda WAJIB mengarsitekturkannya menggunakan standar terkini:
+   a) 18 Konsep RAG (Brij Kishore Pandey): Hybrid Search (pgvector HNSW + BM25 tsvector), Cross-Encoder Reranking, Chunking terstruktur (overlap 50 token), Parent-Child / Contextual Retrieval, Corrective RAG (CRAG) & Self-RAG untuk verifikasi akurasi, serta sitasi sumber (Grounded RAG). Dilarang keras query SQL LIKE '%...' atau pencarian naif.
+   b) 20 Konsep Agentic AI (Balawant Kadam): Tool Use (function calling), Model Context Protocol (MCP), Agentic Workflows multi-tahap, Guardrails (penyaringan PII & kepatuhan UU PDP), dan Observability (telemetri latency/token).
 TXT;
 
             $prompt = <<<TXT
@@ -448,6 +452,8 @@ ATURAN KETAT:
 3. Seluruh skenario pengujian Gherkin harus konkret dan mencakup edge cases spesifik.
 4. Jangan gunakan magic string atau dummy placeholder.
 5. Kembalikan HANYA array JSON valid berisikan objek-objek spesifikasi fitur.
+6. STANDAR TEKNOLOGI TERKINI & IMPLEMENTASI TERBAIK:
+   Fitur yang melibatkan pencarian, katalog, rekomendasi, atau AI wajib menerapkan 18 Konsep RAG (Hybrid Search pgvector + BM25, Reranking, Parent-Child Chunking, Grounded Citations) dan 20 Konsep Agentic AI (MCP, Tool Use, Guardrails, Observability).
 TXT;
 
             $prompt = <<<TXT
@@ -1426,6 +1432,7 @@ PROMPT;
                        "- Scalar Integrity: PKs, FKs, Unique Codes/Slugs, State Machine Statuses, and Hashes MUST remain scalar VARCHAR in relational schema.\n" .
                        "- Clean Brutalism: High contrast, rounded-none or subtle borders, strictly zero pill/capsule buttons.\n" .
                        "- Anti-Hardcoding: Magic strings and fuzzy dummy slug queries are strictly banned.\n" .
+                       "- Modern AI & Search Architecture: Features involving search, matching, recommendations, or generative AI MUST implement the 18 RAG Concepts (Hybrid Search [pgvector + BM25], Cross-Encoder Reranking, Parent-Child Chunking, Grounded Citations) and 20 Agentic AI Concepts (Tool Calling, MCP, Agentic Workflows, Guardrails, Observability). Naive SQL LIKE queries and ungrounded LLM prompts are strictly prohibited.\n" .
                        "- User Directive: {$directive}\n";
             }
 
@@ -1436,6 +1443,7 @@ PROMPT;
                    "- Integritas Skalar: PK, FK, Unique Code/Slug, Status State Machine, dan Hash WAJIB tetap VARCHAR skalar skema relasional, DILARANG dijadikan JSONB.\n" .
                    "- Clean Brutalism: Kontras tinggi, tanpa border capsule pill rounded-full.\n" .
                    "- Anti-Hardcoding: Dilarang keras magic strings atau dummy slug queries.\n" .
+                   "- Arsitektur AI & Pencarian Modern: Fitur yang melibatkan pencarian, pencocokan data, rekomendasi, atau kecerdasan buatan WAJIB menerapkan 18 Konsep RAG (Hybrid Search [pgvector + BM25], Cross-Encoder Reranking, Parent-Child Chunking, Grounded Citations) dan 20 Konsep Agentic AI (Tool Calling, MCP, Agentic Workflows, Guardrails, Observability). Dilarang keras query SQL LIKE '%...' atau prompt tanpa acuan data.\n" .
                    "- Petunjuk Pengguna: {$directive}\n";
         }
 

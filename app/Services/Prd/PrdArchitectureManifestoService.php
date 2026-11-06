@@ -758,6 +758,311 @@ class PrdArchitectureManifestoService
         ];
     }
 
+    /**
+     * Generate Comprehensive 18 RAG Concepts & Production Pipeline Architectural Matrix.
+     * Evaluates and categorizes the 18 fundamental RAG concepts from Brij Kishore Pandey's framework.
+     */
+    public static function generateRagArchitectureMatrix(string $businessName = 'Neriah Pro Platform', array $mvpItems = [], bool $isEn = false): array
+    {
+        $allConcepts = [
+            [
+                'id' => 1,
+                'name' => 'Basic / Naive RAG',
+                'badge' => 'Vector DB -> Top-K -> LLM',
+                'stage' => $isEn ? 'Foundation & Data Ingestion' : 'Fondasi & Penyerapan Data',
+                'stage_badge' => 'STAGE_1_FOUNDATION',
+                'priority' => 'BASELINE',
+                'desc' => $isEn
+                    ? 'Simple similarity search pipeline converting raw documents to chunks, storing in a vector store, and injecting Top-K matches into the prompt.'
+                    : 'Pipeline pencarian similaritas standar: dokumen dipotong menjadi chunks, disimpan di vector database, dan Top-K disuntikkan ke prompt LLM.',
+                'client_application' => $isEn
+                    ? 'Baseline setup for FAQ lookups and static knowledge base retrieval.'
+                    : 'Pondasi awal untuk pencarian FAQ statis dan basis pengetahuan dasar sistem.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 2,
+                'name' => 'Chunking',
+                'badge' => 'Recursive + 50-Token Overlap',
+                'stage' => $isEn ? 'Foundation & Data Ingestion' : 'Fondasi & Penyerapan Data',
+                'stage_badge' => 'STAGE_1_FOUNDATION',
+                'priority' => 'CRITICAL',
+                'desc' => $isEn
+                    ? 'Splits large documents into semantically coherent pieces (paragraphs/sentences) while preserving context continuity via 50-token overlap.'
+                    : 'Memecah dokumen besar menjadi potongan terstruktur dengan overlap 50 token guna menjaga kontinuitas konteks antar potongan kalimat.',
+                'client_application' => $isEn
+                    ? 'Splits operational policies, service catalog items, and contracts without sentence truncation.'
+                    : 'Memecah SOP operasional, katalog layanan, dan dokumen kontrak tanpa memotong makna klausul penting.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 3,
+                'name' => 'Embeddings',
+                'badge' => 'Text to Numerical Vectors',
+                'stage' => $isEn ? 'Foundation & Data Ingestion' : 'Fondasi & Penyerapan Data',
+                'stage_badge' => 'STAGE_1_FOUNDATION',
+                'priority' => 'CRITICAL',
+                'desc' => $isEn
+                    ? 'Translates natural text into dense numerical vectors (1536/3072 dimensions) where semantically similar concepts reside close in vector space.'
+                    : 'Mengubah teks narasi menjadi representasi vektor numerik (1536/3072 dimensi) sehingga makna kata yang serupa berdekatan dalam ruang vektor.',
+                'client_application' => $isEn
+                    ? 'Matches natural user requests (e.g., "sunset beach experience") with relevant catalog items even without exact keyword matches.'
+                    : 'Mencocokkan preferensi bebas pengguna dengan paket atau produk yang tepat meski menggunakan sinonim kata yang berbeda.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 4,
+                'name' => 'Vector Database',
+                'badge' => 'PostgreSQL 16 pgvector / HNSW',
+                'stage' => $isEn ? 'Foundation & Data Ingestion' : 'Fondasi & Penyerapan Data',
+                'stage_badge' => 'STAGE_1_FOUNDATION',
+                'priority' => 'CRITICAL',
+                'desc' => $isEn
+                    ? 'High-speed vector persistence using PostgreSQL 16 pgvector with Hierarchical Navigable Small World (HNSW) indexing for sub-millisecond retrieval.'
+                    : 'Penyimpanan vektor berkecepatan tinggi menggunakan PostgreSQL 16 pgvector dengan indeks HNSW untuk pencarian sub-milidetik O(log N).',
+                'client_application' => $isEn
+                    ? 'Colocated directly in enterprise PostgreSQL alongside relational tables, eliminating separate expensive vector database subscription costs.'
+                    : 'Tersimpan berdampingan dengan tabel relasional bisnis di PostgreSQL, memangkas biaya langganan database vektor eksternal.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 5,
+                'name' => 'Metadata Filtering',
+                'badge' => 'Filter by Tenant, Scope & Date',
+                'stage' => $isEn ? 'Retrieval & Search Optimization' : 'Retrieval & Presisi Pencarian',
+                'stage_badge' => 'STAGE_2_RETRIEVAL',
+                'priority' => 'HIGH',
+                'desc' => $isEn
+                    ? 'Hard-filters semantic vector queries using relational metadata attributes (tenant_id, department, date_range, status) before or after similarity math.'
+                    : 'Menyaring pencarian vektor menggunakan atribut metadata relasional (tenant_id, kategori, tanggal, status) demi akurasi dan keamanan data.',
+                'client_application' => $isEn
+                    ? 'Strict tenant isolation preventing users from retrieving data belonging to other organizations or expired catalog items.'
+                    : 'Isolasi data antar cabang/tenant dan memastikan hanya data aktif yang ditampilkan kepada pengguna.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 6,
+                'name' => 'Top-K Retrieval',
+                'badge' => 'Top K Most Similar Candidates',
+                'stage' => $isEn ? 'Retrieval & Search Optimization' : 'Retrieval & Presisi Pencarian',
+                'stage_badge' => 'STAGE_2_RETRIEVAL',
+                'priority' => 'CRITICAL',
+                'desc' => $isEn
+                    ? 'Extracts the top K highest-scoring candidate chunks (e.g., K=5 to K=10) based on cosine similarity distance.'
+                    : 'Mengambil sejumlah K kandidat potongan data terbaik (misal Top 5-10) berdasarkan skor cosine similarity tertinggi.',
+                'client_application' => $isEn
+                    ? 'Provides the most pertinent pieces of business data without overloading the model context window with irrelevant noise.'
+                    : 'Menyediakan referensi data yang paling relevan ke AI tanpa memboroskan token atau memenuhi konteks.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 7,
+                'name' => 'Hybrid Search',
+                'badge' => 'Semantic Vector + BM25 Keyword',
+                'stage' => $isEn ? 'Retrieval & Search Optimization' : 'Retrieval & Presisi Pencarian',
+                'stage_badge' => 'STAGE_2_RETRIEVAL',
+                'priority' => 'CRITICAL',
+                'desc' => $isEn
+                    ? 'Fuses semantic embeddings (pgvector) with exact keyword matching (PostgreSQL tsvector / BM25) using Reciprocal Rank Fusion (RRF).'
+                    : 'Menggabungkan pencarian semantik (kemiripan makna vektor) dengan pencarian kata kunci eksak (BM25 / PostgreSQL tsvector) melalui RRF.',
+                'client_application' => $isEn
+                    ? 'Guarantees that exact SKU codes, invoice numbers, specific names, and natural semantic concepts are all reliably located.'
+                    : 'Menjamin kode produk, nomor invoice, nama lokasi unik, dan konsep umum semuanya dapat ditemukan secara akurat 100%.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 8,
+                'name' => 'Reranking',
+                'badge' => 'Fast Top-20 -> Cross-Encoder -> Top-5',
+                'stage' => $isEn ? 'Retrieval & Search Optimization' : 'Retrieval & Presisi Pencarian',
+                'stage_badge' => 'STAGE_2_RETRIEVAL',
+                'priority' => 'HIGH',
+                'desc' => $isEn
+                    ? 'Performs fast preliminary retrieval of Top-20 candidates, then passes them through a specialized Cross-Encoder reranker to surface the true Top-5.'
+                    : 'Mengambil Top-20 kandidat secara cepat, lalu menyaring ulang dengan model Cross-Encoder Reranker untuk memilih Top-5 paling presisi.',
+                'client_application' => $isEn
+                    ? 'Eliminates marginal or distracting search matches, boosting LLM reasoning precision by up to 35%.'
+                    : 'Mengeliminasi data samar yang kurang relevan, meningkatkan presisi jawaban AI hingga 35%.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 9,
+                'name' => 'Query Rewriting',
+                'badge' => 'Conversational to Machine-Optimized',
+                'stage' => $isEn ? 'Query & Context Engineering' : 'Rekayasa Query & Konteks',
+                'stage_badge' => 'STAGE_3_CONTEXT',
+                'priority' => 'HIGH',
+                'desc' => $isEn
+                    ? 'Pre-processes colloquial, messy, or underspecified user prompts into crisp, domain-specific search vectors before querying the database.'
+                    : 'Mengubah kalimat santai atau ambigu pengguna menjadi formulasi query teknis yang tajam sebelum mencari ke database.',
+                'client_application' => $isEn
+                    ? 'Converts casual user requests into clear parameter lookups without requiring the user to speak technical jargon.'
+                    : 'Menerjemahkan input bebas klien menjadi parameter pencarian terstruktur secara transparan.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 10,
+                'name' => 'Multi-Query RAG',
+                'badge' => 'Parallel Perspectives & Deduplication',
+                'stage' => $isEn ? 'Query & Context Engineering' : 'Rekayasa Query & Konteks',
+                'stage_badge' => 'STAGE_3_CONTEXT',
+                'priority' => 'MEDIUM',
+                'desc' => $isEn
+                    ? 'Generates multiple query permutations covering distinct semantic facets, executes parallel lookups, and deduplicates the merged result set.'
+                    : 'Menghasilkan 3-4 sudut pandang query berbeda, menjalankan pencarian paralel, lalu menggabungkan dan menduplikasi hasilnya.',
+                'client_application' => $isEn
+                    ? 'Accommodates complex multi-faceted requirements (e.g., budget + accessibility + scheduling) in a single unified inquiry.'
+                    : 'Mengakomodasi kebutuhan kompleks multi-dimensi (anggaran, jadwal, batasan operasional) dalam satu inquiry.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 11,
+                'name' => 'Parent-Child Retrieval',
+                'badge' => 'Small Chunks Search, Large Parent Context',
+                'stage' => $isEn ? 'Query & Context Engineering' : 'Rekayasa Query & Konteks',
+                'stage_badge' => 'STAGE_3_CONTEXT',
+                'priority' => 'CRITICAL',
+                'desc' => $isEn
+                    ? 'Indexes granular child chunks for pinpoint mathematical similarity search, but injects the broader parent section/document into the LLM context.'
+                    : 'Menyimpan potongan kecil untuk akurasi pencarian vektor, namun menyuntikkan dokumen/bab induk yang utuh ke konteks LLM.',
+                'client_application' => $isEn
+                    ? 'Allows finding an exact price line item while giving the AI the entire governing policy context so answers never miss caveats.'
+                    : 'Menemukan baris harga spesifik sekaligus memberikan konteks syarat dan ketentuan utuh agar jawaban tidak parsial.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 12,
+                'name' => 'Contextual Retrieval',
+                'badge' => 'Prepended Surrounding Metadata',
+                'stage' => $isEn ? 'Query & Context Engineering' : 'Rekayasa Query & Konteks',
+                'stage_badge' => 'STAGE_3_CONTEXT',
+                'priority' => 'HIGH',
+                'desc' => $isEn
+                    ? 'Prepends document-level contextual headers and entity summaries onto each chunk prior to embedding generation to avoid orphan ambiguity.'
+                    : 'Menambahkan ringkasan konteks global pada tiap potongan sebelum di-embed, menghindari potongan data yatim tanpa konteks.',
+                'client_application' => $isEn
+                    ? 'Ensures individual items or tables retain awareness of the master project and client profile they originate from.'
+                    : 'Memastikan potongan data tahapan tetap mengenali proyek dan profil induknya secara utuh.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 13,
+                'name' => 'Agentic RAG',
+                'badge' => 'LLM Decides When & What to Search',
+                'stage' => $isEn ? 'Agentic Cognitive & Reliability' : 'Kognitif Agentic & Reliabilitas',
+                'stage_badge' => 'STAGE_4_AGENTIC',
+                'priority' => 'CRITICAL',
+                'desc' => $isEn
+                    ? 'The autonomous agent evaluates whether retrieval is needed, determines which tools/APIs to invoke, and iteratively refines missing facts.'
+                    : 'Agen AI secara dinamis mengevaluasi kebutuhan retrieval, memilih tools/API yang dipanggil, dan mengulang pencarian jika data kurang.',
+                'client_application' => $isEn
+                    ? 'Enables automated business dispatch: checking driver availability, calculating tolls, and verifying schedules autonomously.'
+                    : 'Otomatisasi alur bisnis: memeriksa ketersediaan armada, menghitung biaya operasional, dan memvalidasi jadwal secara cerdas.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 14,
+                'name' => 'Graph RAG',
+                'badge' => 'Knowledge Graphs for Connected Entities',
+                'stage' => $isEn ? 'Agentic Cognitive & Reliability' : 'Kognitif Agentic & Reliabilitas',
+                'stage_badge' => 'STAGE_4_AGENTIC',
+                'priority' => 'MEDIUM',
+                'desc' => $isEn
+                    ? 'Couples vector similarity search with structured knowledge graphs to traverse multi-hop entity relationships and dependencies.'
+                    : 'Menggabungkan pencarian vektor dengan Knowledge Graph untuk menelusuri relasi keterkaitan antar entitas multi-tahap.',
+                'client_application' => $isEn
+                    ? 'Prevents irrational scheduling collisions across interconnected drivers, vehicles, and multi-day stage itineraries.'
+                    : 'Mencegah bentrok jadwal antar pengemudi, unit armada, dan etape perjalanan jarak jauh.',
+                'recommended' => false,
+            ],
+            [
+                'id' => 15,
+                'name' => 'Corrective RAG (CRAG)',
+                'badge' => 'Evaluate Retrieval Quality & Auto-Correct',
+                'stage' => $isEn ? 'Agentic Cognitive & Reliability' : 'Kognitif Agentic & Reliabilitas',
+                'stage_badge' => 'STAGE_4_AGENTIC',
+                'priority' => 'HIGH',
+                'desc' => $isEn
+                    ? 'Evaluates retrieved chunks for factual relevance: if confident, proceed to generation; if ambiguous or poor, trigger fallback queries or web search.'
+                    : 'Mengevaluasi kualitas dokumen yang diambil: jika relevan lanjut ke LLM, jika tidak memadai lakukan koreksi query atau fallback search.',
+                'client_application' => $isEn
+                    ? 'Prevents the AI from answering with low-confidence or outdated information when internal records are ambiguous.'
+                    : 'Mencegah AI menjawab berdasarkan data usang atau meragukan, memberikan peringatan jika data perlu verifikasi staf.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 16,
+                'name' => 'Self-RAG',
+                'badge' => 'Self-Reflection & Critique Loop',
+                'stage' => $isEn ? 'Agentic Cognitive & Reliability' : 'Kognitif Agentic & Reliabilitas',
+                'stage_badge' => 'STAGE_4_AGENTIC',
+                'priority' => 'HIGH',
+                'desc' => $isEn
+                    ? 'The model self-reflects at each phase: "Should I retrieve?", "Is the evidence relevant?", "Is the output verified by the source corpus?".'
+                    : 'Model melakukan refleksi mandiri bertahap: "Apakah perlu retrieval?", "Apakah bukti cukup?", "Apakah output terbukti dari acuan?".',
+                'client_application' => $isEn
+                    ? 'Ensures financial calculations and scheduling timelines are rigorously validated against source documents before user display.'
+                    : 'Menjamin perhitungan biaya dan jadwal tervalidasi secara mandiri sebelum disajikan resmi ke klien.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 17,
+                'name' => 'Citation / Grounded RAG',
+                'badge' => 'Always Return Source & Zero Hallucination',
+                'stage' => $isEn ? 'Agentic Cognitive & Reliability' : 'Kognitif Agentic & Reliabilitas',
+                'stage_badge' => 'STAGE_4_AGENTIC',
+                'priority' => 'CRITICAL',
+                'desc' => $isEn
+                    ? 'Enforces strict attribution: every generated statement or decision must reference verified database records or official document chunks.'
+                    : 'Mewajibkan sitasi sumber: setiap klaim informasi atau keputusan bisnis harus merujuk pada record database atau dokumen acuan resmi.',
+                'client_application' => $isEn
+                    ? 'Guarantees 100% auditable traceability for client agreements, billing quotes, and compliance reports with zero hallucination.'
+                    : 'Menjamin transparansi 100% terlacak untuk rincian tagihan, klausul kontrak, dan data operasional tanpa halusinasi fiktif.',
+                'recommended' => true,
+            ],
+            [
+                'id' => 18,
+                'name' => 'RAG Evaluation Benchmarks',
+                'badge' => 'Precision, Recall, Faithfulness & Hit Rate',
+                'stage' => $isEn ? 'Agentic Cognitive & Reliability' : 'Kognitif Agentic & Reliabilitas',
+                'stage_badge' => 'STAGE_4_AGENTIC',
+                'priority' => 'HIGH',
+                'desc' => $isEn
+                    ? 'Continuous automated benchmarking of the retrieval pipeline measuring Faithfulness, Answer Relevance, Context Precision, and MRR.'
+                    : 'Pengujian berkala terhadap sistem retrieval mengukur Faithfulness, Answer Relevance, Context Precision, dan Hit Rate.',
+                'client_application' => $isEn
+                    ? 'Ensures operational SLA consistency as the business expands its product catalog and user base over time.'
+                    : 'Menjaga standar kualitas respon AI tetap prima seiring bertambahnya volume data dan transaksi perusahaan.',
+                'recommended' => true,
+            ],
+        ];
+
+        $recommendedCount = 0;
+        foreach ($allConcepts as $c) {
+            if ($c['recommended']) $recommendedCount++;
+        }
+
+        return [
+            'total_concepts' => count($allConcepts),
+            'recommended_for_project' => $recommendedCount,
+            'concepts' => $allConcepts,
+            'stages_summary' => [
+                'Foundation & Data Ingestion' => $isEn
+                    ? 'Base chunking, dense vector representations, and PostgreSQL 16 pgvector storage.'
+                    : 'Pemotongan dokumen terstruktur, representasi vektor numerik, dan penyimpanan pgvector PostgreSQL 16.',
+                'Retrieval & Search Optimization' => $isEn
+                    ? 'High-precision hybrid retrieval blending vector semantics with BM25 keyword matching and cross-encoder reranking.'
+                    : 'Pencarian hybrid presisi tinggi memadukan semantik vektor, kata kunci BM25, dan penyaringan ulang cross-encoder.',
+                'Query & Context Engineering' => $isEn
+                    ? 'Query transformation, multi-query expansion, and parent-child context injection to eliminate information gaps.'
+                    : 'Optimasi query pengguna, pencarian paralel multi-sudut, dan penyuntikan konteks induk agar data utuh.',
+                'Agentic Cognitive & Reliability' => $isEn
+                    ? 'Autonomous agent tool routing, self-reflective evaluation, factual citation grounding, and benchmark monitoring.'
+                    : 'Orkestrasi tools mandiri, refleksi kebenaran data (Self-RAG/CRAG), sitasi sumber resmi, dan pemantauan benchmark.',
+            ],
+        ];
+    }
+
 
     /**
      * Generate Comprehensive Mobile, Local Database, and Server Sync Architecture Specifications.

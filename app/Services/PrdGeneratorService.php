@@ -417,6 +417,7 @@ class PrdGeneratorService
             'decoupled_tooling_strategy' => self::generateDecoupledToolingStrategy($businessName, $extraContext, $erdTables, $mvpItems),
             'ai_security_blueprint' => self::generateAiSecurityBlueprint($businessName, $extraContext),
             'agentic_ai_matrix' => self::generateAgenticAiConceptsMatrix($businessName, $mvpItems),
+            'rag_architecture_matrix' => self::generateRagArchitectureMatrix($businessName, $mvpItems, $isEn),
             'server_hardware_sizing' => self::calculateServerHardwareSizing($businessName, $masalah, $mvpItems, $extraContext),
             'itemized_cost_breakdown' => $itemizedEstimation,
             'business_roi_analysis' => self::generateBusinessRoiAnalysis($blueprint, $itemizedEstimation, $isEn),
@@ -707,6 +708,15 @@ class PrdGeneratorService
 )): array
     {
         return PrdArchitectureManifestoService::generateAgenticAiConceptsMatrix($businessName, $mvpItems);
+    }
+
+    /**
+     * Generate Comprehensive 18 RAG Concepts & Production Pipeline Architectural Matrix.
+     * Evaluates and categorizes the 18 fundamental RAG concepts from Brij Kishore Pandey's framework.
+     */
+    public static function generateRagArchitectureMatrix(string $businessName = 'Neriah Pro Platform', array $mvpItems = [], bool $isEn = false): array
+    {
+        return PrdArchitectureManifestoService::generateRagArchitectureMatrix($businessName, $mvpItems, $isEn);
     }
 
     /**

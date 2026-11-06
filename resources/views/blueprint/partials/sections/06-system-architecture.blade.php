@@ -1313,6 +1313,98 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
                 </div>
 
+                <!-- 13. Matriks 18 Konsep RAG & Pipeline Produksi (Brij Kishore Pandey Framework) -->
+                @php
+                    $ragMatrix = $prd['rag_architecture_matrix'] ?? \App\Services\PrdGeneratorService::generateRagArchitectureMatrix($blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Neriah Pro Platform'), $blueprint->user_metadata['mvp_features'] ?? [], $isEn);
+                    $ragConcepts = $ragMatrix['concepts'] ?? [];
+                @endphp
+                <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 bg-emerald-500 inline-block"></span>
+                            <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                                13. {{ $isEn ? '18 RAG Concepts & Production Pipeline Matrix (Brij Kishore Pandey Framework)' : 'Matriks 18 Konsep RAG & Pipeline Produksi (Brij Kishore Pandey Framework)' }}
+                            </h3>
+                        </div>
+                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border border-emerald-500/30">
+                            BRIJ KISHORE PANDEY 18 RAG PIPELINE
+                        </span>
+                    </div>
+
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
+                        {{ $isEn 
+                            ? 'Comprehensive end-to-end Retrieval-Augmented Generation (RAG) architecture analysis. Evaluates the 18 production pillars across Ingestion, Retrieval Precision, Context Engineering, and Cognitive Agentic Verification to eliminate AI hallucinations and guarantee O(1) factual grounding.' 
+                            : 'Analisis komprehensif arsitektur Retrieval-Augmented Generation (RAG) hulu ke hilir. Mengevaluasi 18 pilar produksi mulai dari Ingesti, Presisi Retrieval, Rekayasa Konteks, hingga Verifikasi Kognitif Agentic guna mengeliminasi halusinasi dan menegakkan kepastian data faktual berkecepatan tinggi.' 
+                        }}
+                    </p>
+
+                    <div x-data="{ ragFilter: 'all' }" class="space-y-4">
+                        <!-- Category Filter Buttons -->
+                        <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                            <button type="button" @click="ragFilter = 'all'" :class="ragFilter === 'all' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer">
+                                {{ $isEn ? 'ALL 18 CONCEPTS (100%)' : 'SEMUA 18 KONSEP (100%)' }}
+                            </button>
+                            <button type="button" @click="ragFilter = 'foundation'" :class="ragFilter === 'foundation' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
+                                <span class="w-2 h-2 bg-emerald-400"></span>
+                                {{ $isEn ? '1. INGESTION FOUNDATION' : '1. FONDASI & INGESTI' }}
+                            </button>
+                            <button type="button" @click="ragFilter = 'retrieval'" :class="ragFilter === 'retrieval' ? 'bg-sky-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
+                                <span class="w-2 h-2 bg-sky-400"></span>
+                                {{ $isEn ? '2. RETRIEVAL & HYBRID SEARCH' : '2. RETRIEVAL & HYBRID SEARCH' }}
+                            </button>
+                            <button type="button" @click="ragFilter = 'context'" :class="ragFilter === 'context' ? 'bg-indigo-500 text-white font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
+                                <span class="w-2 h-2 bg-indigo-400"></span>
+                                {{ $isEn ? '3. CONTEXT ENGINEERING' : '3. REKAYASA KONTEKS' }}
+                            </button>
+                            <button type="button" @click="ragFilter = 'agentic'" :class="ragFilter === 'agentic' ? 'bg-purple-500 text-white font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
+                                <span class="w-2 h-2 bg-purple-400"></span>
+                                {{ $isEn ? '4. AGENTIC & RELIABILITY' : '4. AGENTIC & RELIABILITAS' }}
+                            </button>
+                        </div>
+
+                        <!-- 18 RAG Concepts Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 font-mono text-xs">
+                            @foreach($ragConcepts as $rConcept)
+                                @php
+                                    $stageKey = match($rConcept['stage_badge'] ?? '') {
+                                        'STAGE_1_FOUNDATION' => 'foundation',
+                                        'STAGE_2_RETRIEVAL' => 'retrieval',
+                                        'STAGE_3_CONTEXT' => 'context',
+                                        default => 'agentic',
+                                    };
+                                    $isCritical = in_array($rConcept['priority'] ?? '', ['CRITICAL', 'HIGH']);
+                                @endphp
+                                <div x-show="ragFilter === 'all' || ragFilter === '{{ $stageKey }}'"
+                                     class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border transition flex flex-col justify-between {{ $rConcept['recommended'] ? 'border-emerald-500/50 hover:border-emerald-500' : 'border-zinc-300 dark:border-zinc-800 hover:border-zinc-600' }}">
+                                    <div>
+                                        <div class="flex items-center justify-between gap-1 mb-2">
+                                            <span class="w-5 h-5 flex items-center justify-center font-bold text-[10px] {{ $rConcept['recommended'] ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-zinc-300' }}">
+                                                #{{ $rConcept['id'] ?? $loop->iteration }}
+                                            </span>
+                                            <div class="flex items-center gap-1">
+                                                <span class="px-1.5 py-0.2 text-[8px] font-bold uppercase {{ $rConcept['recommended'] ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-400 border border-emerald-500/40' : 'bg-zinc-800 text-zinc-400' }}">
+                                                    {{ $rConcept['priority'] ?? 'STANDARD' }}
+                                                </span>
+                                                <span class="px-1.5 py-0.2 text-[8px] font-bold uppercase bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                                                    {{ str_replace('_', ' ', str_replace('STAGE_', 'S', $rConcept['stage_badge'] ?? 'S1')) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <h4 class="font-black text-xs text-zinc-900 dark:text-zinc-100 mb-0.5">{{ $rConcept['name'] ?? '' }}</h4>
+                                        <div class="text-[10px] text-emerald-800 dark:text-emerald-400 font-bold mb-1.5">{{ $rConcept['badge'] ?? '' }}</div>
+                                        <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-2">
+                                            {{ $rConcept['desc'] ?? '' }}
+                                        </p>
+                                    </div>
+                                    <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800/80 text-[10px] text-zinc-500 dark:text-zinc-400">
+                                        <strong class="text-zinc-700 dark:text-zinc-300">{{ $isEn ? 'Client Value:' : 'Nilai Klien:' }}</strong> {{ $rConcept['client_application'] ?? '' }}
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Software Factory OS v7.0: 15-Pillar Architectural Freeze & Repository Exporter -->
                 <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800" id="section-13">
                     <div class="p-6 sm:p-7 bg-white dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs space-y-5 shadow-sm">

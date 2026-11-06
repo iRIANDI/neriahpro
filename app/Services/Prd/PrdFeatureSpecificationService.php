@@ -668,7 +668,12 @@ MANDATORY RULES:
 1. Every feature must have a concrete User Story: "Sebagai [Aktor], saya ingin [Aksi] sehingga [Manfaat Bisnis]".
 2. Every feature must have 3 concrete Acceptance Criteria scenarios (Given-When-Then) reflecting the true business domain.
 3. Every feature must specify a primary table name from the Database Tables list.
-4. Output JSON Array ONLY with schema:
+4. STATE-OF-THE-ART ARCHITECTURE & MODERN IMPLEMENTATION RULE:
+   Whenever a feature involves AI, search, matching, recommendations, catalog filtering, or document processing:
+   - Enforce the 18 RAG Concepts (Brij Kishore Pandey): Hybrid Search (combining PostgreSQL pgvector HNSW cosine similarity + PostgreSQL full-text search tsvector BM25), Cross-Encoder Reranking, Chunking with 50-token overlap, Parent-Child / Contextual Retrieval, Corrective RAG (CRAG) for ambiguity verification, and Grounded Citations.
+   - Enforce the 20 Agentic AI Concepts (Balawant Kadam): Tool Use (function calling), Model Context Protocol (MCP), Agentic Workflows, Guardrails (PII filter & UU PDP compliance), and Observability (token & latency telemetry).
+   - Primitive SQL LIKE queries and ungrounded hallucinating prompts are strictly prohibited.
+5. Output JSON Array ONLY with schema:
 [
   {
     "title": "Exact or refined feature title",

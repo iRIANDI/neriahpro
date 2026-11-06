@@ -310,12 +310,48 @@
                 </div>
 
                 <template x-for="(clause, key) in activeClauses" :key="key">
-                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-800/80 rounded-none space-y-1.5 print-avoid-break print-bg-soft print-border">
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-800/80 rounded-none space-y-2 print-avoid-break print-bg-soft print-border">
                         <h3 class="font-mono font-bold text-zinc-900 dark:text-white print:text-black text-xs uppercase tracking-wide flex items-center gap-2">
                             <span class="w-1.5 h-1.5 bg-emerald-500 shrink-0"></span>
                             <span x-text="clause.title"></span>
                         </h3>
-                        <p class="text-zinc-700 dark:text-zinc-300 print:text-zinc-900 font-sans text-xs leading-relaxed pl-3.5 text-justify" x-text="clause.description"></p>
+
+                        <template x-if="clause.sections && clause.sections.length > 0">
+                            <div class="space-y-3 pl-3.5 text-xs text-zinc-700 dark:text-zinc-300 print:text-zinc-900 font-sans">
+                                <template x-if="clause.lead">
+                                    <p class="leading-relaxed text-justify font-medium text-zinc-900 dark:text-zinc-200" x-text="clause.lead"></p>
+                                </template>
+                                <template x-for="(sec, sIdx) in clause.sections" :key="sIdx">
+                                    <div class="space-y-1.5">
+                                        <div class="font-bold text-emerald-800 dark:text-emerald-400 font-mono text-[11px] uppercase tracking-wide" x-text="sec.heading"></div>
+                                        <template x-if="sec.items && sec.items.length > 0">
+                                            <ul class="list-disc pl-4 space-y-1">
+                                                <template x-for="(item, iIdx) in sec.items" :key="iIdx">
+                                                    <li class="leading-relaxed text-justify">
+                                                        <template x-if="item.includes(':') && !item.includes('://')">
+                                                            <span>
+                                                                <strong class="font-bold text-zinc-950 dark:text-zinc-100" x-text="item.split(':')[0] + ':'"></strong>
+                                                                <span x-text="' ' + item.split(':').slice(1).join(':').trim()"></span>
+                                                            </span>
+                                                        </template>
+                                                        <template x-if="!item.includes(':') || item.includes('://')">
+                                                            <span x-text="item"></span>
+                                                        </template>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                        <template x-if="sec.text">
+                                            <p class="leading-relaxed text-justify" x-text="sec.text"></p>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template x-if="!clause.sections || clause.sections.length === 0">
+                            <p class="text-zinc-700 dark:text-zinc-300 print:text-zinc-900 font-sans text-xs leading-relaxed pl-3.5 text-justify whitespace-pre-line" x-text="clause.description"></p>
+                        </template>
                     </div>
                 </template>
             </section>

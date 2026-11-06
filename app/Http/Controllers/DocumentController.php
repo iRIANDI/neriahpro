@@ -9,9 +9,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class DocumentController extends Controller
 {
-    public function preview(Document $document)
+    public function preview(Request $request, Document $document)
     {
-        $pdf = Pdf::loadView('pdf.document', compact('document'));
+        $locale = $request->query('lang', $request->query('locale', 'id'));
+        $pdf = Pdf::loadView('pdf.document', compact('document', 'locale'));
         return $pdf->stream('document-' . $document->id . '.pdf');
     }
 }

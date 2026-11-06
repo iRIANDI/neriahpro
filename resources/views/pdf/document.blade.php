@@ -19,38 +19,44 @@
         .parties-box { width: 100%; margin-bottom: 15px; border-collapse: collapse; }
         .parties-box td { width: 50%; vertical-align: top; padding: 8px 10px; border: 1px solid #d1d5db; }
         .parties-title { font-size: 9.5px; font-weight: bold; text-transform: uppercase; color: #059669; margin-bottom: 4px; }
-        .clause-box { margin-bottom: 10px; padding: 7px 10px; border-left: 3px solid #10b981; background-color: #f9fafb; page-break-inside: avoid; }
-        .clause-title { font-weight: bold; font-size: 10.5px; color: #111827; margin-bottom: 3px; }
-        .clause-desc { font-size: 10px; color: #374151; text-align: justify; margin: 0; line-height: 1.4; }
-        .signature-section { margin-top: 25px; width: 100%; border-collapse: collapse; page-break-inside: avoid; }
-        .signature-box { width: 50%; vertical-align: top; text-align: center; padding: 8px 12px; border: 1px solid #e5e7eb; }
-        .signature-image { max-width: 160px; max-height: 70px; margin: 6px 0; }
-        .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 25px; font-size: 8.5px; color: #6b7280; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 5px; font-family: monospace; }
+        .clause-box { margin-bottom: 8px; padding: 6px 9px; border-left: 3px solid #10b981; background-color: #f9fafb; }
+        .clause-title { font-weight: bold; font-size: 10px; color: #111827; margin-bottom: 3px; }
+        .clause-desc { font-size: 9px; color: #374151; text-align: justify; margin: 0; line-height: 1.45; }
+        .clause-lead { font-size: 9px; color: #1f2937; margin: 0 0 5px 0; line-height: 1.45; text-align: justify; }
+        .clause-sec-title { font-size: 8.5px; font-weight: bold; color: #047857; margin-top: 5px; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .clause-list { margin: 2px 0 5px 16px; padding: 0; }
+        .clause-list-item { font-size: 8.5px; color: #374151; margin-bottom: 2px; line-height: 1.35; text-align: justify; }
+        .signature-section { margin-top: 20px; width: 100%; border-collapse: collapse; page-break-inside: avoid; }
+        .signature-box { width: 50%; vertical-align: top; text-align: center; padding: 7px 10px; border: 1px solid #e5e7eb; font-size: 9px; }
+        .signature-image { max-width: 150px; max-height: 60px; margin: 4px 0; }
+        .footer { position: fixed; bottom: 0; left: 0; right: 0; height: 20px; font-size: 8px; color: #6b7280; text-align: center; border-top: 1px solid #e5e7eb; padding-top: 4px; font-family: monospace; }
     </style>
 </head>
 <body>
     @php
         $devInfo = \App\Support\ContractLegalHelper::getDeveloperInfo();
-        $clauses = \App\Support\ContractLegalHelper::getDynamicClauses($document, 'id');
+        $docLocale = $locale ?? ($document->locale ?? 'id');
+        $isEn = $docLocale === 'en';
+        $clauses = \App\Support\ContractLegalHelper::getDynamicClauses($document, $docLocale);
         $projectName = $document->related?->nama_bisnis ?: ($document->related?->client_name ?: 'Mitra Bisnis');
     @endphp
 
     <div class="header">
-        <span class="badge">Surat Perjanjian Kerja Sama Resmi (Digital E-Sign)</span>
+        <span class="badge">{{ $isEn ? 'Official Digital Engineering Agreement (E-Sign)' : 'Surat Perjanjian Kerja Sama Resmi (Digital E-Sign)' }}</span>
         <div class="title">{{ $document->title }}</div>
-        <div class="subtitle">DOKUMEN HUKUM &bull; ID: {{ strtoupper(substr($document->id, 0, 12)) }} &bull; TANGGAL: {{ ($document->signed_at ?: $document->created_at)->format('d F Y') }}</div>
+        <div class="subtitle">{{ $isEn ? 'LEGAL CONTRACT' : 'DOKUMEN HUKUM' }} &bull; ID: {{ strtoupper(substr($document->id, 0, 12)) }} &bull; {{ $isEn ? 'DATE' : 'TANGGAL' }}: {{ ($document->signed_at ?: $document->created_at)->format('d F Y') }}</div>
     </div>
 
     <table class="parties-box">
         <tr>
             <td>
-                <div class="parties-title">PIHAK PERTAMA (KLIEN / PEMESAN):</div>
+                <div class="parties-title">{{ $isEn ? 'PARTY ONE (CLIENT / ORDERER):' : 'PIHAK PERTAMA (KLIEN / PEMESAN):' }}</div>
                 <strong>{{ $document->signer_name ?: ($document->related?->client_name ?: 'Alexander Wijaya') }}</strong><br>
-                <span>Usaha: {{ $projectName }}</span><br>
+                <span>{{ $isEn ? 'Entity' : 'Usaha' }}: {{ $projectName }}</span><br>
                 <span style="font-size: 9px; color: #4b5563;">Email: {{ $document->signer_email ?: ($document->related?->email ?: '-') }}</span>
             </td>
             <td>
-                <div class="parties-title">PIHAK KEDUA (PENGEMBANG SISTEM):</div>
+                <div class="parties-title">{{ $isEn ? 'PARTY TWO (SYSTEM ARCHITECT & DEVELOPER):' : 'PIHAK KEDUA (PENGEMBANG SISTEM):' }}</div>
                 <strong>{{ $devInfo['entity_name'] }}</strong><br>
                 <span>Engineering &amp; Architecture Studio</span><br>
                 <span style="font-size: 9px; color: #4b5563;">Email: {{ $devInfo['email'] }} &bull; {{ $devInfo['location'] }}</span>
@@ -60,16 +66,16 @@
 
     <table class="meta-table">
         <tr>
-            <td class="label">Total Nilai Kontrak</td>
-            <td><strong>Rp {{ number_format($document->contract_amount ?: 50000000, 0, ',', '.') }}</strong> (5 Sprint Kerja)</td>
-            <td class="label">Termin Uang Muka (DP 50%)</td>
+            <td class="label">{{ $isEn ? 'Total Contract Value' : 'Total Nilai Kontrak' }}</td>
+            <td><strong>Rp {{ number_format($document->contract_amount ?: 50000000, 0, ',', '.') }}</strong> (5 Sprint)</td>
+            <td class="label">{{ $isEn ? 'Down Payment (50% DP)' : 'Termin Uang Muka (DP 50%)' }}</td>
             <td><strong style="color: #059669;">Rp {{ number_format($document->dp_amount ?: (($document->contract_amount ?: 50000000) * 0.5), 0, ',', '.') }}</strong></td>
         </tr>
         <tr>
-            <td class="label">Status Ruang Lingkup</td>
-            <td>SCOPE LOCKED (TERKUNCI SECARA KRIPTOGRAFIS)</td>
-            <td class="label">Status Pembayaran</td>
-            <td>{{ $document->status === 'signed' ? 'DP TERKONFIRMASI / LUNAS' : 'MENUNGGU DP' }}</td>
+            <td class="label">{{ $isEn ? 'Scope Freeze Status' : 'Status Ruang Lingkup' }}</td>
+            <td>{{ $isEn ? 'SCOPE LOCKED (CRYPTOGRAPHICALLY SEALED)' : 'SCOPE LOCKED (TERKUNCI SECARA KRIPTOGRAFIS)' }}</td>
+            <td class="label">{{ $isEn ? 'Payment Status' : 'Status Pembayaran' }}</td>
+            <td>{{ $document->status === 'signed' ? ($isEn ? 'DP SETTLED / ACTIVE' : 'DP TERKONFIRMASI / LUNAS') : ($isEn ? 'AWAITING DP SETTLEMENT' : 'MENUNGGU DP') }}</td>
         </tr>
         @if(!empty($document->document_hash) || !empty($document->related?->document_sha256))
         <tr>
@@ -82,13 +88,46 @@
     </table>
 
     <div style="font-size: 10px; font-weight: bold; text-transform: uppercase; color: #111827; margin-bottom: 6px;">
-        Pasal-Pasal Kesepakatan Resmi:
+        {{ $isEn ? 'Articles of Agreement (Legal Covenants):' : 'Pasal-Pasal Kesepakatan Resmi:' }}
     </div>
 
     @foreach($clauses as $key => $clause)
         <div class="clause-box">
             <div class="clause-title">{{ $clause['title'] ?? ('Pasal: ' . strtoupper($key)) }}</div>
-            <p class="clause-desc">{{ $clause['description'] ?? (is_string($clause) ? $clause : json_encode($clause)) }}</p>
+            
+            @if(!empty($clause['sections']))
+                @if(!empty($clause['lead']))
+                    <p class="clause-lead">{{ $clause['lead'] }}</p>
+                @endif
+                <div class="clause-sections">
+                    @foreach($clause['sections'] as $sec)
+                        @if(!empty($sec['heading']))
+                            <div class="clause-sec-title">{{ $sec['heading'] }}</div>
+                        @endif
+                        @if(!empty($sec['items']))
+                            <ol class="clause-list" style="{{ (str_contains(strtolower($sec['heading'] ?? ''), 'integrasi') || str_contains(strtolower($sec['heading'] ?? ''), 'integration')) ? 'list-style-type: square;' : 'list-style-type: decimal;' }}">
+                                @foreach($sec['items'] as $item)
+                                    @php
+                                        $hasColon = str_contains($item, ':') && !str_contains($item, '://');
+                                        $parts = $hasColon ? explode(':', $item, 2) : [$item];
+                                    @endphp
+                                    <li class="clause-list-item">
+                                        @if($hasColon)
+                                            <strong style="color: #111827;">{{ trim($parts[0]) }}:</strong> {{ trim($parts[1]) }}
+                                        @else
+                                            {{ $item }}
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ol>
+                        @elseif(!empty($sec['text']))
+                            <p class="clause-desc" style="margin-bottom: 4px;">{{ $sec['text'] }}</p>
+                        @endif
+                    @endforeach
+                </div>
+            @else
+                <p class="clause-desc">{!! nl2br(e($clause['description'] ?? (is_string($clause) ? $clause : json_encode($clause)))) !!}</p>
+            @endif
         </div>
     @endforeach
 

@@ -10,12 +10,63 @@ use Illuminate\Support\Str;
 class BlueprintRefinementService
 {
     /**
+     * Safely normalize any value (string, array with locale keys, null) into a plain string.
+     * Prevents "Array to string conversion" errors across multi-language attributes.
+     */
+    public function stringifyAttribute(mixed $value, string $locale = 'id', string $separator = "\n"): string
+    {
+        if (is_null($value)) {
+            return '';
+        }
+        if (is_string($value)) {
+            return trim($value);
+        }
+        if (is_numeric($value) || is_bool($value)) {
+            return (string) $value;
+        }
+        if (is_array($value)) {
+            // Check locale match (e.g. ['id' => '...', 'en' => '...'])
+            if (isset($value[$locale]) && (is_string($value[$locale]) || is_numeric($value[$locale]))) {
+                return trim((string) $value[$locale]);
+            }
+            if ($locale === 'en' && isset($value['en']) && (is_string($value['en']) || is_numeric($value['en']))) {
+                return trim((string) $value['en']);
+            }
+            if (isset($value['id']) && (is_string($value['id']) || is_numeric($value['id']))) {
+                return trim((string) $value['id']);
+            }
+            if (isset($value['name'])) {
+                return $this->stringifyAttribute($value['name'], $locale, $separator);
+            }
+            if (isset($value['title'])) {
+                return $this->stringifyAttribute($value['title'], $locale, $separator);
+            }
+            
+            // If it's a numeric list or nested array
+            $parts = [];
+            foreach ($value as $k => $v) {
+                if (is_array($v)) {
+                    $sub = $this->stringifyAttribute($v, $locale, $separator);
+                    if ($sub !== '') $parts[] = $sub;
+                } elseif (is_string($v) || is_numeric($v)) {
+                    $parts[] = is_string($k) && !is_numeric($k) ? "{$k}: {$v}" : (string) $v;
+                }
+            }
+            return implode($separator, $parts);
+        }
+
+        return (string) $value;
+    }
+
+    /**
      * Retrieve the grounded source corpus for a blueprint.
      * Looks for synthesized_corpus.md, individual converted markdown files, or synthesizes from model attributes.
      */
     public function getSourceCorpus(VisionBlueprint $blueprint): array
     {
-        $slug = $blueprint->slug ?: Str::slug($blueprint->nama_bisnis);
+        $rawBusinessName = $this->stringifyAttribute($blueprint->nama_bisnis, 'id', '-');
+        $rawSlug = $blueprint->slug ?: Str::slug($rawBusinessName ?: ($blueprint->client_name ?: 'project'));
+        $slug = $this->stringifyAttribute($rawSlug) ?: 'project';
         $projectDir = storage_path("app/projects/{$slug}");
         $mdDir = "{$projectDir}/markdown";
         $docsDir = "{$projectDir}/documents";
@@ -82,45 +133,53 @@ class BlueprintRefinementService
         // 5. Fallback: If no files on disk, construct comprehensive corpus from blueprint database fields
         if (empty($corpusParts)) {
             $fallbackCorpus = "# SPESIFIKASI PROYEK TERDOKUMENTASI\n\n";
-            $fallbackCorpus .= "Nama Bisnis: " . ($blueprint->nama_bisnis ?: 'N/A') . "\n";
-            $fallbackCorpus .= "Klien: " . ($blueprint->client_name ?: 'N/A') . "\n";
-            $fallbackCorpus .= "Target Waktu: " . ($blueprint->target_waktu ?: '30 Hari Kerja') . "\n\n";
+            $fallbackCorpus .= "Nama Bisnis: " . $this->stringifyAttribute($blueprint->nama_bisnis ?: 'N/A') . "\n";
+            $fallbackCorpus .= "Klien: " . $this->stringifyAttribute($blueprint->client_name ?: 'N/A') . "\n";
+            $fallbackCorpus .= "Target Waktu: " . $this->stringifyAttribute($blueprint->target_waktu ?: '30 Hari Kerja') . "\n\n";
 
-            if ($blueprint->masalah_utama) {
-                $fallbackCorpus .= "## 1. Masalah Utama & Latar Belakang\n" . $blueprint->masalah_utama . "\n\n";
+            $masalah = $this->stringifyAttribute($blueprint->masalah_utama);
+            if ($masalah !== '') {
+                $fallbackCorpus .= "## 1. Masalah Utama & Latar Belakang\n" . $masalah . "\n\n";
             }
-            if ($blueprint->tujuan_utama) {
-                $fallbackCorpus .= "## 2. Tujuan Utama & Indikator Keberhasilan\n" . $blueprint->tujuan_utama . "\n\n";
+            $tujuan = $this->stringifyAttribute($blueprint->tujuan_utama);
+            if ($tujuan !== '') {
+                $fallbackCorpus .= "## 2. Tujuan Utama & Indikator Keberhasilan\n" . $tujuan . "\n\n";
             }
-            if ($blueprint->target_audiens) {
-                $fallbackCorpus .= "## 3. Target Audiens & Pengguna\n" . $blueprint->target_audiens . "\n\n";
+            $audiens = $this->stringifyAttribute($blueprint->target_audiens);
+            if ($audiens !== '') {
+                $fallbackCorpus .= "## 3. Target Audiens & Pengguna\n" . $audiens . "\n\n";
             }
-            if ($blueprint->aktor_sistem) {
-                $fallbackCorpus .= "## 4. Pengguna & Hak Akses (Aktor / RBAC)\n" . $blueprint->aktor_sistem . "\n\n";
+            $aktor = $this->stringifyAttribute($blueprint->aktor_sistem);
+            if ($aktor !== '') {
+                $fallbackCorpus .= "## 4. Pengguna & Hak Akses (Aktor / RBAC)\n" . $aktor . "\n\n";
             }
-            if ($blueprint->fitur_wajib) {
-                $fallbackCorpus .= "## 5. Fitur Wajib (MVP Fase 1)\n" . $blueprint->fitur_wajib . "\n\n";
+            $fiturWajib = $this->stringifyAttribute($blueprint->fitur_wajib);
+            if ($fiturWajib !== '') {
+                $fallbackCorpus .= "## 5. Fitur Wajib (MVP Fase 1)\n" . $fiturWajib . "\n\n";
             }
-            if ($blueprint->fitur_tambahan) {
-                $fallbackCorpus .= "## 6. Fitur Tambahan (Fase 2 / Roadmap)\n" . $blueprint->fitur_tambahan . "\n\n";
+            $fiturTambahan = $this->stringifyAttribute($blueprint->fitur_tambahan);
+            if ($fiturTambahan !== '') {
+                $fallbackCorpus .= "## 6. Fitur Tambahan (Fase 2 / Roadmap)\n" . $fiturTambahan . "\n\n";
             }
-            if ($blueprint->alur_kerja) {
-                $fallbackCorpus .= "## 7. Alur Kerja Sistem (Workflow & Business Logic)\n" . $blueprint->alur_kerja . "\n\n";
+            $alurKerja = $this->stringifyAttribute($blueprint->alur_kerja);
+            if ($alurKerja !== '') {
+                $fallbackCorpus .= "## 7. Alur Kerja Sistem (Workflow & Business Logic)\n" . $alurKerja . "\n\n";
             }
-            if ($blueprint->kebutuhan_integrasi) {
-                $fallbackCorpus .= "## 8. Kebutuhan Integrasi API & Layanan Eksternal\n" . $blueprint->kebutuhan_integrasi . "\n\n";
+            $integrasi = $this->stringifyAttribute($blueprint->kebutuhan_integrasi);
+            if ($integrasi !== '') {
+                $fallbackCorpus .= "## 8. Kebutuhan Integrasi API & Layanan Eksternal\n" . $integrasi . "\n\n";
             }
             if (!empty($meta['target_platform'])) {
-                $fallbackCorpus .= "Target Platform: " . $meta['target_platform'] . "\n";
+                $fallbackCorpus .= "Target Platform: " . $this->stringifyAttribute($meta['target_platform']) . "\n";
             }
             if (!empty($meta['skala_pengguna'])) {
-                $fallbackCorpus .= "Skala Pengguna: " . $meta['skala_pengguna'] . "\n";
+                $fallbackCorpus .= "Skala Pengguna: " . $this->stringifyAttribute($meta['skala_pengguna']) . "\n";
             }
             if (!empty($meta['kepatuhan_keamanan'])) {
-                $fallbackCorpus .= "Kepatuhan Keamanan: " . $meta['kepatuhan_keamanan'] . "\n";
+                $fallbackCorpus .= "Kepatuhan Keamanan: " . $this->stringifyAttribute($meta['kepatuhan_keamanan']) . "\n";
             }
             if (!empty($meta['out_of_scope'])) {
-                $fallbackCorpus .= "Out of Scope: " . $meta['out_of_scope'] . "\n";
+                $fallbackCorpus .= "Out of Scope: " . $this->stringifyAttribute($meta['out_of_scope']) . "\n";
             }
 
             $corpusParts[] = $fallbackCorpus;
@@ -1495,11 +1554,14 @@ PROMPT;
         string $locale = 'id'
     ): string {
         $sourceData = $this->getSourceCorpus($blueprint);
-        $corpusText = $sourceData['corpus_text'] ?? '';
-        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise');
-        $rawProblems = $blueprint->masalah_utama ?: '';
-        $sector = $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
-            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform');
+        $corpusText = $this->stringifyAttribute($sourceData['corpus_text'] ?? '', $locale);
+        $businessName = $this->stringifyAttribute($blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise'), $locale);
+        $rawProblems = $this->stringifyAttribute($blueprint->masalah_utama ?: '', $locale);
+        $sector = $this->stringifyAttribute(
+            $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
+            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform'),
+            $locale
+        );
 
         $isEn = $locale === 'en';
         $langPrompt = $isEn ? 'English (strictly professional engineering vocabulary)' : 'Bahasa Indonesia (baku, tegas, dan profesional)';
@@ -1612,9 +1674,12 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
         ?string $featureContent = null,
         string $locale = 'id'
     ): string {
-        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise');
-        $sector = $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
-            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform');
+        $businessName = $this->stringifyAttribute($blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise'), $locale);
+        $sector = $this->stringifyAttribute(
+            $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
+            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform'),
+            $locale
+        );
         $isEn = $locale === 'en';
 
         if (in_array($segmentKey, ['feature_single', 'features', 'mvp_features']) || !empty($featureId)) {
@@ -1655,9 +1720,12 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
         array $sourceData,
         string $locale = 'id'
     ): string {
-        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise');
-        $sector = $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
-            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform');
+        $businessName = $this->stringifyAttribute($blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise'), $locale);
+        $sector = $this->stringifyAttribute(
+            $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
+            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform'),
+            $locale
+        );
         $cleanLabel = trim(preg_replace('/^(?:Fitur:\s*|Modul:\s*)/i', '', $featLabel));
         $featCode = $featureId ? " [{$featureId}]" : '';
         $isEn = $locale === 'en';
@@ -1875,23 +1943,27 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
         string $locale = 'id'
     ): array {
         $isEn = $locale === 'en';
-        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: ($isEn ? 'Enterprise System' : 'Sistem Enterprise'));
-        $sector = $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
-            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform');
+        $businessName = $this->stringifyAttribute($blueprint->nama_bisnis ?: ($blueprint->client_name ?: ($isEn ? 'Enterprise System' : 'Sistem Enterprise')), $locale);
+        $sector = $this->stringifyAttribute(
+            $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
+            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform'),
+            $locale
+        );
 
         $sourceData = $this->getSourceCorpus($blueprint);
-        $corpusText = $sourceData['corpus_text'] ?? '';
+        $corpusText = $this->stringifyAttribute($sourceData['corpus_text'] ?? '', $locale);
 
         $phaseLabel = $phase === 'phase2' 
             ? ($isEn ? 'Phase 2 (Roadmap)' : 'Fase 2 (Roadmap Susulan)') 
             : ($isEn ? 'Phase 1 (MVP Essential)' : 'Fase 1 (Fitur Wajib MVP)');
 
-        // Extract normalized existing task titles
+        // Extract normalized existing task titles safely
         $existingTitles = [];
         $existingCorpus = '';
         foreach ($currentTasks as $t) {
-            $tTitle = trim($t['title'] ?? '');
-            $tDesc = trim($t['desc'] ?? '');
+            if (!is_array($t)) continue;
+            $tTitle = $this->stringifyAttribute($t['title'] ?? '', $locale);
+            $tDesc = $this->stringifyAttribute($t['desc'] ?? '', $locale);
             if (!empty($tTitle)) {
                 $existingTitles[] = $tTitle;
                 $existingCorpus .= mb_strtolower($tTitle . ' ' . $tDesc . ' ');
@@ -1961,7 +2033,8 @@ TXT;
                         $recs = (array) ($parsed['recommendations'] ?? []);
                         $filteredRecs = [];
                         foreach ($recs as $r) {
-                            $rTitle = trim($r['title'] ?? '');
+                            if (!is_array($r)) continue;
+                            $rTitle = $this->stringifyAttribute($r['title'] ?? '', $locale);
                             if (empty($rTitle)) continue;
                             $rLower = mb_strtolower($rTitle);
                             $duplicate = false;
@@ -1973,17 +2046,23 @@ TXT;
                                 }
                             }
                             if (!$duplicate) {
-                                $r['selected'] = true;
-                                $filteredRecs[] = $r;
+                                $filteredRecs[] = [
+                                    'title' => $rTitle,
+                                    'desc' => $this->stringifyAttribute($r['desc'] ?? '', $locale),
+                                    'category' => $this->stringifyAttribute($r['category'] ?? 'CORE_DOMAIN', $locale),
+                                    'sprint_phase' => $this->stringifyAttribute($r['sprint_phase'] ?? ($phase === 'mvp' ? 'Sprint 1-2' : 'Fase 2 Roadmap'), $locale),
+                                    'urgency_reason' => $this->stringifyAttribute($r['urgency_reason'] ?? '', $locale),
+                                    'selected' => true,
+                                ];
                             }
                         }
 
                         $isMax = count($filteredRecs) === 0 || ($parsed['is_maximal'] === true);
                         return [
                             'is_maximal' => $isMax,
-                            'summary' => $parsed['summary'] ?? ($isMax 
+                            'summary' => $this->stringifyAttribute($parsed['summary'] ?? ($isMax 
                                 ? ($isEn ? 'All essential architecture tasks for this phase are 100% complete and fully verified.' : 'Seluruh task arsitektur esensial untuk fase ini telah 100% lengkap dan terverifikasi.')
-                                : ($isEn ? 'Found missing architecture tasks.' : 'Ditemukan task arsitektur penting yang belum tercover.')),
+                                : ($isEn ? 'Found missing architecture tasks.' : 'Ditemukan task arsitektur penting yang belum tercover.')), $locale),
                             'recommendations' => $isMax ? [] : $filteredRecs,
                             'telemetry' => [
                                 'provider' => $aiResult['provider'] ?? 'ai',
@@ -2013,8 +2092,12 @@ TXT;
         string $existingCorpus,
         bool $isEn = false
     ): array {
-        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise');
-        $lowerCorpus = mb_strtolower($blueprint->masalah_utama . ' ' . $blueprint->tujuan_utama . ' ' . $blueprint->fitur_wajib);
+        $locale = $isEn ? 'en' : 'id';
+        $businessName = $this->stringifyAttribute($blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise'), $locale);
+        $rawMasalah = $this->stringifyAttribute($blueprint->masalah_utama, $locale);
+        $rawTujuan = $this->stringifyAttribute($blueprint->tujuan_utama, $locale);
+        $rawFitur = $this->stringifyAttribute($blueprint->fitur_wajib, $locale);
+        $lowerCorpus = mb_strtolower($rawMasalah . ' ' . $rawTujuan . ' ' . $rawFitur);
         $phaseLabel = $phase === 'phase2' 
             ? ($isEn ? 'Phase 2 (Roadmap)' : 'Fase 2 (Roadmap Susulan)') 
             : ($isEn ? 'Phase 1 (MVP)' : 'Fase 1 (Fitur Wajib MVP)');

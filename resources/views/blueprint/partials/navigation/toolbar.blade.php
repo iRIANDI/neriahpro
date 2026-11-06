@@ -30,13 +30,13 @@
 
                 <!-- Official A4 Mitra Commercial Pack (RAB, SPK Appendix SHA-256, Digital BAST) -->
                 <div class="inline-flex rounded-none border border-amber-400 dark:border-amber-700 divide-x divide-amber-400 dark:divide-amber-700 bg-amber-50 dark:bg-amber-950/40 text-xs font-mono font-black shrink-0 whitespace-nowrap">
-                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'rab']) }}" target="_blank" class="px-2 py-1 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-200 transition" title="Cetak / Unduh A4 Estimasi RAB Algoritmik & WBS 7 Fase">
+                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'rab']) }}" :href="'{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'rab']) }}&locale=' + (locale || 'id')" target="_blank" class="px-2 py-1 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-200 transition" title="Cetak / Unduh A4 Estimasi RAB Algoritmik & WBS 7 Fase">
                         <span>RAB A4</span>
                     </a>
-                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'spk-appendix']) }}" target="_blank" class="px-2 py-1 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-200 transition" title="Cetak / Unduh A4 Lampiran Teknis Kontrak SPK/PKS bersegel SHA-256">
+                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'spk-appendix']) }}" :href="'{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'spk-appendix']) }}&locale=' + (locale || 'id')" target="_blank" class="px-2 py-1 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-200 transition" title="Cetak / Unduh A4 Lampiran Teknis Kontrak SPK/PKS bersegel SHA-256">
                         <span>SPK SHA-256</span>
                     </a>
-                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'bast']) }}" target="_blank" class="px-2 py-1 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-200 transition" title="Cetak / Unduh A4 Berita Acara Serah Terima (BAST) Digital & Rekap UAT">
+                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'bast']) }}" :href="'{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'bast']) }}&locale=' + (locale || 'id')" target="_blank" class="px-2 py-1 hover:bg-amber-200/70 dark:hover:bg-amber-900/60 text-amber-950 dark:text-amber-200 transition" title="Cetak / Unduh A4 Berita Acara Serah Terima (BAST) Digital & Rekap UAT">
                         <span>BAST A4</span>
                     </a>
                 </div>
@@ -78,57 +78,57 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                         <span class="hidden md:inline">PRINT</span>
                     </button>
-                    <a href="{{ route('blueprint.download-pdf', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" title="Unduh Dokumen PDF Resmi">
+                    <a href="{{ route('blueprint.download-pdf', ['slug' => $blueprint->slug, 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-pdf', $blueprint->slug) }}?locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" :title="locale === 'en' ? 'Download Official PDF Document' : 'Unduh Dokumen PDF Resmi'">
                         <span>PDF</span>
                     </a>
-                    <button type="button" @click.prevent="$dispatch('open-raw-md-warning', { action: 'download' })" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Unduh Markdown Asli (.MD) - Disarankan Per-Fitur di Cockpit">
+                    <button type="button" @click.prevent="$dispatch('open-raw-md-warning', { action: 'download' })" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" :title="locale === 'en' ? 'Download Raw Markdown (.MD)' : 'Unduh Markdown Asli (.MD) - Disarankan Per-Fitur di Cockpit'">
                         <span class="hidden sm:inline">MD</span>
                     </button>
-                    <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1" title="Unduh .cursorrules / CLAUDE.md untuk AI IDE">
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', $blueprint->slug) }}?locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1" :title="locale === 'en' ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE'">
                         <span class="hidden xl:inline">.CURSORRULES</span>
                         <span class="xl:hidden">RULES</span>
                     </a>
-                    <a href="{{ route('blueprint.download-schema-json', $blueprint->slug) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" title="Unduh Universal Blueprint Schema v2.0.0 (BLUEPRINT_SCHEMA.json)">
+                    <a href="{{ route('blueprint.download-schema-json', ['slug' => $blueprint->slug, 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-schema-json', $blueprint->slug) }}?locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" :title="locale === 'en' ? 'Download Universal Blueprint Schema (BLUEPRINT_SCHEMA.json)' : 'Unduh Universal Blueprint Schema v2.0.0 (BLUEPRINT_SCHEMA.json)'">
                         <span class="hidden xl:inline">SCHEMA.JSON</span>
                         <span class="xl:hidden">JSON</span>
                     </a>
-                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint']) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" title="Unduh Kontrak Eksekusi Zero-Assumption (PROJECT_OS_EXECUTION_BLUEPRINT.md)">
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint']) }}&locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" :title="locale === 'en' ? 'Download Zero-Assumption Execution Contract (PROJECT_OS_EXECUTION_BLUEPRINT.md)' : 'Unduh Kontrak Eksekusi Zero-Assumption (PROJECT_OS_EXECUTION_BLUEPRINT.md)'">
                         <span class="hidden xl:inline">EXECUTION.MD</span>
                         <span class="xl:hidden">EXEC</span>
                     </a>
-                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'decision-tables']) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 transition flex items-center gap-1" title="Unduh Deterministic Business Rule Decision Tables (.agents/DECISION_TABLES_CONTRACT.md)">
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'decision-tables', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'decision-tables']) }}&locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-900 dark:text-emerald-300 transition flex items-center gap-1" :title="locale === 'en' ? 'Download Deterministic Business Rule Decision Tables' : 'Unduh Deterministic Business Rule Decision Tables (.agents/DECISION_TABLES_CONTRACT.md)'">
                         <span class="hidden xl:inline">DECISION.MD</span>
                         <span class="xl:hidden">DEC</span>
                     </a>
-                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'env-blueprint']) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" title="Unduh Environment & Secret Vault Blueprint (.env.blueprint)">
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'env-blueprint', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'env-blueprint']) }}&locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 transition flex items-center gap-1" :title="locale === 'en' ? 'Download Environment Blueprint (.env.blueprint)' : 'Unduh Environment & Secret Vault Blueprint (.env.blueprint)'">
                         <span class="hidden xl:inline">.ENV.BLUEPRINT</span>
                         <span class="xl:hidden">ENV</span>
                     </a>
-                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint']) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 font-black transition flex items-center gap-1" title="Unduh CI Gatekeeper Anti-Slop Scanner (verify-blueprint.sh)">
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint']) }}&locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 font-black transition flex items-center gap-1" :title="locale === 'en' ? 'Download CI Gatekeeper Scanner (verify-blueprint.sh)' : 'Unduh CI Gatekeeper Anti-Slop Scanner (verify-blueprint.sh)'">
                         <span class="hidden xl:inline">VERIFY.SH</span>
                         <span class="xl:hidden">SH</span>
                     </a>
-                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'symbol-manifest']) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 font-black transition flex items-center gap-1" title="Unduh Exact Symbol Lock Anti-Amnesia (.agents/SYMBOL_MANIFEST.json)">
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'symbol-manifest', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'symbol-manifest']) }}&locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 font-black transition flex items-center gap-1" :title="locale === 'en' ? 'Download Exact Symbol Manifest (SYMBOL_MANIFEST.json)' : 'Unduh Exact Symbol Lock Anti-Amnesia (.agents/SYMBOL_MANIFEST.json)'">
                         <span class="hidden xl:inline">SYMBOL.JSON</span>
                         <span class="xl:hidden">SYM</span>
                     </a>
-                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'enterprise-menu']) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 font-bold transition flex items-center gap-1" title="Unduh 25 Sub-Menu Operasional L1–L4 (.agents/ENTERPRISE_MENU_MATRIX.md)">
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'enterprise-menu', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'enterprise-menu']) }}&locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 font-bold transition flex items-center gap-1" :title="locale === 'en' ? 'Download Enterprise Menu Matrix' : 'Unduh 25 Sub-Menu Operasional L1–L4 (.agents/ENTERPRISE_MENU_MATRIX.md)'">
                         <span class="hidden xl:inline">MENU25.MD</span>
                         <span class="xl:hidden">M25</span>
                     </a>
-                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'syntax-lock']) }}" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 font-black transition flex items-center gap-1" title="Unduh Kamus Anti-Halusinasi Sintaks 2026 (.agents/SYNTAX_LOCK_2026.md)">
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'syntax-lock', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'syntax-lock']) }}&locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 font-black transition flex items-center gap-1" :title="locale === 'en' ? 'Download Syntax Lock Dictionary' : 'Unduh Kamus Anti-Halusinasi Sintaks 2026 (.agents/SYNTAX_LOCK_2026.md)'">
                         <span class="hidden xl:inline">SYNTAX26.MD</span>
                         <span class="xl:hidden">S26</span>
                     </a>
-                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'client-sop']) }}" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 font-bold transition flex items-center gap-1" title="Unduh Buku SOP Operasional & Training Klien (.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md)">
+                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'client-sop', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'client-sop']) }}&locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-200 font-bold transition flex items-center gap-1" :title="locale === 'en' ? 'Download Client Operational SOP Manual' : 'Unduh Buku SOP Operasional & Training Klien (.agents/CLIENT_SOP_AND_TRAINING_MANUAL.md)'">
                         <span class="hidden xl:inline">SOP.MD</span>
                         <span class="xl:hidden">SOP</span>
                     </a>
-                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'sop-training']) }}" target="_blank" class="px-2.5 py-1 hover:bg-amber-500/20 text-amber-950 dark:text-amber-200 font-black transition flex items-center gap-1" title="Buka Buku SOP & Panduan Training Staf Siap Cetak A4 (Lampiran BAST)">
+                    <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'sop-training', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'sop-training']) }}&locale=' + (locale || 'id')" target="_blank" class="px-2.5 py-1 hover:bg-amber-500/20 text-amber-950 dark:text-amber-200 font-black transition flex items-center gap-1" :title="locale === 'en' ? 'Open Printable A4 Staff Training & SOP Manual' : 'Buka Buku SOP & Panduan Training Staf Siap Cetak A4 (Lampiran BAST)'">
                         <span class="hidden xl:inline">SOP-A4</span>
                         <span class="xl:hidden">A4</span>
                     </a>
-                    <a href="{{ url('/blueprint?tier=retail_spark&new=1') }}" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black transition flex items-center gap-1" title="Mulai Proyek Baru Bersih (100% Terisolasi Tanpa Sisa Proyek Ini)">
+                    <a href="{{ url('/blueprint?tier=retail_spark&new=1') }}" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black transition flex items-center gap-1" :title="locale === 'en' ? 'Start Clean New Project' : 'Mulai Proyek Baru Bersih (100% Terisolasi Tanpa Sisa Proyek Ini)'">
                         <span class="hidden xl:inline">+ PROYEK BARU</span>
                         <span class="xl:hidden">+BARU</span>
                     </a>

@@ -3,7 +3,8 @@
             const orig = btnEl ? btnEl.innerHTML : '';
             if (btnEl) btnEl.innerHTML = '<span class="text-emerald-400 font-bold animate-pulse">Mengambil MD...</span>';
             try {
-                const res = await fetch("{{ route('blueprint.raw-md', $blueprint->slug) }}");
+                const activeLoc = (typeof Alpine !== 'undefined' && document.querySelector('[x-data]')?._x_dataStack?.[0]?.locale) || (document.cookie.includes('neriah_locale=en') ? 'en' : 'id');
+                const res = await fetch("{{ route('blueprint.raw-md', $blueprint->slug) }}?locale=" + activeLoc);
                 if (!res.ok) throw new Error('Gagal mengunduh teks markdown');
                 const text = await res.text();
                 await navigator.clipboard.writeText(text);

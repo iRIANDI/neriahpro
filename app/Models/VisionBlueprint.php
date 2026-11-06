@@ -130,20 +130,21 @@ class VisionBlueprint extends Model
     /**
      * Generate or regenerate the Ultimate PRD for this blueprint.
      */
-    public function generateAndSavePrd(?string $preferredAiProvider = null): array
+    public function generateAndSavePrd(?string $preferredAiProvider = null, ?string $forceLocale = null): array
     {
-        $content = PrdGeneratorService::generate($this, $preferredAiProvider);
+        $content = PrdGeneratorService::generate($this, $preferredAiProvider, $forceLocale);
         $this->update(['prd_content' => $content]);
 
         // Partitioned Project Storage: Save official PRD Markdown + Universal Blueprint Schema v1.0 into dedicated project folder
         try {
+            $isEn = ($content['meta']['output_locale'] ?? '') === 'en';
             $slug = $this->slug ?: Str::slug($this->nama_bisnis);
             if ($slug) {
                 $projectDir = storage_path("app/projects/{$slug}");
                 if (! is_dir($projectDir)) {
                     @mkdir($projectDir, 0775, true);
                 }
-                $md = PrdGeneratorService::toMarkdown($this, $content);
+                $md = PrdGeneratorService::toMarkdown($this, $content, $isEn);
                 @file_put_contents("{$projectDir}/prd.md", $md);
                 @file_put_contents("{$projectDir}/blueprint.json", json_encode($this->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 

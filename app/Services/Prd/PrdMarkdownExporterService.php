@@ -15,8 +15,12 @@ class PrdMarkdownExporterService
     /**
      * Convert entire Vision Blueprint PRD into a complete, professional Markdown document.
      */
-    public static function toMarkdown(VisionBlueprint $blueprint, array $prd): string
+    public static function toMarkdown(VisionBlueprint $blueprint, array $prd, bool $isEn = false): string
     {
+        if (!$isEn && (($prd['meta']['output_locale'] ?? '') === 'en' || ($blueprint->user_metadata['output_locale'] ?? '') === 'en')) {
+            $isEn = true;
+        }
+
         $meta = $prd['meta'] ?? [];
         $exec = $prd['executive_summary'] ?? [];
         $actors = $prd['system_actors'] ?? [];
@@ -27,7 +31,7 @@ class PrdMarkdownExporterService
         $tech = $prd['tech_stack'] ?? [];
         $governance = $prd['governance_and_sla'] ?? [];
         $pricing = $prd['velocity_pricing_options'] ?? [];
-        $businessRoi = $prd['business_roi_analysis'] ?? PrdGeneratorService::generateBusinessRoiAnalysis($blueprint, $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint));
+        $businessRoi = $prd['business_roi_analysis'] ?? PrdGeneratorService::generateBusinessRoiAnalysis($blueprint, $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint), $isEn);
         $slop = PrdGeneratorService::getAntiAiSlopDesignSystem();
         $scalability = PrdGeneratorService::getBackendScalabilityManifesto();
         $handoff = PrdGeneratorService::getAgentHandoffProtocol($blueprint->nama_bisnis ?: $blueprint->client_name);
@@ -41,7 +45,7 @@ class PrdMarkdownExporterService
         $md .= "> **SPEC_ID**: `{$specId}`  \n";
         $md .= "> **Client PIC**: {$blueprint->client_name} ({$blueprint->email})  \n";
         $md .= "> **Generated**: " . ($meta['generated_at'] ?? now()->toIso8601String()) . "  \n";
-        $md .= "> **Target Timeline**: " . ($blueprint->target_waktu ?? '30 Hari Kerja') . "  \n";
+        $md .= "> **Target Timeline**: " . ($blueprint->target_waktu ?? ($isEn ? '30 Business Days' : '30 Hari Kerja')) . "  \n";
         $md .= "> **Architecture Standard**: Modern Monolith (Laravel 13 + Filament v5 + PostgreSQL Strict ULID)  \n";
 
         if (!empty($meta['ai_telemetry'])) {
@@ -56,29 +60,40 @@ class PrdMarkdownExporterService
         }
 
         $md .= "\n---\n\n";
-        $md .= "# ⚠️ PANDUAN EKSEKUSI ESTAFET UNTUK DEVELOPER (COCKPIT METHOD) ⚠️\n\n";
-        $md .= "> **BERHENTI! JANGAN COPY-PASTE SELURUH FILE INI SEKALIGUS KE DALAM AI AGENT (CURSOR / CLAUDE / WINDSURF)!**\n";
-        $md .= "> Menyalin ribuan baris PRD sekaligus akan menyebabkan **Context Rot / Amnesia AI**, di mana AI akan berhalusinasi, melewatkan aturan penting, dan merusak struktur arsitektur (seperti lupa menggunakan ULID, merusak styling, atau mengabaikan Gherkin).\n\n";
-        $md .= "**CARA PENGGUNAAN YANG BENAR (METODE ESTAFET / SPRINT COCKPIT):**\n";
-        $md .= "1. **Langkah 0 (Fondasi & Infrastruktur):** Copy bagian *Tech Stack, Architecture Manifesto, Aturan Anti-AI-Slop, dan ERD Diagram* terlebih dahulu. Minta AI membangun `Migration`, `Model`, `Seeder`, `Filament Resource` kosong, dan aturan `UI/UX` dasarnya.\n";
-        $md .= "2. **Langkah 1 (Fitur Spesifik):** Setelah fondasi ter-commit ke Git, copy **hanya satu** blok spesifikasi Fitur (misal MVP Phase 1 - Modul A) beserta Skenario Gherkin-nya ke dalam prompt baru.\n";
-        $md .= "3. **Langkah 2 (Iterasi Berikutnya):** Setelah fitur sebelumnya selesai, diuji (`php artisan test`), dan di-commit, ulangi proses estafet untuk blok fitur selanjutnya.\n";
-        $md .= "4. **Gunakan Dashboard Cockpit:** Untuk pengalaman terbaik, gunakan UI tombol **Sprint Cockpit (0/6)** di dashboard Neriah Pro Anda, yang secara otomatis memotong PRD ini menjadi porsi estafet yang presisi.\n\n";
+        if ($isEn) {
+            $md .= "# ⚠️ STEP-BY-STEP RELAY EXECUTION GUIDE FOR DEVELOPERS (COCKPIT METHOD) ⚠️\n\n";
+            $md .= "> **STOP! DO NOT COPY-PASTE THIS ENTIRE FILE AT ONCE INTO AI AGENTS (CURSOR / CLAUDE / WINDSURF)!**\n";
+            $md .= "> Copying thousands of lines at once causes **AI Context Rot / Amnesia**, leading the agent to hallucinate, omit critical constraints, and degrade architecture integrity (e.g. forgetting ULID primary keys, corrupting styling, or ignoring Gherkin scenarios).\n\n";
+            $md .= "**PROPER RELAY EXECUTION PROCEDURE (SPRINT COCKPIT METHOD):**\n";
+            $md .= "1. **Step 0 (Foundation & Infrastructure):** First, copy only the *Tech Stack, Architecture Manifesto, Anti-AI-Slop Guidelines, and ERD Diagram*. Instruct the AI agent to build the initial `Migration`, `Model`, `Seeder`, empty `Filament Resource`, and foundational `UI/UX` tokens.\n";
+            $md .= "2. **Step 1 (Specific Feature Slice):** Once the foundation is committed to Git, copy **only one** Feature Specification block (e.g., MVP Phase 1 - Module A) along with its Gherkin Scenarios into a fresh agent prompt.\n";
+            $md .= "3. **Step 2 (Next Iteration):** After the preceding feature is fully implemented, verified with tests (`php artisan test`), and committed, repeat the relay for the next feature block.\n";
+            $md .= "4. **Leverage the Cockpit Dashboard:** For optimal results, utilize the **Sprint Cockpit (0/6)** button in your Neriah Pro dashboard, which automatically chunks this PRD into surgical relay portions.\n\n";
+        } else {
+            $md .= "# ⚠️ PANDUAN EKSEKUSI ESTAFET UNTUK DEVELOPER (COCKPIT METHOD) ⚠️\n\n";
+            $md .= "> **BERHENTI! JANGAN COPY-PASTE SELURUH FILE INI SEKALIGUS KE DALAM AI AGENT (CURSOR / CLAUDE / WINDSURF)!**\n";
+            $md .= "> Menyalin ribuan baris PRD sekaligus akan menyebabkan **Context Rot / Amnesia AI**, di mana AI akan berhalusinasi, melewatkan aturan penting, dan merusak struktur arsitektur (seperti lupa menggunakan ULID, merusak styling, atau mengabaikan Gherkin).\n\n";
+            $md .= "**CARA PENGGUNAAN YANG BENAR (METODE ESTAFET / SPRINT COCKPIT):**\n";
+            $md .= "1. **Langkah 0 (Fondasi & Infrastruktur):** Copy bagian *Tech Stack, Architecture Manifesto, Aturan Anti-AI-Slop, dan ERD Diagram* terlebih dahulu. Minta AI membangun `Migration`, `Model`, `Seeder`, `Filament Resource` kosong, dan aturan `UI/UX` dasarnya.\n";
+            $md .= "2. **Langkah 1 (Fitur Spesifik):** Setelah fondasi ter-commit ke Git, copy **hanya satu** blok spesifikasi Fitur (misal MVP Phase 1 - Modul A) beserta Skenario Gherkin-nya ke dalam prompt baru.\n";
+            $md .= "3. **Langkah 2 (Iterasi Berikutnya):** Setelah fitur sebelumnya selesai, diuji (`php artisan test`), dan di-commit, ulangi proses estafet untuk blok fitur selanjutnya.\n";
+            $md .= "4. **Gunakan Dashboard Cockpit:** Untuk pengalaman terbaik, gunakan UI tombol **Sprint Cockpit (0/6)** di dashboard Neriah Pro Anda, yang secara otomatis memotong PRD ini menjadi porsi estafet yang presisi.\n\n";
+        }
         $md .= "---\n\n";
 
         // 1. Executive Discovery
         $md .= "## 1. Executive Technical Discovery & Problem Statement\n\n";
-        $md .= "- **Masalah Utama**: " . ($exec['problem_statement'] ?? $blueprint->masalah_utama) . "\n";
-        $md .= "- **Tujuan / Success Metrics**: " . ($exec['success_metrics'] ?? $blueprint->tujuan_utama) . "\n";
-        $md .= "- **Target Audiens**: " . ($exec['target_audience'] ?? $blueprint->target_audiens) . "\n";
-        $md .= "- **Target Platform & Aksesibilitas**: " . ($exec['target_platform'] ?? 'Modern Web Application Responsive & PWA') . "\n";
-        $md .= "- **Status Migrasi Data Warisan**: " . ($exec['legacy_data_migration'] ?? 'Database Baru Bersih') . "\n";
-        $md .= "- **Infrastruktur Hosting & Server**: " . ($exec['hosting_infrastructure'] ?? 'Managed Dedicated Cloud VPS Neriah Pro') . "\n";
-        $md .= "- **Skema Garansi, SLA & Serah Terima Git**: " . ($exec['warranty_sla'] ?? '30 Hari Garansi Bug Pascameluncur') . "\n";
-        $md .= "- **Skema Termin Pembayaran**: " . ($exec['payment_milestones'] ?? 'Termin Standar 50/50') . "\n";
-        $md .= "- **Target Skala**: " . ($exec['target_scale'] ?? '0 - 100.000 Pengguna / Bulan') . "\n";
-        $md .= "- **Jangkauan Pasar**: " . ($exec['market_reach'] ?? 'Domestik Indonesia') . "\n";
-        $md .= "- **Filosofi Arsitektur**: " . ($exec['architecture_philosophy'] ?? '') . "\n\n";
+        $md .= "- **" . ($isEn ? 'Primary Problem' : 'Masalah Utama') . "**: " . \App\Support\BlueprintPdfHelper::translateText($exec['problem_statement'] ?? $blueprint->masalah_utama, $isEn) . "\n";
+        $md .= "- **" . ($isEn ? 'Objectives / Success Metrics' : 'Tujuan / Success Metrics') . "**: " . \App\Support\BlueprintPdfHelper::translateText($exec['success_metrics'] ?? $blueprint->tujuan_utama, $isEn) . "\n";
+        $md .= "- **" . ($isEn ? 'Target Audience' : 'Target Audiens') . "**: " . \App\Support\BlueprintPdfHelper::translateText($exec['target_audience'] ?? $blueprint->target_audiens, $isEn) . "\n";
+        $md .= "- **" . ($isEn ? 'Target Platform & Accessibility' : 'Target Platform & Aksesibilitas') . "**: " . \App\Support\BlueprintPdfHelper::translateText($exec['target_platform'] ?? 'Modern Web Application Responsive & PWA', $isEn) . "\n";
+        $md .= "- **" . ($isEn ? 'Legacy Data Migration Status' : 'Status Migrasi Data Warisan') . "**: " . \App\Support\BlueprintPdfHelper::translateText($exec['legacy_data_migration'] ?? ($isEn ? 'Clean Start New Database' : 'Database Baru Bersih'), $isEn) . "\n";
+        $md .= "- **" . ($isEn ? 'Hosting & Server Infrastructure' : 'Infrastruktur Hosting & Server') . "**: " . \App\Support\BlueprintPdfHelper::translateText($exec['hosting_infrastructure'] ?? ($isEn ? 'Managed Dedicated Cloud VPS Neriah Pro' : 'Managed Dedicated Cloud VPS Neriah Pro'), $isEn) . "\n";
+        $md .= "- **" . ($isEn ? 'Warranty, SLA & Git Handover' : 'Skema Garansi, SLA & Serah Terima Git') . "**: " . \App\Support\BlueprintPdfHelper::translateText($exec['warranty_sla'] ?? ($isEn ? '30 Calendar Days Post-Launch Bug Warranty' : '30 Hari Garansi Bug Pascameluncur'), $isEn) . "\n";
+        $md .= "- **" . ($isEn ? 'Payment Milestones' : 'Skema Termin Pembayaran') . "**: " . \App\Support\BlueprintPdfHelper::translateText($exec['payment_milestones'] ?? ($isEn ? 'Standard 50/50 Milestones' : 'Termin Standar 50/50'), $isEn) . "\n";
+        $md .= "- **" . ($isEn ? 'Target Scale' : 'Target Skala') . "**: " . \App\Support\BlueprintPdfHelper::translateText($exec['target_scale'] ?? ($isEn ? '0 - 100,000 Users / Month' : '0 - 100.000 Pengguna / Bulan'), $isEn) . "\n";
+        $md .= "- **" . ($isEn ? 'Market Reach' : 'Jangkauan Pasar') . "**: " . \App\Support\BlueprintPdfHelper::translateText($exec['market_reach'] ?? ($isEn ? 'Domestic Indonesia & Global' : 'Domestik Indonesia'), $isEn) . "\n";
+        $md .= "- **" . ($isEn ? 'Architecture Philosophy' : 'Filosofi Arsitektur') . "**: " . \App\Support\BlueprintPdfHelper::translateText($exec['architecture_philosophy'] ?? '', $isEn) . "\n\n";
 
         // 1.5 Business Feasibility, ROI & No-Regret Guarantees
         if (!empty($businessRoi)) {
@@ -676,10 +691,10 @@ class PrdMarkdownExporterService
      * Synthesize complete AI Coding Rules (.cursorrules / CLAUDE.md / AGENTS.md)
      * Tailored for Cursor, Claude Code, Antigravity, and Windsurf AI agents.
      */
-    public static function toCursorrules(VisionBlueprint $blueprint, array $prd = []): string
+    public static function toCursorrules(VisionBlueprint $blueprint, array $prd = [], bool $isEn = false): string
     {
         if (empty($prd)) {
-            $prd = $blueprint->prd_content ?? PrdGeneratorService::generate($blueprint);
+            $prd = $blueprint->prd_content ?? PrdGeneratorService::generate($blueprint, null, $isEn ? 'en' : 'id');
         }
 
         $projectName = $blueprint->nama_bisnis ?: ($blueprint->client_name . "'s Project");

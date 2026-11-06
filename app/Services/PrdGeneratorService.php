@@ -29,10 +29,10 @@ class PrdGeneratorService
     /**
      * Generate an Ultimate PRD & Architecture Blueprint from blueprint questionnaire inputs.
      */
-    public static function generate(VisionBlueprint $blueprint, ?string $preferredAiProvider = null): array
+    public static function generate(VisionBlueprint $blueprint, ?string $preferredAiProvider = null, ?string $forceLocale = null): array
     {
         $outputLocale = \App\Support\PosInclusiveCommercialCatalog::normalizeOutputLocale(
-            $blueprint->user_metadata['output_locale'] ?? $blueprint->user_metadata['locale'] ?? app()->getLocale() ?? 'id'
+            $forceLocale ?? $blueprint->user_metadata['output_locale'] ?? $blueprint->user_metadata['locale'] ?? app()->getLocale() ?? 'id'
         );
         $isEn = ($outputLocale === 'en');
 
@@ -905,19 +905,18 @@ class PrdGeneratorService
     /**
      * Convert entire Vision Blueprint PRD into a complete, professional Markdown document.
      */
-    public static function toMarkdown(VisionBlueprint $blueprint, array $prd): string
+    public static function toMarkdown(VisionBlueprint $blueprint, array $prd, bool $isEn = false): string
     {
-        return PrdMarkdownExporterService::toMarkdown($blueprint, $prd);
+        return PrdMarkdownExporterService::toMarkdown($blueprint, $prd, $isEn);
     }
 
     /**
      * Synthesize complete AI Coding Rules (.cursorrules / CLAUDE.md / AGENTS.md)
      * Tailored for Cursor, Claude Code, Antigravity, and Windsurf AI agents.
      */
-    public static function toCursorrules(VisionBlueprint $blueprint, array $prd = array (
-)): string
+    public static function toCursorrules(VisionBlueprint $blueprint, array $prd = array(), bool $isEn = false): string
     {
-        return PrdMarkdownExporterService::toCursorrules($blueprint, $prd);
+        return PrdMarkdownExporterService::toCursorrules($blueprint, $prd, $isEn);
     }
 
     /**

@@ -22,8 +22,8 @@
         'vi' => ['flag' => '🇻🇳', 'name' => 'Tiếng Việt'],
         'th' => ['flag' => '🇹🇭', 'name' => 'ไทย'],
     ];
-    $currentLang = request()->cookie('neriah_locale', app()->getLocale());
-    $isEn = $currentLang === 'en' || app()->getLocale() === 'en';
+    $currentLang = request()->query('locale') ?: (request()->query('lang') ?: (request()->cookie('neriah_locale') ?: (session('locale') ?: ($locale ?? app()->getLocale()))));
+    $isEn = $currentLang === 'en';
 
     // Lock & Entitlement Status
     $isRetailLicense = ($blueprint->project_status === 'Retail License' || !empty($blueprint->user_metadata['retail_tier']) || !empty($blueprint->user_metadata['package_tier']) || str_contains(strtolower($blueprint->slug ?? ''), '-retail-'));

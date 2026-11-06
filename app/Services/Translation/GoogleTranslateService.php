@@ -24,38 +24,66 @@ class GoogleTranslateService
         }
 
         // Cache translation to avoid duplicate network requests
-        $cacheKey = 'gt_' . md5($source . '_' . $target . '_' . $text);
-        return Cache::remember($cacheKey, now()->addDays(30), function () use ($text, $target, $source) {
-            try {
-                $response = Http::timeout(6)->get('https://translate.googleapis.com/translate_a/single', [
-                    'client' => 'gtx',
-                    'sl' => $source,
-                    'tl' => $target,
-                    'dt' => 't',
-                    'q' => $text,
-                ]);
+        try {
+            $cacheKey = 'gt_' . md5($source . '_' . $target . '_' . $text);
+            return Cache::remember($cacheKey, now()->addDays(30), function () use ($text, $target, $source) {
+                return self::directTranslate($text, $target, $source);
+            });
+        } catch (\Throwable $e) {
+            // If cache storage is temporarily unavailable, fall back to direct translation
+            return self::directTranslate($text, $target, $source);
+        }
+    }
 
-                if ($response->successful()) {
-                    $body = $response->json();
-                    if (is_array($body) && isset($body[0]) && is_array($body[0])) {
-                        $translated = '';
-                        foreach ($body[0] as $segment) {
-                            if (isset($segment[0])) {
-                                $translated .= $segment[0];
-                            }
-                        }
-                        if (!empty($translated)) {
-                            return trim($translated);
-                        }
+    /**
+     * Direct HTTP translation without relying on cache store.
+     */
+    public static function directTranslate(string $text, string $target = 'en', string $source = 'id'): string
+    {
+        $text = trim($text);
+        if (empty($text) || $target === $source) {
+            return $text;
+        }
+
+        try {
+            $url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=' . urlencode($source) . '&tl=' . urlencode($target) . '&dt=t&q=' . urlencode($text);
+            $raw = null;
+
+            if (class_exists(\Illuminate\Support\Facades\Http::class)) {
+                try {
+                    $response = \Illuminate\Support\Facades\Http::timeout(3)->get($url);
+                    if ($response->successful()) {
+                        $raw = $response->body();
                     }
+                } catch (\Throwable) {
+                    $raw = null;
                 }
-            } catch (\Throwable $e) {
-                Log::warning('GoogleTranslateService failed: ' . $e->getMessage());
             }
 
-            // Return original text gracefully if translation fails
-            return $text;
-        });
+            if ($raw === null && function_exists('file_get_contents')) {
+                $ctx = stream_context_create(['http' => ['timeout' => 3]]);
+                $raw = @file_get_contents($url, false, $ctx);
+            }
+
+            if (!empty($raw)) {
+                $body = json_decode($raw, true);
+                if (is_array($body) && isset($body[0]) && is_array($body[0])) {
+                    $translated = '';
+                    foreach ($body[0] as $segment) {
+                        if (isset($segment[0])) {
+                            $translated .= $segment[0];
+                        }
+                    }
+                    if (!empty($translated)) {
+                        return trim($translated);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Silently fallback to original text
+        }
+
+        return $text;
     }
 
     /**

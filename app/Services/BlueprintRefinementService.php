@@ -213,7 +213,7 @@ class BlueprintRefinementService
         // If remote AI was unavailable, in cooldown, or failed to return valid JSON, engage Deterministic Architecture Engine
         if (empty($parsed)) {
             $isDeterministic = true;
-            $parsed = $this->generateDeterministicRefinement($blueprint, $segmentKey, $existingSegmentData, $userInstruction, $sourceData);
+            $parsed = $this->generateDeterministicRefinement($blueprint, $segmentKey, $existingSegmentData, $userInstruction, $sourceData, $additionalContext);
         }
 
         // Re-integrate refined data into prd_content
@@ -334,13 +334,20 @@ class BlueprintRefinementService
         array $additionalContext
     ): array {
         $existingJson = json_encode($existingData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $locale = $additionalContext['locale'] ?? 'id';
+        $isEn = ($locale === 'en');
+        $langPrompt = $isEn ? 'English (strictly professional engineering vocabulary, no Indonesian text)' : 'Bahasa Indonesia (baku, tegas, dan profesional)';
+        $langMandate = $isEn 
+            ? "MANDATORY OUTPUT LANGUAGE: {$langPrompt}. All human-readable narrative output (title, desc, user_story, acceptance_criteria, scenario labels, given/when/then, tasks, directives) MUST be written in English. Do NOT output Indonesian words."
+            : "BAHASA OUTPUT WAJIB: {$langPrompt}.";
+
         $userPromptDirective = !empty($userInstruction) 
-            ? "PETUNJUK PENAJAMAN DARI PENGGUNA:\n{$userInstruction}\n\n" 
-            : "PETUNJUK: Perdalam secara otomatis dan komprehensif berdasarkan Dokumen Acuan di atas.\n\n";
+            ? ($isEn ? "USER REFINEMENT INSTRUCTION:\n{$userInstruction}\n\n" : "PETUNJUK PENAJAMAN DARI PENGGUNA:\n{$userInstruction}\n\n")
+            : ($isEn ? "DIRECTIVE: Deepen and refine automatically and comprehensively based on Project Source Documents above.\n\n" : "PETUNJUK: Perdalam secara otomatis dan komprehensif berdasarkan Dokumen Acuan di atas.\n\n");
 
         // Segment 1: FEATURES (Entire List or Single Feature)
         if ($segmentKey === 'feature_single') {
-            $featureTitle = $existingData['title'] ?? 'Fitur';
+            $featureTitle = $existingData['title'] ?? ($isEn ? 'Feature' : 'Fitur');
             $systemInstruction = <<<TXT
 Anda adalah Principal Software Architect di Neriah Pro.
 Tugas Anda: Memperdalam SATU SPESIFIKASI FITUR TERTENTU berdasarkan DOKUMEN ACUAN PROYEK (MarkItDown Corpus / Spesifikasi Klien).
@@ -351,6 +358,7 @@ ATURAN KETAT:
 4. Jangan gunakan kata-kata generik atau placeholder kosong.
 5. Pertahankan ID Fitur, tier ('mvp'), dan index yang sama.
 6. Kembalikan HANYA objek JSON valid (tanpa wrapper ```json).
+7. {$langMandate}
 TXT;
 
             $prompt = <<<TXT
@@ -663,6 +671,8 @@ TXT;
             $specs = $prd['engineering_specs']['mvp_specs'] ?? ($prd['features']['mvp_phase1'] ?? []);
             $found = false;
 
+            $isEnTarget = ($additionalContext['locale'] ?? ($blueprint->user_metadata['output_locale'] ?? '')) === 'en';
+
             foreach ($specs as $idx => $spec) {
                 if (($featureId && (($spec['id'] ?? '') === $featureId || ($spec['feature_id'] ?? '') === $featureId)) ||
                     ($specIndex !== null && $idx === (int) $specIndex)) {
@@ -670,7 +680,7 @@ TXT;
                     $merged = BlueprintDiscoveryService::polishFeatureSpecification(
                         $merged,
                         $blueprint->domain_category ?? 'custom_portal',
-                        ($blueprint->user_metadata['output_locale'] ?? '') === 'en'
+                        $isEnTarget
                     );
                     $specs[$idx] = $merged;
                     $found = true;
@@ -682,7 +692,7 @@ TXT;
                 $parsedData = BlueprintDiscoveryService::polishFeatureSpecification(
                     $parsedData,
                     $blueprint->domain_category ?? 'custom_portal',
-                    ($blueprint->user_metadata['output_locale'] ?? '') === 'en'
+                    $isEnTarget
                 );
                 $specs[] = $parsedData;
             }
@@ -701,13 +711,14 @@ TXT;
         }
 
         if (in_array($segmentKey, ['features', 'feature_specifications', 'mvp_features'])) {
+            $isEnTarget = ($additionalContext['locale'] ?? ($blueprint->user_metadata['output_locale'] ?? '')) === 'en';
             $featuresList = is_array($parsedData) ? $parsedData : [];
             foreach ($featuresList as &$fItem) {
                 if (is_array($fItem)) {
                     $fItem = BlueprintDiscoveryService::polishFeatureSpecification(
                         $fItem,
                         $blueprint->domain_category ?? 'custom_portal',
-                        ($blueprint->user_metadata['output_locale'] ?? '') === 'en'
+                        $isEnTarget
                     );
                 }
             }
@@ -888,32 +899,94 @@ PROMPT;
         string $segmentKey,
         mixed $existingData,
         ?string $userInstruction,
-        array $sourceData
+        array $sourceData,
+        array $additionalContext = []
     ): mixed {
-        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise');
-        $directive = $userInstruction ?: 'Penajaman arsitektur otomatis berstandar enterprise.';
+        $locale = $additionalContext['locale'] 
+            ?? ($blueprint->user_metadata['output_locale'] 
+            ?? (request()->query('locale') 
+            ?: (request()->cookie('neriah_locale') ?: (session('locale') ?: app()->getLocale()))));
+        $isEn = ($locale === 'en');
+        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: ($isEn ? 'Enterprise System' : 'Sistem Enterprise'));
+        $directive = $userInstruction ?: ($isEn ? 'Automatic enterprise-grade architectural refinement.' : 'Penajaman arsitektur otomatis berstandar enterprise.');
 
         if ($segmentKey === 'feature_single') {
             $item = is_array($existingData) ? $existingData : [];
-            $title = $item['title'] ?? 'Spesifikasi Modul Inti';
+            $title = $item['title'] ?? ($isEn ? 'Core Module Specification' : 'Spesifikasi Modul Inti');
             $id = $item['id'] ?? 'FEAT-MVP-01';
             $index = $item['index'] ?? 1;
             $category = $item['category'] ?? 'core';
-            $catLabel = $item['category_label'] ?? 'Modul Inti';
+            $catLabel = $item['category_label'] ?? ($isEn ? 'Core Module' : 'Modul Inti');
 
             $slugTitle = Str::slug($title);
             $pascal = PrdGeneratorService::sanitizeEntityClassName($title, $item['related_table'] ?? null);
+
+            $defaultDesc = $isEn
+                ? "Module {$title} for {$businessName} featuring transactional ACID execution, tamper-proof audit trails, and verified third-party integrations."
+                : "Modul {$title} untuk {$businessName} dengan pemrosesan transactional ACID, audit trail, dan integrasi terverifikasi.";
+
+            $userStory = $isEn
+                ? "As a System User of {$businessName}, I want to manage {$title} with real-time data validation, concurrency protection, and centralized audit reporting."
+                : "Sebagai Pengguna Sistem {$businessName}, saya dapat mengelola {$title} dengan validasi data real-time, perlindungan konkurensi, dan laporan audit terpusat.";
+
+            $acceptanceCriteria = $isEn
+                ? [
+                    "Scenario 1 (Happy Path): System successfully processes {$title} returning HTTP 200 OK and persisting relational database records with Strict ULID.",
+                    "Scenario 2 (Validation Error): Request with incomplete or invalid parameters returns 422 Unprocessable Content with structured error messages.",
+                    "Scenario 3 (Edge Case & Concurrency): Simultaneous mutation attempts are handled using database pessimistic locking to eliminate race conditions.",
+                ]
+                : [
+                    "Skenario 1 (Happy Path): Sistem berhasil memproses {$title} dengan status 200 OK dan menyimpan relasi database Strict ULID.",
+                    "Skenario 2 (Validation Error): Request dengan parameter tidak lengkap menghasilkan response 422 Unprocessable Content dengan pesan error terstruktur.",
+                    "Skenario 3 (Edge Case & Concurrency): Percobaan mutasi simultan ditangani melalui database transaction locking untuk mencegah race condition.",
+                ];
+
+            $frontendTasks = $isEn
+                ? [
+                    "Build responsive user interface for {$title} adhering strictly to WCAG AAA contrast ratio.",
+                    "Implement Keyset Cursor Pagination O(1) data table with instant clear button on search field.",
+                    "Integrate floating toast visual feedback for every state transition.",
+                ]
+                : [
+                    "Bangun antarmuka responsif {$title} dengan rasio kontras WCAG AAA.",
+                    "Implementasikan tabel listing data Keyset Cursor Pagination O(1) dengan search box instan clear button.",
+                    "Integrasikan feedback visual floating toast untuk setiap mutasi state.",
+                ];
+
+            $backendTasks = $isEn
+                ? [
+                    "Database migration for " . Str::snake(Str::plural($pascal)) . " table with 26-character Strict ULID primary key conforming to PostgreSQL 16 standard.",
+                    "Implement atomic {$pascal}Service wrapped in DB::transaction() with pessimistic locking (lockForUpdate).",
+                    "Enforce FormRequest Store{$pascal}Request validation with strict anti-XSS and type sanitization.",
+                ]
+                : [
+                    "Migration tabel " . Str::snake(Str::plural($pascal)) . " dengan Primary Key ULID 26-karakter standar PostgreSQL 16.",
+                    "Implementasikan {$pascal}Service atomik dibungkus DB::transaction() dengan pessimistic locking (lockForUpdate).",
+                    "Terapkan validasi FormRequest Store{$pascal}Request anti-XSS dan sanitasi tipe data ketat.",
+                ];
+
+            $integrationTasks = $isEn
+                ? [
+                    "Register RESTful API endpoint with Sanctum token authentication and rate limiting.",
+                    "Format error responses according to RFC 9457 Problem Details specification with precise HTTP status codes.",
+                    "Enforce X-Idempotency-Key request header to eliminate duplicate mutations.",
+                ]
+                : [
+                    "Daftarkan endpoint RESTful API dengan otentikasi token Sanctum dan rate limiting.",
+                    "Format respons error standar RFC 9457 Problem Details dengan HTTP status code presisi.",
+                    "Terapkan header X-Idempotency-Key untuk mencegah mutasi ganda.",
+                ];
 
             $refinedItem = [
                 'id' => $id,
                 'index' => $index,
                 'tier' => 'mvp',
                 'title' => $title,
-                'desc' => ($item['desc'] ?? '') ?: "Modul {$title} untuk {$businessName} dengan pemrosesan transactional ACID, audit trail, dan integrasi terverifikasi.",
+                'desc' => ($item['desc'] ?? '') ?: $defaultDesc,
                 'category' => $category,
                 'category_label' => $catLabel,
                 'story_points' => $item['story_points'] ?? 5,
-                'complexity_label' => $item['complexity_label'] ?? 'High (5 SP)',
+                'complexity_label' => $item['complexity_label'] ?? ($isEn ? 'High (5 SP)' : 'Tinggi (5 SP)'),
                 'sprint_phase' => $item['sprint_phase'] ?? 'Sprint 1',
                 'target_files' => [
                     "app/Models/{$pascal}.php",
@@ -921,21 +994,17 @@ PROMPT;
                     "app/Http/Controllers/{$pascal}Controller.php",
                     "tests/Feature/{$pascal}ContractTest.php",
                 ],
-                'user_story' => "Sebagai Pengguna Sistem {$businessName}, saya dapat mengelola {$title} dengan validasi data real-time, perlindungan konkurensi, dan laporan audit terpusat.",
-                'acceptance_criteria' => PrdGeneratorService::normalizeAcceptanceCriteria([
-                    "Skenario 1 (Happy Path): Sistem berhasil memproses {$title} dengan status 200 OK dan menyimpan relasi database Strict ULID.",
-                    "Skenario 2 (Validation Error): Request dengan parameter tidak lengkap menghasilkan response 422 Unprocessable Content dengan pesan error terstruktur.",
-                    "Skenario 3 (Edge Case & Concurrency): Percobaan mutasi simultan ditangani melalui database transaction locking untuk mencegah race condition.",
-                ], $title, "Sebagai Pengguna Sistem {$businessName}, saya dapat mengelola {$title}..."),
+                'user_story' => $userStory,
+                'acceptance_criteria' => PrdGeneratorService::normalizeAcceptanceCriteria(
+                    $acceptanceCriteria, 
+                    $title, 
+                    $userStory
+                ),
                 'frontend' => [
                     'components' => ["{$pascal}Component.blade.php", "{$pascal}Card.blade.php"],
-                    'tasks' => [
-                        "Bangun antarmuka responsif {$title} dengan rasio kontras WCAG AAA.",
-                        "Implementasikan tabel listing data Keyset Cursor Pagination O(1) dengan search box instan clear button.",
-                        "Integrasikan feedback visual floating toast untuk setiap mutasi state.",
-                    ],
-                    'states' => 'Default, Loading Skeleton, Empty State, Error Toast, Memproses',
-                    'anti_ai_slop' => 'Palet Zinc monokrom dengan aksen tajam, border presisi rounded-none, dilarang tombol kapsul, bebas window.alert() native.',
+                    'tasks' => $frontendTasks,
+                    'states' => $isEn ? 'Default, Loading Skeleton, Empty State, Error Toast, Processing' : 'Default, Loading Skeleton, Empty State, Error Toast, Memproses',
+                    'anti_ai_slop' => $isEn ? 'Solid Zinc monochrome palette with crisp high contrast, rounded-none or subtle borders, strictly zero pill/capsule buttons, no native window.alert().' : 'Palet Zinc monokrom dengan aksen tajam, border presisi rounded-none, dilarang tombol kapsul, bebas window.alert() native.',
                 ],
                 'backend' => [
                     'target_files' => [
@@ -943,39 +1012,34 @@ PROMPT;
                         "app/Services/{$pascal}Service.php",
                         "app/Http/Controllers/{$pascal}Controller.php",
                     ],
-                    'tasks' => [
-                        "Migration tabel " . Str::snake(Str::plural($pascal)) . " dengan Primary Key ULID 26-karakter standar PostgreSQL 16.",
-                        "Implementasikan {$pascal}Service atomik dibungkus DB::transaction() dengan pessimistic locking (lockForUpdate).",
-                        "Terapkan validasi FormRequest Store{$pascal}Request anti-XSS dan sanitasi tipe data ketat.",
-                    ],
-                    'ulid_migration_rules' => 'Wajib gunakan ->ulid("id")->primary() (VARCHAR(26)) dan foreignUlid. Dilarang AUTO_INCREMENT.',
-                    'query_strategy' => 'Keyset Cursor Pagination cursorPaginate() dengan ->orderBy("id", "asc") untuk latensi sub-10ms.',
+                    'tasks' => $backendTasks,
+                    'ulid_migration_rules' => $isEn ? 'Must use ->ulid("id")->primary() (VARCHAR(26)) and foreignUlid. AUTO_INCREMENT is strictly prohibited.' : 'Wajib gunakan ->ulid("id")->primary() (VARCHAR(26)) dan foreignUlid. Dilarang AUTO_INCREMENT.',
+                    'query_strategy' => $isEn ? 'Keyset Cursor Pagination cursorPaginate() with ->orderBy("id", "asc") for sub-10ms query latency.' : 'Keyset Cursor Pagination cursorPaginate() dengan ->orderBy("id", "asc") untuk latensi sub-10ms.',
                 ],
                 'integration' => [
                     'endpoint' => "POST /api/v1/" . Str::kebab(Str::plural($pascal)),
                     'middleware' => ['api', 'auth:sanctum', 'throttle:60,1'],
-                    'tasks' => [
-                        "Daftarkan endpoint RESTful API dengan otentikasi token Sanctum dan rate limiting.",
-                        "Format respons error standar RFC 9457 Problem Details dengan HTTP status code presisi.",
-                        "Terapkan header X-Idempotency-Key untuk mencegah mutasi ganda.",
-                    ],
+                    'tasks' => $integrationTasks,
                     'request_schema' => json_encode(['title' => "Sample {$title}", 'status' => 'active'], JSON_PRETTY_PRINT),
                     'response_schema' => json_encode(['success' => true, 'data' => ['id' => '01J...ULID26CHARS', 'title' => "Sample {$title}", 'status' => 'active']], JSON_PRETTY_PRINT),
                 ],
-                'code_agent_directive' => "Implementasikan {$pascal}Service dengan DB::transaction, Strict ULID primary keys, cursorPaginate(), dan anti-hardcoding patterns.",
+                'code_agent_directive' => $isEn ? "Implement {$pascal}Service using DB::transaction, Strict ULID primary keys, cursorPaginate(), and anti-hardcoding patterns." : "Implementasikan {$pascal}Service dengan DB::transaction, Strict ULID primary keys, cursorPaginate(), dan anti-hardcoding patterns.",
             ];
 
             return BlueprintDiscoveryService::polishFeatureSpecification(
                 $refinedItem,
                 $blueprint->domain_category ?? 'custom_portal',
-                ($blueprint->user_metadata['output_locale'] ?? '') === 'en'
+                $isEn
             );
         }
 
         if (in_array($segmentKey, ['features', 'feature_specifications', 'mvp_features'])) {
             $existingList = is_array($existingData) ? $existingData : [];
             if (empty($existingList)) {
-                $rawFeatures = array_filter(array_map('trim', explode("\n", $blueprint->fitur_wajib ?: "Modul Transaksi\nManajemen Pengguna\nAudit Log & Pelaporan")));
+                $defaultFeatures = $isEn
+                    ? "Transaction Module\nUser Management\nAudit Log & Reporting"
+                    : "Modul Transaksi\nManajemen Pengguna\nAudit Log & Pelaporan";
+                $rawFeatures = array_filter(array_map('trim', explode("\n", $blueprint->fitur_wajib ?: $defaultFeatures)));
                 $i = 1;
                 foreach ($rawFeatures as $fName) {
                     $cleanName = preg_replace('/^[0-9\.\-\*\s]+/', '', $fName);
@@ -985,7 +1049,7 @@ PROMPT;
                         'index' => $i,
                         'tier' => 'mvp',
                         'title' => $cleanName,
-                        'desc' => "Spesifikasi mendalam modul {$cleanName} pada {$businessName}.",
+                        'desc' => $isEn ? "In-depth specification for {$cleanName} module on {$businessName}." : "Spesifikasi mendalam modul {$cleanName} pada {$businessName}.",
                     ];
                     $i++;
                 }
@@ -998,7 +1062,8 @@ PROMPT;
                     'feature_single',
                     $feat,
                     $userInstruction,
-                    $sourceData
+                    $sourceData,
+                    $additionalContext
                 );
             }
             return $refinedList;
@@ -1008,27 +1073,27 @@ PROMPT;
             $tables = is_array($existingData) ? $existingData : [];
             if (empty($tables)) {
                 $tables = [
-                    ['name' => 'users', 'description' => 'Tabel akun otentikasi pengguna & hak akses'],
-                    ['name' => Str::plural(Str::snake(Str::slug($blueprint->nama_bisnis ?: 'project'))) . '_records', 'description' => 'Tabel entitas bisnis utama'],
-                    ['name' => 'audit_logs', 'description' => 'Tabel riwayat jejak audit aktivitas sistem'],
+                    ['name' => 'users', 'description' => $isEn ? 'User authentication accounts & permissions table' : 'Tabel akun otentikasi pengguna & hak akses'],
+                    ['name' => Str::plural(Str::snake(Str::slug($blueprint->nama_bisnis ?: 'project'))) . '_records', 'description' => $isEn ? 'Core business domain entity table' : 'Tabel entitas bisnis utama'],
+                    ['name' => 'audit_logs', 'description' => $isEn ? 'System activity immutable audit trail table' : 'Tabel riwayat jejak audit aktivitas sistem'],
                 ];
             }
 
             $refinedTables = [];
             foreach ($tables as $t) {
                 $tName = $t['name'] ?? 'records';
-                $tDesc = $t['description'] ?? ("Tabel operasional data " . $tName);
+                $tDesc = $t['description'] ?? ($isEn ? "Operational data table for {$tName}" : "Tabel operasional data " . $tName);
                 $columns = $t['columns'] ?? [];
 
                 if (empty($columns)) {
                     $columns = [
                         ['name' => 'id', 'type' => 'VARCHAR(26)', 'nullable' => false, 'primary' => true, 'description' => 'Strict ULID Primary Key'],
-                        ['name' => 'name', 'type' => 'JSONB', 'nullable' => false, 'primary' => false, 'description' => 'Nama atau label entitas dwibahasa (ID/EN)'],
-                        ['name' => 'code_reference', 'type' => 'VARCHAR(50)', 'nullable' => false, 'primary' => false, 'description' => 'Kode referensi unik O(1)'],
-                        ['name' => 'status', 'type' => 'VARCHAR(50)', 'nullable' => false, 'primary' => false, 'description' => 'Status state machine'],
-                        ['name' => 'created_at', 'type' => 'TIMESTAMPTZ', 'nullable' => false, 'primary' => false, 'description' => 'Timestamp pembuatan data'],
-                        ['name' => 'updated_at', 'type' => 'TIMESTAMPTZ', 'nullable' => false, 'primary' => false, 'description' => 'Timestamp perubahan data'],
-                        ['name' => 'deleted_at', 'type' => 'TIMESTAMPTZ', 'nullable' => true, 'primary' => false, 'description' => 'Soft delete timestamp'],
+                        ['name' => 'name', 'type' => 'JSONB', 'nullable' => false, 'primary' => false, 'description' => $isEn ? 'Bilingual entity name or title (ID/EN)' : 'Nama atau label entitas dwibahasa (ID/EN)'],
+                        ['name' => 'code_reference', 'type' => 'VARCHAR(50)', 'nullable' => false, 'primary' => false, 'description' => $isEn ? 'Unique O(1) indexed reference code' : 'Kode referensi unik O(1)'],
+                        ['name' => 'status', 'type' => 'VARCHAR(50)', 'nullable' => false, 'primary' => false, 'description' => $isEn ? 'State machine lifecycle status' : 'Status state machine'],
+                        ['name' => 'created_at', 'type' => 'TIMESTAMPTZ', 'nullable' => false, 'primary' => false, 'description' => $isEn ? 'Record creation timestamp' : 'Timestamp pembuatan data'],
+                        ['name' => 'updated_at', 'type' => 'TIMESTAMPTZ', 'nullable' => false, 'primary' => false, 'description' => $isEn ? 'Record mutation timestamp' : 'Timestamp perubahan data'],
+                        ['name' => 'deleted_at', 'type' => 'TIMESTAMPTZ', 'nullable' => true, 'primary' => false, 'description' => $isEn ? 'Soft delete timestamp' : 'Soft delete timestamp'],
                     ];
                 }
 
@@ -1057,30 +1122,55 @@ PROMPT;
         if (in_array($segmentKey, ['alurs_kerja', 'workflow'])) {
             $workflows = is_array($existingData) ? $existingData : [];
             if (empty($workflows)) {
-                $workflows = [
-                    [
-                        'id' => 'FLOW-01',
-                        'name' => 'Alur Pendaftaran & Verifikasi Kredensial',
-                        'actor' => 'Pengguna',
-                        'steps' => [
-                            '1. Pengguna menginput kredensial pada portal ' . $businessName,
-                            '2. Sistem mengecek keunikan identitas dan mengirimkan kode OTP',
-                            '3. Pengguna memverifikasi kode 6-digit',
-                            '4. Sesi aktif diterbitkan dengan token terenkripsi',
+                $workflows = $isEn
+                    ? [
+                        [
+                            'id' => 'FLOW-01',
+                            'name' => 'Registration & Credential Verification Workflow',
+                            'actor' => 'User / Customer',
+                            'steps' => [
+                                '1. User inputs credentials into ' . $businessName . ' portal',
+                                '2. System verifies identity uniqueness and sends 6-digit OTP verification code',
+                                '3. User verifies the 6-digit OTP code',
+                                '4. Active session is issued with encrypted Bearer token',
+                            ],
                         ],
-                    ],
-                    [
-                        'id' => 'FLOW-02',
-                        'name' => 'Alur Eksekusi & Audit Mutasi Data',
-                        'actor' => 'Operator / Admin',
-                        'steps' => [
-                            '1. Operator menginisiasi transaksi atau perubahan status',
-                            '2. Validasi skema bisnis dan otorisasi RBAC dievaluasi',
-                            '3. Database commit dilakukan dalam blok DB::transaction atomic',
-                            '4. Audit log tercatat dengan capture IP dan actor ULID',
+                        [
+                            'id' => 'FLOW-02',
+                            'name' => 'Data Mutation & Audit Trail Execution Workflow',
+                            'actor' => 'Business Operator / Admin',
+                            'steps' => [
+                                '1. Operator initiates transaction or state transition',
+                                '2. Business schema validation and RBAC authorization are evaluated',
+                                '3. Database commit executed within atomic DB::transaction block',
+                                '4. Tamper-proof audit log recorded with actor ULID and client IP',
+                            ],
                         ],
-                    ],
-                ];
+                    ]
+                    : [
+                        [
+                            'id' => 'FLOW-01',
+                            'name' => 'Alur Pendaftaran & Verifikasi Kredensial',
+                            'actor' => 'Pengguna',
+                            'steps' => [
+                                '1. Pengguna menginput kredensial pada portal ' . $businessName,
+                                '2. Sistem mengecek keunikan identitas dan mengirimkan kode OTP',
+                                '3. Pengguna memverifikasi kode 6-digit',
+                                '4. Sesi aktif diterbitkan dengan token terenkripsi',
+                            ],
+                        ],
+                        [
+                            'id' => 'FLOW-02',
+                            'name' => 'Alur Eksekusi & Audit Mutasi Data',
+                            'actor' => 'Operator / Admin',
+                            'steps' => [
+                                '1. Operator menginisiasi transaksi atau perubahan status',
+                                '2. Validasi skema bisnis dan otorisasi RBAC dievaluasi',
+                                '3. Database commit dilakukan dalam blok DB::transaction atomic',
+                                '4. Audit log tercatat dengan capture IP dan actor ULID',
+                            ],
+                        ],
+                    ];
             }
             return $workflows;
         }
@@ -1088,28 +1178,57 @@ PROMPT;
         if ($segmentKey === 'system_actors') {
             $actors = is_array($existingData) ? $existingData : [];
             if (empty($actors)) {
-                $actors = [
-                    [
-                        'role' => 'Super Administrator',
-                        'description' => 'Akses kontrol penuh konfigurasi sistem, audit log, dan integrasi API.',
-                        'permissions' => ['*'],
-                    ],
-                    [
-                        'role' => 'Operator Bisnis',
-                        'description' => 'Manajemen operasional harian data transaksi dan monitoring.',
-                        'permissions' => ['view_records', 'create_records', 'update_records'],
-                    ],
-                    [
-                        'role' => 'Klien / Pelanggan',
-                        'description' => 'Akses mandiri portal layanan, dashboard status, dan riwayat.',
-                        'permissions' => ['view_own_data'],
-                    ],
-                ];
+                $actors = $isEn
+                    ? [
+                        [
+                            'role' => 'Super Administrator',
+                            'description' => 'Full control access for system configuration, audit logs, and API integrations.',
+                            'permissions' => ['*'],
+                        ],
+                        [
+                            'role' => 'Business Operator',
+                            'description' => 'Daily operational management of transactions and live monitoring.',
+                            'permissions' => ['view_records', 'create_records', 'update_records'],
+                        ],
+                        [
+                            'role' => 'Client / Customer',
+                            'description' => 'Self-service portal access, status dashboard, and order history.',
+                            'permissions' => ['view_own_data'],
+                        ],
+                    ]
+                    : [
+                        [
+                            'role' => 'Super Administrator',
+                            'description' => 'Akses kontrol penuh konfigurasi sistem, audit log, dan integrasi API.',
+                            'permissions' => ['*'],
+                        ],
+                        [
+                            'role' => 'Operator Bisnis',
+                            'description' => 'Manajemen operasional harian data transaksi dan monitoring.',
+                            'permissions' => ['view_records', 'create_records', 'update_records'],
+                        ],
+                        [
+                            'role' => 'Klien / Pelanggan',
+                            'description' => 'Akses mandiri portal layanan, dashboard status, dan riwayat.',
+                            'permissions' => ['view_own_data'],
+                        ],
+                    ];
             }
             return $actors;
         }
 
         if ($segmentKey === 'custom_ai_agent_rules') {
+            if ($isEn) {
+                return "# Neriah Pro Software Engineering Standards ({$businessName})\n\n" .
+                       "- Primary Keys: Strictly 26-character ULID (VARCHAR(26)), AUTO_INCREMENT is prohibited.\n" .
+                       "- Pagination: Keyset Cursor Pagination O(1) (cursorPaginate()) is mandatory.\n" .
+                       "- Multi-Language Tier 1: Human-readable narrative columns (name, title, description, reason, memo, message_body, decision_note, tier_name) MUST be JSONB `{\"id\": \"...\", \"en\": \"...\"}` cast as array.\n" .
+                       "- Scalar Integrity: PKs, FKs, Unique Codes/Slugs, State Machine Statuses, and Hashes MUST remain scalar VARCHAR in relational schema.\n" .
+                       "- Clean Brutalism: High contrast, rounded-none or subtle borders, strictly zero pill/capsule buttons.\n" .
+                       "- Anti-Hardcoding: Magic strings and fuzzy dummy slug queries are strictly banned.\n" .
+                       "- User Directive: {$directive}\n";
+            }
+
             return "# Standar Rekayasa Perangkat Lunak Neriah Pro ({$businessName})\n\n" .
                    "- Primary Keys: Wajib ULID 26 karakter (VARCHAR(26)), dilarang auto-increment.\n" .
                    "- Pagination: Wajib Keyset Cursor Pagination O(1) (cursorPaginate()).\n" .
@@ -1499,58 +1618,6 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
 
         // 10. Authentication, Profiling & Granular RBAC
         $isAuth = preg_match('/(?:autentikasi|auth|rbac|pengguna|login|profil|hak akses|user management)/i', $titleCorpus);
-        if ($isAuth) {
-            if ($isEn) {
-                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
-                       "1. Frictionless Authentication & WhatsApp OTP: Deploy passwordless magic links and WhatsApp OTP verification for travelers, minimizing registration drop-offs.\n" .
-                       "2. Granular Role-Based Access Control (RBAC): Enforce strict permission boundaries separating Guest, Field Driver, Dispatcher, Finance, and Superadmin under the Principle of Least Privilege.\n" .
-                       "3. Personal Data Privacy & Portability (UU PDP): Provide one-click data archive exports and compliant right-to-be-forgotten workflows under Indonesian PDP Law No. 27/2022.\n" .
-                       "4. Multi-Device Session Security: Enforce session token rotation and automated revocation upon detection of concurrent logins or suspicious geolocation shifts.";
-            }
-
-            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
-                   "1. Autentikasi Tanpa Hambatan & WhatsApp OTP: Sediakan login tanpa password (magic link) dan verifikasi OTP WhatsApp bagi wisatawan guna meminimalkan hambatan registrasi.\n" .
-                   "2. Pembagian Peran Granular (RBAC): Terapkan batas hak akses ketat antara Tamu, Pengemudi Mitra, Dispatcher, Keuangan, dan Superadmin mengacu pada prinsip Least Privilege.\n" .
-                   "3. Privasi Data & Hak Portabilitas (UU PDP): Sediakan fitur ekspor arsip data pribadi dan alur penghapusan akun (right to be forgotten) sesuai UU No. 27/2022.\n" .
-                   "4. Keamanan Sesi Multi-Perangkat: Terapkan rotasi token sesi dan pemutusan akses otomatis saat terdeteksi aktivitas login dari perangkat mencurigakan.";
-        }
-
-        // 8. Comprehensive Reports & Data Export Module
-        $isReporting = preg_match('/(?:ekspor|laporan|reporting|rekapitulasi|ledger|excel|\bpdf\b)/i', $titleCorpus);
-        if ($isReporting) {
-            if ($isEn) {
-                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
-                       "1. Dual-Format Export Engine (Excel .xlsx & Formal PDF): Build high-performance reporting using O(1) Keyset Cursor Pagination capable of streaming thousands of records without memory exhaustion.\n" .
-                       "2. Financial Reconciliation & Partner Settlement Ledger: Formulate reconciliation ledgers calculating gross booking collections, platform fees, and net driver commissions.\n" .
-                       "3. Document Download Audit Trail (UU PDP Compliance): Record tamper-proof download logs tracking administrator identity, IP address, and timestamps for personal data compliance.\n" .
-                       "4. Multi-Dimensional Granular Filtering: Provide instant search filters across date ranges, geographical zones (Ubud/Kuta/Sanur), fleet types, and reservation statuses.";
-            }
-
-            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
-                   "1. Modul Ekspor Format Ganda (Excel .xlsx & PDF Siap Cetak): Rancang pembuatan laporan operasional dan mutasi pemesanan dengan Keyset Cursor Pagination O(1) yang mampu mengekspor jutaan baris data tanpa membebani memori server.\n" .
-                   "2. Rekonsiliasi Keuangan & Settlement Fee Mitra: Susun tabel ledger rekonsiliasi yang menghitung selisih pembayaran bruto dari payment gateway, potongan fee platform, dan hak bersih komisi pengemudi/rekanan.\n" .
-                   "3. Audit Trail Unduhan Dokumen (UU PDP): Catat histori unduhan file yang merekam identitas admin, alamat IP, timestamp, dan enkripsi data sensitif guna kepatuhan penuh terhadap UU Perlindungan Data Pribadi.\n" .
-                   "4. Filter Granular Multi-Dimensi: Lengkapi dengan filter pencarian berdasarkan periode waktu, zona destinasi (Ubud/Kuta/Sanur), jenis armada, dan status penyelesaian pesanan.";
-        }
-
-        // 9. Payment Gateway & 2-Stage Settlement
-        if ($isPayment) {
-            if ($isEn) {
-                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
-                       "1. Two-Stage Milestone Automation (50% DP & 50% Balance): Link separate payment order IDs to the main reservation, auto-locking scope upon DP and releasing full service access upon settlement.\n" .
-                       "2. Webhook Idempotency & Signature Verification: Enforce atomic pessimistic locks (lockForUpdate) on webhook callbacks to prevent duplicate payment confirmations.\n" .
-                       "3. Multi-Currency Support (IDR, USD, AUD): Automate daily exchange rate caching with integrated international gateways (Wise/PayPal) alongside domestic Midtrans/Xendit QRIS.\n" .
-                       "4. Automated Cancellation & Refund Penalty Engine: Implement tiered cancellation deductions based on departure proximity (H-7: 100% refund, H-3: 50% refund, H-1: non-refundable).";
-            }
-
-            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
-                   "1. Otomatisasi Termin 2 Tahap (DP 50% & Pelunasan 50%): Hubungkan order ID pembayaran terpisah ke induk reservasi, mengunci scope saat DP dan membuka akses layanan penuh saat pelunasan diterima.\n" .
-                   "2. Webhook Idempotency & Verifikasi Tanda Tangan: Terapkan penguncian atomik (lockForUpdate) pada callback webhook payment gateway guna mencegah eksekusi ganda.\n" .
-                   "3. Dukungan Multi-Mata Uang (IDR, USD, AUD): Sediakan konversi kurs harian otomatis dengan gateway internasional (Wise/PayPal) di samping QRIS/VA domestik.\n" .
-                   "4. Formula Pembatalan & Pemotongan Refund Otomatis: Susun aturan pengembalian dana berjenjang berdasarkan kedekatan jadwal (H-7: refund penuh, H-3: refund 50%, H-1: hangus).";
-        }
-
-        // 10. Authentication & Granular RBAC
         if ($isAuth) {
             if ($isEn) {
                 return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .

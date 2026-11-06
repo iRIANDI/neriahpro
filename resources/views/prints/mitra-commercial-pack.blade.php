@@ -6,7 +6,8 @@
     $partnerPicName = $isWhiteLabel ? ($wl['pic_name'] ?? 'Lead Principal Architect') : ($devInfo['pic_name'] ?? 'Yoseph Iriandi');
     $partnerPicTitle = $isWhiteLabel ? ($wl['pic_title'] ?? 'Principal Engineering Partner') : ($devInfo['pic_title'] ?? 'Lead Software Architect');
     $partnerSealText = $isWhiteLabel ? (strtoupper($wl['agency_name']) . ' VERIFIED DIGITAL SEAL') : ($devInfo['seal_text'] ?? 'NERIAH PRO DIGITAL SEAL');
-    $docLocale = (string) ($posProject?->output_locale ?? ($schema['project_metadata']['output_locale'] ?? 'id'));
+    $docLocale = (string) ($locale ?? (request()->query('locale') ?: ($posProject?->output_locale ?? ($schema['project_metadata']['output_locale'] ?? 'id'))));
+    $isEn = $docLocale === 'en';
     $isRtlDoc = $docLocale === 'ar';
     $visualUi = is_array($schema['visual_frontend_ui_contract'] ?? null) ? $schema['visual_frontend_ui_contract'] : [];
     $jurisdiction = is_array($schema['jurisdiction_compliance_profile'] ?? null) ? $schema['jurisdiction_compliance_profile'] : [];
@@ -111,16 +112,16 @@
     @if(empty($isPdfStream))
     <div class="screen-bar">
         <div>
-            <strong>{{ strtoupper($partnerEntityName) }} — MITRA COMMERCIAL &amp; LEGAL PACK</strong>
+            <strong>{{ strtoupper($partnerEntityName) }} — {{ $isEn ? 'MITRA COMMERCIAL & LEGAL PACK' : 'MITRA COMMERCIAL & LEGAL PACK' }}</strong>
             <span class="mono" style="margin-left: 8px; color: #a1a1aa;">[{{ strtoupper($docType) }}]</span>
         </div>
         <div>
-            <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/rab') }}" class="screen-btn">1. RAB &amp; WBS</a>
-            <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/spk-appendix') }}" class="screen-btn">2. Lampiran SPK SHA-256</a>
-            <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/bast') }}" class="screen-btn">3. BAST &amp; UAT</a>
-            <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/sop-training') }}" class="screen-btn">4. Buku SOP &amp; Training Staf</a>
-            <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/' . $docType . '?download=pdf') }}" class="screen-btn">Unduh PDF</a>
-            <button type="button" onclick="window.print()" class="screen-btn screen-btn-primary">Cetak A4 Sekarang</button>
+            <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/rab?locale=' . ($isEn ? 'en' : 'id')) }}" class="screen-btn">{{ $isEn ? '1. BOQ & WBS' : '1. RAB & WBS' }}</a>
+            <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/spk-appendix?locale=' . ($isEn ? 'en' : 'id')) }}" class="screen-btn">{{ $isEn ? '2. SPK Appendix SHA-256' : '2. Lampiran SPK SHA-256' }}</a>
+            <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/bast?locale=' . ($isEn ? 'en' : 'id')) }}" class="screen-btn">{{ $isEn ? '3. BAST & UAT' : '3. BAST & UAT' }}</a>
+            <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/sop-training?locale=' . ($isEn ? 'en' : 'id')) }}" class="screen-btn">{{ $isEn ? '4. SOP & Training' : '4. Buku SOP & Training Staf' }}</a>
+            <a href="{{ url('/blueprint/' . $blueprint->slug . '/mitra-document/' . $docType . '?download=pdf&locale=' . ($isEn ? 'en' : 'id')) }}" class="screen-btn">{{ $isEn ? 'Download PDF' : 'Unduh PDF' }}</a>
+            <button type="button" onclick="window.print()" class="screen-btn screen-btn-primary">{{ $isEn ? 'Print A4 Now' : 'Cetak A4 Sekarang' }}</button>
         </div>
     </div>
     @endif
@@ -128,46 +129,46 @@
     <div class="page-sheet">
         <div class="doc-header">
             @if($docType === 'rab')
-                <div class="tag">Dokumen Resmi Komersial &bull; Algorithmic Scope-to-Quotation</div>
-                <h1>Rencana Anggaran Biaya (RAB) &amp; Work Breakdown Structure (WBS)</h1>
+                <div class="tag">{{ $isEn ? 'Official Commercial Document • Algorithmic Scope-to-Quotation' : 'Dokumen Resmi Komersial • Algorithmic Scope-to-Quotation' }}</div>
+                <h1>{{ $isEn ? 'Bill of Quantities (BOQ/RAB) & Work Breakdown Structure (WBS)' : 'Rencana Anggaran Biaya (RAB) & Work Breakdown Structure (WBS)' }}</h1>
             @elseif($docType === 'spk-appendix')
-                <div class="tag">Lampiran Hukum Kontrak SPK/PKS &bull; Cryptographic Scope Freeze</div>
-                <h1>Lampiran Ruang Lingkup Teknis &amp; Kunci Hash SHA-256</h1>
+                <div class="tag">{{ $isEn ? 'Contract Legal Appendix • Cryptographic Scope Freeze' : 'Lampiran Hukum Kontrak SPK/PKS • Cryptographic Scope Freeze' }}</div>
+                <h1>{{ $isEn ? 'Technical Scope Appendix & SHA-256 Checksum Seal' : 'Lampiran Ruang Lingkup Teknis & Kunci Hash SHA-256' }}</h1>
             @elseif($docType === 'sop-training')
-                <div class="tag">Lampiran Serah Terima Operasional &bull; Auto-Generated Role SOP &amp; Hardware Guide</div>
-                <h1>Buku Manual Operasional Klien, SOP Per Role Staf &amp; Materi Training BAST</h1>
+                <div class="tag">{{ $isEn ? 'Operational Handover Appendix • Auto-Generated Role SOP & Hardware Guide' : 'Lampiran Serah Terima Operasional • Auto-Generated Role SOP & Hardware Guide' }}</div>
+                <h1>{{ $isEn ? 'Client Operations Manual, Role SOPs & Training Guide' : 'Buku Manual Operasional Klien, SOP Per Role Staf & Materi Training BAST' }}</h1>
             @else
-                <div class="tag">Berita Acara Serah Terima Sistem &bull; UAT Given-When-Then Verified</div>
-                <h1>Berita Acara Serah Terima (BAST) Digital &amp; Rekapitulasi UAT</h1>
+                <div class="tag">{{ $isEn ? 'System Acceptance Certificate • UAT Given-When-Then Verified' : 'Berita Acara Serah Terima Sistem • UAT Given-When-Then Verified' }}</div>
+                <h1>{{ $isEn ? 'Digital Acceptance Certificate (BAST) & UAT Recapitulation' : 'Berita Acara Serah Terima (BAST) Digital & Rekapitulasi UAT' }}</h1>
             @endif
             <div class="mono" style="font-size: 10px; color: #3f3f46;">
-                PROYEK: {{ $projectName }} &bull; VERSI: {{ $posProject?->current_version ?: 'v1.0' }} &bull; TANGGAL: {{ now()->format('d M Y H:i') }} WIB
+                {{ $isEn ? 'PROJECT:' : 'PROYEK:' }} {{ $projectName }} &bull; {{ $isEn ? 'VERSION:' : 'VERSI:' }} {{ $posProject?->current_version ?: 'v1.0' }} &bull; {{ $isEn ? 'DATE:' : 'TANGGAL:' }} {{ now()->format('d M Y H:i') }}
             </div>
         </div>
 
         <table>
             <tr>
-                <th style="width: 22%;">Klien / Pemesan</th>
+                <th style="width: 22%;">{{ $isEn ? 'Client / Ordering Party' : 'Klien / Pemesan' }}</th>
                 <td style="width: 28%;"><strong>{{ $blueprint->client_name ?: $projectName }}</strong><br><span style="color:#52525b;">{{ $blueprint->email ?: '-' }}</span></td>
-                <th style="width: 22%;">Mitra Pelaksana</th>
+                <th style="width: 22%;">{{ $isEn ? 'Executing Partner' : 'Mitra Pelaksana' }}</th>
                 <td style="width: 28%;"><strong>{{ $partnerEntityName }}</strong><br><span style="color:#52525b;">{{ $partnerEmail }}</span></td>
             </tr>
             <tr>
-                <th>Sektor Fungsional</th>
+                <th>{{ $isEn ? 'Functional Sector' : 'Sektor Fungsional' }}</th>
                 <td class="mono">{{ $quotation['sector_code'] }}</td>
-                <th>Arsitektur Stack</th>
+                <th>{{ $isEn ? 'Architecture Stack' : 'Arsitektur Stack' }}</th>
                 <td class="mono">{{ $quotation['stack_preset'] }} ({{ $quotation['stack_multiplier'] }}x Multiplier)</td>
             </tr>
             <tr>
                 <th>Visual Frontend UI/UX</th>
                 <td class="mono">{{ $visualUi['selected_variant_code'] ?? ($quotation['selected_ui_variant'] ?? 'SECTOR_DEFAULT') }} ({{ $visualUi['navigation_shell_code'] ?? ($quotation['navigation_shell'] ?? 'SIDEBAR_ERP_DENSE') }})</td>
-                <th>Yurisdiksi &amp; Bahasa</th>
+                <th>{{ $isEn ? 'Jurisdiction & Language' : 'Yurisdiksi & Bahasa' }}</th>
                 <td class="mono">{{ strtoupper($docLocale) }} ({{ $isRtlDoc ? 'RTL' : 'LTR' }}) &bull; {{ $jurisdiction['jurisdiction_code'] ?? ($quotation['jurisdiction_code'] ?? 'ID_NKRI_STATUTORY') }}</td>
             </tr>
             <tr>
-                <th>Estimasi Beban Kerja</th>
-                <td class="mono"><strong>{{ $quotation['man_hours'] }} Jam Kerja ({{ $quotation['timeline_days'] }} Hari Kerja)</strong></td>
-                <th>Nilai Investasi Proyek</th>
+                <th>{{ $isEn ? 'Estimated Workload' : 'Estimasi Beban Kerja' }}</th>
+                <td class="mono"><strong>{{ $quotation['man_hours'] }} {{ $isEn ? 'Man-Hours' : 'Jam Kerja' }} ({{ $quotation['timeline_days'] }} {{ $isEn ? 'Business Days' : 'Hari Kerja' }})</strong></td>
+                <th>{{ $isEn ? 'Project Investment' : 'Nilai Investasi Proyek' }}</th>
                 <td class="mono"><strong style="color:#047857;">{{ $quotation['formatted_quotation_idr'] }}</strong></td>
             </tr>
         </table>

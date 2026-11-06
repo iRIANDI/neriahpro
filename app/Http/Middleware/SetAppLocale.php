@@ -27,9 +27,10 @@ class SetAppLocale
             }
         }
 
-        // 1. Explicit URL query parameter (?lang=en or ?lang=id)
-        if ($request->has('lang') && in_array($request->query('lang'), ['id', 'en'], true)) {
-            $locale = $request->query('lang');
+        // 1. Explicit URL query parameter (?lang=en or ?lang=id or ?locale=en or ?locale=id)
+        $explicitLang = $request->query('lang') ?: $request->query('locale');
+        if ($explicitLang && in_array($explicitLang, ['id', 'en'], true)) {
+            $locale = $explicitLang;
             Session::put('locale', $locale);
             cookie()->queue(cookie('neriah_locale', $locale, 60 * 24 * 365, '/', null, false, false));
             cookie()->queue(cookie('neriah_locale_manual', '1', 60 * 24 * 365, '/', null, false, false));

@@ -1188,8 +1188,9 @@
                 },
                 proceedWithRawMd() {
                     this.showRawMdWarningModal = false;
+                    const activeLoc = this.locale || (document.cookie.includes('neriah_locale=en') ? 'en' : 'id');
                     if (this.rawMdActionType === 'download') {
-                        window.location.href = "{{ route('blueprint.download-md', $blueprint->slug) }}";
+                        window.location.href = "{{ route('blueprint.download-md', $blueprint->slug) }}?locale=" + activeLoc;
                     } else if (this.rawMdActionType === 'copy') {
                         if (window.executeCopyFullPrdMarkdown) {
                             window.executeCopyFullPrdMarkdown();

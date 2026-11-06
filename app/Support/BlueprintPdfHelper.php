@@ -7,8 +7,9 @@ class BlueprintPdfHelper
     /**
      * Parse and format raw text/array into cleanly indented, readable bullet/numbered points.
      * Supports both DomPDF table layout and responsive Web/Tailwind layout.
+     * Optionally translates each item to English if $isEn is true.
      */
-    public static function formatPoints(string|array|null $content, bool $ordered = true, bool $isPdf = true): string
+    public static function formatPoints(string|array|null $content, bool $ordered = true, bool $isPdf = true, bool $isEn = false): string
     {
         if (empty($content)) {
             return $isPdf 
@@ -22,6 +23,10 @@ class BlueprintPdfHelper
             return $isPdf 
                 ? '<span style="color: #94a3b8; font-style: italic;">-</span>'
                 : '<span class="text-zinc-400 italic text-xs">-</span>';
+        }
+
+        if ($isEn) {
+            $items = array_map(fn($item) => self::translateText((string)$item, true), $items);
         }
 
         if (count($items) === 1) {
@@ -178,5 +183,89 @@ class BlueprintPdfHelper
         }
 
         return [$text];
+    }
+
+    /**
+     * Translate or localize text from Indonesian to English if $isEn is true.
+     * Uses dictionary mapping first, then falls back to GoogleTranslateService.
+     */
+    public static function translateText(?string $text, bool $isEn = false): string
+    {
+        if (!$isEn || empty($text)) {
+            return (string) $text;
+        }
+
+        $trimmed = trim((string) $text);
+        if ($trimmed === '') {
+            return '';
+        }
+
+        // Direct dictionary lookup for common domain phrases
+        static $dict = [
+            'Otomatisasi proses bisnis dan administrasi operasional' => 'Automation of business processes and operational administration',
+            'eliminasi duplikasi input data manual' => 'eliminating duplicate manual data entry',
+            'sentralisasi basis data transaksi organisasi' => 'centralizing organizational transaction databases',
+            'Meningkatkan efisiensi kerja tim operasional' => 'Increase operational efficiency for the team',
+            'meminimalisir kesalahan pelaporan' => 'minimize reporting errors',
+            'menyediakan platform digital terpadu yang andal dan scalable' => 'provide a reliable and scalable integrated digital platform',
+            'Pengguna internal organisasi, staf operasional, tim manajemen, dan pelanggan publik.' => 'Internal organizational staff, operational coordinators, management, and public end-customers.',
+            'Pengguna internal organisasi dan klien eksternal.' => 'Internal organizational staff, operators, and external clients.',
+            'Superadmin (Full Control), Operator/Staff (Input & Validasi), Klien/Pelanggan (Self-Service).' => 'Superadmin (Full Control), Operator/Staff (Input & Validation), Client/Customer (Self-Service).',
+            'Superadmin (Full Control), Staff/Operator (Input & Review), Pengunjung/Klien (Pengisian Form).' => 'Superadmin (Full Control), Staff/Operator (Input & Review), Visitors/Clients (Public Interaction).',
+            'Autentikasi Aman & RBAC, Formulir Intake Tervalidasi, Dasbor Administrasi Filament v5, Rekapitulasi Data & Ekspor PDF/Excel.' => 'Secure Authentication & RBAC, Validated Intake Forms, Filament PHP v5 Admin Dashboard, Dynamic Data Ledger & PDF/Excel Export.',
+            'Manajemen Pengguna & RBAC, Input Formulir Data, Rekap Database Dinamis, Ekspor PDF/Excel.' => 'User Management & RBAC, Structured Intake Forms, Real-Time Database Ledger, PDF/Excel Export.',
+            'Notifikasi Otomatis WhatsApp/Email E.164, Audit Trail Activity Log, Dual Theme Dark/Light Mode.' => 'Automated WhatsApp & Email Notifications (E.164), Cryptographic Activity Audit Trail, Dual Dark/Light Mode Theme.',
+            'Notifikasi WhatsApp/Email otomatis, Audit Trail Log, Dark Mode.' => 'Automated WhatsApp & Email Notifications, Cryptographic Audit Trail, Dark/Light Mode Theme.',
+            'Midtrans Snap Payment Gateway, Cloud Storage S3, WhatsApp API Gateway.' => 'Midtrans Snap Payment Gateway, Amazon S3 Cloud Storage, WhatsApp Business API Gateway.',
+            'Payment Gateway, WhatsApp Gateway, Cloud Storage S3.' => 'Payment Rails, WhatsApp Gateway API, S3 Cloud Storage.',
+            'Database Baru Bersih (Clean Start)' => 'Clean Start New Database',
+            'Database Baru Bersih' => 'Clean Start New Database',
+            'Managed Cloud VPS Neriah Pro (Hardened Linux)' => 'Managed Cloud VPS Neriah Pro (Hardened Linux)',
+            'Sedang Disiapkan' => 'Currently In Preparation',
+            'Sedang Disiapkan Tim Internal' => 'Currently In Preparation by Internal Team',
+            '30 Hari Kalender Pascameluncur' => '30 Calendar Days Post-Launch',
+            '30 Hari Garansi Bug Pascameluncur' => '30 Days Post-Launch Bug Warranty',
+            'Termin Standar 50/50' => 'Standard Milestone 50/50',
+            '0 - 100.000 Pengguna / Bulan' => '0 - 100,000 Users / Month',
+            'Domestik Indonesia' => 'Domestic Indonesia',
+        ];
+
+        if (isset($dict[$trimmed])) {
+            return $dict[$trimmed];
+        }
+
+        // Try GoogleTranslateService
+        try {
+            $translated = \App\Services\Translation\GoogleTranslateService::directTranslate($trimmed, 'en', 'id');
+            if (!empty($translated) && $translated !== $trimmed) {
+                return $translated;
+            }
+        } catch (\Throwable) {}
+
+        // Fallback: Perform term-by-term replacements
+        static $termReplacements = [
+            'Hari Kerja' => 'Business Days',
+            'Pascameluncur' => 'Post-Launch',
+            'Wisatawan' => 'Travelers',
+            'Tamu hotel' => 'Hotel guests',
+            'Pengemudi' => 'Drivers',
+            'Armada' => 'Fleet',
+            'Penjemputan' => 'Pickup',
+            'Bandara' => 'Airport',
+            'Skenario' => 'Scenario',
+            'Izin:' => 'Permissions:',
+            'Fitur Inti' => 'Core Feature',
+            'Modul' => 'Module',
+            'Tabel akun otentikasi' => 'Authentication user account table',
+            'Entitas utama' => 'Primary entity',
+            'Jejak audit' => 'Audit trail',
+        ];
+
+        $result = $trimmed;
+        foreach ($termReplacements as $idTerm => $enTerm) {
+            $result = str_ireplace($idTerm, $enTerm, $result);
+        }
+
+        return $result;
     }
 }

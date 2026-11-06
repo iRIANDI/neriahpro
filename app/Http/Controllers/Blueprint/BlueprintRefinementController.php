@@ -160,9 +160,15 @@ class BlueprintRefinementController extends Controller
 
         if ($mode === 'ai') {
             try {
+                $locale = $request->input('locale')
+                    ?: ($request->header('X-Locale')
+                    ?: ($request->cookie('neriah_locale') ?: (session('locale') ?: ($blueprint->user_metadata['output_locale'] ?? app()->getLocale()))));
+                $locale = in_array(strtolower((string)$locale), ['en', 'id'], true) ? strtolower((string)$locale) : 'id';
+
                 $additionalContext = [
                     'feature_id' => $request->input('feature_id'),
                     'spec_index' => $request->filled('spec_index') ? (int) $request->input('spec_index') : null,
+                    'locale' => $locale,
                 ];
 
                 $result = $refinementService->refineSegment(

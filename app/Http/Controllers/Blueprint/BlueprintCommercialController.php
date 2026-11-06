@@ -1198,6 +1198,12 @@ class BlueprintCommercialController extends Controller
             }
         }
 
+        $activeLocale = $request->query('locale')
+            ?: ($request->cookie('neriah_locale')
+            ?: (session('locale') ?: ($blueprint->user_metadata['output_locale'] ?? app()->getLocale())));
+        $locale = in_array(strtolower((string) $activeLocale), ['en', 'id'], true) ? strtolower((string) $activeLocale) : 'id';
+        $isEn = ($locale === 'en');
+
         $viewData = [
             'docType' => $docType,
             'blueprint' => $blueprint,
@@ -1210,6 +1216,8 @@ class BlueprintCommercialController extends Controller
             'devInfo' => ContractLegalHelper::getDeveloperInfo(),
             'whiteLabel' => $whiteLabel,
             'isPdfStream' => $request->query('download') === 'pdf',
+            'locale' => $locale,
+            'isEn' => $isEn,
         ];
 
         if ($request->query('download') === 'pdf' && class_exists(Pdf::class)) {

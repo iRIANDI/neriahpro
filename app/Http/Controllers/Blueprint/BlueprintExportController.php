@@ -61,15 +61,21 @@ class BlueprintExportController extends Controller
     /**
      * Download PRD as PDF
      */
-    public function downloadPdf(string $slug)
+    public function downloadPdf(Request $request, string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
 
+        $activeLocale = $request->query('locale')
+            ?: ($request->cookie('neriah_locale')
+            ?: (session('locale') ?: ($blueprint->user_metadata['output_locale'] ?? app()->getLocale())));
+        $locale = in_array(strtolower((string) $activeLocale), ['en', 'id'], true) ? strtolower((string) $activeLocale) : 'id';
+        $isEn = ($locale === 'en');
+
         $prd = $blueprint->prd_content;
         if (empty($prd) || ! is_array($prd) || empty($prd['features'])) {
             try {
-                $prd = PrdGeneratorService::generate($blueprint);
+                $prd = PrdGeneratorService::generate($blueprint, null, $locale);
                 $blueprint->prd_content = $prd;
                 $blueprint->saveQuietly();
             } catch (\Throwable $e) {
@@ -81,6 +87,8 @@ class BlueprintExportController extends Controller
         $pdf = Pdf::loadView('pdf.blueprint', [
             'blueprint' => $blueprint,
             'prd' => $prd,
+            'locale' => $locale,
+            'isEn' => $isEn,
         ])->setPaper('a4', 'portrait')
             ->setOptions([
                 'isHtml5ParserEnabled' => true,
@@ -88,24 +96,31 @@ class BlueprintExportController extends Controller
                 'defaultFont' => 'Helvetica',
             ]);
 
-        return $pdf->download('PRD_'.$blueprint->slug.'.pdf');
+        $prefix = $isEn ? 'PRD_EN_' : 'PRD_';
+        return $pdf->download($prefix.$blueprint->slug.'.pdf');
     }
 
     /**
      * Download PRD as Markdown (with Invisible Zero-Width Canary Watermark & Viral/White-Label Seal v8.0)
      */
-    public function downloadMd(string $slug)
+    public function downloadMd(Request $request, string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
+
+        $activeLocale = $request->query('locale')
+            ?: ($request->cookie('neriah_locale')
+            ?: (session('locale') ?: ($blueprint->user_metadata['output_locale'] ?? app()->getLocale())));
+        $locale = in_array(strtolower((string) $activeLocale), ['en', 'id'], true) ? strtolower((string) $activeLocale) : 'id';
+        $isEn = ($locale === 'en');
 
         $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
         $wl = is_array($posProject?->white_label_branding_json) ? $posProject->white_label_branding_json : null;
         $actorSeed = (string) (auth()->id() ?: ($blueprint->email ?: request()->ip()));
         $canarySig = PosInclusiveCommercialCatalog::computeCanaryFingerprint($actorSeed);
 
-        $md = PrdGeneratorService::toMarkdown($blueprint, $prd);
+        $md = PrdGeneratorService::toMarkdown($blueprint, $prd, $isEn);
         $md .= PosInclusiveCommercialCatalog::renderViralCertifiedBadgeMarkdown($wl);
         $md = PosInclusiveCommercialCatalog::injectCanaryWatermark($md, $actorSeed);
 
@@ -126,27 +141,34 @@ class BlueprintExportController extends Controller
             );
         }
 
+        $prefix = $isEn ? 'PRD_EN_' : 'PRD_';
         return response($md, 200, [
             'Content-Type' => 'text/markdown; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="PRD_'.$blueprint->slug.'.md"',
+            'Content-Disposition' => 'attachment; filename="'.$prefix.$blueprint->slug.'.md"',
         ]);
     }
 
     /**
      * Get Raw PRD Markdown for AI Code Agent clipboard copy (with Invisible Zero-Width Canary Watermark v8.0)
      */
-    public function rawMd(string $slug)
+    public function rawMd(Request $request, string $slug)
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
         $prd = $blueprint->prd_content ?? [];
+
+        $activeLocale = $request->query('locale')
+            ?: ($request->cookie('neriah_locale')
+            ?: (session('locale') ?: ($blueprint->user_metadata['output_locale'] ?? app()->getLocale())));
+        $locale = in_array(strtolower((string) $activeLocale), ['en', 'id'], true) ? strtolower((string) $activeLocale) : 'id';
+        $isEn = ($locale === 'en');
 
         $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
         $wl = is_array($posProject?->white_label_branding_json) ? $posProject->white_label_branding_json : null;
         $actorSeed = (string) (auth()->id() ?: ($blueprint->email ?: request()->ip()));
         $canarySig = PosInclusiveCommercialCatalog::computeCanaryFingerprint($actorSeed);
 
-        $md = PrdGeneratorService::toMarkdown($blueprint, $prd);
+        $md = PrdGeneratorService::toMarkdown($blueprint, $prd, $isEn);
         $md .= PosInclusiveCommercialCatalog::renderViralCertifiedBadgeMarkdown($wl);
         $md = PosInclusiveCommercialCatalog::injectCanaryWatermark($md, $actorSeed);
 
@@ -200,9 +222,16 @@ class BlueprintExportController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
+
+        $activeLocale = $request->query('locale')
+            ?: ($request->cookie('neriah_locale')
+            ?: (session('locale') ?: ($blueprint->user_metadata['output_locale'] ?? app()->getLocale())));
+        $locale = in_array(strtolower((string) $activeLocale), ['en', 'id'], true) ? strtolower((string) $activeLocale) : 'id';
+        $isEn = ($locale === 'en');
+
         $prd = $blueprint->prd_content ?? [];
         if (empty($prd)) {
-            $prd = PrdGeneratorService::generate($blueprint);
+            $prd = PrdGeneratorService::generate($blueprint, null, $locale);
         }
 
         $format = strtolower((string) $request->query('format', 'cursorrules'));
@@ -336,7 +365,7 @@ class BlueprintExportController extends Controller
                 'SYNTAX_LOCK_2026.md',
             ],
             'dual-zone-ux' => [
-                PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($univSchema, app()->getLocale()),
+                PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($univSchema, $locale),
                 'DUAL_ZONE_PUBLIC_UX_AND_INPUT_HYGIENE.md',
             ],
             'troubleshooting' => [
@@ -344,7 +373,7 @@ class BlueprintExportController extends Controller
                 'TROUBLESHOOTING_INSTINCTS.md',
             ],
             'client-sop' => [
-                PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($univSchema, app()->getLocale()),
+                PosRealWorldRuntimeCatalog::renderClientSopManualMarkdown($univSchema, $locale),
                 'CLIENT_SOP_AND_TRAINING_MANUAL.md',
             ],
             'pg16-partition' => [

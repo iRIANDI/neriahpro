@@ -59,6 +59,29 @@ class BlueprintViewController extends Controller
     use AuthorizesBlueprintAccess;
 
     /**
+     * Resolve whether active session/request is English (Tier 1 Locale).
+     */
+    protected function resolveIsEn(VisionBlueprint $blueprint): bool
+    {
+        $requested = request()->query('locale') ?: request()->query('lang');
+        if ($requested) {
+            return $requested === 'en';
+        }
+        $cookie = request()->cookie('neriah_locale');
+        if ($cookie) {
+            return $cookie === 'en';
+        }
+        if (session()->has('locale')) {
+            return session('locale') === 'en';
+        }
+        $blueprintLocale = $blueprint->user_metadata['output_locale'] ?? $blueprint->user_metadata['locale'] ?? null;
+        if ($blueprintLocale) {
+            return $blueprintLocale === 'en';
+        }
+        return app()->getLocale() === 'en';
+    }
+
+    /**
      * Show the generated Ultimate PRD & Blueprint for a specific project slug.
      */
     public function show(string $slug): View
@@ -72,6 +95,8 @@ class BlueprintViewController extends Controller
 
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
+
+        $isEn = $this->resolveIsEn($blueprint);
 
         // Auto-heal: If this is a Retail License (or has a retail tier / paid order) but is_published is false, publish it immediately!
         if ($blueprint->isRetailLicense() && ! $blueprint->is_published) {
@@ -234,6 +259,8 @@ class BlueprintViewController extends Controller
             'isDpConfirmed' => $isDpConfirmed,
             'isContractSigned' => $isContractSigned,
             'contractDocument' => $contractDocument,
+            'locale' => $isEn ? 'en' : 'id',
+            'isEn' => $isEn,
         ]);
     }
 
@@ -253,8 +280,7 @@ class BlueprintViewController extends Controller
         }
 
         $prd = $blueprint->prd_content ?? [];
-        $outputLoc = $blueprint->user_metadata['output_locale'] ?? $blueprint->user_metadata['locale'] ?? app()->getLocale();
-        $isEn = ($outputLoc === 'en' || request('lang') === 'en');
+        $isEn = $this->resolveIsEn($blueprint);
         $itemized = $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint, [], $isEn);
         $newRoi = PrdGeneratorService::generateBusinessRoiAnalysis($blueprint, $itemized, $isEn);
 
@@ -292,8 +318,7 @@ class BlueprintViewController extends Controller
 
         if (! $blueprint->isScopeFrozen()) {
             $prd = $blueprint->prd_content ?? [];
-            $outputLoc = $blueprint->user_metadata['output_locale'] ?? $blueprint->user_metadata['locale'] ?? app()->getLocale();
-            $isEn = ($outputLoc === 'en' || request('lang') === 'en');
+            $isEn = $this->resolveIsEn($blueprint);
             $itemized = $prd['itemized_cost_breakdown'] ?? PrdGeneratorService::calculateItemizedEstimation($blueprint, [], $isEn);
             $newRoi = PrdGeneratorService::generateBusinessRoiAnalysis($blueprint, $itemized, $isEn);
             $prd['business_roi_analysis'] = $newRoi;
@@ -331,7 +356,7 @@ class BlueprintViewController extends Controller
         }
 
         // 1. Detect Domain accurately
-        $isEn = ($blueprint->user_metadata['output_locale'] ?? app()->getLocale()) === 'en';
+        $isEn = $this->resolveIsEn($blueprint);
         $domain = BlueprintDiscoveryService::detectDomain(
             $blueprint->nama_bisnis . ' ' . $blueprint->masalah_utama . ' ' . $blueprint->fitur_wajib . ' ' . $blueprint->fitur_tambahan
         );
@@ -368,7 +393,7 @@ class BlueprintViewController extends Controller
         $blueprint->save();
 
         // 3. Generate and Save Complete PRD
-        $prd = $blueprint->generateAndSavePrd();
+        $prd = $blueprint->generateAndSavePrd($isEn ? 'en' : 'id');
         $blueprint->refresh();
         $blueprint->document_sha256 = $blueprint->calculatePrdHash();
         $blueprint->save();
@@ -393,7 +418,7 @@ class BlueprintViewController extends Controller
         $this->authorizeBlueprintAccess($blueprint);
 
         if (!$blueprint->signed_agreement && !$blueprint->isDpConfirmed() && !$blueprint->isRetailLicense()) {
-            $isEn = ($blueprint->user_metadata['output_locale'] ?? app()->getLocale()) === 'en';
+            $isEn = $this->resolveIsEn($blueprint);
             $domain = BlueprintDiscoveryService::detectDomain(
                 $blueprint->nama_bisnis . ' ' . $blueprint->masalah_utama . ' ' . $blueprint->fitur_wajib . ' ' . $blueprint->fitur_tambahan
             );
@@ -427,7 +452,7 @@ class BlueprintViewController extends Controller
             }
 
             $blueprint->save();
-            $blueprint->generateAndSavePrd();
+            $blueprint->generateAndSavePrd($isEn ? 'en' : 'id');
             $blueprint->refresh();
             $blueprint->document_sha256 = $blueprint->calculatePrdHash();
             $blueprint->save();

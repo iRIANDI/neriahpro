@@ -182,6 +182,9 @@
 </head>
 <body x-data="blueprintApp()" @open-raw-md-warning.window="openRawMdWarning($event.detail?.action)" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200 overflow-x-clip max-w-full">
 
+    <!-- 1. TOP UTILITY HEADER (FULL SITE NAVIGATION + DUAL TIER LANGUAGE + THEME TOGGLE) -->
+    <x-global-navigation :global-settings="$globalSettings ?? []" />
+
     @include('blueprint.partials.navigation.toolbar')
 
     @if(!$blueprint->is_published)

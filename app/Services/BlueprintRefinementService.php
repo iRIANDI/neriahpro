@@ -1331,86 +1331,12 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
         $featCode = $featureId ? " [{$featureId}]" : '';
         $isEn = $locale === 'en';
 
-        $corpus = mb_strtolower($cleanLabel . ' ' . ($featureId ?? '') . ' ' . ($featureContent ?? '') . ' ' . $sector);
+        // Title and ID provide the highest domain-specificity anchor for the active feature
+        $titleCorpus = mb_strtolower($cleanLabel . ' ' . ($featureId ?? ''));
+        $contentCorpus = mb_strtolower(is_string($featureContent) ? $featureContent : json_encode($featureContent ?? []));
 
-        // Detect Functional Domain Archetype
-        $isFleetCatalog = str_contains($corpus, 'katalog') || str_contains($corpus, 'catalog') || 
-                          str_contains($corpus, 'day tour') || str_contains($corpus, 'paket wisata') || 
-                          str_contains($corpus, 'armada') || str_contains($corpus, 'fleet') || 
-                          str_contains($corpus, 'kendaraan') || str_contains($corpus, 'configurator');
-
-        $isAiItinerary = str_contains($corpus, 'ai') || str_contains($corpus, 'wishlist') || 
-                         str_contains($corpus, 'wish list') || str_contains($corpus, 'itinerary') || 
-                         str_contains($corpus, 'generator') || str_contains($corpus, 'rekomendasi') || 
-                         str_contains($corpus, 'rute') || str_contains($corpus, 'jadwal');
-
-        $isAirportTransfer = str_contains($corpus, 'bandara') || str_contains($corpus, 'airport') || 
-                             str_contains($corpus, 'transfer in') || str_contains($corpus, 'transfer out') || 
-                             str_contains($corpus, 'ngurah rai') || str_contains($corpus, 'dps') || 
-                             str_contains($corpus, 'flight') || str_contains($corpus, 'jemput');
-
-        $isOverland = str_contains($corpus, 'overland') || str_contains($corpus, 'bromo') || 
-                      str_contains($corpus, 'ijen') || str_contains($corpus, 'jawa timur') || 
-                      str_contains($corpus, 'luar bali') || str_contains($corpus, 'multi-day');
-
-        $isDispatcher = str_contains($corpus, 'dispatcher') || str_contains($corpus, 'dasbor pusat') || 
-                        str_contains($corpus, 'monitoring') || str_contains($corpus, 'penugasan') || 
-                        str_contains($corpus, 'dispatcher armada') || str_contains($corpus, 'supir');
-
-        $isVoucherQr = str_contains($corpus, 'voucher') || str_contains($corpus, 'qr code') || 
-                       str_contains($corpus, 'e-voucher') || str_contains($corpus, 'whatsapp') || 
-                       str_contains($corpus, 'tiket') || str_contains($corpus, 'notifikasi');
-
-        $isCapacityCalc = str_contains($corpus, 'kalkulator kapasitas') || str_contains($corpus, 'bagasi') || 
-                          str_contains($corpus, 'dimensi bagasi') || str_contains($corpus, 'rekomendasi pintar tipe mobil');
-
-        $isReporting = str_contains($corpus, 'ekspor laporan') || str_contains($corpus, 'rekapitulasi') || 
-                       str_contains($corpus, 'excel') || str_contains($corpus, 'pdf') || 
-                       str_contains($corpus, 'komprehensif') || str_contains($corpus, 'ledger');
-
-        $isPayment = str_contains($corpus, 'pembayaran') || str_contains($corpus, 'payment') || 
-                     str_contains($corpus, 'midtrans') || str_contains($corpus, 'qris') || 
-                     str_contains($corpus, 'dp') || str_contains($corpus, 'termin');
-
-        $isAuth = str_contains($corpus, 'autentikasi') || str_contains($corpus, 'auth') || 
-                  str_contains($corpus, 'rbac') || str_contains($corpus, 'pengguna') || 
-                  str_contains($corpus, 'login') || str_contains($corpus, 'profil');
-
-        // 1. Interactive Day Tour Catalog & Fleet Configurator
-        if ($isFleetCatalog && !$isCapacityCalc && !$isAirportTransfer && !$isOverland) {
-            if ($isEn) {
-                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
-                       "1. Fleet Capacity Matrix & Luggage Volumetric Matching: Specify the vehicle assignment algorithm (e.g., Avanza, Innova Reborn, HiAce Commuter, Alphard) matching passenger count (adults/children) and physical luggage volume (cabin vs 28-inch check-in bags), including automated multi-vehicle split or vehicle upgrade recommendations when limits are exceeded.\n" .
-                       "2. Dynamic Tariff Formulation & Service Inclusions: Define accurate rate calculation formulas: duration tiers (Half Day 6h vs Full Day 10-12h), hourly overtime surcharges, and explicit separation between All-inclusive items (fuel + multilingual driver) and on-the-road operational expenses (Bali Mandara toll, parking fees, regional tourism retribution).\n" .
-                       "3. Fleet Inventory Availability & Transient Hold State: Enforce a 15-minute transient Inventory TTL Hold during customer checkout to prevent concurrent overbooking collisions, synchronized with regional blackout calendars (Nyepi Day, Christmas & New Year high season).\n" .
-                       "4. Data Contract & Sub-10ms O(1) Scalability: Structure the tour catalog response with Keyset Cursor Pagination O(1) indexed by Bali geographical zones (South Bali, Ubud, Kintamani, Bedugul, East Bali), delivering instant transit estimates and verified fleet ratings.";
-            }
-
-            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
-                   "1. Matriks Kapasitas Armada & Kalkulasi Bagasi Riil: Rinci algoritma pencocokan tipe armada (misal Avanza, Innova Reborn, HiAce Commuter, Alphard) berdasarkan kombinasi jumlah penumpang dewasa/anak dan volume bagasi fisik (koper kabin vs koper 28-inci). Tambahkan aturan validasi cerdas jika rombongan melebihi kapasitas agar sistem otomatis merekomendasikan split 2 armada atau upgrade unit yang lebih hemat.\n" .
-                   "2. Formulasi Tarif Dinamis & Inklusi Operasional: Rumuskan formula kalkulasi tarif sewa: durasi paket (Half Day 6 jam vs Full Day 10-12 jam), surcharge biaya lembur (overtime) per jam, dan pemisahan tegas antara komponen All-in (BBM + Pengemudi Berbahasa Asing) versus biaya operasional lapangan yang ditanggung tamu (tiket tol Bali Mandara, biaya parkir destinasi, retribusi desa wisata).\n" .
-                   "3. Kalender Ketersediaan & State Holding Unit: Terapkan mekanisme penguncian inventori armada sementara (Inventory TTL Hold 15 menit) saat tamu berada pada checkout alur pembayaran guna mencegah overbooking antar pemesan paralel, terintegrasi dengan status kalender blackout date (Hari Raya Nyepi, High Season Natal & Tahun Baru).\n" .
-                   "4. Kontrak Data & Skalabilitas O(1): Format respons katalog dengan Keyset Cursor Pagination O(1) berbasis destinasi/zona Bali (Bali Selatan, Ubud, Kintamani, Bedugul, Bali Timur) dan pastikan respon katalog mengembalikan estimasi durasi tempuh serta rating armada secara instan sub-10ms.";
-        }
-
-        // 2. AI-Powered Wishlist & Itinerary Generator (Zero-Assumption Engine)
-        if ($isAiItinerary) {
-            if ($isEn) {
-                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
-                       "1. Zero-Assumption Wishlist Extraction & Intelligent Geo-Clustering: Architect an entity extraction engine for client free-text wishlists that automatically clusters destinations geographically (South Badung, Ubud/Gianyar, Kintamani/Bangli, Bedugul/Tabanan) to eliminate irrational zig-zag routes and reduce client transit fatigue.\n" .
-                       "2. POI Operating Hours & Real-Traffic Transit Buffers: Validate operating hours of tourist destinations (e.g., Uluwatu Kecak performance at 18:00 WITA, Tanah Lot sunset, Lempuyang Temple) against historical Bali traffic congestion buffers to guarantee conflict-free schedules.\n" .
-                       "3. Comprehensive Real-Budget & Expense Engine: Formulate an integrated budget calculation engine itemizing destination admission tickets (Domestic vs Foreign tourist rates), vehicle mileage costs, and certified regional tourist guide (HPI) options.\n" .
-                       "4. Client Customization Lifecycle & Interactive Itinerary Dispatch: Implement the lifecycle state machine (DRAFT_AI -> CLIENT_CUSTOMIZING -> DISPATCHER_VERIFIED -> LOCKED_CONFIRMED), supporting official printable PDF vouchers with anti-tamper QR verification and interactive Google Maps GPS navigation links for drivers and travelers.";
-            }
-
-            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
-                   "1. Ekstraksi Wishlist & Klastering Geografis Tanpa Asumsi: Rancang algoritma ekstraksi entitas destinasi dari catatan wish list bebas klien, lalu kelompokkan secara geografis (Geo-Clustering: Badung Selatan, Gianyar/Ubud, Bangli/Kintamani, Tabanan/Bedugul) guna mengeliminasi rute zig-zag yang tidak rasional dan menghemat waktu tempuh wisatawan.\n" .
-                   "2. Validasi Jam Operasional POI & Buffer Kemacetan Riil: Integrasikan data jam buka/tutup resmi destinasi wisata (misal jadwal Tari Kecak Uluwatu pukul 18:00 WITA, sunset Tanah Lot, Pura Lempuyang) dengan buffer waktu transit realistis berbasis riwayat kemacetan lalu lintas Bali untuk mencegah bentrok jadwal atau tiba setelah loket tutup.\n" .
-                   "3. Kalkulator Estimasi Anggaran Riil & Rekap Biaya Terpadu: Susun kalkulator biaya terpadu per itinerary yang menghitung tiket masuk objek wisata (WNA vs WNI), kebutuhan sewa armada sesuai jarak total kilometer, dan opsi jasa pemandu lokal berlisensi (HPI).\n" .
-                   "4. Siklus Persetujuan Klien & Penerbitan Rencana Interaktif: Rancang transisi status rencana perjalanan (DRAFT_AI -> CLIENT_CUSTOMIZING -> DISPATCHER_VERIFIED -> LOCKED_CONFIRMED), lengkap dengan fitur ekspor ke format PDF siap cetak ber-QR Code serta tautan navigasi Google Maps interaktif untuk pengemudi dan wisatawan.";
-        }
-
-        // 3. Airport Transfer (Ngurah Rai DPS In/Out)
+        // 1. Airport Transfer (Ngurah Rai DPS In/Out) - Specific Airport Radar & Flight Sync
+        $isAirportTransfer = preg_match('/(?:bandara|airport|transfer in|transfer out|ngurah rai|\bdps\b|flight|penerbangan|antar jemput)/i', $titleCorpus);
         if ($isAirportTransfer) {
             if ($isEn) {
                 return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
@@ -1427,7 +1353,8 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
                    "4. Penanganan Edge Cases Pembatalan & No-Show: Rumuskan alur mitigasi jika nomor penerbangan tidak ditemukan, pembatalan sepihak dari maskapai, atau tamu tidak muncul di meeting point (No-Show) dengan audit trail foto dan log GPS untuk proteksi hak pengemudi mitra.";
         }
 
-        // 4. Overland Tour (Mount Bromo & Mount Ijen)
+        // 2. Overland Tour (Mount Bromo & Mount Ijen) - Multi-Day & National Parks
+        $isOverland = preg_match('/(?:overland|bromo|ijen|jawa timur|luar bali|multi-day|selat bali|ferry|penyeberangan)/i', $titleCorpus);
         if ($isOverland) {
             if ($isEn) {
                 return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
@@ -1444,7 +1371,8 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
                    "4. Standar Keselamatan Kerja & Pencegahan Microsleep: Rumuskan kebijakan rotasi pengemudi untuk perjalanan overland jarak jauh (>12 jam), memastikan batas jam kerja sopir maksimal 8 jam mengemudi per hari dengan titik istirahat terverifikasi.";
         }
 
-        // 5. Central Operational Dispatcher & Fleet Center
+        // 3. Central Operational Dispatcher & Fleet Center
+        $isDispatcher = preg_match('/(?:dispatcher|dasbor pusat|monitoring armada|penugasan armada|fleet center|penugasan supir|alokasi supir)/i', $titleCorpus);
         if ($isDispatcher) {
             if ($isEn) {
                 return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
@@ -1461,7 +1389,8 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
                    "4. Prosedur Auto-Reassignment Tanggap Darurat: Rumuskan mekanisme penugasan armada pengganti secara kilat (<15 menit) jika unit mengalami kendala teknis atau mogok di jalan raya tanpa mengacaukan jadwal perjalanan tamu.";
         }
 
-        // 6. E-Voucher QR Code & WhatsApp Instant Confirmation
+        // 4. E-Voucher QR Code & WhatsApp Instant Confirmation
+        $isVoucherQr = preg_match('/(?:voucher|qr code|e-voucher|tiket digital|boarding pass|barcode)/i', $titleCorpus);
         if ($isVoucherQr) {
             if ($isEn) {
                 return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
@@ -1478,7 +1407,8 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
                    "4. Mitigasi Kegagalan Pengiriman (Retry & Email Fallback): Rancang mekanisme retry berjangka dan auto-fallback pengiriman melalui email SMTP resmi jika nomor telepon tamu tidak terhubung ke WhatsApp.";
         }
 
-        // 7. Fleet Capacity & Luggage Calculator
+        // 5. Fleet Capacity & Luggage Calculator
+        $isCapacityCalc = preg_match('/(?:kalkulator kapasitas|bagasi|dimensi bagasi|volume bagasi|luggage|trunk space)/i', $titleCorpus);
         if ($isCapacityCalc) {
             if ($isEn) {
                 return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
@@ -1495,7 +1425,98 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
                    "4. Kepatuhan Beban Muatan Kendaraan: Terapkan batas muatan maksimal demi keselamatan penumpang dan kepatuhan terhadap regulasi lalu lintas jalan raya.";
         }
 
+        // 6. Interactive Day Tour Catalog & Fleet Configurator
+        $isFleetCatalog = preg_match('/(?:katalog|catalog|day tour|paket wisata|fleet configurator|konfigurasi armada|pilihan armada)/i', $titleCorpus);
+        if ($isFleetCatalog) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Fleet Capacity Matrix & Luggage Volumetric Matching: Specify the vehicle assignment algorithm (e.g., Avanza, Innova Reborn, HiAce Commuter, Alphard) matching passenger count (adults/children) and physical luggage volume (cabin vs 28-inch check-in bags), including automated multi-vehicle split or vehicle upgrade recommendations when limits are exceeded.\n" .
+                       "2. Dynamic Tariff Formulation & Service Inclusions: Define accurate rate calculation formulas: duration tiers (Half Day 6h vs Full Day 10-12h), hourly overtime surcharges, and explicit separation between All-inclusive items (fuel + multilingual driver) and on-the-road operational expenses (Bali Mandara toll, parking fees, regional tourism retribution).\n" .
+                       "3. Fleet Inventory Availability & Transient Hold State: Enforce a 15-minute transient Inventory TTL Hold during customer checkout to prevent concurrent overbooking collisions, synchronized with regional blackout calendars (Nyepi Day, Christmas & New Year high season).\n" .
+                       "4. Data Contract & Sub-10ms O(1) Scalability: Structure the tour catalog response with Keyset Cursor Pagination O(1) indexed by Bali geographical zones (South Bali, Ubud, Kintamani, Bedugul, East Bali), delivering instant transit estimates and verified fleet ratings.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Matriks Kapasitas Armada & Kalkulasi Bagasi Riil: Rinci algoritma pencocokan tipe armada (misal Avanza, Innova Reborn, HiAce Commuter, Alphard) berdasarkan kombinasi jumlah penumpang dewasa/anak dan volume bagasi fisik (koper kabin vs koper 28-inci). Tambahkan aturan validasi cerdas jika rombongan melebihi kapasitas agar sistem otomatis merekomendasikan split 2 armada atau upgrade unit yang lebih hemat.\n" .
+                   "2. Formulasi Tarif Dinamis & Inklusi Operasional: Rumuskan formula kalkulasi tarif sewa: durasi paket (Half Day 6 jam vs Full Day 10-12 jam), surcharge biaya lembur (overtime) per jam, dan pemisahan tegas antara komponen All-in (BBM + Pengemudi Berbahasa Asing) versus biaya operasional lapangan yang ditanggung tamu (tiket tol Bali Mandara, biaya parkir destinasi, retribusi desa wisata).\n" .
+                   "3. Kalender Ketersediaan & State Holding Unit: Terapkan mekanisme penguncian inventori armada sementara (Inventory TTL Hold 15 menit) saat tamu berada pada checkout alur pembayaran guna mencegah overbooking antar pemesan paralel, terintegrasi dengan status kalender blackout date (Hari Raya Nyepi, High Season Natal & Tahun Baru).\n" .
+                   "4. Kontrak Data & Skalabilitas O(1): Format respons katalog dengan Keyset Cursor Pagination O(1) berbasis destinasi/zona Bali (Bali Selatan, Ubud, Kintamani, Bedugul, Bali Timur) dan pastikan respon katalog mengembalikan estimasi durasi tempuh serta rating armada secara instan sub-10ms.";
+        }
+
+        // 7. AI-Powered Wishlist & Itinerary Generator (Only for actual Wishlist & AI Itinerary modules)
+        $isAiItinerary = preg_match('/(?:wishlist|wish list|itinerary|generator|\bai itinerary\b|smart itinerary|rekomendasi rute|rekomendasi jadwal)/i', $titleCorpus);
+        if ($isAiItinerary) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Zero-Assumption Wishlist Extraction & Intelligent Geo-Clustering: Architect an entity extraction engine for client free-text wishlists that automatically clusters destinations geographically (South Badung, Ubud/Gianyar, Kintamani/Bangli, Bedugul/Tabanan) to eliminate irrational zig-zag routes and reduce client transit fatigue.\n" .
+                       "2. POI Operating Hours & Real-Traffic Transit Buffers: Validate operating hours of tourist destinations (e.g., Uluwatu Kecak performance at 18:00 WITA, Tanah Lot sunset, Lempuyang Temple) against historical Bali traffic congestion buffers to guarantee conflict-free schedules.\n" .
+                       "3. Comprehensive Real-Budget & Expense Engine: Formulate an integrated budget calculation engine itemizing destination admission tickets (Domestic vs Foreign tourist rates), vehicle mileage costs, and certified regional tourist guide (HPI) options.\n" .
+                       "4. Client Customization Lifecycle & Interactive Itinerary Dispatch: Implement the lifecycle state machine (DRAFT_AI -> CLIENT_CUSTOMIZING -> DISPATCHER_VERIFIED -> LOCKED_CONFIRMED), supporting official printable PDF vouchers with anti-tamper QR verification and interactive Google Maps GPS navigation links for drivers and travelers.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Ekstraksi Wishlist & Klastering Geografis Tanpa Asumsi: Rancang algoritma ekstraksi entitas destinasi dari catatan wish list bebas klien, lalu kelompokkan secara geografis (Geo-Clustering: Badung Selatan, Gianyar/Ubud, Bangli/Kintamani, Tabanan/Bedugul) guna mengeliminasi rute zig-zag yang tidak rasional dan menghemat waktu tempuh wisatawan.\n" .
+                   "2. Validasi Jam Operasional POI & Buffer Kemacetan Riil: Integrasikan data jam buka/tutup resmi destinasi wisata (misal jadwal Tari Kecak Uluwatu pukul 18:00 WITA, sunset Tanah Lot, Pura Lempuyang) dengan buffer waktu transit realistis berbasis riwayat kemacetan lalu lintas Bali untuk mencegah bentrok jadwal atau tiba setelah loket tutup.\n" .
+                   "3. Kalkulator Estimasi Anggaran Riil & Rekap Biaya Terpadu: Susun kalkulator biaya terpadu per itinerary yang menghitung tiket masuk objek wisata (WNA vs WNI), kebutuhan sewa armada sesuai jarak total kilometer, dan opsi jasa pemandu lokal berlisensi (HPI).\n" .
+                   "4. Siklus Persetujuan Klien & Penerbitan Rencana Interaktif: Rancang transisi status rencana perjalanan (DRAFT_AI -> CLIENT_CUSTOMIZING -> DISPATCHER_VERIFIED -> LOCKED_CONFIRMED), lengkap dengan fitur ekspor ke format PDF siap cetak ber-QR Code serta tautan navigasi Google Maps interaktif untuk pengemudi dan wisatawan.";
+        }
+
         // 8. Comprehensive Reports & Data Export Module
+        $isReporting = preg_match('/(?:ekspor|laporan|reporting|rekapitulasi|ledger|excel|\bpdf\b)/i', $titleCorpus);
+        if ($isReporting) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Dual-Format Export Engine (Excel .xlsx & Formal PDF): Build high-performance reporting using O(1) Keyset Cursor Pagination capable of streaming thousands of records without memory exhaustion.\n" .
+                       "2. Financial Reconciliation & Partner Settlement Ledger: Formulate reconciliation ledgers calculating gross booking collections, platform fees, and net driver commissions.\n" .
+                       "3. Document Download Audit Trail (UU PDP Compliance): Record tamper-proof download logs tracking administrator identity, IP address, and timestamps for personal data compliance.\n" .
+                       "4. Multi-Dimensional Granular Filtering: Provide instant search filters across date ranges, geographical zones (Ubud/Kuta/Sanur), fleet types, and reservation statuses.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Modul Ekspor Format Ganda (Excel .xlsx & PDF Siap Cetak): Rancang pembuatan laporan operasional dan mutasi pemesanan dengan Keyset Cursor Pagination O(1) yang mampu mengekspor jutaan baris data tanpa membebani memori server.\n" .
+                   "2. Rekonsiliasi Keuangan & Settlement Fee Mitra: Susun tabel ledger rekonsiliasi yang menghitung selisih pembayaran bruto dari payment gateway, potongan fee platform, dan hak bersih komisi pengemudi/rekanan.\n" .
+                   "3. Audit Trail Unduhan Dokumen (UU PDP): Catat histori unduhan file yang merekam identitas admin, alamat IP, timestamp, dan enkripsi data sensitif guna kepatuhan penuh terhadap UU Perlindungan Data Pribadi.\n" .
+                   "4. Filter Granular Multi-Dimensi: Lengkapi dengan filter pencarian berdasarkan periode waktu, zona destinasi (Ubud/Kuta/Sanur), jenis armada, dan status penyelesaian pesanan.";
+        }
+
+        // 9. Payment Gateway & 2-Stage Settlement (50% DP & 50% Pelunasan)
+        $isPayment = preg_match('/(?:pembayaran|payment|midtrans|qris|\bdp\b|termin|pelunasan|checkout|transaksi)/i', $titleCorpus);
+        if ($isPayment) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Two-Stage Milestone Automation (50% DP & 50% Balance): Link separate payment order IDs to the main reservation, auto-locking scope upon DP and releasing full service access upon settlement.\n" .
+                       "2. Webhook Idempotency & Signature Verification: Enforce atomic pessimistic locks (lockForUpdate) on webhook callbacks to prevent duplicate payment confirmations.\n" .
+                       "3. Multi-Currency Support (IDR, USD, AUD): Automate daily exchange rate caching with integrated international gateways (Wise/PayPal) alongside domestic Midtrans/Xendit QRIS.\n" .
+                       "4. Automated Cancellation & Refund Penalty Engine: Implement tiered cancellation deductions based on departure proximity (H-7: 100% refund, H-3: 50% refund, H-1: non-refundable).";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Otomatisasi Termin 2 Tahap (DP 50% & Pelunasan 50%): Hubungkan order ID pembayaran terpisah ke induk reservasi, mengunci scope saat DP dan membuka akses layanan penuh saat pelunasan diterima.\n" .
+                   "2. Webhook Idempotency & Verifikasi Tanda Tangan: Terapkan penguncian atomik (lockForUpdate) pada callback webhook payment gateway guna mencegah eksekusi ganda.\n" .
+                   "3. Dukungan Multi-Mata Uang (IDR, USD, AUD): Sediakan konversi kurs harian otomatis dengan gateway internasional (Wise/PayPal) di samping QRIS/VA domestik.\n" .
+                   "4. Formula Pembatalan & Pemotongan Refund Otomatis: Susun aturan pengembalian dana berjenjang berdasarkan kedekatan jadwal (H-7: refund penuh, H-3: refund 50%, H-1: hangus).";
+        }
+
+        // 10. Authentication, Profiling & Granular RBAC
+        $isAuth = preg_match('/(?:autentikasi|auth|rbac|pengguna|login|profil|hak akses|user management)/i', $titleCorpus);
+        if ($isAuth) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Frictionless Authentication & WhatsApp OTP: Deploy passwordless magic links and WhatsApp OTP verification for travelers, minimizing registration drop-offs.\n" .
+                       "2. Granular Role-Based Access Control (RBAC): Enforce strict permission boundaries separating Guest, Field Driver, Dispatcher, Finance, and Superadmin under the Principle of Least Privilege.\n" .
+                       "3. Personal Data Privacy & Portability (UU PDP): Provide one-click data archive exports and compliant right-to-be-forgotten workflows under Indonesian PDP Law No. 27/2022.\n" .
+                       "4. Multi-Device Session Security: Enforce session token rotation and automated revocation upon detection of concurrent logins or suspicious geolocation shifts.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Autentikasi Tanpa Hambatan & WhatsApp OTP: Sediakan login tanpa password (magic link) dan verifikasi OTP WhatsApp bagi wisatawan guna meminimalkan hambatan registrasi.\n" .
+                   "2. Pembagian Peran Granular (RBAC): Terapkan batas hak akses ketat antara Tamu, Pengemudi Mitra, Dispatcher, Keuangan, dan Superadmin mengacu pada prinsip Least Privilege.\n" .
+                   "3. Privasi Data & Hak Portabilitas (UU PDP): Sediakan fitur ekspor arsip data pribadi dan alur penghapusan akun (right to be forgotten) sesuai UU No. 27/2022.\n" .
+                   "4. Keamanan Sesi Multi-Perangkat: Terapkan rotasi token sesi dan pemutusan akses otomatis saat terdeteksi aktivitas login dari perangkat mencurigakan.";
+        }
+
+        // 8. Comprehensive Reports & Data Export Module
+        $isReporting = preg_match('/(?:ekspor|laporan|reporting|rekapitulasi|ledger|excel|\bpdf\b)/i', $titleCorpus);
         if ($isReporting) {
             if ($isEn) {
                 return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
@@ -1529,7 +1550,7 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
                    "4. Formula Pembatalan & Pemotongan Refund Otomatis: Susun aturan pengembalian dana berjenjang berdasarkan kedekatan jadwal (H-7: refund penuh, H-3: refund 50%, H-1: hangus).";
         }
 
-        // 10. Authentication & RBAC
+        // 10. Authentication & Granular RBAC
         if ($isAuth) {
             if ($isEn) {
                 return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .

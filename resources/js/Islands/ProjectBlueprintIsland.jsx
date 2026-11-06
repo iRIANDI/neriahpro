@@ -3553,7 +3553,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 font-sans relative">
+    <div className={`w-full py-8 px-4 sm:px-6 font-sans relative transition-all duration-200 ${
+      isIndexExpanded
+        ? 'xl:pl-[310px] xl:pr-6 2xl:pl-[330px] 2xl:pr-10 max-w-none'
+        : 'xl:pl-20 xl:pr-6 2xl:pl-24 2xl:pr-10 max-w-none'
+    }`}>
       <style>{`
         @keyframes fieldStrokePulse {
           0%, 100% {

@@ -1,0 +1,18 @@
+# ADR-003: In-Place TranslatableTabs and Unified JSON Storage
+**Status**: ACCEPTED  
+**Deciders**: Lead Frontend Architect, Product Design Lead  
+**Date**: 2026-10-20  
+
+## Context
+Penggunaan dropdown pemilih bahasa di pojok kanan atas halaman (`LocaleSwitcher::make()`) sering menimbulkan masalah state form global ter-reset, data yang belum disimpan hilang, dan membingungkan pengguna backoffice yang mengelola konten dwibahasa secara bersamaan.
+
+## Decision
+Menghapus seluruh dropdown locale tingkat halaman. Menggantikannya dengan **TranslatableTabs In-Place** langsung di dalam masing-masing komponen input form dengan kolom database bertipe JSON/JSONB (`{"id": "...", "en": "..."}`).
+
+## Consequences
+- **Positif**:
+  - Pengguna dapat melihat dan mengedit teks Indonesia dan English secara berdampingan tanpa berpindah halaman.
+  - Terintegrasi dengan tombol translasi otomatis 1-klik (`GoogleTranslateService`).
+  - Auto-translate fallback sebelum simpan memastikan tab English tidak pernah kosong.
+- **Negatif / Mitigasi**:
+  - Membutuhkan casting 'array' pada Eloquent Model, yang telah diimplementasikan secara otomatis pada scaffold generator.

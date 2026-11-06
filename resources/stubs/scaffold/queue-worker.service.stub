@@ -1,0 +1,13 @@
+[Unit]
+Description={{ SLUG }} High-Concurrency Queue Worker (Redis)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=3
+ExecStart=/usr/bin/php /var/www/html/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+
+[Install]
+WantedBy=multi-user.target

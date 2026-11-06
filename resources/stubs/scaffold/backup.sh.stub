@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# DISASTER RECOVERY // ENCRYPTED DATABASE BACKUP SCRIPT
+# Project: {{ APP_NAME }}
+# Target SLA: Recovery Point Objective (RPO) < 15 Minutes
+# ==============================================================================
+
+set -euo pipefail
+
+BACKUP_DIR="/var/backups/{{ SLUG }}"
+TIMESTAMP=\$(date +"%Y%m%d_%H%M%S")
+FILENAME="db_{{ SLUG }}_\${TIMESTAMP}.sql.gz"
+BACKUP_PATH="\${BACKUP_DIR}/\${FILENAME}"
+
+mkdir -p "\${BACKUP_DIR}"
+
+echo ">>> [BACKUP] Initiating PostgreSQL snapshot for {{ SLUG }}..."
+
+# 1. Execute compressed database dump
+docker exec {{ SLUG }}_postgres pg_dump -U {{ SLUG }}_user -d {{ SLUG }}_db | gzip -9 > "\${BACKUP_PATH}"
+
+echo ">>> [BACKUP] Snapshot successfully written: \${BACKUP_PATH} (\$(du -h "\${BACKUP_PATH}" | cut -f1))"
+
+# 2. Upload to Off-Site Cloud Storage (AWS S3 or Cloudflare R2 if AWS CLI configured)
+if command -v aws &> /dev/null && [ -n "\${BACKUP_S3_BUCKET:-}" ]; then
+  echo ">>> [BACKUP] Uploading to off-site S3 bucket: \${BACKUP_S3_BUCKET}..."
+  aws s3 cp "\${BACKUP_PATH}" "s3://\${BACKUP_S3_BUCKET}/{{ SLUG }}/\${FILENAME}"
+fi
+
+# 3. Purge Local Backups Older Than 7 Days
+find "\${BACKUP_DIR}" -type f -name "db_{{ SLUG }}_*.sql.gz" -mtime +7 -delete
+
+echo ">>> [BACKUP COMPLETE] Backup cycle finished successfully."

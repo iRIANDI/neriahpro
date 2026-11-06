@@ -1,0 +1,7 @@
+# Defect Reproduction & Failing-Test-First Protocol
+
+Saat memperbaiki bug atau regresi logika pada sistem:
+1. **Reproduksi Sebelum Perbaikan**: Dilarang mengedit kode implementasi bisnis sebelum membuat satu pengujian otomatis di `tests/Feature/` yang mereproduksi kegagalan secara deterministik.
+2. **Verifikasi Status Gagal (Red State)**: Jalankan `php artisan test --filter=YourTest` dan pastikan tes benar-benar gagal karena bug tersebut (bukan karena syntax error).
+3. **Implementasi Minimalis (Green State)**: Tulis perbaikan dengan diff sesingkat mungkin hingga tes tersebut bernilai hijau (100% pass).
+4. **Proteksi Regresi**: Pastikan seluruh test suite lainnya tetap lulus uji tanpa efek samping.

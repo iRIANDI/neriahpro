@@ -1,0 +1,18 @@
+# ADR-001: Architectural Paradigm Selection (High-Concurrency Modular Monolith)
+**Status**: ACCEPTED  
+**Deciders**: Principal Systems Architect, Lead Engineer  
+**Date**: 2026-10-20  
+
+## Context
+Aplikasi {{ APP_NAME }} membutuhkan siklus rilis cepat, konsistensi data transaksi (ACID), kemudahan pemeliharaan tim, serta latensi inter-service serendah mungkin tanpa beban operasional jaringan mikroservis yang berlebihan.
+
+## Decision
+Kami memilih arsitektur **Modular Monolith** berbasis Laravel 13, Filament v5, PostgreSQL 16, dan Redis 7. Komponen dipisahkan secara logis ke dalam modul-modul independen dengan batas domain yang jelas.
+
+## Consequences
+- **Positif**:
+  - Nol latensi partisi jaringan antar-fitur (in-process execution).
+  - Transaksi ACID terjamin 100% tanpa distributed two-phase commit overhead.
+  - Deployment satu pintu via Docker Compose dan script CI/CD presisi.
+- **Negatif / Mitigasi**:
+  - Jika satu domain membutuhkan komputasi intensif di masa depan, modul tersebut dapat diekstrak menjadi microservice menggunakan kontrak OpenAPI 3.0 yang sudah disiapkan.

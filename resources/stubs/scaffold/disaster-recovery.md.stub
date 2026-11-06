@@ -1,0 +1,36 @@
+# Disaster Recovery & Business Continuity Playbook
+**Project**: {{ APP_NAME }}  
+**SLA Targets**: RTO < 1 Hour | RPO < 15 Minutes  
+**Classification**: Enterprise Tier 1 High-Availability  
+
+---
+
+## 1. Incident Response Triage
+Jika server utama tidak dapat diakses atau database korup:
+1. Hubungi Lead On-Call Engineer.
+2. Periksa status server via health probe: `curl -I https://{{ SLUG }}.com/healthz`.
+3. Buka log SRE terbaru di `/var/log/nginx/` dan `docker compose logs --tail=100 app`.
+
+## 2. Point-In-Time Database Restoration Procedure
+1. Temukan berkas snapshot terbaru di `/var/backups/{{ SLUG }}/` atau S3 bucket:
+   ```bash
+   ls -lh /var/backups/{{ SLUG }}/
+   ```
+2. Jalankan drill pemulihan otomatis:
+   ```bash
+   ./scripts/restore.sh /var/backups/{{ SLUG }}/db_{{ SLUG }}_latest.sql.gz
+   ```
+3. Jika drill berhasil, pulihkan ke database produksi:
+   ```bash
+   gunzip -c /var/backups/{{ SLUG }}/db_{{ SLUG }}_latest.sql.gz | docker exec -i {{ SLUG }}_postgres psql -U {{ SLUG }}_user -d {{ SLUG }}_db
+   ```
+4. Restart antrean dan bersihkan cache:
+   ```bash
+   docker compose restart app redis
+   docker compose exec app php artisan optimize:clear
+   ```
+
+## 3. Post-Recovery Verification
+- Pastikan `/healthz` mengembalikan HTTP 200 OK.
+- Lakukan uji login akun administrator.
+- Catat kronologi insiden pada Root Cause Analysis (RCA) log.

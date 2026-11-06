@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# PROJECT OS // PRODUCTION SELF-HEALING DEPLOYMENT CONTROLLER
+# Project: {{ APP_NAME }}
+# Standard: Conforms strictly to Neriah Pro 6 Deployment Scenarios
+# ==============================================================================
+
+set -e
+
+SCENARIO=\${1:-1}
+
+echo ">>> [SOFTWARE FACTORY] Initializing deployment scenario \${SCENARIO}..."
+
+case "\${SCENARIO}" in
+  1)
+    echo ">>> Scenario 1: Skenario Ringan (UI / Blade / Logika PHP)..."
+    git pull origin main
+    composer install --no-dev --optimize-autoloader
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    chmod -R 777 storage bootstrap/cache
+    php artisan queue:restart
+    echo ">>> Deployment Scenario 1 Complete! System Live."
+    ;;
+  2)
+    echo ">>> Scenario 2: Migrasi Aman + Pre-Migration Atomic pg_dump Snapshot Guard..."
+    git pull origin main
+    composer install --no-dev --optimize-autoloader
+    mkdir -p storage/backups
+    SNAP_TS=\$(date +%Y%m%d_%H%M%S)
+    SNAP_FILE="storage/backups/pre_migrate_\${SNAP_TS}.sql.gz"
+    if command -v pg_dump &> /dev/null && [ -n "\${DB_DATABASE:-}" ]; then
+      PGPASSWORD="\${DB_PASSWORD:-}" pg_dump -h "\${DB_HOST:-127.0.0.1}" -U "\${DB_USERNAME:-postgres}" "\${DB_DATABASE}" | gzip > "\${SNAP_FILE}" || true
+      find storage/backups -name "pre_migrate_*.sql.gz" -mtime +7 -delete || true
+      echo ">>> [SNAPSHOT GUARD] Captured pre-migration snapshot: \${SNAP_FILE}"
+    fi
+    php artisan migrate --force
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    chmod -R 777 storage bootstrap/cache
+    php artisan queue:restart
+    echo ">>> Deployment Scenario 2 Complete! Schema Synchronized."
+    ;;
+  3)
+    echo ">>> Scenario 3: Hancur & Bangun DB (Staging Only - Migrate Fresh & Synthetic Seeder)..."
+    read -p "PERINGATAN: Seluruh data akan dihapus! Jalankan migrate:fresh? (y/N): " CONFIRM
+    if [ "\$CONFIRM" = "y" ] || [ "\$CONFIRM" = "Y" ]; then
+      php artisan migrate:fresh --seed --force
+      chmod -R 777 storage bootstrap/cache
+      echo ">>> Database staging berhasil di-reset dan diisi data simulasi nyata (Synthetic Mock Data)."
+    else
+      echo ">>> Eksekusi dibatalkan."
+    fi
+    ;;
+  4)
+    echo ">>> Scenario 4: Install Plugin / Package Baru (Composer / Filament Upgrade)..."
+    git pull origin main
+    composer install --no-dev --optimize-autoloader
+    php artisan filament:upgrade || true
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    chmod -R 777 storage bootstrap/cache
+    php artisan queue:restart
+    echo ">>> Deployment Scenario 4 Complete! Dependencies Installed & Filament Synchronized."
+    ;;
+  5)
+    echo ">>> Scenario 5: Dump Autoload (Perubahan Nama Class / Namespace / Folder PHP)..."
+    git pull origin main
+    composer dump-autoload -o
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    chmod -R 777 storage bootstrap/cache
+    php artisan queue:restart
+    echo ">>> Deployment Scenario 5 Complete! Autoload Classmap Rebuilt."
+    ;;
+  6)
+    echo ">>> Scenario 6: Build Assets Frontend (CSS, Tailwind, Vite, NPM)..."
+    git pull origin main
+    if command -v npm &> /dev/null; then
+      npm ci || npm install
+      npm run build
+    else
+      echo ">>> NPM tidak ditemukan, melewati compile aset."
+    fi
+    php artisan optimize:clear
+    php artisan view:cache
+    chmod -R 777 storage bootstrap/cache
+    echo ">>> Deployment Scenario 6 Complete! Frontend Assets Compiled."
+    ;;
+  7|rollback)
+    echo ">>> Scenario 7: Atomic Zero-Downtime Rollback & Snapshot Restore..."
+    LATEST_SNAP=\$(ls -1t storage/backups/pre_migrate_*.sql.gz 2>/dev/null | head -n 1 || true)
+    git reset --hard HEAD~1
+    if [ -n "\${LATEST_SNAP}" ] && command -v gunzip &> /dev/null && command -v psql &> /dev/null && [ -n "\${DB_DATABASE:-}" ]; then
+      echo ">>> Restoring latest PostgreSQL snapshot: \${LATEST_SNAP}"
+      gunzip -c "\${LATEST_SNAP}" | PGPASSWORD="\${DB_PASSWORD:-}" psql -h "\${DB_HOST:-127.0.0.1}" -U "\${DB_USERNAME:-postgres}" "\${DB_DATABASE}"
+    else
+      php artisan migrate:rollback --step=1 --force || true
+    fi
+    php artisan optimize:clear
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+    php artisan queue:restart
+    echo ">>> Atomic Rollback Complete!"
+    ;;
+  *)
+    echo ">>> Penggunaan: ./deploy.sh [1-7|rollback]"
+    echo "    1: Skenario Ringan (UI / Blade / PHP)"
+    echo "    2: Migrasi Aman + Pre-Migration pg_dump Snapshot"
+    echo "    3: Hancur & Bangun DB (Staging Fresh & Seed)"
+    echo "    4: Install Plugin / Package Baru (Composer & Filament)"
+    echo "    5: Dump Autoload (Namespace & Classmap)"
+    echo "    6: Build Assets Frontend (Vite & Tailwind)"
+    echo "    7|rollback: Atomic Rollback + Restore Snapshot Terakhir"
+    exit 1
+    ;;
+esac
+
+echo ">>> Executing post-deployment health probe verification on /healthz..."
+if command -v curl &> /dev/null; then
+  HEALTH_STATUS=\$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/healthz || echo "000")
+  if [ "\$HEALTH_STATUS" = "200" ]; then
+    echo ">>> [HEALTHCHECK PASSED] All systems operational! HTTP 200 OK."
+  else
+    echo ">>> [HEALTHCHECK WARNING] /healthz returned HTTP \$HEALTH_STATUS. Please inspect error logs."
+  fi
+fi

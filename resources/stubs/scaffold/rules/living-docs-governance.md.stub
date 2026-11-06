@@ -1,0 +1,6 @@
+# Living Documentation Governance Protocol
+
+Setiap perubahan pada arsitektur kode wajib menjaga dokumentasi selalu tersinkronisasi (*Single Source of Truth*):
+1. **Skema Database & Migrasi**: Setiap penambahan kolom atau tabel baru wajib memperbarui `openapi.json` dan `database/migrations/schema_complete.sql`.
+2. **Endpoint API**: Setiap penambahan rute API wajib didokumentasikan pada `openapi.json` dengan contoh response dan parameter Keyset Cursor Pagination O(1).
+3. **Arsitektur & Konfigurasi**: Variabel environment baru wajib dicatat dalam `.env.example` beserta nilai default yang aman.

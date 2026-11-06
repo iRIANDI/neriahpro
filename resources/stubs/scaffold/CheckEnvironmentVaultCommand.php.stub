@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+
+final class CheckEnvironmentVaultCommand extends Command
+{
+    protected \$signature = 'pos:check-env';
+
+    protected \$description = 'Project OS v4.0 Pre-Deployment Secret & Environment Validator';
+
+    public function handle(): int
+    {
+        \$required = {$keysExport};
+        \$missing = [];
+
+        foreach (\$required as \$key) {
+            if (env(\$key) === null || trim((string) env(\$key)) === '') {
+                \$missing[] = \$key;
+            }
+        }
+
+        if (app()->environment('production') && (bool) config('app.debug') === true) {
+            \$this->error('CRITICAL: APP_DEBUG must be false in production!');
+            return self::FAILURE;
+        }
+
+        if (! empty(\$missing)) {
+            \$this->error('Missing required .env.blueprint credentials: ' . implode(', ', \$missing));
+            return self::FAILURE;
+        }
+
+        \$this->info('All required Project OS v4.0 environment variables are valid.');
+        return self::SUCCESS;
+    }
+}

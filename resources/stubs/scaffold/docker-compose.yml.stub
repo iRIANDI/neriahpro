@@ -1,0 +1,122 @@
+version: '3.8'
+
+# ==============================================================================
+# PROJECT OS // SCAFFOLD ARCHITECTURE CONTAINER STACK
+# Project: {{ APP_NAME }}
+# Generated: auto-synthesized from PRD Blueprint & strict O(1) Scalability Spec
+# ==============================================================================
+
+services:
+  # 1. Main Application Container (PHP 8.5+ FPM with High-Concurrency Extensions)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: {{ SLUG }}-app:latest
+    container_name: {{ SLUG }}_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./storage:/var/www/html/storage
+    environment:
+      APP_NAME: "{{ APP_NAME }}"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: "http://localhost:8080"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: {{ SLUG }}_db
+      DB_USERNAME: {{ SLUG }}_user
+      DB_PASSWORD: secret_production_change_me
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      AI_THREAT_SHIELD_ENABLED: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - {{ SLUG }}_net
+
+  # 2. Web Server (Nginx Alpine Reverse Proxy with FastCGI Buffering)
+  web:
+    image: nginx:alpine
+    container_name: {{ SLUG }}_web
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    networks:
+      - {{ SLUG }}_net
+
+  # 3. Database Engine (PostgreSQL 16 with Strict ULID & UTF-8)
+  postgres:
+    image: postgres:16-alpine
+    container_name: {{ SLUG }}_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: {{ SLUG }}_db
+      POSTGRES_USER: {{ SLUG }}_user
+      POSTGRES_PASSWORD: secret_production_change_me
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - {{ SLUG }}_pgdata:/var/lib/postgresql/data
+      - ./database/migrations/schema_complete.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ SLUG }}_user -d {{ SLUG }}_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - {{ SLUG }}_net
+
+  # 4. In-Memory Cache, Rate Limiting & Queue Broker (Redis 7)
+  redis:
+    image: redis:7-alpine
+    container_name: {{ SLUG }}_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - {{ SLUG }}_redisdata:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - {{ SLUG }}_net
+
+  # 5. Local Mail Testing Sandbox (Mailpit)
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: {{ SLUG }}_mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - {{ SLUG }}_net
+
+networks:
+  {{ SLUG }}_net:
+    driver: bridge
+
+volumes:
+  {{ SLUG }}_pgdata:
+    driver: local
+  {{ SLUG }}_redisdata:
+    driver: local

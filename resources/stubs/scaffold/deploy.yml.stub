@@ -1,0 +1,43 @@
+name: Software Factory CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP Runtime
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, redis
+          coverage: none
+
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Execute Automated Regression Test Suite
+        run: php artisan test --parallel
+
+  deploy-to-cloud:
+    needs: test-and-lint
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Remote SSH Rolling Deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: \${{ secrets.VPS_HOST }}
+          username: \${{ secrets.VPS_USER }}
+          key: \${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/{{ SLUG }}
+            git pull origin main
+            ./deploy.sh 1

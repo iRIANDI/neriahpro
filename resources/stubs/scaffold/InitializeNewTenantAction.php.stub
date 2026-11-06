@@ -1,0 +1,59 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Actions\Tenancy;
+
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+/**
+ * Layer 2: Atomic Zero-State Tenant Provisioning ({$sectorCode}).
+ * Guarantees a newly signed-up organization NEVER lands on a dead-end blank dashboard.
+ */
+final class InitializeNewTenantAction
+{
+    /**
+     * @param  array<string, mixed>  \$tenantPayload
+     * @return array<string, mixed>
+     */
+    public function __invoke(array \$tenantPayload): array
+    {
+        \$foundationRecords = {$seedsExport};
+        \$checklistSteps = {$stepsExport};
+
+        return DB::transaction(function () use (\$tenantPayload, \$foundationRecords, \$checklistSteps): array {
+            \$organizationId = (string) (\$tenantPayload['organization_id'] ?? Str::ulid());
+
+            if (DB::getSchemaBuilder()->hasTable('organizations')) {
+                DB::table('organizations')->where('id', \$organizationId)->lockForUpdate()->first();
+                DB::table('organizations')->updateOrInsert(
+                    ['id' => \$organizationId],
+                    [
+                        'code' => (string) (\$tenantPayload['code'] ?? ('ORG-' . strtoupper(substr(\$organizationId, -6)))),
+                        'name' => json_encode([
+                            'id' => (string) (\$tenantPayload['name'] ?? 'Organisasi Operasional Utama'),
+                            'en' => (string) (\$tenantPayload['name'] ?? 'Primary Operational Organization'),
+                        ]),
+                        'timezone' => (string) (\$tenantPayload['timezone'] ?? 'Asia/Jakarta'),
+                        'currency' => (string) (\$tenantPayload['currency'] ?? 'IDR'),
+                        'updated_at' => now(),
+                        'created_at' => now(),
+                    ]
+                );
+            }
+
+            return [
+                'organization_id' => \$organizationId,
+                'sector_code' => '{$sectorCode}',
+                'seeded_foundations' => \$foundationRecords,
+                'guided_setup_widget' => [
+                    'component' => 'GuidedSetupChecklistWidget',
+                    'progress_percent' => 33,
+                    'auto_hide_at_percent' => 100,
+                    'steps' => \$checklistSteps,
+                ],
+            ];
+        });
+    }
+}

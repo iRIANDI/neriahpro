@@ -1,0 +1,20 @@
+# Strict Prohibition of Page-Level Locale Switcher Dropdowns (Standar Wajib TranslatableTabs In-Place)
+
+**HARAM HUKUMNYA** menggunakan dropdown pemilih bahasa di pojok kanan atas halaman (`LocaleSwitcher::make()`, `LaraZeus\SpatieTranslatable`, atau page-level locale switchers) di seluruh resource dan page Filament:
+
+1. **Melenyapkan Dropdown List di Kanan Atas Halaman**:
+   - Menghapus 100% penggunaan `LocaleSwitcher::make()` dan trait `LaraZeus\SpatieTranslatable` dari seluruh halaman Filament (`CreateRecord`, `EditRecord`, `ListRecords`, `ManageRecords`, dan `ViewRecord`).
+   - Pojok kanan atas halaman wajib bersih dan luas tanpa dropdown bahasa global yang membingungkan.
+
+2. **Tab Bahasa Tier 1 Langsung Pada Kotak Input Masing-Masing**:
+   - Setiap field yang menyimpan teks dwibahasa (JSON / Spatie Translatable) wajib memiliki sub-tab independen langsung di dalam form-nya menggunakan `App\Filament\Forms\Components\TranslatableTabs`:
+     - 🇮🇩 **Indonesia (ID)**
+     - 🇬🇧 **English (EN)**
+
+3. **Fitur Google Translate 1-Klik di Setiap Input (`GoogleTranslateService`)**:
+   - Di samping kanan label atau di dalam tab masing-masing input, terpasang tombol translasi cerdas berbasis `App\Services\Translation\GoogleTranslateService`:
+     - **Di Tab Indonesia**: Tombol `✨ Terjemahkan ke EN` → Mengklik tombol ini seketika menerjemahkan teks Indonesia dan otomatis mengisikannya ke tab Bahasa Inggris.
+     - **Di Tab English**: Tombol `✨ Terjemahkan ke ID` dan `🔄 Tarik dari ID` → Untuk menyinkronkan atau memperbarui terjemahan jika narasi Indonesia diubah.
+   - **Auto-Translate saat Simpan (`HasTranslatableTabs`)**:
+     - Setiap Page `CreateRecord` dan `EditRecord` untuk model translatable wajib menggunakan trait `App\Filament\Concerns\HasTranslatableTabs`.
+     - Jika admin sedang buru-buru dan hanya mengisi tab Indonesia lalu menekan tombol Simpan, sistem secara otomatis menerjemahkan teks tersebut ke Bahasa Inggris di latar belakang sebelum disimpan ke database, sehingga data publik tidak pernah kosong.

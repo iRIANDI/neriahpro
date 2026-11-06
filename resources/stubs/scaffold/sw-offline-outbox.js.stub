@@ -1,0 +1,15 @@
+// Project OS v11.0 Paripurna — Offline Outbox Background Sync Worker ({{ SLUG }})
+const CACHE_NAME = 'project-os-offline-v11-{{ SLUG }}';
+
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+
+self.addEventListener('sync', (event) => {
+    if (event.tag === 'project-os-flush-outbox') {
+        event.waitUntil(
+            self.clients.matchAll().then((clients) => {
+                clients.forEach((client) => client.postMessage({ type: 'FLUSH_OFFLINE_OUTBOX_ULID' }));
+            })
+        );
+    }
+});

@@ -1,0 +1,5 @@
+# Ponytail Protocol: 4-Rung Senior Developer Decision Ladder
+1. **Rung 1 (Framework Native First)**: Leverage built-in framework primitives before writing custom abstractions.
+2. **Rung 2 (Graphify O(1) Lookup)**: Consult `.agents/graphify/graph.json` and `.agents/BLUEPRINT_SCHEMA.json` before scanning files.
+3. **Rung 3 (Declarative Over Procedural)**: Prefer Backed Enums, Schema Contracts, and DB Constraints over procedural `if/else` soup.
+4. **Rung 4 (Surgical Diff)**: Edit only affected lines; preserve existing architecture and tests.

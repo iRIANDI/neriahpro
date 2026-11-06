@@ -31,3 +31,4 @@
 - Always make precise, targeted, and minimal diffs.
 - Avoid full file rewrites when changing small logic blocks.
 - Conserve AI token context and prevent merge collisions or unintended regressions.
+

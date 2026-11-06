@@ -122,37 +122,41 @@
                         </select>
                     </div>
 
-                    <!-- Directive Textarea -->
+                    <!-- Directive Textarea with Responsive Dynamic Elaborator Button -->
                     <div>
-                        <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-                            <div class="flex items-center gap-2">
-                                <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2">
+                            <div class="flex-1 min-w-0">
+                                <label class="block text-xs font-mono font-bold uppercase text-zinc-800 dark:text-zinc-200">
                                     <span x-text="isEn ? 'SPECIAL REFINEMENT DIRECTIVE (OPTIONAL):' : 'INSTRUKSI PENAJAMAN KHUSUS (OPSIONAL):'">
                                         INSTRUKSI PENAJAMAN KHUSUS (OPSIONAL):
                                     </span>
                                 </label>
-                                <button 
-                                    type="button" 
-                                    @click="elaborateDirectiveFromAi()" 
-                                    :disabled="elaboratingDirective"
-                                    class="px-2.5 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold border border-emerald-500/40 flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
-                                    :title="isEn ? 'AI compiles automatic refinement directive based on project documents and global engineering standards' : 'AI menyusun instruksi penajaman otomatis berdasarkan ide acuan proyek dan standar rekayasa dunia'"
-                                >
-                                    <template x-if="!elaboratingDirective">
-                                        <span class="flex items-center gap-1">
-                                            <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                            <span x-text="isEn ? '✨ ELABORATE FROM IDEA & WORLD STANDARDS' : '✨ ELABORASI DARI IDE & STANDAR DUNIA'">✨ ELABORASI DARI IDE &amp; STANDAR DUNIA</span>
-                                        </span>
-                                    </template>
-                                    <template x-if="elaboratingDirective">
-                                        <span class="flex items-center gap-1 animate-pulse text-zinc-500">
-                                            <svg class="animate-spin w-3 h-3 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                            <span x-text="isEn ? 'Synthesizing from Source & World Standards...' : 'Menyusun dari Acuan & Standar Dunia...'">Menyusun dari Acuan &amp; Standar Dunia...</span>
-                                        </span>
-                                    </template>
-                                </button>
+                                <span class="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 block mt-0.5" x-text="isEn ? 'Leave empty for auto-deepening, or click the dynamic button to auto-synthesize from project corpus & world standards:' : 'Kosongkan untuk pendalaman otomatis, atau klik tombol dinamis untuk merumuskan instruksi dari acuan & standar dunia:'">
+                                    Kosongkan untuk pendalaman otomatis, atau klik tombol dinamis untuk merumuskan instruksi dari acuan &amp; standar dunia:
+                                </span>
                             </div>
-                            <span class="text-[10px] font-mono text-zinc-400" x-text="isEn ? 'Leave empty to let AI deepen automatically' : 'Kosongkan jika ingin AI memperdalam otomatis'">Kosongkan jika ingin AI memperdalam otomatis</span>
+
+                            <!-- Dynamic Area-Specific AI Elaborator Button -->
+                            <button 
+                                type="button" 
+                                @click="elaborateDirectiveFromAi()" 
+                                :disabled="elaboratingDirective"
+                                class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 active:bg-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-mono text-xs font-bold border border-emerald-500/50 hover:border-emerald-500 flex items-center gap-2 transition cursor-pointer disabled:opacity-50 shadow-xs self-start sm:self-auto shrink-0 max-w-full rounded-none"
+                                :title="isEn ? 'AI compiles automatic refinement directive based on project documents and global engineering standards' : 'AI menyusun instruksi penajaman otomatis berdasarkan ide acuan proyek dan standar rekayasa dunia'"
+                            >
+                                <template x-if="!elaboratingDirective">
+                                    <span class="flex items-center gap-1.5 truncate">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                        <span class="truncate uppercase tracking-tight" x-text="getElaborateButtonLabel()">✨ ELABORASI DARI IDE &amp; STANDAR DUNIA</span>
+                                    </span>
+                                </template>
+                                <template x-if="elaboratingDirective">
+                                    <span class="flex items-center gap-2 animate-pulse text-zinc-600 dark:text-zinc-400 truncate">
+                                        <svg class="animate-spin w-3.5 h-3.5 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        <span class="truncate font-medium" x-text="getElaboratingLoadingLabel()">Menyusun dari Acuan &amp; Standar Dunia...</span>
+                                    </span>
+                                </template>
+                            </button>
                         </div>
                         <textarea 
                             x-model="tweakPrompt" 

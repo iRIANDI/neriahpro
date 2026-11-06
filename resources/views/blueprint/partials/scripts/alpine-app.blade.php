@@ -721,6 +721,64 @@
                     }
                 },
 
+                getElaborateButtonLabel() {
+                    const isEn = this.isEn;
+                    let areaName = '';
+                    if (this.tweakSegmentKey === 'scaffold_file') {
+                        areaName = this.scaffoldActiveTab || (isEn ? 'Code File' : 'Berkas Kode');
+                    } else if (this.tweakSegmentKey === 'database_erd') {
+                        areaName = isEn ? 'Database ERD' : 'Basis Data (ERD)';
+                    } else if (this.tweakSegmentKey === 'system_actors') {
+                        areaName = isEn ? 'RBAC & Actors' : 'Aktor & RBAC';
+                    } else if (this.tweakSegmentKey === 'alurs_kerja') {
+                        areaName = isEn ? 'Business Workflow' : 'Alur Kerja Sistem';
+                    } else if (this.tweakSegmentKey === 'features') {
+                        areaName = isEn ? 'MVP Features' : 'Katalog Fitur MVP';
+                    } else if (this.tweakSegmentKey === 'executive_summary') {
+                        areaName = isEn ? 'Executive Summary' : 'Ringkasan Eksekutif';
+                    } else if (this.tweakSegmentKey === 'custom_ai_agent_rules') {
+                        areaName = isEn ? 'AI Rules' : 'Aturan AI Agent';
+                    } else if (this.tweakSegmentTitle) {
+                        let raw = this.tweakSegmentTitle.replace(/^fitur:\s*/i, '').trim();
+                        if (raw.length > 28) {
+                            const parenMatch = raw.match(/\(([^)]+)\)/);
+                            if (parenMatch && parenMatch[1].length <= 25) {
+                                raw = parenMatch[1];
+                            } else {
+                                raw = raw.slice(0, 26).trim() + '…';
+                            }
+                        }
+                        areaName = raw;
+                    } else if (this.tweakFeatureId) {
+                        areaName = this.tweakFeatureId;
+                    } else {
+                        areaName = isEn ? 'Specification' : 'Spesifikasi';
+                    }
+
+                    if (isEn) {
+                        return `✨ ELABORATE SPEC: ${areaName.toUpperCase()} (WORLD STANDARDS)`;
+                    } else {
+                        return `✨ ELABORASI SPESIFIKASI: ${areaName.toUpperCase()} (STANDAR DUNIA)`;
+                    }
+                },
+
+                getElaboratingLoadingLabel() {
+                    const isEn = this.isEn;
+                    let areaName = '';
+                    if (this.tweakSegmentKey === 'scaffold_file') {
+                        areaName = this.scaffoldActiveTab || 'File';
+                    } else if (this.tweakSegmentTitle) {
+                        let raw = this.tweakSegmentTitle.replace(/^fitur:\s*/i, '').trim();
+                        if (raw.length > 22) raw = raw.slice(0, 20).trim() + '…';
+                        areaName = raw;
+                    } else {
+                        areaName = isEn ? 'Spec' : 'Modul';
+                    }
+                    return isEn 
+                        ? `Synthesizing ${areaName} from Source & World Standards...` 
+                        : `Menyusun ${areaName} dari Acuan & Standar Dunia...`;
+                },
+
                 scaffoldLoading: false,
                 scaffoldMode: 'preview', // 'preview' or 'edit'
                 scaffoldActiveTab: 'docker-compose.yml',
@@ -1105,6 +1163,9 @@
                     }
                 },
                 locale: '{{ $blueprint->user_metadata['output_locale'] ?? '' }}' || localStorage.getItem('neriah_blueprint_lang') || '{{ ($isEn ?? false) ? "en" : "id" }}',
+                get isEn() {
+                    return this.locale === 'en' || (document.documentElement.lang && document.documentElement.lang.startsWith('en')) || (document.cookie && document.cookie.includes('neriah_locale=en'));
+                },
                 setLocale(l) {
                     this.locale = l;
                     try { localStorage.setItem('neriah_blueprint_lang', l); } catch(e){}

@@ -1748,7 +1748,7 @@ class BlueprintDiscoveryService
         }
         if (empty($int['request_schema']) || $int['request_schema'] === '{}') {
             $int['request_schema'] = json_encode([
-                'title' => "Sample {$title}",
+                'title' => $title,
                 'status' => 'active',
                 'metadata' => ['source' => 'web_portal']
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
@@ -1758,7 +1758,7 @@ class BlueprintDiscoveryService
                 'success' => true,
                 'data' => [
                     'id' => '01J7K9M0P1Q2R3S4T5U6V7W8X9',
-                    'title' => "Sample {$title}",
+                    'title' => $title,
                     'status' => 'active',
                     'created_at' => '2026-11-06T12:00:00Z'
                 ]

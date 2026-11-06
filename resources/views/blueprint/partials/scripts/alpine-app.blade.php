@@ -674,7 +674,7 @@
                         });
                     }
                     try {
-                        const isEnLocale = (typeof isEn !== 'undefined' && isEn) || (typeof currentLocale !== 'undefined' && currentLocale === 'en') || (document.documentElement.lang && document.documentElement.lang.startsWith('en')) || (document.cookie && document.cookie.includes('neriah_locale=en'));
+                        const isEnLocale = this.isEn;
                         const res = await fetch('{{ route('api.blueprint.elaborate-directive', $blueprint->slug) }}', {
                             method: 'POST',
                             headers: {
@@ -709,7 +709,7 @@
                         }
                     } catch(err) {
                         if (window.showToast) {
-                            const isEnLocale = (typeof isEn !== 'undefined' && isEn) || (typeof currentLocale !== 'undefined' && currentLocale === 'en') || (document.documentElement.lang && document.documentElement.lang.startsWith('en')) || (document.cookie && document.cookie.includes('neriah_locale=en'));
+                            const isEnLocale = this.isEn;
                             window.showToast({
                                 type: 'error',
                                 title: isEnLocale ? 'DIRECTIVE COMPILATION FAILED' : 'GAGAL MENYUSUN INSTRUKSI',

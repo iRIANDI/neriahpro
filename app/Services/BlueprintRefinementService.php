@@ -1116,109 +1116,114 @@ PROMPT;
             $slugTitle = Str::slug($title);
             $pascal = PrdGeneratorService::sanitizeEntityClassName($title, $item['related_table'] ?? null);
 
+            $erdTables = $blueprint->prd_content['erd_schema']['tables'] 
+                ?? ($blueprint->prd_content['database_erd'] ?? []);
+            $actors = $blueprint->prd_content['system_actors'] ?? [];
+            $clientActor = $actors[0]['name'] ?? ($isEn ? 'Client / Traveler' : 'Klien / Pengguna');
+            $primaryActor = $actors[1]['name'] ?? ($isEn ? 'System Administrator' : 'Administrator');
+            $prefix = 'MVP';
+
+            // Invoke deep domain semantic analysis & concrete engineering archetypes
+            $domainSpec = \App\Services\Prd\PrdFeatureSpecificationService::analyzeFeatureDomain(
+                $title,
+                $item['desc'] ?? '',
+                $businessName,
+                $clientActor,
+                $primaryActor,
+                $index,
+                $prefix,
+                $erdTables,
+                $isEn
+            );
+
             $defaultDesc = $isEn
                 ? "Module {$title} for {$businessName} featuring transactional ACID execution, tamper-proof audit trails, and verified third-party integrations."
                 : "Modul {$title} untuk {$businessName} dengan pemrosesan transactional ACID, audit trail, dan integrasi terverifikasi.";
 
-            $userStory = $isEn
+            $userStory = $domainSpec['user_story'] ?? ($isEn
                 ? "As a System User of {$businessName}, I want to manage {$title} with real-time data validation, concurrency protection, and centralized audit reporting."
-                : "Sebagai Pengguna Sistem {$businessName}, saya dapat mengelola {$title} dengan validasi data real-time, perlindungan konkurensi, dan laporan audit terpusat.";
-
-            $acceptanceCriteria = $isEn
-                ? [
-                    "Scenario 1 (Happy Path): System successfully processes {$title} returning HTTP 200 OK and persisting relational database records with Strict ULID.",
-                    "Scenario 2 (Validation Error): Request with incomplete or invalid parameters returns 422 Unprocessable Content with structured error messages.",
-                    "Scenario 3 (Edge Case & Concurrency): Simultaneous mutation attempts are handled using database pessimistic locking to eliminate race conditions.",
-                ]
-                : [
-                    "Skenario 1 (Happy Path): Sistem berhasil memproses {$title} dengan status 200 OK dan menyimpan relasi database Strict ULID.",
-                    "Skenario 2 (Validation Error): Request dengan parameter tidak lengkap menghasilkan response 422 Unprocessable Content dengan pesan error terstruktur.",
-                    "Skenario 3 (Edge Case & Concurrency): Percobaan mutasi simultan ditangani melalui database transaction locking untuk mencegah race condition.",
-                ];
-
-            $frontendTasks = $isEn
-                ? [
-                    "Build responsive user interface for {$title} adhering strictly to WCAG AAA contrast ratio.",
-                    "Implement Keyset Cursor Pagination O(1) data table with instant clear button on search field.",
-                    "Integrate floating toast visual feedback for every state transition.",
-                ]
-                : [
-                    "Bangun antarmuka responsif {$title} dengan rasio kontras WCAG AAA.",
-                    "Implementasikan tabel listing data Keyset Cursor Pagination O(1) dengan search box instan clear button.",
-                    "Integrasikan feedback visual floating toast untuk setiap mutasi state.",
-                ];
-
-            $backendTasks = $isEn
-                ? [
-                    "Database migration for " . Str::snake(Str::plural($pascal)) . " table with 26-character Strict ULID primary key conforming to PostgreSQL 16 standard.",
-                    "Implement atomic {$pascal}Service wrapped in DB::transaction() with pessimistic locking (lockForUpdate).",
-                    "Enforce FormRequest Store{$pascal}Request validation with strict anti-XSS and type sanitization.",
-                ]
-                : [
-                    "Migration tabel " . Str::snake(Str::plural($pascal)) . " dengan Primary Key ULID 26-karakter standar PostgreSQL 16.",
-                    "Implementasikan {$pascal}Service atomik dibungkus DB::transaction() dengan pessimistic locking (lockForUpdate).",
-                    "Terapkan validasi FormRequest Store{$pascal}Request anti-XSS dan sanitasi tipe data ketat.",
-                ];
-
-            $integrationTasks = $isEn
-                ? [
-                    "Register RESTful API endpoint with Sanctum token authentication and rate limiting.",
-                    "Format error responses according to RFC 9457 Problem Details specification with precise HTTP status codes.",
-                    "Enforce X-Idempotency-Key request header to eliminate duplicate mutations.",
-                ]
-                : [
-                    "Daftarkan endpoint RESTful API dengan otentikasi token Sanctum dan rate limiting.",
-                    "Format respons error standar RFC 9457 Problem Details dengan HTTP status code presisi.",
-                    "Terapkan header X-Idempotency-Key untuk mencegah mutasi ganda.",
-                ];
+                : "Sebagai Pengguna Sistem {$businessName}, saya dapat mengelola {$title} dengan validasi data real-time, perlindungan konkurensi, dan laporan audit terpusat.");
 
             $refinedItem = [
                 'id' => $id,
                 'index' => $index,
                 'tier' => 'mvp',
                 'title' => $title,
-                'desc' => ($item['desc'] ?? '') ?: $defaultDesc,
-                'category' => $category,
-                'category_label' => $catLabel,
+                'desc' => ($item['desc'] ?? '') ?: ($domainSpec['user_story'] ?? $defaultDesc),
+                'category' => $domainSpec['category'] ?? $category,
+                'category_label' => $domainSpec['category_label'] ?? $catLabel,
+                'related_table' => $domainSpec['related_table'] ?? ($item['related_table'] ?? Str::snake(Str::plural($pascal))),
                 'story_points' => $item['story_points'] ?? 5,
                 'complexity_label' => $item['complexity_label'] ?? ($isEn ? 'High (5 SP)' : 'Tinggi (5 SP)'),
                 'sprint_phase' => $item['sprint_phase'] ?? 'Sprint 1',
-                'target_files' => [
+                'target_files' => $domainSpec['backend']['target_files'] ?? [
                     "app/Models/{$pascal}.php",
                     "app/Services/{$pascal}Service.php",
                     "app/Http/Controllers/{$pascal}Controller.php",
                     "tests/Feature/{$pascal}ContractTest.php",
                 ],
                 'user_story' => $userStory,
-                'acceptance_criteria' => PrdGeneratorService::normalizeAcceptanceCriteria(
-                    $acceptanceCriteria, 
+                'acceptance_criteria' => $domainSpec['acceptance_criteria'] ?? PrdGeneratorService::normalizeAcceptanceCriteria(
+                    $isEn ? [
+                        "Scenario 1 (Happy Path): System successfully processes {$title} returning HTTP 200 OK and persisting relational database records with Strict ULID.",
+                        "Scenario 2 (Validation Error): Request with incomplete or invalid parameters returns 422 Unprocessable Content with structured error messages.",
+                        "Scenario 3 (Edge Case & Concurrency): Simultaneous mutation attempts are handled using database pessimistic locking to eliminate race conditions.",
+                    ] : [
+                        "Skenario 1 (Happy Path): Sistem berhasil memproses {$title} dengan status 200 OK dan menyimpan relasi database Strict ULID.",
+                        "Skenario 2 (Validation Error): Request dengan parameter tidak lengkap menghasilkan response 422 Unprocessable Content dengan pesan error terstruktur.",
+                        "Skenario 3 (Edge Case & Concurrency): Percobaan mutasi simultan ditangani melalui database transaction locking untuk mencegah race condition.",
+                    ], 
                     $title, 
                     $userStory
                 ),
-                'frontend' => [
+                'frontend' => $domainSpec['frontend'] ?? [
                     'components' => ["{$pascal}Component.blade.php", "{$pascal}Card.blade.php"],
-                    'tasks' => $frontendTasks,
+                    'tasks' => $isEn ? [
+                        "Build responsive user interface for {$title} adhering strictly to WCAG AAA contrast ratio.",
+                        "Implement Keyset Cursor Pagination O(1) data table with instant clear button on search field.",
+                        "Integrate floating toast visual feedback for every state transition.",
+                    ] : [
+                        "Bangun antarmuka responsif {$title} dengan rasio kontras WCAG AAA.",
+                        "Implementasikan tabel listing data Keyset Cursor Pagination O(1) dengan search box instan clear button.",
+                        "Integrasikan feedback visual floating toast untuk setiap mutasi state.",
+                    ],
                     'states' => $isEn ? 'Default, Loading Skeleton, Empty State, Error Toast, Processing' : 'Default, Loading Skeleton, Empty State, Error Toast, Memproses',
                     'anti_ai_slop' => $isEn ? 'Solid Zinc monochrome palette with crisp high contrast, rounded-none or subtle borders, strictly zero pill/capsule buttons, no native window.alert().' : 'Palet Zinc monokrom dengan aksen tajam, border presisi rounded-none, dilarang tombol kapsul, bebas window.alert() native.',
                 ],
-                'backend' => [
+                'backend' => $domainSpec['backend'] ?? [
                     'target_files' => [
                         "app/Models/{$pascal}.php",
                         "app/Services/{$pascal}Service.php",
                         "app/Http/Controllers/{$pascal}Controller.php",
                     ],
-                    'tasks' => $backendTasks,
+                    'tasks' => $isEn ? [
+                        "Database migration for " . Str::snake(Str::plural($pascal)) . " table with 26-character Strict ULID primary key conforming to PostgreSQL 16 standard.",
+                        "Implement atomic {$pascal}Service wrapped in DB::transaction() with pessimistic locking (lockForUpdate).",
+                        "Enforce FormRequest Store{$pascal}Request validation with strict anti-XSS and type sanitization.",
+                    ] : [
+                        "Migration tabel " . Str::snake(Str::plural($pascal)) . " dengan Primary Key ULID 26-karakter standar PostgreSQL 16.",
+                        "Implementasikan {$pascal}Service atomik dibungkus DB::transaction() dengan pessimistic locking (lockForUpdate).",
+                        "Terapkan validasi FormRequest Store{$pascal}Request anti-XSS dan sanitasi tipe data ketat.",
+                    ],
                     'ulid_migration_rules' => $isEn ? 'Must use ->ulid("id")->primary() (VARCHAR(26)) and foreignUlid. AUTO_INCREMENT is strictly prohibited.' : 'Wajib gunakan ->ulid("id")->primary() (VARCHAR(26)) dan foreignUlid. Dilarang AUTO_INCREMENT.',
                     'query_strategy' => $isEn ? 'Keyset Cursor Pagination cursorPaginate() with ->orderBy("id", "asc") for sub-10ms query latency.' : 'Keyset Cursor Pagination cursorPaginate() dengan ->orderBy("id", "asc") untuk latensi sub-10ms.',
                 ],
-                'integration' => [
+                'integration' => $domainSpec['integration'] ?? [
                     'endpoint' => "POST /api/v1/" . Str::kebab(Str::plural($pascal)),
                     'middleware' => ['api', 'auth:sanctum', 'throttle:60,1'],
-                    'tasks' => $integrationTasks,
-                    'request_schema' => json_encode(['title' => "Sample {$title}", 'status' => 'active'], JSON_PRETTY_PRINT),
-                    'response_schema' => json_encode(['success' => true, 'data' => ['id' => '01J...ULID26CHARS', 'title' => "Sample {$title}", 'status' => 'active']], JSON_PRETTY_PRINT),
+                    'tasks' => $isEn ? [
+                        "Register RESTful API endpoint with Sanctum token authentication and rate limiting.",
+                        "Format error responses according to RFC 9457 Problem Details specification with precise HTTP status codes.",
+                        "Enforce X-Idempotency-Key request header to eliminate duplicate mutations.",
+                    ] : [
+                        "Daftarkan endpoint RESTful API dengan otentikasi token Sanctum dan rate limiting.",
+                        "Format respons error standar RFC 9457 Problem Details dengan HTTP status code presisi.",
+                        "Terapkan header X-Idempotency-Key untuk mencegah mutasi ganda.",
+                    ],
+                    'request_schema' => json_encode(['title' => $title, 'status' => 'active'], JSON_PRETTY_PRINT),
+                    'response_schema' => json_encode(['success' => true, 'data' => ['id' => '01J7K9M0P1Q2R3S4T5U6V7W8X9', 'title' => $title, 'status' => 'active']], JSON_PRETTY_PRINT),
                 ],
-                'code_agent_directive' => $isEn ? "Implement {$pascal}Service using DB::transaction, Strict ULID primary keys, cursorPaginate(), and anti-hardcoding patterns." : "Implementasikan {$pascal}Service dengan DB::transaction, Strict ULID primary keys, cursorPaginate(), dan anti-hardcoding patterns.",
+                'code_agent_directive' => $domainSpec['code_agent_directive'] ?? ($isEn ? "Implement {$pascal}Service using DB::transaction, Strict ULID primary keys, cursorPaginate(), and anti-hardcoding patterns." : "Implementasikan {$pascal}Service dengan DB::transaction, Strict ULID primary keys, cursorPaginate(), dan anti-hardcoding patterns."),
             ];
 
             return BlueprintDiscoveryService::polishFeatureSpecification(
@@ -1559,6 +1564,10 @@ TUGAS ARSITEK:
 Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segmen '{$segmentKey}' dalam {$langPrompt} tanpa asumsi fiktif.";
         }
 
+        if ($preferredAiProvider === 'deterministic') {
+            return $this->generateDeterministicDirective($blueprint, $segmentKey, $sourceData, $customTitle, $featureId, $featureContent, $locale);
+        }
+
         try {
             $aiResult = MultiAiModelManager::executeWithFailover(
                 $prompt,
@@ -1757,8 +1766,8 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
                    "4. Kontrak Data & Skalabilitas O(1): Format respons katalog dengan Keyset Cursor Pagination O(1) berbasis destinasi/zona Bali (Bali Selatan, Ubud, Kintamani, Bedugul, Bali Timur) dan pastikan respon katalog mengembalikan estimasi durasi tempuh serta rating armada secara instan sub-10ms.";
         }
 
-        // 7. AI-Powered Wishlist & Itinerary Generator (Only for actual Wishlist & AI Itinerary modules)
-        $isAiItinerary = preg_match('/(?:wishlist|wish list|itinerary|generator|\bai itinerary\b|smart itinerary|rekomendasi rute|rekomendasi jadwal)/i', $titleCorpus);
+        // 7. AI-Powered Wishlist & Itinerary Generator (Strictly targeted to custom wishlist and itinerary planners)
+        $isAiItinerary = preg_match('/(?:\bwishlist\b|\bwish list\b|\bai itinerary\b|generator itinerary|smart itinerary|itinerary generator|rekomendasi rute|rekomendasi jadwal)/i', $titleCorpus);
         if ($isAiItinerary) {
             if ($isEn) {
                 return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .

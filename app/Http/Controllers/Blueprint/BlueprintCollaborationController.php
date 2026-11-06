@@ -132,6 +132,50 @@ class BlueprintCollaborationController extends Controller
     }
 
     /**
+     * AI & Grounded Task Gap Analyzer for Phase 1 (MVP) and Phase 2 (Roadmap).
+     * Discovers missing essential architecture tasks or declares 100% maximal completeness.
+     */
+    public function analyzeTaskGap(Request $request, string $slug, BlueprintRefinementService $refinementService): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $request->validate([
+            'phase' => 'required|string|in:mvp,phase2',
+            'current_tasks' => 'nullable|array',
+            'ai_provider' => 'nullable|string',
+            'locale' => 'nullable|string|in:id,en',
+        ]);
+
+        $phase = $request->input('phase', 'mvp');
+        $currentTasks = $request->input('current_tasks', []);
+        $aiProvider = $request->input('ai_provider', 'auto');
+        $locale = $request->input('locale') 
+            ?: ($request->header('X-Locale') 
+            ?: ($request->cookie('neriah_locale') ?: app()->getLocale()));
+        $locale = $locale === 'en' ? 'en' : 'id';
+
+        try {
+            $analysis = $refinementService->analyzeTaskGaps(
+                $blueprint,
+                $phase,
+                $currentTasks,
+                $aiProvider,
+                $locale
+            );
+
+            return response()->json(array_merge(['success' => true], $analysis));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Task Gap Analysis error: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menganalisis task: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Update and persist developer/architect execution checkpoints for a blueprint.
      * Synchronizes live progress with the customer dashboard.
      */

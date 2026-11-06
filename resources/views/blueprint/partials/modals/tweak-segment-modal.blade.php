@@ -70,7 +70,23 @@
                             </div>
                         </template>
 
-                        <div class="max-h-40 overflow-y-auto bg-zinc-950 text-zinc-300 font-mono text-[11px] p-3 border border-zinc-800 custom-prd-scrollbar select-all leading-relaxed whitespace-pre-wrap" x-text="sourceCorpusData ? sourceCorpusData.corpus_text.slice(0, 1500) + (sourceCorpusData.corpus_text.length > 1500 ? '\n\n[... sisa ' + (sourceCorpusData.character_count - 1500).toLocaleString() + ' karakter lainnya terindeks untuk AI ...]' : '') : 'Belum ada konten.'"></div>
+                        <div 
+                            :class="sourceCorpusFullView ? 'max-h-80' : 'max-h-40'"
+                            class="overflow-y-auto bg-zinc-950 text-zinc-300 font-mono text-[11px] p-3 border border-zinc-800 custom-prd-scrollbar select-all leading-relaxed whitespace-pre-wrap transition-all duration-200" 
+                            x-text="sourceCorpusData ? (sourceCorpusFullView ? sourceCorpusData.corpus_text : (sourceCorpusData.corpus_text.slice(0, 1500) + (sourceCorpusData.corpus_text.length > 1500 ? '\n\n[... sisa ' + (sourceCorpusData.character_count - 1500).toLocaleString() + ' karakter lainnya terindeks untuk AI ...]' : ''))) : 'Belum ada konten.'"
+                        ></div>
+                        <template x-if="sourceCorpusData && sourceCorpusData.character_count > 1500">
+                            <div class="flex items-center justify-between pt-1 text-[10px] font-mono text-zinc-500">
+                                <span>Status: <strong class="text-emerald-500">100% Utuh &amp; Terindeks untuk AI</strong> (tidak ada pemotongan di backend).</span>
+                                <button 
+                                    type="button" 
+                                    @click="sourceCorpusFullView = !sourceCorpusFullView" 
+                                    class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-bold underline cursor-pointer flex items-center gap-1"
+                                >
+                                    <span x-text="sourceCorpusFullView ? '▲ Ringkas Pratinjau (1.500 Karakter)' : '▼ Baca Seluruh Dokumen Acuan Lengkap (' + sourceCorpusData.character_count.toLocaleString() + ' Karakter)'"></span>
+                                </button>
+                            </div>
+                        </template>
                     </div>
                 </div>
 

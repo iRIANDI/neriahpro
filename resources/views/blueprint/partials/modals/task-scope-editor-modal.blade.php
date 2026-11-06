@@ -82,26 +82,118 @@
                 </div>
             </div>
 
-            <!-- Tab Switcher: Fase 1 MVP vs Fase 2 Roadmap -->
-            <div class="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">
+            <!-- Tab Switcher & Dynamic AI Gap Analyzer -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">
+                <div class="flex items-center gap-2">
+                    <button 
+                        type="button" 
+                        @click="taskEditorTab = 'mvp'; taskGapResult = null;" 
+                        class="px-3 py-1.5 text-xs font-bold transition flex items-center gap-2 border rounded-none cursor-pointer"
+                        :class="taskEditorTab === 'mvp' ? 'bg-emerald-500 text-black border-emerald-500 font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100'"
+                    >
+                        <span>FASE 1: FITUR WAJIB (MVP)</span>
+                        <span class="px-1.5 py-0.2 text-[10px] font-bold" :class="taskEditorTab === 'mvp' ? 'bg-black text-emerald-400' : 'bg-zinc-300 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'" x-text="mvpTasks.length"></span>
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="taskEditorTab = 'phase2'; taskGapResult = null;" 
+                        class="px-3 py-1.5 text-xs font-bold transition flex items-center gap-2 border rounded-none cursor-pointer"
+                        :class="taskEditorTab === 'phase2' ? 'bg-sky-500 text-black border-sky-500 font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100'"
+                    >
+                        <span>FASE 2: ROADMAP SUSULAN</span>
+                        <span class="px-1.5 py-0.2 text-[10px] font-bold" :class="taskEditorTab === 'phase2' ? 'bg-black text-sky-400' : 'bg-zinc-300 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'" x-text="phase2Tasks.length"></span>
+                    </button>
+                </div>
+
+                <!-- Dynamic AI Gap Analyzer Trigger Button -->
                 <button 
                     type="button" 
-                    @click="taskEditorTab = 'mvp'" 
-                    class="px-3 py-1.5 text-xs font-bold transition flex items-center gap-2 border rounded-none cursor-pointer"
-                    :class="taskEditorTab === 'mvp' ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100'"
+                    @click="analyzeTaskGapsWithAi()" 
+                    :disabled="analyzingTaskGaps"
+                    class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 active:bg-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-mono text-xs font-bold border border-emerald-500/50 hover:border-emerald-500 flex items-center gap-2 transition cursor-pointer disabled:opacity-50 shrink-0 rounded-none shadow-xs"
+                    :title="isEn ? 'AI compares existing tasks against the Project Documents to discover missing requirements without assumptions' : 'AI membandingkan task saat ini dengan Dokumen Acuan untuk mencari celah kebutuhan penting tanpa asumsi'"
                 >
-                    <span>FASE 1: FITUR WAJIB (MVP)</span>
-                    <span class="px-1.5 py-0.2 text-[10px] font-bold" :class="taskEditorTab === 'mvp' ? 'bg-black text-emerald-400' : 'bg-zinc-300 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'" x-text="mvpTasks.length"></span>
+                    <template x-if="!analyzingTaskGaps">
+                        <span class="flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span class="uppercase tracking-tight" x-text="taskEditorTab === 'mvp' ? (isEn ? '✨ AI GAP ANALYSIS: PHASE 1 (MVP)' : '✨ ANALISIS GAP FASE 1 (MVP) DENGAN AI') : (isEn ? '✨ AI GAP ANALYSIS: PHASE 2 (ROADMAP)' : '✨ ANALISIS GAP FASE 2 (ROADMAP) DENGAN AI')"></span>
+                        </span>
+                    </template>
+                    <template x-if="analyzingTaskGaps">
+                        <span class="flex items-center gap-2 animate-pulse text-zinc-600 dark:text-zinc-400">
+                            <svg class="animate-spin w-3.5 h-3.5 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span x-text="isEn ? 'Analyzing Source Corpus & Architecture Gaps...' : 'Membedah Dokumen Acuan & Celah Arsitektur...'"></span>
+                        </span>
+                    </template>
                 </button>
-                <button 
-                    type="button" 
-                    @click="taskEditorTab = 'phase2'" 
-                    class="px-3 py-1.5 text-xs font-bold transition flex items-center gap-2 border rounded-none cursor-pointer"
-                    :class="taskEditorTab === 'phase2' ? 'bg-sky-500 text-black border-sky-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700 hover:text-zinc-900 dark:hover:text-zinc-100'"
-                >
-                    <span>FASE 2: ROADMAP SUSULAN</span>
-                    <span class="px-1.5 py-0.2 text-[10px] font-bold" :class="taskEditorTab === 'phase2' ? 'bg-black text-sky-400' : 'bg-zinc-300 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200'" x-text="phase2Tasks.length"></span>
-                </button>
+            </div>
+
+            <!-- AI Gap Analysis Result: CASE A (100% Maximal & Complete) -->
+            <div 
+                x-show="taskGapResult && taskGapResult.is_maximal" 
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-1"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                class="p-3.5 mb-3 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-400 dark:border-emerald-700 flex items-start gap-3 rounded-none"
+            >
+                <span class="w-6 h-6 bg-emerald-500 text-black flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">✓</span>
+                <div class="flex-1 text-xs font-mono text-emerald-950 dark:text-emerald-200">
+                    <div class="font-black uppercase tracking-wider mb-1 flex items-center justify-between">
+                        <span x-text="isEn ? '✓ THIS PHASE ARCHITECTURE IS 100% MAXIMAL & COMPLETE' : '✓ ARSITEKTUR FASE INI SUDAH 100% MAKSIMAL & LENGKAP'"></span>
+                        <button type="button" @click="taskGapResult = null" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-xs font-bold cursor-pointer">&times; TUTUP</button>
+                    </div>
+                    <p class="leading-relaxed font-sans text-[11px]" x-text="taskGapResult?.summary || (isEn ? 'All essential functional and operational requirements from the Project Source Documents are fully covered in this phase without assumptions. No extra tasks are needed.' : 'Seluruh kebutuhan fungsional dan operasional berdasarkan Dokumen Acuan telah terakomodasi sempurna pada fase ini tanpa asumsi fiktif. Tidak diperlukan penambahan task lagi.')"></p>
+                </div>
+            </div>
+
+            <!-- AI Gap Analysis Result: CASE B (Gaps Found & Recommendations Available) -->
+            <div 
+                x-show="taskGapResult && !taskGapResult.is_maximal && taskGapResult.recommendations?.length > 0" 
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-1"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                class="p-3.5 mb-3 bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-500 flex flex-col gap-2.5 rounded-none"
+            >
+                <div class="flex items-center justify-between border-b border-amber-500/30 pb-2">
+                    <div class="text-xs font-mono font-black text-amber-950 dark:text-amber-300 uppercase flex items-center gap-2">
+                        <span class="w-2 h-2 bg-amber-500 inline-block animate-ping"></span>
+                        <span x-text="isEn ? ('FOUND ' + taskGapResult.recommendations.length + ' ESSENTIAL ARCHITECTURE TASKS NOT YET COVERED:') : ('DITEMUKAN ' + taskGapResult.recommendations.length + ' TASK KRUSIAL BELUM TERCOVER (TANPA ASUMSI):')"></span>
+                    </div>
+                    <button type="button" @click="taskGapResult = null" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 text-xs font-bold cursor-pointer">&times; TUTUP</button>
+                </div>
+                <p class="text-[11px] text-zinc-700 dark:text-zinc-300 font-sans" x-text="taskGapResult?.summary"></p>
+                
+                <!-- Recommendations List -->
+                <div class="space-y-2 max-h-48 overflow-y-auto custom-prd-scrollbar pr-1">
+                    <template x-for="(rec, rIdx) in taskGapResult.recommendations" :key="'rec-' + rIdx">
+                        <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 flex items-start gap-2.5 rounded-none hover:border-amber-500 transition">
+                            <input type="checkbox" x-model="rec.selected" class="mt-1 accent-amber-500 cursor-pointer" />
+                            <div class="flex-1 text-xs">
+                                <div class="flex flex-wrap items-center justify-between gap-1.5 mb-0.5">
+                                    <strong class="text-zinc-900 dark:text-zinc-100 font-bold" x-text="rec.title"></strong>
+                                    <span class="px-1.5 py-0.2 text-[9px] bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono uppercase" x-text="rec.category"></span>
+                                </div>
+                                <p class="text-zinc-600 dark:text-zinc-400 text-[11px] font-sans leading-relaxed" x-text="rec.desc"></p>
+                                <div class="text-[10px] text-amber-800 dark:text-amber-400 font-mono mt-1 flex items-center gap-1 font-bold">
+                                    <span>⚠️ Urgensi:</span>
+                                    <span x-text="rec.urgency_reason"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="flex items-center justify-between pt-2 border-t border-amber-500/30">
+                    <span class="text-[10px] font-mono text-zinc-500 dark:text-zinc-400" x-text="isEn ? 'Select tasks above to append them into this phase.' : 'Centang task di atas untuk memasukkannya ke daftar fase ini.'"></span>
+                    <button 
+                        type="button" 
+                        @click="applyRecommendedTasks()" 
+                        class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-black font-black text-xs uppercase transition rounded-none cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    >
+                        <span>+ MASUKKAN TASK TERPILIH KE DAFTAR</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Task List Body (Scrollable) -->

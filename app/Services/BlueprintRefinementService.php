@@ -1853,4 +1853,319 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
                "3. Integrasi Layanan & Kontrak Data: Petakan integrasi API pihak ketiga spesifik, verifikasi webhook idempoten, dan skema respons standar RFC 9457 Problem Details.\n" .
                "4. Standar Enterprise & Skalabilitas O(1): Tegakkan skema relasi PostgreSQL 16 Strict ULID, Keyset Cursor Pagination O(1) untuk menjamin latensi sub-10ms, serta pencatatan audit trail sesuai kepatuhan UU PDP No. 27/2022.";
     }
+
+    /**
+     * AI & Grounded Heuristic Task Gap Analyzer for Phase 1 (MVP) and Phase 2 (Roadmap).
+     * Compares current tasks against the project source corpus & world-class standards
+     * to identify missing, non-redundant architecture tasks or declare 100% maximal completeness.
+     */
+    public function analyzeTaskGaps(
+        VisionBlueprint $blueprint,
+        string $phase,
+        array $currentTasks,
+        ?string $aiProvider = null,
+        string $locale = 'id'
+    ): array {
+        $isEn = $locale === 'en';
+        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: ($isEn ? 'Enterprise System' : 'Sistem Enterprise'));
+        $sector = $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
+            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform');
+
+        $sourceData = $this->getSourceCorpus($blueprint);
+        $corpusText = $sourceData['corpus_text'] ?? '';
+
+        $phaseLabel = $phase === 'phase2' 
+            ? ($isEn ? 'Phase 2 (Roadmap)' : 'Fase 2 (Roadmap Susulan)') 
+            : ($isEn ? 'Phase 1 (MVP Essential)' : 'Fase 1 (Fitur Wajib MVP)');
+
+        // Extract normalized existing task titles
+        $existingTitles = [];
+        $existingCorpus = '';
+        foreach ($currentTasks as $t) {
+            $tTitle = trim($t['title'] ?? '');
+            $tDesc = trim($t['desc'] ?? '');
+            if (!empty($tTitle)) {
+                $existingTitles[] = $tTitle;
+                $existingCorpus .= mb_strtolower($tTitle . ' ' . $tDesc . ' ');
+            }
+        }
+
+        // 1. Attempt AI analysis if provider is not deterministic
+        if ($aiProvider !== 'deterministic') {
+            $langInstruction = $isEn ? 'Respond strictly in English.' : 'Gunakan Bahasa Indonesia formal.';
+            $systemInstruction = <<<TXT
+You are an Enterprise Solutions Architect & Systems Analyst specializing in Laravel 13, Filament v5, and PostgreSQL 16 Strict ULID.
+Your job is to analyze the current tasks of {$businessName} for {$phaseLabel} against the Project Source Documents (Source Corpus).
+
+CRITICAL ARCHITECTURE RULES:
+1. ZERO ASSUMPTIONS & NO HALLUCINATION: Only identify tasks that are truly needed based on the client's problem statement, documents, or world-class enterprise standards (security, data integrity, idempotency, audit trail).
+2. STRICTLY NO REDUNDANCY: Never propose capabilities or tasks that already exist in the Current Tasks list, even if described differently.
+3. EXHAUSTIVE COMPLETENESS GATE: If the Current Tasks ALREADY cover all required business entities, state transitions, and integrations for this phase, you MUST set "is_maximal": true and "recommendations": [].
+4. Return ONLY valid JSON (no markdown fences, no conversational filler).
+{$langInstruction}
+TXT;
+
+            $existingJson = json_encode($currentTasks, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            $prompt = <<<TXT
+=== DOKUMEN ACUAN SUMBER PROYEK (SOURCE CORPUS) ===
+{$corpusText}
+
+=== SEKTOR / SISTEM: {$sector} ===
+=== TARGET FASE: {$phaseLabel} ===
+
+=== DAFTAR TASK SAAT INI ({count($currentTasks)} TASK) ===
+{$existingJson}
+
+TUGAS ANDA:
+Analisis apakah ada task arsitektur atau fitur krusial yang BELUM ADA dalam daftar task saat ini untuk {$phaseLabel}.
+Jika semua sudah lengkap dan tidak ada celah arsitektur penting, set "is_maximal": true dan "recommendations": [].
+Jika ada gap esensial (1-3 task krusial), berikan rekomendasi task konkret.
+
+Format JSON Wajib:
+{
+  "is_maximal": true_or_false,
+  "summary": "Ringkasan analisis kelengkapan...",
+  "recommendations": [
+    {
+      "title": "Nama Task / Fitur Konkret",
+      "desc": "Deskripsi teknis dan kriteria penerimaan spesifik",
+      "category": "Kategori Modul",
+      "sprint_phase": "Sprint 1-2",
+      "urgency_reason": "Alasan arsitektural mengapa task ini penting"
+    }
+  ]
+}
+TXT;
+
+            try {
+                $aiResult = MultiAiModelManager::executeWithFailover(
+                    $prompt,
+                    $systemInstruction,
+                    'prd',
+                    $aiProvider ?: 'auto'
+                );
+
+                $text = trim($aiResult['text'] ?? '');
+                if (preg_match('/\{[\s\S]*\}/', $text, $match)) {
+                    $parsed = json_decode($match[0], true);
+                    if (is_array($parsed) && isset($parsed['is_maximal'])) {
+                        // Double check against existing to guarantee zero duplicates
+                        $recs = (array) ($parsed['recommendations'] ?? []);
+                        $filteredRecs = [];
+                        foreach ($recs as $r) {
+                            $rTitle = trim($r['title'] ?? '');
+                            if (empty($rTitle)) continue;
+                            $rLower = mb_strtolower($rTitle);
+                            $duplicate = false;
+                            foreach ($existingTitles as $et) {
+                                $etLower = mb_strtolower($et);
+                                if ($rLower === $etLower || str_contains($existingCorpus, $rLower) || str_contains($rLower, $etLower)) {
+                                    $duplicate = true;
+                                    break;
+                                }
+                            }
+                            if (!$duplicate) {
+                                $r['selected'] = true;
+                                $filteredRecs[] = $r;
+                            }
+                        }
+
+                        $isMax = count($filteredRecs) === 0 || ($parsed['is_maximal'] === true);
+                        return [
+                            'is_maximal' => $isMax,
+                            'summary' => $parsed['summary'] ?? ($isMax 
+                                ? ($isEn ? 'All essential architecture tasks for this phase are 100% complete and fully verified.' : 'Seluruh task arsitektur esensial untuk fase ini telah 100% lengkap dan terverifikasi.')
+                                : ($isEn ? 'Found missing architecture tasks.' : 'Ditemukan task arsitektur penting yang belum tercover.')),
+                            'recommendations' => $isMax ? [] : $filteredRecs,
+                            'telemetry' => [
+                                'provider' => $aiResult['provider'] ?? 'ai',
+                                'model' => $aiResult['model'] ?? 'failover',
+                            ],
+                        ];
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Task gap analysis AI warning: ' . $e->getMessage());
+            }
+        }
+
+        // Deterministic Fallback Gap Analyzer
+        return $this->deterministicTaskGapAnalysis($blueprint, $phase, $currentTasks, $existingTitles, $existingCorpus, $isEn);
+    }
+
+    /**
+     * Resilient deterministic domain gap analyzer.
+     * Evaluates domain archetypes against existing tasks to detect gaps or declare maximal completeness.
+     */
+    protected function deterministicTaskGapAnalysis(
+        VisionBlueprint $blueprint,
+        string $phase,
+        array $currentTasks,
+        array $existingTitles,
+        string $existingCorpus,
+        bool $isEn = false
+    ): array {
+        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise');
+        $lowerCorpus = mb_strtolower($blueprint->masalah_utama . ' ' . $blueprint->tujuan_utama . ' ' . $blueprint->fitur_wajib);
+        $phaseLabel = $phase === 'phase2' 
+            ? ($isEn ? 'Phase 2 (Roadmap)' : 'Fase 2 (Roadmap Susulan)') 
+            : ($isEn ? 'Phase 1 (MVP)' : 'Fase 1 (Fitur Wajib MVP)');
+
+        $recommendations = [];
+
+        if ($phase === 'mvp') {
+            // Check T1: Airport Transfer
+            $hasAirportTransfer = preg_match('/(?:bandara|airport|transfer in|transfer out|ngurah rai|\bdps\b|flight)/i', $existingCorpus);
+            $needsAirportTransfer = preg_match('/(?:bandara|airport|transfer|ngurah rai|\bdps\b)/i', $lowerCorpus);
+            if ($needsAirportTransfer && !$hasAirportTransfer) {
+                $recommendations[] = [
+                    'title' => $isEn ? 'Airport & Hotel Transfer Dispatch Engine (Transfer In/Out DPS)' : 'Sistem Reservasi & Dispatch Transfer Bandara Ngurah Rai (Transfer In/Out)',
+                    'desc' => $isEn ? 'Real-time flight arrival radar sync, 45-60 min baggage buffer, digital paging board, and driver GPS check-in.' : 'Sinkronisasi radar kedatangan pesawat DPS Ngurah Rai, buffer bagasi 45-60 menit, digital paging board, dan log GPS pengemudi.',
+                    'category' => 'LOGISTICS_DISPATCH',
+                    'sprint_phase' => 'Sprint 1 (Fondasi & CRUD)',
+                    'urgency_reason' => $isEn ? 'Critical intake requirement for airport passenger transport without scheduling conflicts.' : 'Kebutuhan inti alur pemesanan transfer bandara tanpa risiko bentrok jadwal.',
+                    'selected' => true,
+                ];
+            }
+
+            // Check T2: Day Tour & Fleet Configurator
+            $hasFleetCatalog = preg_match('/(?:katalog|catalog|day tour|paket wisata|fleet configurator|pilihan armada)/i', $existingCorpus);
+            $needsFleetCatalog = preg_match('/(?:katalog|tour|wisata|armada|mobil|sewa)/i', $lowerCorpus);
+            if ($needsFleetCatalog && !$hasFleetCatalog) {
+                $recommendations[] = [
+                    'title' => $isEn ? 'Interactive Day Tour Catalog & Fleet Configurator' : 'Katalog Paket Day Tour Interaktif & Konfigurasi Armada',
+                    'desc' => $isEn ? 'Volumetric vehicle luggage matching, duration tiering (Half Day vs Full Day), and 15-minute transient inventory hold.' : 'Pencocokan volumetrik koper bagasi armada, formulasi durasi Half Day vs Full Day, dan penahanan inventori TTL 15 menit.',
+                    'category' => 'TOUR_CATALOG_FLEET',
+                    'sprint_phase' => 'Sprint 1 (Fondasi & CRUD)',
+                    'urgency_reason' => $isEn ? 'Core catalog enabling clients to choose verified vehicles and instant booking quotes.' : 'Katalog utama yang memungkinkan tamu memilih armada resmi dengan estimasi tarif transparan.',
+                    'selected' => true,
+                ];
+            }
+
+            // Check T3: AI Wishlist & Itinerary Generator
+            $hasItinerary = preg_match('/(?:wishlist|wish list|\bai itinerary\b|generator itinerary|smart itinerary)/i', $existingCorpus);
+            $needsItinerary = preg_match('/(?:wishlist|wish list|itinerary|rute|kalkulasi biaya otomatis)/i', $lowerCorpus);
+            if ($needsItinerary && !$hasItinerary) {
+                $recommendations[] = [
+                    'title' => $isEn ? 'AI-Powered Wishlist & Itinerary Generator (Zero-Assumption Engine)' : 'Mesin AI Itinerary Generator Cerdas (Zero-Assumption Engine)',
+                    'desc' => $isEn ? 'Entity extraction from free-text wishlists, geographical clustering (South Badung, Ubud, Kintamani), and POI operating hours validation.' : 'Ekstraksi entitas wishlist bebas, klastering geografis (Badung, Ubud, Kintamani), dan validasi jam operasional POI objek wisata.',
+                    'category' => 'AI_ITINERARY_PLANNER',
+                    'sprint_phase' => 'Sprint 2 (Business Logic & Workflow)',
+                    'urgency_reason' => $isEn ? 'Essential differentiating capability eliminating manual hours of itinerary planning.' : 'Fitur diferensiasi utama yang mengeliminasi rekap manual itinerary berjam-jam.',
+                    'selected' => true,
+                ];
+            }
+
+            // Check T4: Overland Tour (Bromo & Ijen)
+            $hasOverland = preg_match('/(?:overland|bromo|ijen|jawa timur|selat bali)/i', $existingCorpus);
+            $needsOverland = preg_match('/(?:overland|bromo|ijen|jawa timur)/i', $lowerCorpus);
+            if ($needsOverland && !$hasOverland) {
+                $recommendations[] = [
+                    'title' => $isEn ? 'Overland Multi-Day Expedition Tour (Mount Bromo & Ijen Crater)' : 'Paket Ekspedisi Overland Multi-Hari (Bromo & Kawah Ijen)',
+                    'desc' => $isEn ? 'Multi-day stage tracking, Bali Strait ferry booking synchronization, local Sukapura 4x4 Jeep vouchers, and Blue Fire certified guides.' : 'Manajemen etape perjalanan multi-hari, penyeberangan feri Selat Bali, voucher Jeep 4x4 Sukapura, dan pemandu Kawah Ijen.',
+                    'category' => 'OVERLAND_EXPEDITION',
+                    'sprint_phase' => 'Sprint 2 (Business Logic & Workflow)',
+                    'urgency_reason' => $isEn ? 'High-value long-distance expedition requiring cross-province partner coordination.' : 'Layanan ekspedisi lintas provinsi bernilai tinggi yang memerlukan koordinasi mitra feri dan jeep.',
+                    'selected' => true,
+                ];
+            }
+
+            // Check T5: Fleet Dispatcher
+            $hasDispatcher = preg_match('/(?:dispatcher|dasbor pusat|monitoring armada|penugasan supir|alokasi supir)/i', $existingCorpus);
+            $needsDispatcher = preg_match('/(?:dispatcher|penugasan|armada|supir|alokasi jadwal)/i', $lowerCorpus);
+            if ($needsDispatcher && !$hasDispatcher) {
+                $recommendations[] = [
+                    'title' => $isEn ? 'Central Operational Fleet Dispatcher & Real-Time Kanban Board' : 'Dasbor Pusat Dispatcher Operasional & Papan Kanban Armada',
+                    'desc' => $isEn ? 'Live vehicle Kanban swimlanes (Available, Dispatched, In-Transit, Maintenance), automated driver language matching, and GPS milestone tracking.' : 'Papan Kanban visual status unit, algoritma pencocokan bahasa pengemudi, dan log telemetri GPS perjalanan.',
+                    'category' => 'FLEET_DISPATCH_CENTER',
+                    'sprint_phase' => 'Sprint 3 (Integrasi & Third-Party)',
+                    'urgency_reason' => $isEn ? 'Required command center for supervisors to prevent double-booking and schedule collisions.' : 'Pusat kendali wajib bagi supervisor untuk mencegah bentrok jadwal pengemudi antar-pesanan.',
+                    'selected' => true,
+                ];
+            }
+
+            // Check T6: E-Voucher QR Code
+            $hasVoucher = preg_match('/(?:voucher|qr code|e-voucher|tiket digital)/i', $existingCorpus);
+            $needsVoucher = preg_match('/(?:voucher|qr|tiket|konfirmasi|whatsapp)/i', $lowerCorpus);
+            if ($needsVoucher && !$hasVoucher) {
+                $recommendations[] = [
+                    'title' => $isEn ? 'Cryptographic QR Code E-Voucher & WhatsApp Instant Confirmation' : 'Penerbitan E-Voucher Ber-QR Code Kriptografis & Konfirmasi WhatsApp',
+                    'desc' => $isEn ? 'Tamper-proof HMAC SHA-256 QR ticketing, automated WhatsApp Business Cloud API PDF dispatch, and sub-second web scanner validation.' : 'Tiket digital QR Code HMAC SHA-256 anti-pemalsuan, push otomatis WhatsApp Cloud API dengan lampiran PDF, dan scanner web cepat <1 detik.',
+                    'category' => 'DIGITAL_VOUCHER_QR',
+                    'sprint_phase' => 'Sprint 3 (Integrasi & Third-Party)',
+                    'urgency_reason' => $isEn ? 'Automated digital boarding proof essential for airport and hotel pickups.' : 'Bukti penjemputan digital otomatis yang sah bagi tamu di terminal bandara dan lobi hotel.',
+                    'selected' => true,
+                ];
+            }
+
+            // Check T7: Payment Gateway (2-Stage DP)
+            $hasPayment = preg_match('/(?:pembayaran|payment|midtrans|qris|\bdp\b|termin)/i', $existingCorpus);
+            $needsPayment = preg_match('/(?:pembayaran|payment|midtrans|qris|transaksi|tarif)/i', $lowerCorpus);
+            if ($needsPayment && !$hasPayment) {
+                $recommendations[] = [
+                    'title' => $isEn ? 'Two-Stage Payment Gateway (50% Down Payment & 50% Settlement)' : 'Gerbang Pembayaran Termin 2 Tahap (DP 50% & Pelunasan)',
+                    'desc' => $isEn ? 'Midtrans/Xendit QRIS integration, automated DP scope freeze, idempotent webhook handling with lockForUpdate, and tiered refund engine.' : 'Integrasi Midtrans QRIS/VA, penguncian scope saat DP 50%, callback webhook idempoten dengan lockForUpdate, dan aturan refund berjenjang.',
+                    'category' => 'FINANCIAL_PAYMENT_GATEWAY',
+                    'sprint_phase' => 'Sprint 3 (Integrasi & Third-Party)',
+                    'urgency_reason' => $isEn ? 'Secures client revenue and eliminates unpaid reservation collisions.' : 'Mengamankan arus kas reservasi dan mencegah pemesanan fiktif.',
+                    'selected' => true,
+                ];
+            }
+        } else {
+            // Phase 2 Roadmap
+            $hasMultiCurrency = preg_match('/(?:multi-currency|usd|aud|kurs|valuta)/i', $existingCorpus);
+            if (!$hasMultiCurrency) {
+                $recommendations[] = [
+                    'title' => $isEn ? 'Multi-Currency Settlement & Real-Time Forex Rate Engine (USD/AUD/EUR)' : 'Konversi Multi-Mata Uang & Integrasi Kurs Valas Real-Time (USD/AUD/EUR)',
+                    'desc' => $isEn ? 'Automated Bank Indonesia forex feed synchronization with international gateways (Wise/PayPal) for cross-border travelers.' : 'Sinkronisasi kurs valuta asing Bank Indonesia terintegrasi gateway pembayaran internasional (Wise/PayPal) untuk wisatawan mancanegara.',
+                    'category' => 'FINANCIAL_GLOBAL',
+                    'sprint_phase' => 'Fase 2 Roadmap',
+                    'urgency_reason' => $isEn ? 'Scales platform adoption for international foreign tourists booking from abroad.' : 'Memperluas penetrasi pasar wisatawan mancanegara yang memesan langsung dari luar negeri.',
+                    'selected' => true,
+                ];
+            }
+
+            $hasDriverPwa = preg_match('/(?:pwa|mobile companion|offline|driver app)/i', $existingCorpus);
+            if (!$hasDriverPwa) {
+                $recommendations[] = [
+                    'title' => $isEn ? 'Driver Mobile Companion PWA with Offline GPS Trip Logging' : 'Aplikasi PWA Pendamping Pengemudi Mitra dengan Offline GPS Telemetri',
+                    'desc' => $isEn ? 'Lightweight Progressive Web App enabling field drivers to log trips, verify QR vouchers offline, and report vehicle inspection checklists.' : 'Progressive Web App ringan untuk pengemudi mitra mencatat milestone perjalanan, validasi voucher offline, dan checklist armada harian.',
+                    'category' => 'MOBILE_COMPANION',
+                    'sprint_phase' => 'Fase 2 Roadmap',
+                    'urgency_reason' => $isEn ? 'Empowers field drivers in remote Bali & East Java areas with intermittent cellular reception.' : 'Membantu pengemudi di area pelosok Bali dan pegunungan Jawa Timur saat sinyal seluler terbatas.',
+                    'selected' => true,
+                ];
+            }
+
+            $hasB2bPartner = preg_match('/(?:b2b|afiliasi|mitra hotel|partner portal)/i', $existingCorpus);
+            if (!$hasB2bPartner) {
+                $recommendations[] = [
+                    'title' => $isEn ? 'B2B Partner Portal & Travel Agent Commission Settlement Ledger' : 'Portal Kemitraan B2B & Ledger Rekonsiliasi Komisi Agen Perjalanan / Hotel',
+                    'desc' => $isEn ? 'Dedicated sub-portal for concierge hotel desks and travel agencies with automated wholesale net rates and commission payouts.' : 'Sub-portal khusus staf lobi hotel dan agen travel rekanan dengan tarif wholesale dan otomatisasi perhitungan komisi rujukan.',
+                    'category' => 'PARTNER_ECOSYSTEM',
+                    'sprint_phase' => 'Fase 2 Roadmap',
+                    'urgency_reason' => $isEn ? 'Accelerates B2B distribution through hotel lobby concierges and partner agencies.' : 'Membuka kanal distribusi B2B masif melalui jaringan lobi hotel bintang 4 & 5 serta agen rekanan.',
+                    'selected' => true,
+                ];
+            }
+        }
+
+        $isMaximal = count($recommendations) === 0;
+
+        return [
+            'is_maximal' => $isMaximal,
+            'summary' => $isMaximal
+                ? ($isEn 
+                    ? "All critical domain architecture requirements for {$phaseLabel} are 100% complete and fully accounted for in the current task list based on official Project Documents. No additional tasks are needed."
+                    : "Seluruh kebutuhan arsitektur inti untuk {$phaseLabel} telah 100% lengkap dan terpenuhi dengan sempurna pada daftar task saat ini berdasarkan Dokumen Acuan Proyek. Tidak ada kebutuhan task tambahan.")
+                : ($isEn 
+                    ? "Identified " . count($recommendations) . " essential architecture tasks based on Project Source Documents that are not yet covered in {$phaseLabel}."
+                    : "Ditemukan " . count($recommendations) . " task arsitektur esensial berdasarkan Dokumen Acuan yang belum tercover pada {$phaseLabel}."),
+            'recommendations' => $recommendations,
+            'telemetry' => [
+                'provider' => 'deterministic_heuristic_engine',
+                'model' => 'enterprise-domain-analyzer-v1',
+            ],
+        ];
+    }
 }

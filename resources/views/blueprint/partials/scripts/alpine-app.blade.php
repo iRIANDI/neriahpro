@@ -137,6 +137,8 @@
                 taskEditorOpen: false,
                 taskEditorSaving: false,
                 taskEditorTab: 'mvp',
+                analyzingTaskGaps: false,
+                taskGapResult: null,
                 mvpTasks: @json($prd['features']['mvp_phase1'] ?? []),
                 phase2Tasks: @json($prd['features']['phase2_roadmap'] ?? []),
                 newTaskTitle: '',
@@ -227,6 +229,124 @@
                         });
                     }
                 },
+                async analyzeTaskGapsWithAi() {
+                    if (this.analyzingTaskGaps) return;
+                    this.analyzingTaskGaps = true;
+                    this.taskGapResult = null;
+                    const phase = this.taskEditorTab;
+                    const currentTasks = phase === 'mvp' ? this.mvpTasks : this.phase2Tasks;
+                    const isEnLocale = this.isEn;
+
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: isEnLocale ? 'ANALYZING TASK GAPS' : 'MENGANALISIS GAP TASK & ARSITEKTUR',
+                            message: isEnLocale 
+                                ? 'AI is inspecting Project Documents to identify missing requirements without assumptions...' 
+                                : 'AI sedang memeriksa Dokumen Acuan Proyek untuk mencari celah kebutuhan arsitektur tanpa asumsi...'
+                        });
+                    }
+
+                    try {
+                        const res = await fetch('{{ route('blueprint.tasks.analyze-gap', $blueprint->slug) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'X-Locale': isEnLocale ? 'en' : 'id'
+                            },
+                            body: JSON.stringify({
+                                phase: phase,
+                                current_tasks: currentTasks,
+                                ai_provider: this.tweakAiProvider || 'auto',
+                                locale: isEnLocale ? 'en' : 'id'
+                            })
+                        });
+
+                        const data = await res.json();
+                        if (data && data.success) {
+                            this.taskGapResult = data;
+                            if (window.showToast) {
+                                if (data.is_maximal) {
+                                    window.showToast({
+                                        type: 'success',
+                                        title: isEnLocale ? '100% COMPLETE & MAXIMAL' : 'ARSITEKTUR 100% LENGKAP & MAKSIMAL',
+                                        message: data.summary || (isEnLocale 
+                                            ? 'All domain requirements for this phase are fully covered!' 
+                                            : 'Seluruh kebutuhan arsitektur untuk fase ini telah terpenuhi sempurna!')
+                                    });
+                                } else {
+                                    const count = data.recommendations?.length || 0;
+                                    window.showToast({
+                                        type: 'warning',
+                                        title: isEnLocale ? 'ARCHITECTURE GAPS FOUND' : 'DITEMUKAN CELAH KEBUTUHAN',
+                                        message: isEnLocale 
+                                            ? `Found ${count} essential tasks not yet covered in this phase.` 
+                                            : `Ditemukan ${count} task esensial yang belum tercover di fase ini.`
+                                    });
+                                }
+                            }
+                        } else {
+                            throw new Error(data.message || (isEnLocale ? 'Failed to analyze task gaps.' : 'Gagal menganalisis celah task.'));
+                        }
+                    } catch (err) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: isEnLocale ? 'GAP ANALYSIS FAILED' : 'ANALISIS GAP GAGAL',
+                                message: err.message
+                            });
+                        }
+                    } finally {
+                        this.analyzingTaskGaps = false;
+                    }
+                },
+
+                applyRecommendedTasks() {
+                    if (!this.taskGapResult || !this.taskGapResult.recommendations) return;
+                    const selected = this.taskGapResult.recommendations.filter(r => r.selected);
+                    if (selected.length === 0) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'warning',
+                                title: this.isEn ? 'NO TASKS SELECTED' : 'TIDAK ADA TASK DIPILIH',
+                                message: this.isEn ? 'Please check at least one task to add.' : 'Silakan centang minimal satu task untuk ditambahkan.'
+                            });
+                        }
+                        return;
+                    }
+
+                    const phase = this.taskEditorTab;
+                    let addedCount = 0;
+                    selected.forEach(r => {
+                        const item = {
+                            title: r.title,
+                            desc: r.desc || '',
+                            category: r.category || 'CORE DOMAIN',
+                            sprint_phase: r.sprint_phase || (phase === 'mvp' ? 'Sprint 1-2' : 'Fase 2 Roadmap')
+                        };
+                        if (phase === 'mvp') {
+                            this.mvpTasks.push(item);
+                        } else {
+                            this.phase2Tasks.push(item);
+                        }
+                        addedCount++;
+                    });
+
+                    this.taskGapResult = null;
+
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'success',
+                            title: this.isEn ? 'TASKS APPENDED' : 'TASK DITAMBAHKAN',
+                            message: this.isEn 
+                                ? `${addedCount} tasks successfully added. Click Save Changes to freeze.` 
+                                : `${addedCount} task arsitektur berhasil dimasukkan ke daftar. Klik Simpan Perubahan untuk mengunci.`
+                        });
+                    }
+                },
+
                 async submitSaveTasks() {
                     if (this.mvpTasks.length === 0) {
                         if (window.showToast) {
@@ -491,6 +611,7 @@
                 sourceCorpusLoading: false,
                 sourceCorpusData: null,
                 sourceCorpusExpanded: false,
+                sourceCorpusFullView: false,
                 async loadSourceCorpus() {
                     if (this.sourceCorpusData) return;
                     this.sourceCorpusLoading = true;

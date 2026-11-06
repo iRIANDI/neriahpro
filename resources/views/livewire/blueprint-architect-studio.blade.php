@@ -3,7 +3,11 @@
     $isEnLoc = ($curLoc === 'en');
     $locVal = function ($item, $fallback = '') use ($curLoc, $isEnLoc) {
         if (!is_array($item)) return (string) ($item ?: $fallback);
-        return $item[$curLoc] ?? $item[$isEnLoc ? 'en' : 'id'] ?? $item['id'] ?? $item['en'] ?? $fallback;
+        $val = $item[$curLoc] ?? $item[$isEnLoc ? 'en' : 'id'] ?? $item['id'] ?? $item['en'] ?? $fallback;
+        if (is_array($val)) {
+            $val = reset($val);
+        }
+        return (string) ($val ?: $fallback);
     };
 
     $tables = $schema['data_dictionary'] ?? [];
@@ -231,7 +235,7 @@
         <!-- Left: Telemetry & Scope Integrity -->
         <div class="flex items-center gap-2 flex-wrap">
             <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-black text-[10px]">
-                {{ $activeSectorObj['name'] ?? 'General Sector' }} &bull; {{ $activeStackObj['name'] ?? 'Laravel Monolith' }}
+                {{ $locVal($activeSectorObj['name'] ?? null, 'General Sector') }} &bull; {{ $locVal($activeStackObj['name'] ?? null, 'Laravel Monolith') }}
             </span>
 
             @if($engagementMode === 'MITRA_TURNKEY_PROJECT')
@@ -2357,10 +2361,10 @@
                             </div>
                             @foreach($sprintList as $spRow)
                                 <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 space-y-1">
-                                    <div class="font-black text-emerald-950 dark:text-emerald-300">{{ $spRow['title'] ?? '' }}</div>
+                                    <div class="font-black text-emerald-950 dark:text-emerald-300">{{ $locVal($spRow['title'] ?? '', $spRow['code'] ?? '') }}</div>
                                     @foreach(($spRow['tasks'] ?? []) as $tkRow)
                                         <div class="pl-2 border-l-2 border-emerald-500 text-zinc-900 dark:text-zinc-200">
-                                            <strong>{{ $tkRow['task_code'] ?? '' }}</strong> [{{ $tkRow['role'] ?? '' }}]: {{ $tkRow['title'] ?? '' }}
+                                            <strong>{{ $tkRow['task_code'] ?? '' }}</strong> [{{ $tkRow['role'] ?? '' }}]: {{ $locVal($tkRow['title'] ?? '', $tkRow['task_code'] ?? '') }}
                                             <span class="text-zinc-600 dark:text-zinc-400">(&rarr; {{ $tkRow['deliverable'] ?? '' }})</span>
                                         </div>
                                     @endforeach

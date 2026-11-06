@@ -51,7 +51,7 @@
 
                 <div x-show="!sectionCollapses['section-2']" x-transition class="accordion-body">
                 <div class="mb-4 text-xs font-mono text-zinc-500 dark:text-zinc-400">
-                    TARGET_AUDIENCE: <span class="text-zinc-900 dark:text-zinc-100 font-bold">{{ $blueprint->target_audiens ?? ($prd['executive_summary']['target_audience'] ?? '-') }}</span>
+                    TARGET_AUDIENCE: <div class="inline-block text-zinc-900 dark:text-zinc-100 font-bold">{!! \App\Support\BlueprintPdfHelper::formatWebPoints($blueprint->target_audiens ?? ($prd['executive_summary']['target_audience'] ?? '-'), false) !!}</div>
                 </div>
 
                 <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4">

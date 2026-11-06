@@ -17,10 +17,7 @@ class PrdFeatureSpecificationService
      */
     public static function parseItems(string $text, string $domain = 'custom_portal', bool $isEn = false): array
     {
-        $lines = preg_split('/[\r\n]+/', trim($text));
-        if (count($lines) === 1 && str_contains($lines[0], ',')) {
-            $lines = explode(',', $lines[0]);
-        }
+        $lines = \App\Support\BlueprintPdfHelper::extractItems($text);
         $items = [];
 
         foreach ($lines as $line) {
@@ -82,29 +79,7 @@ class PrdFeatureSpecificationService
      */
     public static function parseActors(string $text, string $businessName = '', string $audiens = '', bool $isEn = false): array
     {
-        $rawLines = preg_split('/[\r\n;]+/', trim($text));
-        $normalizedLines = [];
-        foreach ($rawLines as $l) {
-            $l = trim($l);
-            if (empty($l)) {
-                continue;
-            }
-            if (str_contains($l, ',') && !str_contains($l, ':') && !str_contains($l, ' - ')) {
-                $parts = explode(',', $l);
-                foreach ($parts as $p) {
-                    $subParts = preg_split('/\s+(?:dan|serta|and)\s+/i', trim($p));
-                    foreach ($subParts as $sp) {
-                        $sp = trim($sp, " \t\n\r\0\x0B-•*1234567890.)");
-                        if (!empty($sp)) {
-                            $normalizedLines[] = $sp;
-                        }
-                    }
-                }
-            } else {
-                $normalizedLines[] = $l;
-            }
-        }
-
+        $normalizedLines = \App\Support\BlueprintPdfHelper::extractItems($text);
         $actors = [];
         $hasAdmin = false;
 
@@ -269,16 +244,7 @@ class PrdFeatureSpecificationService
      */
     public static function parseWorkflow(string $text, string $businessName = '', bool $isEn = false): array
     {
-        // 1. First attempt split by -> or => or newlines or numbered patterns (1. ... 2. ...)
-        if (str_contains($text, '->')) {
-            $rawSteps = explode('->', $text);
-        } elseif (str_contains($text, '=>')) {
-            $rawSteps = explode('=>', $text);
-        } elseif (preg_match('/(?:\r?\n|\s+)\d+[\.\)]\s+/', $text)) {
-            $rawSteps = preg_split('/(?:\r?\n|\s+)(?=\d+[\.\)]\s+)/', $text);
-        } else {
-            $rawSteps = preg_split('/[\r\n]+/', $text);
-        }
+        $rawSteps = \App\Support\BlueprintPdfHelper::extractItems($text);
 
         $steps = [];
         foreach ($rawSteps as $s) {

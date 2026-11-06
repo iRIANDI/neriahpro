@@ -47,15 +47,15 @@
                 <div class="grid md:grid-cols-2 gap-4 mb-6">
                     <div class="bg-zinc-50 dark:bg-zinc-950 p-5 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-2">Masalah Utama yang Diselesaikan</h3>
-                        <p class="text-zinc-700 dark:text-zinc-300 text-sm leading-relaxed font-sans">
-                            {{ $blueprint->masalah_utama ?? ($prd['executive_summary']['problem_statement'] ?? '-') }}
-                        </p>
+                        <div class="text-zinc-700 dark:text-zinc-300 text-sm leading-relaxed font-sans">
+                            {!! \App\Support\BlueprintPdfHelper::formatWebPoints($blueprint->masalah_utama ?? ($prd['executive_summary']['problem_statement'] ?? '-'), true) !!}
+                        </div>
                     </div>
                     <div class="bg-zinc-50 dark:bg-zinc-950 p-5 border border-zinc-200 dark:border-zinc-800 rounded-none">
                         <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">Tolak Ukur Kesuksesan (KPI)</h3>
-                        <p class="text-zinc-700 dark:text-zinc-300 text-sm leading-relaxed font-sans">
-                            {{ $blueprint->tujuan_utama ?? ($prd['executive_summary']['success_metrics'] ?? '-') }}
-                        </p>
+                        <div class="text-zinc-700 dark:text-zinc-300 text-sm leading-relaxed font-sans">
+                            {!! \App\Support\BlueprintPdfHelper::formatWebPoints($blueprint->tujuan_utama ?? ($prd['executive_summary']['success_metrics'] ?? '-'), true) !!}
+                        </div>
                     </div>
                 </div>
 

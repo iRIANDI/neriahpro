@@ -70,6 +70,9 @@ Route::post('/api/blueprint/{slug}/delta-requests/{crId}/approve', [BlueprintCon
 Route::post('/api/blueprint/commercial-estimate', [BlueprintController::class, 'commercialEstimate'])->name('api.blueprint.commercial-estimate')->middleware('throttle:60,1');
 Route::post('/api/blueprint/topological-preview', [BlueprintController::class, 'topologicalPreview'])->name('api.blueprint.topological-preview')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/lock-scope-spk', [BlueprintController::class, 'lockScopeAndGenerateSpk'])->name('api.blueprint.lock-scope-spk')->middleware('throttle:30,1');
+Route::post('/api/blueprint/{slug}/unlock-scope', [BlueprintController::class, 'unlockScope'])->name('api.blueprint.unlock-scope')->middleware('throttle:30,1');
+Route::post('/blueprint/{slug}/unlock-scope', [BlueprintController::class, 'unlockScope'])->name('blueprint.unlock-scope')->middleware('throttle:30,1');
+Route::get('/blueprint/{slug}/unlock-scope', [BlueprintController::class, 'unlockScopeRedirect'])->name('blueprint.unlock-scope.get')->middleware('throttle:30,1');
 Route::post('/api/blueprint/{slug}/codesign/sign-module', [BlueprintController::class, 'codesignSignModule'])->name('api.blueprint.codesign.sign-module')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/codesign/annotate', [BlueprintController::class, 'codesignAnnotate'])->name('api.blueprint.codesign.annotate')->middleware('throttle:60,1');
 Route::post('/api/blueprint/{slug}/codesign/dual-key-lock', [BlueprintController::class, 'codesignDualKeyLock'])->name('api.blueprint.codesign.dual-key-lock')->middleware('throttle:20,1');

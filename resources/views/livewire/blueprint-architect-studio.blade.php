@@ -1556,6 +1556,15 @@
                             >
                                 🔒 {{ $isEnLoc ? 'Freeze Scope SHA-256 & Issue SPK Contract' : 'Kunci Scope SHA-256 & Terbitkan Kontrak SPK' }}
                             </button>
+                            @if(!empty($latestSpkResult['scope_hash_full']) || $scopeFreezeLocked)
+                                <button
+                                    type="button"
+                                    wire:click="unlockStudioScope"
+                                    class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-mono text-[11px] font-black rounded-xs cursor-pointer"
+                                >
+                                    🔓 {{ $isEnLoc ? 'Unlock Scope (Resume Elaboration)' : 'Buka Kunci Scope (Lanjut Elaborasi)' }}
+                                </button>
+                            @endif
                             @if($slug)
                                 <a href="{{ url('/blueprint/' . $slug . '/mitra-document/rab') }}" target="_blank" class="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 font-mono text-[10px] font-bold rounded-xs">
                                     🖨️ {{ $isEnLoc ? 'Print RAB A4' : 'Cetak RAB A4' }}
@@ -2207,6 +2216,15 @@
                                         <div>🔒 SCOPE v1.0 SEALED READ-ONLY (DUAL-KEY CRYPTOGRAPHIC LOCK)</div>
                                         <div>Architect Key: {{ $cdCeremony['architect_signed_by'] ?? '-' }} | Client Key: {{ $cdCeremony['client_signed_by'] ?? '-' }}</div>
                                         <div class="truncate">Master SHA-256: {{ $cdCeremony['master_scope_hash_sha256'] ?? '' }}</div>
+                                    </div>
+                                    <div class="pt-1">
+                                        <button
+                                            type="button"
+                                            wire:click="unlockStudioScope"
+                                            class="w-full py-1.5 px-3 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase rounded-none text-[11px] transition cursor-pointer"
+                                        >
+                                            🔓 {{ $isEnLoc ? 'Unlock Scope & Re-Open Elaboration' : 'Buka Kunci Scope & Lanjut Elaborasi Spesifikasi' }}
+                                        </button>
                                     </div>
                                 @else
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">

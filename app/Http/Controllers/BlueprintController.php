@@ -3461,6 +3461,65 @@ class BlueprintController extends Controller
     }
 
     /**
+     * Unlock Scope Helper: Membuka kunci scope agar pengguna/admin dapat melanjutkan elaborasi.
+     * Dapat dipanggil melalui AJAX atau tombol web biasa.
+     */
+    public function unlockScope(
+        Request $request,
+        string $slug,
+        PosCommercialBridgeService $bridge
+    ): JsonResponse|RedirectResponse {
+        $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $actor = Auth::user();
+        $reason = (string) $request->input('reason', '');
+
+        $result = $bridge->unlockScope($blueprint, $actor, $reason);
+
+        if (! $result['success']) {
+            if ($request->wantsJson()) {
+                return response()->json($result, 422);
+            }
+
+            return redirect()->route('blueprint.show', $blueprint->slug)
+                ->with('error', $result['message']);
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json($result);
+        }
+
+        return redirect()->route('blueprint.show', $blueprint->slug)
+            ->with('status', $result['message']);
+    }
+
+    /**
+     * Unlock Scope GET Helper (for quick 1-click links).
+     */
+    public function unlockScopeRedirect(
+        Request $request,
+        string $slug,
+        PosCommercialBridgeService $bridge
+    ): RedirectResponse {
+        $blueprint = VisionBlueprint::where('slug', $slug)->orWhere('id', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $actor = Auth::user();
+        $reason = (string) $request->input('reason', 'Quick 1-Click Unlock');
+
+        $result = $bridge->unlockScope($blueprint, $actor, $reason);
+
+        if (! $result['success']) {
+            return redirect()->route('blueprint.show', $blueprint->slug)
+                ->with('error', $result['message']);
+        }
+
+        return redirect()->route('blueprint.show', $blueprint->slug)
+            ->with('status', $result['message']);
+    }
+
+    /**
      * Mitra Commercial #3: Client Approves Paid Change-Order Addendum & Generates Delta Invoice.
      */
     public function approveDeltaAddendum(

@@ -1314,6 +1314,36 @@ class BlueprintArchitectStudio extends Component
         $this->engagementMode = PosCommercialBridgeService::MODE_MITRA;
     }
 
+    public function unlockStudioScope(PosCommercialBridgeService $bridge): void
+    {
+        $bp = $this->blueprintId ? VisionBlueprint::query()->find($this->blueprintId) : null;
+        if (! $bp) {
+            $this->scopeFreezeActive = false;
+            $this->scopeFreezeLocked = false;
+            $this->codesignDualKeyState['is_locked'] = false;
+            $this->codesignDualKeyState['locked_v1_readonly'] = false;
+            $this->latestSpkResult = [];
+            $this->codesignStatusNotice = '🔓 Kunci simulasi berhasil dibuka. Anda bebas melanjutkan elaborasi arsitektur.';
+            return;
+        }
+
+        $actor = auth()->user();
+        $result = $bridge->unlockScope($bp, $actor, 'Unlocked from Architect Studio');
+
+        if (! $result['success']) {
+            $this->codesignStatusNotice = '⚠️ ' . $result['message'];
+            return;
+        }
+
+        $this->scopeFreezeActive = false;
+        $this->scopeFreezeLocked = false;
+        $this->latestSpkResult = [];
+        $this->codesignDualKeyState['is_locked'] = false;
+        $this->codesignDualKeyState['locked_v1_readonly'] = false;
+        $this->persistCoDesignStateToProject('dual_key_scope_unlocked', $this->codesignDualKeyState);
+        $this->codesignStatusNotice = '🔓 ' . $result['message'];
+    }
+
     public function approveStudioAddendum(PosCommercialBridgeService $bridge): void
     {
         $crId = $this->latestDeltaResult['id'] ?? null;

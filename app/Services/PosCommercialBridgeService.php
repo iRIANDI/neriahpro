@@ -9,6 +9,7 @@ use App\Models\Document;
 use App\Models\PosChangeRequest;
 use App\Models\PosProject;
 use App\Models\Transaction;
+use App\Models\User;
 use App\Models\VisionBlueprint;
 use App\Services\Saas\PosSaasCommercialEngineService;
 use App\Services\Sla\PosSlaAndSandboxEngineService;
@@ -677,6 +678,102 @@ class PosCommercialBridgeService
             'sign_url' => url("/document/{$doc->id}/sign"),
             'pdf_preview_url' => url("/document/{$doc->id}/preview"),
             'spk_appendix_url' => url("/blueprint/{$blueprint->slug}/mitra-document/spk-appendix"),
+        ];
+    }
+
+    /**
+     * Unlock Scope Helper: Membuka kembali kunci scope blueprint untuk melanjutkan elaborasi.
+     *
+     * Kebijakan Otorisasi:
+     * 1. Superadmin: Bebas membuka kunci kapan saja secara instan (unconditional).
+     * 2. Klien Retail / Advisory: Bebas membuka kunci / living sandbox tanpa batasan.
+     * 3. Klien Mitra:
+     *    - Jika DP 50% BELUM dibayar: Bebas membuka kunci untuk melanjutkan elaborasi spesifikasi.
+     *    - Jika DP 50% SUDAH dibayar: Scope terikat kontrak aktif; harus melalui Addendum / Change Order (atau di-unlock Superadmin).
+     *
+     * @param  VisionBlueprint  $blueprint
+     * @param  User|null  $actor
+     * @param  string  $reason
+     * @return array<string, mixed>
+     */
+    public function unlockScope(VisionBlueprint $blueprint, ?User $actor = null, string $reason = ''): array
+    {
+        $isSuperAdmin = $actor?->isSuperAdmin() ?? false;
+        $isRetail = $blueprint->isRetailLicense();
+        $isDpPaid = $blueprint->isDpConfirmed();
+
+        // Cek otorisasi untuk Klien Mitra yang sudah bayar DP
+        if (! $isSuperAdmin && ! $isRetail && $isDpPaid) {
+            return [
+                'success' => false,
+                'requires_addendum' => true,
+                'message' => 'Proyek Mitra ini telah terikat kontrak aktif dengan DP 50% yang terkonfirmasi settlement. Untuk mengubah atau menambah ruang lingkup kerja, silakan ajukan Addendum / Change Request atau hubungi Superadmin.',
+            ];
+        }
+
+        $prevStatus = $blueprint->project_status;
+
+        // 1. Reset status pada VisionBlueprint
+        $blueprint->forceFill([
+            'project_status' => in_array($blueprint->project_status, ['Scope Locked', 'Signed Agreement', 'Ready for DP']) ? 'Draft' : $blueprint->project_status,
+            'signed_agreement' => false,
+            'document_sha256' => null,
+            'signed_at' => null,
+            'signer_ip' => null,
+            'signer_user_agent' => null,
+        ])->saveQuietly();
+
+        // 2. Buka kunci dokumen SPK/kontrak terkait
+        try {
+            $blueprint->documents()->where('scope_locked', true)->update([
+                'scope_locked' => false,
+                'status' => 'pending_signature',
+            ]);
+        } catch (\Throwable) {
+            // Ignore if documents table has temporary schema difference
+        }
+
+        // 3. Reset PosProject yang terhubung jika ada
+        try {
+            $posProject = PosProject::where('vision_blueprint_id', $blueprint->id)->first();
+            if ($posProject) {
+                $posProject->update([
+                    'scope_locked_at' => null,
+                    'scope_hash_sha256' => null,
+                    'locked_v1_readonly' => false,
+                    'codesign_dual_key_json' => null,
+                ]);
+            }
+        } catch (\Throwable) {
+            // Safe fallback
+        }
+
+        // 4. Catat Audit Log
+        AuditLog::record(
+            action: 'blueprint_scope_unlocked',
+            model: $blueprint,
+            actorName: $actor ? ($actor->name . ' (' . ($isSuperAdmin ? 'SuperAdmin' : 'Client') . ')') : 'Console/System',
+            actorType: $isSuperAdmin ? 'superadmin' : ($actor ? 'client' : 'artisan_cli'),
+            description: "Kunci scope blueprint '{$blueprint->nama_bisnis}' berhasil dibuka oleh " . ($actor?->email ?? 'System CLI') . ". Alasan: " . ($reason ?: 'Melanjutkan elaborasi spesifikasi dan arsitektur.'),
+            eventCategory: 'commercial_contract',
+            newValues: [
+                'blueprint_id' => $blueprint->id,
+                'slug' => $blueprint->slug,
+                'actor_email' => $actor?->email ?? 'cli',
+                'actor_role' => $isSuperAdmin ? 'superadmin' : ($actor ? 'client' : 'system'),
+                'is_retail' => $isRetail,
+                'is_dp_paid' => $isDpPaid,
+                'prev_status' => $prevStatus,
+                'new_status' => $blueprint->project_status,
+                'reason' => $reason ?: 'Melanjutkan elaborasi arsitektur',
+            ]
+        );
+
+        return [
+            'success' => true,
+            'requires_addendum' => false,
+            'message' => 'Kunci scope berhasil dibuka. Anda kini bebas melanjutkan elaborasi arsitektur, menambah modul, dan menyempurnakan spesifikasi.',
+            'blueprint' => $blueprint->fresh(),
         ];
     }
 

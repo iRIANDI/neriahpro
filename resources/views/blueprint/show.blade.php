@@ -2865,7 +2865,12 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
 
                 @php
                     $isRetailLicense = ($blueprint->project_status === 'Retail License' || !empty($blueprint->user_metadata['retail_tier']) || !empty($blueprint->user_metadata['package_tier']) || str_contains(strtolower($blueprint->slug ?? ''), '-retail-'));
-                    $isLocked = $blueprint->signed_agreement || ($isScopeLocked ?? false) || $isRetailLicense;
+                    $isDpPaid = $blueprint->isDpConfirmed();
+                    $isScopeFrozen = $blueprint->isScopeFrozen();
+                    $isSuperAdmin = auth()->check() && auth()->user()->isSuperAdmin();
+                    // Scope is locked for editing only if frozen AND not retail
+                    $isLocked = $isScopeFrozen && ! $isRetailLicense;
+                    $canUnlock = $isSuperAdmin || (! $isDpPaid) || $isRetailLicense;
                 @endphp
 
                 @if(!$isLocked)
@@ -2873,11 +2878,20 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         <span class="hidden xl:inline" x-text="locale === 'en' ? 'EDIT SPEC' : 'LENGKAPI'">LENGKAPI</span>
                     </a>
+                @elseif($canUnlock)
+                    <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0 shrink-0">
+                        @csrf
+                        <button type="submit" class="px-2.5 py-1 {{ $isSuperAdmin ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-700' : 'bg-amber-500 hover:bg-amber-400 text-black border-amber-600' }} text-xs font-mono uppercase font-black rounded-none border transition flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer shadow-none" title="{{ $isSuperAdmin ? 'Super Admin: Buka kunci scope secara instan' : 'Buka kunci scope untuk melanjutkan elaborasi spesifikasi' }}">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                            <span class="hidden md:inline">{{ $isSuperAdmin ? 'UNLOCK (ADMIN)' : 'BUKA KUNCI' }}</span>
+                            <span class="md:hidden">UNLOCK</span>
+                        </button>
+                    </form>
                 @else
                     <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-xs font-mono uppercase font-bold border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 cursor-not-allowed select-none shrink-0 whitespace-nowrap" 
-                          title="{{ $isRetailLicense ? 'Lisensi Retail telah diterbitkan dan tidak dapat diubah.' : 'Scope Terkunci: Dokumen telah ditandatangani dan tidak dapat diubah.' }}">
+                          title="Scope Terkunci: Proyek Mitra aktif dengan DP terverifikasi. Untuk revisi fitur, silakan ajukan Addendum / Change Request.">
                         <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        <span class="hidden md:inline">{{ $isRetailLicense ? 'RETAIL LICENSE' : 'SCOPE LOCKED' }}</span>
+                        <span class="hidden md:inline">SCOPE LOCKED</span>
                     </span>
                 @endif
 
@@ -3100,6 +3114,16 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                     'subtitle_id' => $blueprint->isRetailLicense() ? 'Segel Integritas SHA-256, Lisensi Digital Retail & Unduh Kode' : 'Segel Integritas SHA-256, Kontrak Digital & Midtrans / Voucher',
                     'subtitle_en' => $blueprint->isRetailLicense() ? 'SHA-256 Integrity Seal, Retail Digital License & Code Download' : 'SHA-256 Integrity Seal, Digital Contract & Midtrans / Voucher',
                     'badge' => $blueprint->isRetailLicense() ? 'LISENSI' : 'LEGAL & DP',
+                ],
+                [
+                    'id' => 'section-13',
+                    'num' => '13',
+                    'group' => 'infra',
+                    'title_id' => 'Ekspor Repository Project OS (15 Pilar)',
+                    'title_en' => 'Export Project OS Repository (15 Pillars)',
+                    'subtitle_id' => 'Scaffold Turnkey, 22 Berkas Arsitektur, .cursorrules & .ZIP',
+                    'subtitle_en' => 'Turnkey Scaffolding, 22 Architecture Files, .cursorrules & .ZIP',
+                    'badge' => 'FULL REPO',
                 ],
             ];
 
@@ -8327,47 +8351,147 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
 
                 <!-- Software Factory OS v7.0: 15-Pillar Architectural Freeze & Repository Exporter -->
-                <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                    <div class="p-6 bg-zinc-50 dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 shadow-sm">
-                        <div class="space-y-2 min-w-0">
+                <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800" id="section-13">
+                    <div class="p-6 sm:p-7 bg-white dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs space-y-5 shadow-sm">
+                        <!-- Top Metadata & Status Bar -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
                             <div class="flex items-center gap-2 flex-wrap">
-                                <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase">PROJECT OS v7.0 • 100% FREEZE</span>
-                                <span class="text-zinc-700 dark:text-zinc-300 text-xs uppercase font-bold">{{ $isEn ? '15 ARCHITECTURE PILLARS: ULID PG16 PARTITION • HARDWARE <30MS • ZERO-POLL WS • SYNTAX 2026 • ROLE SOP' : '15 PILAR ARSITEKTUR: PARTISI PG16 ULID • HARDWARE <30MS • WS TANPA POLLING • SYNTAX 2026 • BUKU SOP' }}</span>
+                                <span class="px-2.5 py-1 bg-emerald-600 text-black font-black text-[11px] uppercase tracking-wider">PROJECT OS v7.0 • 100% FREEZE</span>
+                                @if($blueprint->isScopeFrozen())
+                                    <span class="px-2.5 py-1 bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/40 text-[10px] font-bold inline-flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                        <span>{{ $isEn ? 'SCOPE FROZEN (SHA-256)' : 'SCOPE TERKUNCI (SHA-256)' }}</span>
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold inline-flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                                        <span>{{ $isEn ? 'ACTIVE LIVING SANDBOX' : 'SANDBOX ELABORASI AKTIF' }}</span>
+                                    </span>
+                                @endif
+                                <span class="text-zinc-500 dark:text-zinc-400 text-xs font-bold hidden md:inline">22 CORE ARTIFACTS • STRICT ULID • KEYSET CURSOR O(1)</span>
                             </div>
-                            <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white">
+
+                            <!-- Quick Scope Unlock Helper for Superadmin & Unpaid Clients -->
+                            <div class="flex items-center gap-2">
+                                @if($blueprint->isScopeFrozen())
+                                    @if(auth()->check() && auth()->user()->isSuperAdmin())
+                                        <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase transition cursor-pointer flex items-center gap-1.5 shadow-none" title="Super Admin: Buka kunci scope agar bebas elaborasi kembali">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
+                                                <span>UNLOCK (SUPERADMIN)</span>
+                                            </button>
+                                        </form>
+                                    @elseif(!$blueprint->isDpConfirmed())
+                                        <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase transition cursor-pointer flex items-center gap-1.5 shadow-none" title="Buka kunci sementara untuk memperbaiki atau menambah spesifikasi sebelum bayar DP">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                                <span>LANJUT ELABORASI</span>
+                                            </button>
+                                        </form>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Title & Overview Block -->
+                        <div class="space-y-2">
+                            <h3 class="text-lg sm:text-xl font-black uppercase text-zinc-950 dark:text-zinc-50 tracking-tight">
                                 {{ $isEn ? '13. Export Complete 15-Pillar Project OS Repository (100% Architectural Freeze)' : '13. Ekspor Repository Lengkap 15 Pilar Project OS (100% Architectural Freeze)' }}
                             </h3>
-                            <p class="text-zinc-600 dark:text-zinc-400 font-sans text-xs max-w-2xl leading-relaxed">
+                            <p class="text-zinc-700 dark:text-zinc-300 font-sans text-xs sm:text-sm leading-relaxed max-w-4xl">
                                 {{ $isEn 
                                     ? 'Your PRD architectural blueprint exports all 15 canonical Project OS pillars: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), Strict ULID & pg16_range_partitioning.sql (0% N+1), <30ms Barcode Wedge + Dual-Screen Local QRIS bridge, Zero-Polling Reverb/Soketi WebSocket contracts, SYNTAX_LOCK_2026.md, Role-Based SmartGuide.php + CLIENT_SOP_AND_TRAINING_MANUAL.md, SyntheticDataSeeder.php, ApiContractTest.php, and verify-blueprint.sh.'
                                     : 'Blueprint arsitektur PRD Anda mengekspor seluruh 15 pilar kanonikal Project OS: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), skema Strict ULID & pg16_range_partitioning.sql (0% N+1), jembatan Scanner Barcode <30ms + Layar Kedua QRIS lokal, WebSocket Tanpa Polling Reverb/Soketi, SYNTAX_LOCK_2026.md, SmartGuide.php + CLIENT_SOP_AND_TRAINING_MANUAL.md, SyntheticDataSeeder.php, ApiContractTest.php, dan verify-blueprint.sh.' }}
                             </p>
                         </div>
-                        <div class="flex flex-wrap items-center gap-2.5 w-full xl:w-auto shrink-0">
-                            <button type="button" @click="openScaffoldModal()" class="w-full sm:w-auto px-5 py-3 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/60 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                <span>{{ $isEn ? 'PREVIEW CODE (15 PILLARS)' : 'PREVIEW KODE (15 PILAR)' }}</span>
-                            </button>
-                            <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-4 py-3 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer" title="{{ $isEn ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE' }}">
-                                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                                <span>.CURSORRULES</span>
-                            </a>
-                            <a href="{{ route('blueprint.download-schema-json', $blueprint->slug) }}" class="w-full sm:w-auto px-4 py-3 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer" title="Download Universal Blueprint Schema v1.0 JSON">
-                                <svg class="w-4 h-4 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"></path></svg>
-                                <span>SCHEMA.JSON</span>
-                            </a>
-                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint']) }}" class="w-full sm:w-auto px-4 py-3 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer" title="Download PROJECT_OS_EXECUTION_BLUEPRINT.md">
-                                <svg class="w-4 h-4 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                <span>EXECUTION.MD</span>
-                            </a>
-                            <button type="button" @click="openTweakModal('custom_ai_agent_rules', 'AI Coding Agent Directives (Custom Rules)')" class="w-full sm:w-auto px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase transition flex items-center justify-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                <span>TWEAK</span>
-                            </button>
-                            <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="w-full sm:w-auto px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase transition flex items-center justify-center gap-2 cursor-pointer">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                <span>{{ $isEn ? 'DOWNLOAD ZIP (.ZIP)' : 'UNDUH BERKAS (.ZIP)' }}</span>
-                            </a>
+
+                        <!-- Technical Spec Badges Matrix -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-black">01</span>
+                                <span class="text-zinc-800 dark:text-zinc-200">PostgreSQL 16 Strict ULID (0% N+1)</span>
+                            </div>
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-black">02</span>
+                                <span class="text-zinc-800 dark:text-zinc-200">Hardware &lt;30ms &amp; Zero-Poll WS</span>
+                            </div>
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-black">03</span>
+                                <span class="text-zinc-800 dark:text-zinc-200">Pest API Contract Suite (8 Dimensi)</span>
+                            </div>
+                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
+                                <span class="text-emerald-600 dark:text-emerald-400 font-black">04</span>
+                                <span class="text-zinc-800 dark:text-zinc-200">Automated deploy.sh (6 Skenario)</span>
+                            </div>
+                        </div>
+
+                        <!-- Scope Notice / Helper Box if Locked -->
+                        @if($blueprint->isScopeFrozen())
+                            <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900/80 border border-zinc-300 dark:border-zinc-800 text-xs font-mono flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2 text-zinc-900 dark:text-zinc-200 font-bold">
+                                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                        <span>SHA-256: <code class="text-emerald-600 dark:text-emerald-400 font-mono">{{ substr($blueprint->document_sha256 ?: $blueprint->calculatePrdHash(), 0, 18) }}...</code></span>
+                                    </div>
+                                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans">
+                                        {{ $blueprint->isDpConfirmed() 
+                                            ? 'Proyek Mitra telah terikat kontrak aktif dengan DP 50% terkonfirmasi. Untuk penambahan fitur baru, silakan gunakan menu Addendum Scope.' 
+                                            : 'Scope dikunci sementara untuk penerbitan SPK/kontrak. Belum selesai elaborasi? Anda dapat membuka kunci kembali secara instan.' }}
+                                    </p>
+                                </div>
+                                @if(auth()->check() && auth()->user()->isSuperAdmin())
+                                    <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0 shrink-0">
+                                        @csrf
+                                        <button type="submit" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase transition cursor-pointer">
+                                            🔓 Buka Kunci (Admin)
+                                        </button>
+                                    </form>
+                                @elseif(!$blueprint->isDpConfirmed())
+                                    <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0 shrink-0">
+                                        @csrf
+                                        <button type="submit" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase transition cursor-pointer">
+                                            ↩️ Lanjut Elaborasi (Buka Kunci)
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endif
+
+                        <!-- Dedicated Actions Command Toolbar (Full Width Bottom Shelf) -->
+                        <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                            <!-- Group A: Inspect & Directives -->
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="button" @click="openScaffoldModal()" class="w-full sm:w-auto px-4 py-2.5 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/60 font-bold uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-xs text-xs">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    <span>{{ $isEn ? 'PREVIEW CODE (22 FILES)' : 'PREVIEW KODE (22 BERKAS)' }}</span>
+                                </button>
+                                <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-3.5 py-2.5 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs" title="{{ $isEn ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE' }}">
+                                    <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                    <span>.CURSORRULES</span>
+                                </a>
+                                <a href="{{ route('blueprint.download-schema-json', $blueprint->slug) }}" class="w-full sm:w-auto px-3.5 py-2.5 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs" title="Download Universal Blueprint Schema v1.0 JSON">
+                                    <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"></path></svg>
+                                    <span>SCHEMA.JSON</span>
+                                </a>
+                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint']) }}" class="w-full sm:w-auto px-3.5 py-2.5 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs" title="Download PROJECT_OS_EXECUTION_BLUEPRINT.md">
+                                    <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                    <span>EXECUTION.MD</span>
+                                </a>
+                                <button type="button" @click="openTweakModal('custom_ai_agent_rules', 'AI Coding Agent Directives (Custom Rules)')" class="w-full sm:w-auto px-3.5 py-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-black uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs">
+                                    <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    <span>TWEAK</span>
+                                </button>
+                            </div>
+
+                            <!-- Group B: Primary Turnkey Repo Download -->
+                            <div class="flex items-center gap-2 shrink-0">
+                                <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="w-full md:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer shadow-sm text-xs border border-emerald-600">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    <span>{{ $isEn ? 'DOWNLOAD FULL REPO (.ZIP)' : 'UNDUH FULL REPO (.ZIP)' }}</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

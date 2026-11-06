@@ -23,6 +23,3 @@
             </form>
         </div>
     </div>
-
-    @if($googleTranslateEnabled)
-    <!-- Hidden Google Translate Element & Loader -->

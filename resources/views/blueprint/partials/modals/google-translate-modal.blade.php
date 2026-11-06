@@ -1,3 +1,4 @@
+@if($googleTranslateEnabled)
     <!-- 5. GOOGLE TRANSLATE TIER 2 MODERN LOADER MODAL (STRICTLY VIEWPORT DEAD-CENTERED) -->
     <div 
         id="translate_loader_modal" 

@@ -24,6 +24,75 @@
     ];
     $currentLang = request()->cookie('neriah_locale', app()->getLocale());
     $isEn = $currentLang === 'en' || app()->getLocale() === 'en';
+
+    // Lock & Entitlement Status
+    $isRetailLicense = ($blueprint->project_status === 'Retail License' || !empty($blueprint->user_metadata['retail_tier']) || !empty($blueprint->user_metadata['package_tier']) || str_contains(strtolower($blueprint->slug ?? ''), '-retail-'));
+    $isDpPaid = $blueprint->isDpConfirmed();
+    $isScopeFrozen = $blueprint->isScopeFrozen();
+    $isSuperAdmin = auth()->check() && auth()->user()->isSuperAdmin();
+    $isLocked = $isScopeFrozen && ! $isRetailLicense;
+    $canUnlock = $isSuperAdmin || (! $isDpPaid) || $isRetailLicense;
+
+    // Commercial & Velocity Tiers
+    $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
+    $hasSignedContract = $contractDoc && $contractDoc->status === 'signed' && (float)$contractDoc->contract_amount > 0;
+    $itemizedScope = $prd['itemized_cost_breakdown'] ?? \App\Services\PrdGeneratorService::calculateItemizedEstimation($blueprint);
+    $pricingTiers = \App\Services\PrdGeneratorService::getPrimaryVelocityTiers($blueprint);
+    $alpineTiers = [];
+    $matchedSignedTierKey = null;
+
+    foreach ($pricingTiers as $t) {
+        $alpineTiers[$t['id']] = [
+            'contract' => (float)$t['contract_amount'],
+            'dp' => (float)$t['dp_amount'],
+            'days' => $t['duration'],
+            'name' => $t['name'],
+        ];
+        if ($hasSignedContract && (float)$t['contract_amount'] === (float)$contractDoc->contract_amount) {
+            $matchedSignedTierKey = $t['id'];
+        }
+    }
+    $tierKeys = array_keys($alpineTiers);
+
+    if ($hasSignedContract) {
+        $defaultSelectedTier = $matchedSignedTierKey ?? ($blueprint->user_metadata['selected_velocity_tier'] ?? (count($tierKeys) >= 2 ? $tierKeys[1] : ($tierKeys[0] ?? '')));
+    } else {
+        $preferredTier = $blueprint->user_metadata['selected_velocity_tier'] ?? null;
+        $defaultSelectedTier = ($preferredTier && isset($alpineTiers[$preferredTier])) 
+            ? $preferredTier 
+            : (count($tierKeys) >= 2 ? $tierKeys[1] : ($tierKeys[0] ?? ''));
+    }
+
+    // Engineering Specs & Dev Steps
+    $mvpEngineeringSpecs = $prd['features']['mvp_phase1'] ?? ($prd['engineering_specs']['mvp_specs'] ?? []);
+    $totalDevSteps = count($mvpEngineeringSpecs) + 2;
+
+    // ERD Tables & Prompt
+    $erdTablesList = $prd['erd_schema']['tables'] ?? [];
+    $erdSummary = [];
+    foreach ($erdTablesList as $t) {
+        $tableName = $t['name'] ?? ($t['table_name'] ?? 'tabel');
+        $pkName = $t['primary_key'] ?? ($t['pk'] ?? 'id (ULID)');
+        $cols = array_map(fn($c) => ($c['name'] ?? 'col') . ' (' . ($c['type'] ?? 'varchar') . ')', $t['columns'] ?? []);
+        $erdSummary[] = "- Tabel: " . $tableName . " [PK: " . $pkName . "]\n  Kolom: " . implode(', ', array_slice($cols, 0, 8));
+    }
+    $erdText = implode("\n", $erdSummary);
+
+    $hasSync = !empty($prd['mobile_and_sync_architecture']);
+    $syncText = $hasSync 
+        ? "\n\nArsitektur Sinkronisasi Offline-First (Bab 5.6):\n- Endpoint Push: POST /api/v1/sync/push\n- Endpoint Pull: GET /api/v1/sync/pull\n- Resolusi Konflik: Last-Write-Wins (LWW) berdasarkan updated_at ULID\n- SQLite Local DDL & SQLite client support" 
+        : "";
+
+    $foundationPrompt = "[FONDASI GLOBAL & SETUP BASIS DATA: " . ($blueprint->nama_bisnis ?: $blueprint->client_name) . "]\n"
+        . "Tugas Arsitektur: Inisialisasi struktur database PostgreSQL, model Eloquent ULID, dan base stack project.\n\n"
+        . "Spesifikasi Bab 5 (ERD Schema):\n" . $erdText . $syncText . "\n\n"
+        . "Aturan Wajib Kepatuhan (.agents/AGENTS.md):\n"
+        . "1. Gunakan ULID (->ulid('id')->primary()) untuk semua primary key tabel bisnis. Dilarang AUTO_INCREMENT.\n"
+        . "2. Model Eloquent wajib menyertakan trait HasUlids.\n"
+        . "3. Keyset Cursor Pagination O(1) (cursorPaginate()). Dilarang offset pagination.\n"
+        . "4. Kolom multi-bahasa bertipe JSON dengan cast 'array'.\n"
+        . "5. Jalankan verifikasi terminal: php artisan migrate:status && php artisan test\n"
+        . "6. Setelah exit code 0, lakukan commit git: git commit -m 'chore(db): setup ULID migrations and base foundation'";
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">

@@ -1,3 +1,14 @@
+<!-- SECTION 06: EVALUASI ARSITEKTUR & REKOMENDASI INFRASTRUKTUR (HOSTING, POLA SISTEM & AI DATABASE) -->
+            @php
+                $archEval = $prd['architecture_evaluation'] ?? \App\Services\PrdGeneratorService::evaluateArchitecture(
+                    $blueprint->nama_bisnis ?? $blueprint->client_name,
+                    $blueprint->masalah_utama ?? '',
+                    $prd['features']['mvp_phase1'] ?? [],
+                    $blueprint->alur_kerja ?? '',
+                    $blueprint->user_metadata ?? []
+                );
+            @endphp
+
             <section id="section-6" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3 cursor-pointer select-none" @click="toggleSection('section-6')">
                     <div class="flex items-center gap-2">

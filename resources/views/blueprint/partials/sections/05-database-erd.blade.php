@@ -1,3 +1,4 @@
+@php $isErdImpacted = in_array('erd_schema', $prd['_impacted_segments'] ?? []); @endphp
             <section id="section-5" class="bg-white dark:bg-zinc-900 border {{ $isErdImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target transition-all">
                 <div class="flex flex-col gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none" @click="toggleSection('section-5')">
@@ -408,13 +409,4 @@
                 </div>
             </section>
 
-            <!-- SECTION 06: EVALUASI ARSITEKTUR & REKOMENDASI INFRASTRUKTUR (HOSTING, POLA SISTEM & AI DATABASE) -->
-            @php
-                $archEval = $prd['architecture_evaluation'] ?? \App\Services\PrdGeneratorService::evaluateArchitecture(
-                    $blueprint->nama_bisnis ?? $blueprint->client_name,
-                    $blueprint->masalah_utama ?? '',
-                    $prd['features']['mvp_phase1'] ?? [],
-                    $blueprint->alur_kerja ?? '',
-                    $blueprint->user_metadata ?? []
-                );
-            @endphp
+            

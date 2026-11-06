@@ -1531,6 +1531,12 @@ INTG;
 11. **Filament v5 Form Rule**: Always use `\Filament\Schemas\Schema` method signature for `form()`.
 12. **Filament v5 Curator Image Standard**: Every image upload input in Filament v5 MUST use Curator Picker and specify a shallow directory mapping (maximum 1-2 levels, e.g. ->directory('products') or ->directory('branding')). Deep recursive directory nesting is strictly forbidden to optimize Linux OS filesystem inodes and eliminate RAM overhead during folder scans.
 13. **Full-Featured Rich Text Standard**: Every textarea for lengthy descriptions/articles MUST use a standardized full-featured Rich Text Editor class (e.g. `\App\Support\FilamentRichEditor::make(...)`) with all toolbar capabilities enabled (H1-H6, formatting, lists, tables, links, code) AND integrated Curator media picker for image insertions.
+14. **Strict Clean Code & Anti-Bloat Architecture (Anti-God Object)**:
+    - **Single Responsibility Principle**: Every PHP class, Controller, Service, Blade View, or React Component MUST NEVER exceed 400 lines (>400 lines is a strict warning, >800 lines is a fatal architectural violation). Always decompose into cohesive, single-responsibility units.
+    - **Modular Sub-Services & Sub-Controllers**: Decompose large controllers into focused Sub-Controllers under dedicated sub-namespaces, and large services into domain sub-services.
+    - **Frontend Components & Custom Hooks**: Extract large components into atomic sub-components (`components/`, `modals/`) and encapsulate state/API logic into custom hooks.
+    - **Template Isolation (.stub)**: Never write multi-hundred-line heredocs in PHP. Extract templates to `.stub` files and load via `StubLoader`.
+    - **Surgical & Minimalist Diffs**: Always generate precise, token-conserving diffs to prevent regressions.
 
 {$schemaSection}
 

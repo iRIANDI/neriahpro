@@ -303,8 +303,20 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
   Standar terpusat Rich Text Editor untuk Filament v5: memunculkan seluruh fitur toolbar lengkap (H1-H6, formatting, lists, tables, links, code, attachments) dengan penegakan struktur folder penyimpanan dangkal/shallow (maksimal 1-2 tingkat kedalaman) guna mengoptimalkan inode Linux dan mencegah lonjakan konsumsi RAM server saat scanning direktori.
 - **`App\Support\FilamentCuratorHelper`**:
   Standar komponen input media gambar di Filament v5: mengintegrasikan Curator Media Picker (`\Awcodes\Curator\Components\Forms\CuratorPicker`) dan FileUpload fallback dengan penegakan path folder dangkal untuk menjamin integritas server OS.
-- **`App\Services\BlueprintDiscoveryService` & `ProjectBlueprintIsland` (Textarea Studio Mode)**:
+- **`App\Services\BlueprintDiscoveryService` & `ProjectBlueprintIsland` (Modular React Island Studio & Clean Code Agent Protocols)**:
   Antarmuka Studio Project OS berbasis input textarea interaktif yang mendukung konversi instan multi-dokumen (PDF, DOCX, TXT, MD, CSV, XLSX, PPTX, PNG, JPG) menjadi format Markdown (.md) via Microsoft MarkItDown (`MarkItDownService`) guna menghemat >80% konsumsi token AI LLM. Dilengkapi suite anti-spam multi-lapis (decoy honeypots `_hp_check` & `_website`, deteksi repetisi karakter, dan IP throttling).
+  Telah didekomposisi secara modular dari 8.586 baris monolitik menjadi subkomponen terisolasi di `resources/js/Islands/Blueprint/`:
+  1. `BlueprintSuccessView.jsx` (Layar sukses serah terima blueprint, CTA portal klien, dan unduh dokumen).
+  2. `BlueprintPaymentRailModal.jsx` (Modal konfigurasi multi-rail payment).
+  3. `BlueprintKpiCascadeModal.jsx` (Modal cascading AI KPI ke fitur & aktor).
+  4. `BlueprintTopHeader.jsx` (Toolbar Satu Pintu, tema dark/light, auto-save status, reset).
+  5. `BlueprintTrackSwitcher.jsx` (Switcher jalur Retail vs Dedicated Studio Mitra).
+  6. `BlueprintSpySidebar.jsx` (Sidebar HUD navigasi indeks 26 parameter, status checklist, search).
+  7. `BlueprintQuickIdeaSection.jsx` (Studio visi ide, dropzone MarkItDown, model AI selector, AI CoPilot).
+  8. `BlueprintComposableMatrixSection.jsx` (12-sektor matrix, stack selector, pre-flight doctor audit).
+  9. `BlueprintDiscoveryParamsSection.jsx` (Form interaktif 25 parameter Discovery Blocks A-F).
+  10. `constants/blueprintConstants.js` & `blueprintTranslations.js` (Dictionary kamus terjemahan dwibahasa ID/EN dan konstanta).
+  Serta menyuntikkan **Clean Code & Anti-Bloat Architecture Protocol (Anti-God Object)** ke dalam prompt AI agent (`PrdFeatureSpecificationService`, `PrdMarkdownExporterService::toCursorrules()`, `.agents/rules/clean-code-modular-standard.md.stub`, dan `ScaffoldGeneratorService`) yang mewajibkan AI coding agent menulis kode modular terisolasi (<400 baris per file) dan melarang kelas/komponen raksasa monolitik.
 - **`App\Models\CmsGlobalSetting` & `App\Http\Controllers\PageController` (Cache Incomplete Class Resiliency)**:
   Sistem penanganan cache CMS dan global configuration yang 100% kebal terhadap error `__PHP_Incomplete_Class`: `CmsGlobalSetting::getAllCached()` dan `PageController` hanya menyimpan raw array atribut primitif (`cms_global_settings_data` & `cms_page_data_{slug}`) alih-alih serialisasi objek/koleksi Eloquent mentah. Dilengkapi self-healing otomatis di level model, controller, dan Blade view (`page.blade.php`, `cv-pro/index.blade.php`) yang mendeteksi serta me-reset cache secara transparan jika terdeteksi data korup/legacy.
 - **`App\Http\Middleware\SetAppLocale`**:

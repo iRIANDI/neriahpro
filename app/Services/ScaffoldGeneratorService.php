@@ -230,6 +230,7 @@ class ScaffoldGeneratorService
             '.agents/rules/ecc-multi-agent-standard.md' => self::generateEccStandardRule(),
             '.agents/rules/living-docs-governance.md' => self::generateLivingDocsRule(),
             '.agents/rules/defect-reproduction-protocol.md' => self::generateDefectReproductionRule(),
+            '.agents/rules/clean-code-modular-standard.md' => self::generateCleanCodeModularRule(),
 
             // Project OS v3.0 & v4.0: Day-2 Production + Day-30+ Lifecycle (Decision Matrix, MCP Bridge, .env.blueprint & Red-Team)
             'app/Actions/Tenancy/InitializeNewTenantAction.php' => self::generateInitializeNewTenantAction($universalSchema),
@@ -614,7 +615,10 @@ class ScaffoldGeneratorService
      */
     public static function generateNextJsRoute(VisionBlueprint $blueprint, array $erdTables = []): string
     {
-        return StubLoader::load('scaffold/nextjs.route.ts.stub');
+        $projectName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'MyApplication');
+        return StubLoader::load('scaffold/nextjs.route.ts.stub', [
+            '{{ APP_NAME }}' => $projectName,
+        ]);
     }
 
     /**
@@ -1957,6 +1961,14 @@ PHP;
     public static function generateDefectReproductionRule(): string
     {
         return StubLoader::load('scaffold/rules/defect-reproduction-protocol.md.stub');
+    }
+
+    /**
+     * Mandatory Clean Code, Anti-Bloat & Modular Decomposition Standard.
+     */
+    public static function generateCleanCodeModularRule(): string
+    {
+        return StubLoader::load('scaffold/rules/clean-code-modular-standard.md.stub');
     }
 
     /**

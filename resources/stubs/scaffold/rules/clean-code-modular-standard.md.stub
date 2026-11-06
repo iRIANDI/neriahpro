@@ -1,0 +1,33 @@
+# Mandatory Protocol: Strict Clean Code, Anti-Bloat & Modular Decomposition Standard
+
+## 1. Zero Tolerance for Monolithic God Objects (Anti-God Object / Anti-Bloat)
+- **Strict File Length Ceilings**:
+  - Max 300-400 lines for normal controllers, services, components, and views.
+  - Any file exceeding 500 lines requires immediate modular decomposition.
+  - Any file exceeding 800 lines is a CRITICAL ARCHITECTURAL DEFECT.
+- **Single Responsibility Principle (SRP)**:
+  - Every class, function, or component must have one and only one reason to change.
+  - Never combine business orchestration, data manipulation, HTTP handling, and UI rendering in a single class.
+
+## 2. Backend Decomposition Rules (Laravel & PHP 8.5+)
+- **Sub-Controllers Pattern**:
+  - Large controllers must be broken into domain-specific sub-controllers under dedicated sub-namespaces (e.g. `App\Http\Controllers\Order\OrderCheckoutController`, `OrderPaymentController`, `OrderExportController`).
+  - Use Master Facade or routing groups with shared traits for cross-cutting authorization.
+- **Service Modularization**:
+  - Break monolithic services (>500 lines) into focused domain sub-services (e.g. `App\Services\Prd\PrdErdSchemaService`, `PrdCommercialEstimatorService`).
+  - Keep public static facades for 100% backward compatibility while delegating execution to the sub-services.
+- **Template Isolation (.stub)**:
+  - Never inline multi-hundred-line heredocs or raw strings in PHP classes.
+  - Always extract templates to `resources/stubs/` and load via `App\Support\StubLoader::load()`.
+
+## 3. Frontend Decomposition Rules (React, Livewire & Blade)
+- **Component & Hook Extraction**:
+  - Break large React Islands or Livewire views into atomic sub-components (`components/`, `partials/`, `modals/`).
+  - Extract complex state management, form handlers, and API fetching into custom hooks (e.g. `useOrderState`, `useOrderApi`).
+- **Clean Partials**:
+  - Blade templates must be split into clean partials under `partials/` with clear responsibility (e.g. `header.blade.php`, `table.blade.php`, `modals.blade.php`).
+
+## 4. Surgical & Minimalist Diffs
+- Always make precise, targeted, and minimal diffs.
+- Avoid full file rewrites when changing small logic blocks.
+- Conserve AI token context and prevent merge collisions or unintended regressions.

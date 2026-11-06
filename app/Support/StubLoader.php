@@ -33,3 +33,4 @@ class StubLoader
         return file_exists(resource_path('stubs/' . ltrim($stubPath, '/\\')));
     }
 }
+

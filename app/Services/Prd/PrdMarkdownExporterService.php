@@ -796,6 +796,21 @@ class PrdMarkdownExporterService
         $rules .= "  - `security-reviewer`: Audit keamanan OWASP, RBAC, dan validasi webhook payment gateway.\n";
         $rules .= "  - `browser-qa`: Pengujian visual UI/UX, rasio kontras WCAG AAA, dan kepatuhan dark/light mode.\n";
         $rules .= "- **Automated Slash Workflows**: `/plan` (analisis & risiko arsitektur), `/build-fix` (resolusi error minimalis), `/code-review` (audit mendalam), `/checkpoint` (titik aman pemulihan), `/tdd-workflow` (pengujian TDD).\n\n";
+
+        $rules .= "### I. Mandatory Clean Code, Anti-Bloat & Modular Decomposition Protocol (Anti-God Object)\n";
+        $rules .= "- **Zero Tolerance for Monolithic God Objects**: Setiap file PHP, Controller, Service, Blade View, atau React Component DILARANG KERAS membengkak ribuan baris (>400 baris peringatan keras, >800 baris pelanggaran fatal). Selalu dekomposisi menjadi unit terkecil yang kohesif.\n";
+        $rules .= "- **Single Responsibility Principle (SRP)**: Setiap class/komponen hanya boleh memiliki satu alasan untuk berubah. Pisahkan logika presentasi, state management, orchestration, dan infrastruktur ke dalam modul terisolasi.\n";
+        $rules .= "- **Controller & Service Decomposition**:\n";
+        $rules .= "  1. Controller gemuk (>500 baris) WAJIB dipecah menjadi Sub-Controllers terfokus di sub-namespace (misal: `DiscoveryController`, `CommercialController`, `ExportController`, `AuditController`).\n";
+        $rules .= "  2. Service gemuk (>800 baris) WAJIB dipecah menjadi domain sub-services terfokus (misal: `EstimatorService`, `ErdSchemaService`, `ManifestoService`, `MarkdownExporterService`) dengan master orchestrator facade yang mempertahankan backwards compatibility.\n";
+        $rules .= "- **Frontend Component & Custom Hooks Modularization**:\n";
+        $rules .= "  1. React Island / Livewire component besar WAJIB dipecah menjadi sub-komponen UI modular (misal: header, tab panels, modals, status cards) di folder `components/` atau `partials/`.\n";
+        $rules .= "  2. State management dan API data-fetching yang kompleks WAJIB diekstrak ke dalam custom hooks independen (misal: `useBlueprintState`, `useBlueprintApi`, `useBlueprintModals`).\n";
+        $rules .= "- **Template & Stubs Isolation (`.stub`)**:\n";
+        $rules .= "  1. DILARANG KERAS menanam string heredoc template ratusan baris di dalam file service PHP. Seluruh template generator boilerplate wajib diekstrak ke dalam file `.stub` terisolasi di `resources/stubs/` dan dimuat via `StubLoader`.\n";
+        $rules .= "- **Surgical & Minimalist Diffs**:\n";
+        $rules .= "  1. AI Coding Agent WAJIB membuat diff kode yang presisi, hemat token, dan anti-regresi. Hindari menulis ulang seluruh file jika hanya sebagian baris yang dimodifikasi.\n\n";
+
         $rules .= "---\n\n";
 
         // 3. UI/UX Protocols

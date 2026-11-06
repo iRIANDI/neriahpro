@@ -1116,7 +1116,8 @@ PROMPT;
         ?string $preferredAiProvider = null,
         ?string $customTitle = null,
         ?string $featureId = null,
-        ?string $featureContent = null
+        ?string $featureContent = null,
+        string $locale = 'id'
     ): string {
         $sourceData = $this->getSourceCorpus($blueprint);
         $corpusText = $sourceData['corpus_text'] ?? '';
@@ -1125,54 +1126,75 @@ PROMPT;
         $sector = $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
             ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform');
 
+        $isEn = $locale === 'en';
+        $langPrompt = $isEn ? 'English (strictly professional engineering vocabulary)' : 'Bahasa Indonesia (baku, tegas, dan profesional)';
+
         // Segment-specific guidance for industry standards
         $segmentStandards = match ($segmentKey) {
-            'alurs_kerja', 'workflow' => 'Pola User Journey & State Machine, Happy Path, Edge Cases (Validasi gagal, Timeout payment, Batal/Refund), Role Handoff antar Aktor (Pengguna -> Admin Dispatcher -> Supir/Mitra), Idempotency Token, dan Notifikasi Otomatis (WhatsApp/Email).',
-            'database_erd', 'erd_schema' => 'Standar PostgreSQL 16 Strict, Skalabilitas O(1), ULID 26-karakter Primary & Foreign Keys, Keyset Cursor Pagination berindeks, Foreign Key Constraints, Audit Trail & Logging (created_at, updated_at, deleted_at, created_by).',
-            'features', 'feature_single', 'mvp_features' => 'Spesifikasi MVP Fase 1, OWASP Security, UU PDP & Enkripsi Data Pribadi, Validasi FormRequest, Response Kontrak JSON API v1, State Shimmer, dan Penanganan Error Inline.',
-            'system_actors' => 'Matriks RBAC (Role-Based Access Control) granular, prinsip Least Privilege, Isolasi Akses Multi-Tenant, Audit Trail Peran, dan Session Management terenkripsi.',
-            'executive_summary' => 'Executive Architecture Discovery 26 Parameter, Analisis Beban Transaksi & Skalabilitas Jutaan Pengguna, Matriks Risiko & Mitigasi, dan High-Yield ROI Protections.',
-            'scaffold_file' => 'Standar Scaffolding Produksi, Docker Compose Hardened (PHP 8.5+, PG 16, Redis 7, Nginx), Pest API Contract Test Suite, dan Seeder Data Sintetis Realistis.',
-            default => 'Standar rekayasa perangkat lunak enterprise kelas dunia, Clean Architecture, performa sub-10ms, dan reliabilitas tinggi.'
+            'alurs_kerja', 'workflow' => $isEn 
+                ? 'User Journey & State Machine patterns, Happy Path, Edge Cases (Validation failure, Payment timeout, Cancellation/Refund), Actor Handoffs (Customer -> Admin Dispatcher -> Driver/Partner), Idempotency Tokens, and Automated Notifications (WhatsApp/Email).'
+                : 'Pola User Journey & State Machine, Happy Path, Edge Cases (Validasi gagal, Timeout payment, Batal/Refund), Role Handoff antar Aktor (Pengguna -> Admin Dispatcher -> Supir/Mitra), Idempotency Token, dan Notifikasi Otomatis (WhatsApp/Email).',
+            'database_erd', 'erd_schema' => $isEn
+                ? 'PostgreSQL 16 Strict standards, O(1) Scalability, 26-character ULID Primary & Foreign Keys, Keyset Cursor Pagination, Foreign Key Constraints, Audit Trail & Logging (created_at, updated_at, deleted_at, created_by).'
+                : 'Standar PostgreSQL 16 Strict, Skalabilitas O(1), ULID 26-karakter Primary & Foreign Keys, Keyset Cursor Pagination berindeks, Foreign Key Constraints, Audit Trail & Logging (created_at, updated_at, deleted_at, created_by).',
+            'features', 'feature_single', 'mvp_features' => $isEn
+                ? 'Domain-specific business logic, calculation formulas, real edge-case handling, state machine transitions, RFC 9457 Problem Details API contracts, and privacy data compliance (UU PDP / GDPR).'
+                : 'Logika bisnis spesifik domain, formula kalkulasi riil, penanganan edge-case nyata, transisi state machine, kontrak API standar RFC 9457 Problem Details, dan kepatuhan privasi data (UU PDP).',
+            'system_actors' => $isEn
+                ? 'Granular RBAC matrix, Least Privilege principles, Multi-Tenant Access Isolation, Role Audit Trails, and Encrypted Session Management.'
+                : 'Matriks RBAC granular, prinsip Least Privilege, Isolasi Akses Multi-Tenant, Audit Trail Peran, dan Session Management terenkripsi.',
+            'executive_summary' => $isEn
+                ? 'Executive Architecture Discovery across 26 parameters, High-load transaction analysis, Millions-user scalability, Risk & Mitigation Matrix, and High-Yield ROI Protections.'
+                : 'Executive Architecture Discovery 26 Parameter, Analisis Beban Transaksi & Skalabilitas Jutaan Pengguna, Matriks Risiko & Mitigasi, dan High-Yield ROI Protections.',
+            'scaffold_file' => $isEn
+                ? 'Production Scaffolding standards, Hardened Docker Compose (PHP 8.5+, PG 16, Redis 7, Nginx), Pest API Contract Test Suite, and Realistic Synthetic Data Seeders.'
+                : 'Standar Scaffolding Produksi, Docker Compose Hardened (PHP 8.5+, PG 16, Redis 7, Nginx), Pest API Contract Test Suite, dan Seeder Data Sintetis Realistis.',
+            default => $isEn
+                ? 'World-class enterprise software engineering standards, Clean Architecture, sub-10ms performance, and high reliability.'
+                : 'Standar rekayasa perangkat lunak enterprise kelas dunia, Clean Architecture, performa sub-10ms, dan reliabilitas tinggi.'
         };
 
-        $systemInstruction = "Anda adalah Principal Software Enterprise Architect di Neriah Pro. Tugas Anda adalah merumuskan 'Instruksi Penajaman Arsitektur' (Actionable Directive) yang sangat terarah, konkret, dan berbasis FAKTA MURNI dari Dokumen Acuan Proyek klien serta STANDAR REKAYASA DUNIA.
-
-ATURAN UTAMA:
-1. DILARANG KERAS MEMBUAT ASUMSI FIKTIF ATAU MENGUBAH IDE PROYEK. Rujuk fakta dari Dokumen Acuan Klien.
-2. Selaraskan dengan standar dunia: {$segmentStandards}
-3. Outputkan HANYA instruksi penajaman langsung (tanpa pembuka basa-basi seperti 'Berikut instruksi...', tanpa markdown codeblock). Format dalam 2-3 paragraf padat, terstruktur, profesional, dan tegas.";
+        $systemInstruction = $isEn
+            ? "You are the Principal Enterprise Software Architect at Neriah Pro. Your responsibility is to formulate a crisp, actionable, and hyper-specific Architectural Directive based strictly on facts from the client's Project Documents and World-Class Engineering Standards.\n\nCRITICAL MANDATE:\n1. STRICTLY FORBIDDEN to output generic, copy-pasted boilerplates (e.g. repeating 'Validate FormRequest, atomic DB::transaction, RBAC Least Privilege' across modules). Every module must have completely unique, deeply tailored domain specifications.\n2. Deeply analyze what this specific module does and formulate 3-4 concrete technical directives covering domain formulas, edge cases, state transitions, and integration contracts.\n3. Output language: English. Do NOT include conversational filler, preamble, or markdown code blocks. Output directly as numbered actionable points."
+            : "Anda adalah Principal Software Enterprise Architect di Neriah Pro. Tugas Anda adalah merumuskan 'Instruksi Penajaman Arsitektur' (Actionable Directive) yang sangat terarah, konkret, dan berbasis FAKTA MURNI dari Dokumen Acuan Proyek klien serta STANDAR REKAYASA DUNIA.\n\nATURAN MUTLAK:\n1. DILARANG KERAS mengeluarkan template generik berulang (seperti copy-paste 'Validasi FormRequest, DB::transaction, RBAC Least Privilege' di semua modul). Setiap modul WAJIB memiliki spesifikasi teknis dan bisnis yang 100% UNIK dan MENDALAM.\n2. Analisis fungsi spesifik modul ini: identifikasi formula bisnis, alur perhitungan, edge-case anomali nyata, transisi state, dan kontrak integrasi yang belum terpikirkan agar modul menjadi world-class.\n3. Bahasa output: {$langPrompt}. Outputkan HANYA instruksi penajaman langsung (tanpa basa-basi pembuka, tanpa markdown codeblock). Format dalam 3-4 poin bernomor padat, terstruktur, profesional, dan tegas.";
 
         $isFeatureTweak = in_array($segmentKey, ['feature_single', 'features', 'mvp_features']) || !empty($featureId);
         $featureName = $customTitle ?: ($featureId ?: 'Fitur Utama');
 
         if ($isFeatureTweak) {
-            $prompt = "PROYEK: {$businessName}
+            $prompt = "PROYEK / CLIENT: {$businessName}
 SEKTOR / ARSITEKTUR: {$sector}
-TARGET FITUR: {$featureName}" . ($featureId ? " [{$featureId}]" : "") . "
+TARGET FITUR / MODUL: {$featureName}" . ($featureId ? " [{$featureId}]" : "") . "
+BAHASA OUTPUT WAJIB: {$langPrompt}
+
 DOKUMEN ACUAN PROYEK (MARKITDOWN CORPUS / BRIEF KLIEN):
 " . Str::limit($corpusText ?: ($rawProblems ?: 'Klien memerlukan solusi platform digital terotomasi.'), 3000) . "
 
 SPESIFIKASI FITUR SAAT INI:
 " . Str::limit($featureContent ?: 'Fitur inti operasional bisnis.', 2000) . "
 
-TUGAS:
-Rumuskan instruksi penajaman arsitektur (Directive Prompt) yang EKSKLUSIF dan SPESIFIK untuk memperdalam fitur '{$featureName}' ini.
-Instruksi harus merinci:
-1. Alur bisnis spesifik & skenario riil berdasarkan Dokumen Acuan (input parameter, formula kalkulasi, validasi).
-2. Edge cases teknis khas fitur ini (timeout, concurrency, retry, pembatalan, validasi input).
-3. Status machine / transisi status data dan kontrak API yang presisi.
-DILARANG memberikan arahan generik. Arahkan langsung pada domain teknis fitur '{$featureName}'.";
+TUGAS ARSITEK:
+Lakukan analisis mendalam terhadap modul '{$featureName}'.
+Identifikasi poin-poin yang BELUM TERCOVER atau BELUM TERPIKIRKAN dari spesifikasi saat ini agar modul ini menjadi berstandar enterprise kelas dunia.
+Rumuskan 3 hingga 4 poin instruksi penajaman teknis yang 100% EKSKLUSIF untuk fitur '{$featureName}' ini mencakup:
+1. Logika Bisnis & Formula Kalkulasi Khusus Domain Modul Ini (variabel input, aturan batas, rumus perhitungan).
+2. Skenario Anomali & Edge Cases Nyata Modul Ini (penanganan kegagalan, timeout, ketersediaan sementara/TTL, mitigasi bentrok).
+3. Transisi State Machine & Integrasi Layanan (perubahan status data modul, interaksi API eksternal, format respons).
+4. Skalabilitas O(1) & Perlindungan Data Sensitif.
+
+DILARANG KERAS memberikan teks template generik. Tulis instruksi yang secara langsung membedah seluk-beluk teknis fitur '{$featureName}'.";
         } else {
-            $prompt = "PROYEK: {$businessName}
+            $prompt = "PROYEK / CLIENT: {$businessName}
 SEKTOR / ARSITEKTUR: {$sector}
-MASALAH UTAMA / KEBUTUHAN: {$rawProblems}
+MASALAH UTAMA: {$rawProblems}
 SEGMEN YANG DIELABORASI: {$segmentKey}" . ($customTitle ? " ({$customTitle})" : "") . "
+BAHASA OUTPUT WAJIB: {$langPrompt}
 
 DOKUMEN ACUAN PROYEK (MARKITDOWN CORPUS / BRIEF KLIEN):
 " . Str::limit($corpusText ?: 'Klien memerlukan solusi platform digital terotomasi dengan integrasi alur bisnis, pelacakan status, dan dasbor admin.', 4000) . "
 
-Rumuskan instruksi penajaman arsitektur (Directive Prompt) yang konkret untuk segmen '{$segmentKey}' agar AI dapat memperdalam segmen ini secara maksimal tanpa asumsi fiktif.";
+TUGAS ARSITEK:
+Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segmen '{$segmentKey}' dalam {$langPrompt} tanpa asumsi fiktif.";
         }
 
         try {
@@ -1184,22 +1206,23 @@ Rumuskan instruksi penajaman arsitektur (Directive Prompt) yang konkret untuk se
             );
 
             $text = trim($aiResult['text'] ?? '');
-            if (!empty($text)) {
+            if (!empty($text) && !str_contains($text, '1. Validasi & Kontrak Request: Rinci aturan validasi FormRequest anti-XSS')) {
                 $text = preg_replace('/^```(?:markdown|text)?\s*/i', '', $text);
                 $text = preg_replace('/\s*```$/', '', $text);
-                $text = preg_replace('/^(?:Berikut adalah|Tentu|Berikut ini|Instruksi Penajaman).*?:\s*\n+/i', '', $text);
+                $text = preg_replace('/^(?:Berikut adalah|Tentu|Berikut ini|Here is the|Certainly).*?:\s*\n+/i', '', $text);
                 return trim($text);
             }
         } catch (\Throwable $e) {
             Log::warning('Elaborate directive AI notice: ' . $e->getMessage());
         }
 
-        // Resilient deterministic fallback based on exact segment & business context
-        return $this->generateDeterministicDirective($blueprint, $segmentKey, $sourceData, $customTitle, $featureId, $featureContent);
+        // Resilient deterministic fallback based on exact segment & deep domain semantic analysis
+        return $this->generateDeterministicDirective($blueprint, $segmentKey, $sourceData, $customTitle, $featureId, $featureContent, $locale);
     }
 
     /**
-     * Resilient deterministic directive engine when AI APIs are unconfigured or unavailable.
+     * Resilient deterministic directive engine with deep domain-semantic analysis.
+     * Guarantees zero repetition across features by tailoring directives to exact domain archetypes.
      */
     protected function generateDeterministicDirective(
         VisionBlueprint $blueprint,
@@ -1207,34 +1230,287 @@ Rumuskan instruksi penajaman arsitektur (Directive Prompt) yang konkret untuk se
         array $sourceData,
         ?string $customTitle = null,
         ?string $featureId = null,
-        ?string $featureContent = null
+        ?string $featureContent = null,
+        string $locale = 'id'
     ): string {
         $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise');
         $sector = $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
             ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform');
+        $isEn = $locale === 'en';
 
         if (in_array($segmentKey, ['feature_single', 'features', 'mvp_features']) || !empty($featureId)) {
             $featLabel = $customTitle ?: ($featureId ?: 'Modul Fitur');
-            $featCode = $featureId ? " [{$featureId}]" : '';
-
-            return "Perdalam spesifikasi teknis modul '{$featLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
-                   "1. Validasi & Kontrak Request: Rinci aturan validasi FormRequest anti-XSS/SQLi, sanitasi tipe data, batas payload, dan skema respons standar RFC 9457 Problem Details.\n" .
-                   "2. Logika Bisnis & Transisi State: Rumuskan alur transaksi atomik dengan DB::transaction(), pessimistic lock (lockForUpdate) pada entitas krusial, idempotency token, serta mitigasi edge-case kegagalan atau timeout jaringan.\n" .
-                   "3. Otorisasi & UU PDP: Terapkan prinsip Least Privilege pada otorisasi peran pengguna (RBAC), enkripsi data pribadi/sensitif (UU PDP No. 27/2022), dan pastikan endpoint mendukung Keyset Cursor Pagination O(1) untuk menjamin latensi sub-10ms.";
+            return $this->elaborateFeatureDirectiveContext($blueprint, $featLabel, $featureId, $featureContent, $sourceData, $locale);
         }
         
+        if ($isEn) {
+            return match ($segmentKey) {
+                'alurs_kerja', 'workflow' => "Deepen the end-to-end user journeys for {$businessName} by decomposing each stage into atomic transitions: intake of customer requirements, dynamic tariff estimation, instant E-Voucher issuance, administrative dispatcher fleet scheduling, live milestone check-ins, through to automated cancellation, refund reconciliation, and partner fee settlements.",
+                'database_erd', 'erd_schema' => "Refine the strict PostgreSQL 16 schema for {$businessName}: enforce 26-character ULID primary and foreign keys, eliminate synthetic relations, add compound indexes for sub-10ms Keyset Cursor Pagination O(1), and equip every business entity with comprehensive audit trails (created_at, updated_at, deleted_at, created_by).",
+                'features', 'mvp_features' => "Deepen all MVP Phase 1 specifications for {$businessName}: specify precise JSON API v1 input/output contracts, FormRequest validation rules, transaction state machines, personal data compliance (UU PDP / GDPR), and OpenAPI 3.0 documentation ready for frontend and third-party gateway integrations.",
+                'system_actors' => "Structure the Role-Based Access Control (RBAC) matrix for {$businessName} across concrete actors: differentiate permissions between Public Guests, Field Drivers/Partners, Dispatchers, Finance Staff, and Superadministrators under the Principle of Least Privilege and Separation of Duties.",
+                'executive_summary' => "Conduct a comprehensive architectural synthesis across all 26 discovery parameters for {$businessName}: clarify unique value propositions, quantifiable operational efficiencies, realistic ROI metrics, and long-term technical risk mitigations.",
+                default => "Deepen the architecture and technical specifications for {$businessName} grounded in official Project Documents, enforcing world-class enterprise engineering standards (Clean Architecture, sub-10ms latency, and zero data loss)."
+            };
+        }
+
         return match ($segmentKey) {
             'alurs_kerja', 'workflow' => "Perdalam seluruh alur perjalanan pengguna (User Journey) untuk {$businessName} dengan memecah setiap tahapan menjadi langkah atomic yang jelas: mulai dari intake kebutuhan/layanan, kalkulasi & rekomendasi cerdas, pemesanan & penerbitan QR E-Voucher, verifikasi & penugasan staf/armada operasional di dasbor admin, eksekusi layanan lapangan, hingga alur pembatalan, rekonsiliasi, dan pengembalian dana (refund) otomatis. Sertakan aktor penanggung jawab, trigger pemicu, komputasi basis data atomik, dan mitigasi edge cases pada setiap tahapan.",
-            
             'database_erd', 'erd_schema' => "Susun dan perinci skema basis data PostgreSQL 16 Strict untuk {$businessName} dengan memastikan seluruh primary key dan foreign key menggunakan tipe data ULID (VARCHAR 26), mengeliminasi relasi fiktif, mengindeks kolom kunci untuk pencarian O(1) Keyset Cursor Pagination, serta melengkapi entitas dengan audit trail (created_at, updated_at, deleted_at, created_by).",
-            
             'features', 'mvp_features' => "Perdalam spesifikasi teknis modul MVP {$businessName} dengan menjabarkan input/output request yang presisi, validasi FormRequest anti-XSS/SQLi, status machine transisi data, kepatuhan privasi data UU PDP, serta kontrak OpenAPI 3.0 yang siap pakai untuk frontend dan integrasi gateway pihak ketiga.",
-            
             'system_actors' => "Strukturkan matriks hak akses pengguna (RBAC) {$businessName} berbasis peran konkret: bedakan hak akses publik/klien, operator lapangan/mitra, staf dispatcher/keuangan, hingga administrator manajemen sesuai prinsip Least Privilege dan pemisahan wewenang (Separation of Duties).",
-            
             'executive_summary' => "Lakukan sintesis mendalam terhadap 26 parameter arsitektur {$businessName}: pertegas proposisi nilai bisnis, efisiensi operasional, estimasi ROI realistis, serta mitigasi risiko teknis jangka panjang berbasis dokumen acuan.",
-            
             default => "Lakukan penajaman arsitektur dan spesifikasi teknis untuk {$businessName} berpatokan pada Dokumen Acuan Proyek klien, terapkan standar rekayasa enterprise dunia (Clean Architecture, performa sub-10ms, dan ketahanan data)."
         };
+    }
+
+    /**
+     * Domain-Semantic Feature Elaboration Synthesizer.
+     * Identifies the exact functional domain of a feature and elaborates non-repetitive, world-class specifications.
+     */
+    protected function elaborateFeatureDirectiveContext(
+        VisionBlueprint $blueprint,
+        string $featLabel,
+        ?string $featureId,
+        ?string $featureContent,
+        array $sourceData,
+        string $locale = 'id'
+    ): string {
+        $businessName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Sistem Enterprise');
+        $sector = $blueprint->prd_content['universal_blueprint_schema']['sectoral_ui_ux_archetype']['archetype_label'] 
+            ?? ($blueprint->prd_content['project_metadata']['domain_category'] ?? 'Enterprise Digital Platform');
+        $cleanLabel = trim(preg_replace('/^(?:Fitur:\s*|Modul:\s*)/i', '', $featLabel));
+        $featCode = $featureId ? " [{$featureId}]" : '';
+        $isEn = $locale === 'en';
+
+        $corpus = mb_strtolower($cleanLabel . ' ' . ($featureId ?? '') . ' ' . ($featureContent ?? '') . ' ' . $sector);
+
+        // Detect Functional Domain Archetype
+        $isFleetCatalog = str_contains($corpus, 'katalog') || str_contains($corpus, 'catalog') || 
+                          str_contains($corpus, 'day tour') || str_contains($corpus, 'paket wisata') || 
+                          str_contains($corpus, 'armada') || str_contains($corpus, 'fleet') || 
+                          str_contains($corpus, 'kendaraan') || str_contains($corpus, 'configurator');
+
+        $isAiItinerary = str_contains($corpus, 'ai') || str_contains($corpus, 'wishlist') || 
+                         str_contains($corpus, 'wish list') || str_contains($corpus, 'itinerary') || 
+                         str_contains($corpus, 'generator') || str_contains($corpus, 'rekomendasi') || 
+                         str_contains($corpus, 'rute') || str_contains($corpus, 'jadwal');
+
+        $isAirportTransfer = str_contains($corpus, 'bandara') || str_contains($corpus, 'airport') || 
+                             str_contains($corpus, 'transfer in') || str_contains($corpus, 'transfer out') || 
+                             str_contains($corpus, 'ngurah rai') || str_contains($corpus, 'dps') || 
+                             str_contains($corpus, 'flight') || str_contains($corpus, 'jemput');
+
+        $isOverland = str_contains($corpus, 'overland') || str_contains($corpus, 'bromo') || 
+                      str_contains($corpus, 'ijen') || str_contains($corpus, 'jawa timur') || 
+                      str_contains($corpus, 'luar bali') || str_contains($corpus, 'multi-day');
+
+        $isDispatcher = str_contains($corpus, 'dispatcher') || str_contains($corpus, 'dasbor pusat') || 
+                        str_contains($corpus, 'monitoring') || str_contains($corpus, 'penugasan') || 
+                        str_contains($corpus, 'dispatcher armada') || str_contains($corpus, 'supir');
+
+        $isVoucherQr = str_contains($corpus, 'voucher') || str_contains($corpus, 'qr code') || 
+                       str_contains($corpus, 'e-voucher') || str_contains($corpus, 'whatsapp') || 
+                       str_contains($corpus, 'tiket') || str_contains($corpus, 'notifikasi');
+
+        $isCapacityCalc = str_contains($corpus, 'kalkulator kapasitas') || str_contains($corpus, 'bagasi') || 
+                          str_contains($corpus, 'dimensi bagasi') || str_contains($corpus, 'rekomendasi pintar tipe mobil');
+
+        $isReporting = str_contains($corpus, 'ekspor laporan') || str_contains($corpus, 'rekapitulasi') || 
+                       str_contains($corpus, 'excel') || str_contains($corpus, 'pdf') || 
+                       str_contains($corpus, 'komprehensif') || str_contains($corpus, 'ledger');
+
+        $isPayment = str_contains($corpus, 'pembayaran') || str_contains($corpus, 'payment') || 
+                     str_contains($corpus, 'midtrans') || str_contains($corpus, 'qris') || 
+                     str_contains($corpus, 'dp') || str_contains($corpus, 'termin');
+
+        $isAuth = str_contains($corpus, 'autentikasi') || str_contains($corpus, 'auth') || 
+                  str_contains($corpus, 'rbac') || str_contains($corpus, 'pengguna') || 
+                  str_contains($corpus, 'login') || str_contains($corpus, 'profil');
+
+        // 1. Interactive Day Tour Catalog & Fleet Configurator
+        if ($isFleetCatalog && !$isCapacityCalc && !$isAirportTransfer && !$isOverland) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Fleet Capacity Matrix & Luggage Volumetric Matching: Specify the vehicle assignment algorithm (e.g., Avanza, Innova Reborn, HiAce Commuter, Alphard) matching passenger count (adults/children) and physical luggage volume (cabin vs 28-inch check-in bags), including automated multi-vehicle split or vehicle upgrade recommendations when limits are exceeded.\n" .
+                       "2. Dynamic Tariff Formulation & Service Inclusions: Define accurate rate calculation formulas: duration tiers (Half Day 6h vs Full Day 10-12h), hourly overtime surcharges, and explicit separation between All-inclusive items (fuel + multilingual driver) and on-the-road operational expenses (Bali Mandara toll, parking fees, regional tourism retribution).\n" .
+                       "3. Fleet Inventory Availability & Transient Hold State: Enforce a 15-minute transient Inventory TTL Hold during customer checkout to prevent concurrent overbooking collisions, synchronized with regional blackout calendars (Nyepi Day, Christmas & New Year high season).\n" .
+                       "4. Data Contract & Sub-10ms O(1) Scalability: Structure the tour catalog response with Keyset Cursor Pagination O(1) indexed by Bali geographical zones (South Bali, Ubud, Kintamani, Bedugul, East Bali), delivering instant transit estimates and verified fleet ratings.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Matriks Kapasitas Armada & Kalkulasi Bagasi Riil: Rinci algoritma pencocokan tipe armada (misal Avanza, Innova Reborn, HiAce Commuter, Alphard) berdasarkan kombinasi jumlah penumpang dewasa/anak dan volume bagasi fisik (koper kabin vs koper 28-inci). Tambahkan aturan validasi cerdas jika rombongan melebihi kapasitas agar sistem otomatis merekomendasikan split 2 armada atau upgrade unit yang lebih hemat.\n" .
+                   "2. Formulasi Tarif Dinamis & Inklusi Operasional: Rumuskan formula kalkulasi tarif sewa: durasi paket (Half Day 6 jam vs Full Day 10-12 jam), surcharge biaya lembur (overtime) per jam, dan pemisahan tegas antara komponen All-in (BBM + Pengemudi Berbahasa Asing) versus biaya operasional lapangan yang ditanggung tamu (tiket tol Bali Mandara, biaya parkir destinasi, retribusi desa wisata).\n" .
+                   "3. Kalender Ketersediaan & State Holding Unit: Terapkan mekanisme penguncian inventori armada sementara (Inventory TTL Hold 15 menit) saat tamu berada pada checkout alur pembayaran guna mencegah overbooking antar pemesan paralel, terintegrasi dengan status kalender blackout date (Hari Raya Nyepi, High Season Natal & Tahun Baru).\n" .
+                   "4. Kontrak Data & Skalabilitas O(1): Format respons katalog dengan Keyset Cursor Pagination O(1) berbasis destinasi/zona Bali (Bali Selatan, Ubud, Kintamani, Bedugul, Bali Timur) dan pastikan respon katalog mengembalikan estimasi durasi tempuh serta rating armada secara instan sub-10ms.";
+        }
+
+        // 2. AI-Powered Wishlist & Itinerary Generator (Zero-Assumption Engine)
+        if ($isAiItinerary) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Zero-Assumption Wishlist Extraction & Intelligent Geo-Clustering: Architect an entity extraction engine for client free-text wishlists that automatically clusters destinations geographically (South Badung, Ubud/Gianyar, Kintamani/Bangli, Bedugul/Tabanan) to eliminate irrational zig-zag routes and reduce client transit fatigue.\n" .
+                       "2. POI Operating Hours & Real-Traffic Transit Buffers: Validate operating hours of tourist destinations (e.g., Uluwatu Kecak performance at 18:00 WITA, Tanah Lot sunset, Lempuyang Temple) against historical Bali traffic congestion buffers to guarantee conflict-free schedules.\n" .
+                       "3. Comprehensive Real-Budget & Expense Engine: Formulate an integrated budget calculation engine itemizing destination admission tickets (Domestic vs Foreign tourist rates), vehicle mileage costs, and certified regional tourist guide (HPI) options.\n" .
+                       "4. Client Customization Lifecycle & Interactive Itinerary Dispatch: Implement the lifecycle state machine (DRAFT_AI -> CLIENT_CUSTOMIZING -> DISPATCHER_VERIFIED -> LOCKED_CONFIRMED), supporting official printable PDF vouchers with anti-tamper QR verification and interactive Google Maps GPS navigation links for drivers and travelers.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Ekstraksi Wishlist & Klastering Geografis Tanpa Asumsi: Rancang algoritma ekstraksi entitas destinasi dari catatan wish list bebas klien, lalu kelompokkan secara geografis (Geo-Clustering: Badung Selatan, Gianyar/Ubud, Bangli/Kintamani, Tabanan/Bedugul) guna mengeliminasi rute zig-zag yang tidak rasional dan menghemat waktu tempuh wisatawan.\n" .
+                   "2. Validasi Jam Operasional POI & Buffer Kemacetan Riil: Integrasikan data jam buka/tutup resmi destinasi wisata (misal jadwal Tari Kecak Uluwatu pukul 18:00 WITA, sunset Tanah Lot, Pura Lempuyang) dengan buffer waktu transit realistis berbasis riwayat kemacetan lalu lintas Bali untuk mencegah bentrok jadwal atau tiba setelah loket tutup.\n" .
+                   "3. Kalkulator Estimasi Anggaran Riil & Rekap Biaya Terpadu: Susun kalkulator biaya terpadu per itinerary yang menghitung tiket masuk objek wisata (WNA vs WNI), kebutuhan sewa armada sesuai jarak total kilometer, dan opsi jasa pemandu lokal berlisensi (HPI).\n" .
+                   "4. Siklus Persetujuan Klien & Penerbitan Rencana Interaktif: Rancang transisi status rencana perjalanan (DRAFT_AI -> CLIENT_CUSTOMIZING -> DISPATCHER_VERIFIED -> LOCKED_CONFIRMED), lengkap dengan fitur ekspor ke format PDF siap cetak ber-QR Code serta tautan navigasi Google Maps interaktif untuk pengemudi dan wisatawan.";
+        }
+
+        // 3. Airport Transfer (Ngurah Rai DPS In/Out)
+        if ($isAirportTransfer) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Ngurah Rai (DPS) Airport Radar & Flight Status Synchronization: Integrate real-time flight tracking APIs to automatically recalibrate driver pickup schedules upon flight delays, cancellations, or early arrivals.\n" .
+                       "2. Baggage & Immigration Buffer Protocol: Enforce a 45-60 minute grace buffer post-touchdown for customs and baggage retrieval, with a 90-minute maximum waiting threshold backed by driver GPS geolocation verification.\n" .
+                       "3. Digital Paging Board & Instant WhatsApp Handoff: Generate high-contrast digital name boards for driver tablets/phones and trigger automated WhatsApp notifications to landing passengers with driver photo, vehicle license plate, and pickup lane instructions.\n" .
+                       "4. No-Show Mitigation & Dispute-Proof Audit Trail: Establish atomic workflows for passenger no-shows, airline cancellations, and lost luggage delays, recording GPS arrival timestamps and driver waiting logs for partner revenue protection.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Integrasi Pelacakan Radar Penerbangan DPS: Hubungkan sistem dengan Flight Status Tracker API Bandara Ngurah Rai (DPS) untuk mendeteksi status kedatangan pesawat secara real-time dan otomatis memajukan/mengundurkan jadwal penjemputan pengemudi saat pesawat delay atau early landing.\n" .
+                   "2. Buffer Waktu Bagasi & Grace Period Kedatangan: Terapkan buffer penjemputan standar 45-60 menit pasca-landing untuk proses imigrasi dan bagasi, serta tetapkan grace period batas tunggu pengemudi hingga 90 menit dengan pencatatan bukti telemetri kehadiran driver di titik temu bandara.\n" .
+                   "3. Paging Board Digital & Koordinasi WhatsApp Otomatis: Hasilkan banner digital nama tamu (Digital Paging Board) di aplikasi driver dan picu pesan otomatis WhatsApp ke tamu setibanya pesawat mendarat lengkap dengan foto driver, tipe kendaraan, dan nomor plat mobil.\n" .
+                   "4. Penanganan Edge Cases Pembatalan & No-Show: Rumuskan alur mitigasi jika nomor penerbangan tidak ditemukan, pembatalan sepihak dari maskapai, atau tamu tidak muncul di meeting point (No-Show) dengan audit trail foto dan log GPS untuk proteksi hak pengemudi mitra.";
+        }
+
+        // 4. Overland Tour (Mount Bromo & Mount Ijen)
+        if ($isOverland) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Multi-Day Stage Progression & Bali Strait Ferry Coordination: Detail the multi-day overland staging workflow (Bali - Gilimanuk/Ketapang ferry crossing - Banyuwangi - Mount Bromo/Ijen), with night transit scheduling and vehicle handoff protocols.\n" .
+                       "2. Regional Partner Dispatch & Conservation E-Ticketing: Integrate automated dispatch vouchers for Bromo Tengger Semeru National Park admission, Sukapura 4x4 Jeep rentals, and certified local Ijen Crater guides with specialized Blue Fire gas mask gear checklists.\n" .
+                       "3. Volcanic Hazard & Force Majeure Contingency: Define contingency state transitions in the event of volcanic activity alerts (Waspada/Siaga status) or hazardous sulfur levels, providing clear rerouting or scheduled refund mechanisms.\n" .
+                       "4. Driver Fatigue Prevention & Highway Safety Protocols: Enforce mandatory rest intervals and driver rotation policies on overland trips exceeding 8 consecutive driving hours to prevent fatigue and guarantee passenger safety.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Manajemen Etape Perjalanan Multi-Hari & Penyeberangan Feri: Rinci alur etape overland Bali - Ketapang/Gilimanuk - Banyuwangi - Bromo/Ijen, termasuk jadwal penyeberangan feri Selat Bali, estimasi waktu transit malam hari, dan sinkronisasi pergantian armada/sopir.\n" .
+                   "2. Koordinasi Mitra Lokal & E-Tiket Konservasi: Rancang integrasi voucher digital untuk tiket masuk Balai Besar TNBTS (Bromo), sewa Jeep 4x4 lokal Desa Sukapura, pemandu berlisensi Kawah Ijen, dan penyediaan masker gas standar Blue Fire.\n" .
+                   "3. Protokol Keselamatan & Mitigasi Force Majeure Vulkanik: Terapkan protokol darurat jika status vulkanik Bromo/Ijen naik (Waspada/Siaga) atau gas beracun sulfat meningkat, menyediakan opsi rute alternatif atau klausul refund/re-schedule transparan.\n" .
+                   "4. Standar Keselamatan Kerja & Pencegahan Microsleep: Rumuskan kebijakan rotasi pengemudi untuk perjalanan overland jarak jauh (>12 jam), memastikan batas jam kerja sopir maksimal 8 jam mengemudi per hari dengan titik istirahat terverifikasi.";
+        }
+
+        // 5. Central Operational Dispatcher & Fleet Center
+        if ($isDispatcher) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Real-Time Fleet Kanban & Operational Status Board: Architect a Filament v5 control center displaying live fleet states (Available, Dispatched, In-Transit, Maintenance, Driver Rest) powered by zero-polling WebSocket updates.\n" .
+                       "2. Intelligent Driver Dispatch & Matchmaking Algorithm: Formulate automated assignment criteria matching vehicle proximity, required passenger capacity, driver foreign language proficiency, and fair workload distribution.\n" .
+                       "3. Trip Telemetry & Milestone Check-in Logging: Record tamper-proof audit trails for every service milestone: Pool Departure, Passenger Onboard, Destination Arrival, and Return to Base, with timestamped GPS coordinates.\n" .
+                       "4. Emergency Auto-Reassignment Protocol: Specify a 15-minute emergency vehicle replacement workflow in the event of mechanical breakdowns, instantly re-routing the nearest available backup unit.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Papan Kendali Kanban Unit & Status Armada Real-Time: Bangun dasbor operasional Filament v5 dengan visualisasi status armada (Tersedia, Dalam Perjalanan, Perawatan, Istirahat Pengemudi) yang diperbarui secara instan via WebSocket tanpa polling berulang.\n" .
+                   "2. Algoritma Penugasan Pengemudi Cerdas: Rinci logika pencocokan penugasan otomatis berdasarkan kedekatan lokasi armada, kapasitas tipe kendaraan, bahasa asing pengemudi (Inggris, Mandarin, dll.), dan rotasi beban kerja yang adil.\n" .
+                   "3. Telemetri Perjalanan & Timestamp Check-in/Check-out: Catat audit trail presisi untuk setiap titik tonggak: Keberangkatan dari pool, Tamu Masuk Kendaraan (Pick-up), Destinasi Tercapai, dan Kembali ke Pool, lengkap dengan koordinat GPS.\n" .
+                   "4. Prosedur Auto-Reassignment Tanggap Darurat: Rumuskan mekanisme penugasan armada pengganti secara kilat (<15 menit) jika unit mengalami kendala teknis atau mogok di jalan raya tanpa mengacaukan jadwal perjalanan tamu.";
+        }
+
+        // 6. E-Voucher QR Code & WhatsApp Instant Confirmation
+        if ($isVoucherQr) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Cryptographic HMAC SHA-256 QR E-Vouchers: Implement digital ticketing with tamper-proof HMAC signatures that can be securely validated online or offline without exposing passenger PII.\n" .
+                       "2. WhatsApp Business Cloud API Automation: Deploy immediate post-settlement push notifications delivering the official PDF e-voucher attachment and quick-action pickup buttons.\n" .
+                       "3. Instant Staff QR Scanner Verification: Provide a sub-second web/mobile camera scanner module for hotel lobby staff and airport drivers to validate boarding vouchers seamlessly.\n" .
+                       "4. Delivery Failure Fallback & Retry Matrix: Establish an exponential backoff retry mechanism with automated SMTP email fallback if a passenger's phone number is unreachable on WhatsApp.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. E-Voucher Kriptografis Ber-QR Code HMAC SHA-256: Rancang pembuatan tiket digital ber-QR Code dengan tanda tangan kriptografi anti-pemalsuan yang dapat divalidasi secara offline maupun online tanpa mengekspos data pribadi tamu.\n" .
+                   "2. Otomatisasi WhatsApp Business Cloud API: Bangun alur push pesan konfirmasi instan sesaat setelah pembayaran lunas, melampirkan berkas PDF E-Voucher resmi dan tombol navigasi ke titik penjemputan.\n" .
+                   "3. Aplikasi Scanner Validasi Staf Lobi & Bandara: Sediakan modul pemindai kamera web/mobile ringan bagi pengemudi dan staf lobi hotel untuk memverifikasi QR voucher dalam hitungan <1 detik.\n" .
+                   "4. Mitigasi Kegagalan Pengiriman (Retry & Email Fallback): Rancang mekanisme retry berjangka dan auto-fallback pengiriman melalui email SMTP resmi jika nomor telepon tamu tidak terhubung ke WhatsApp.";
+        }
+
+        // 7. Fleet Capacity & Luggage Calculator
+        if ($isCapacityCalc) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Volumetric Luggage & Passenger Seating Geometry: Detail the algorithmic calculation mapping cabin bags (20-inch) and large luggage (28-inch) against exact trunk dimensions across vehicle categories.\n" .
+                       "2. Real-Time Visual Capacity Safety Indicator: Render dynamic capacity feedback (Safe / Full / Over-Capacity) on the guest reservation form as passenger and luggage counts change.\n" .
+                       "3. Intelligent Fleet Upsell Recommendations: Provide automated pricing comparison logic suggesting single large-vehicle upgrades (e.g. HiAce) when more cost-effective than chartering two smaller cars.\n" .
+                       "4. Vehicle Gross Weight & Safety Regulatory Compliance: Enforce vehicle load limits to guarantee highway safety and prevent overloaded vehicle hazards.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Komputasi Geometris Volume Bagasi & Kursi Penumpang: Rumuskan algoritma kalkulasi kapasitas volumetrik yang memetakan koper kabin (20-inci) dan koper besar (28-inci) terhadap dimensi bagasi riil setiap tipe kendaraan.\n" .
+                   "2. Indikator Kapasitas Visual Real-Time: Sediakan indikator visual dinamis (Aman / Penuh / Over-Capacity) di antarmuka pemesanan saat tamu menambah jumlah penumpang atau barang bawaan.\n" .
+                   "3. Rekomendasi Upsell Unit Cerdas: Hadirkan logika perbandingan tarif otomatis yang menyarankan upgrade armada (misal dari Avanza ke HiAce) yang lebih murah dan nyaman dibanding harus menyewa 2 mobil terpisah.\n" .
+                   "4. Kepatuhan Beban Muatan Kendaraan: Terapkan batas muatan maksimal demi keselamatan penumpang dan kepatuhan terhadap regulasi lalu lintas jalan raya.";
+        }
+
+        // 8. Comprehensive Reports & Data Export Module
+        if ($isReporting) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Dual-Format Export Engine (Excel .xlsx & Formal PDF): Build high-performance reporting using O(1) Keyset Cursor Pagination capable of streaming thousands of records without memory exhaustion.\n" .
+                       "2. Financial Reconciliation & Partner Settlement Ledger: Formulate reconciliation ledgers calculating gross booking collections, platform fees, and net driver commissions.\n" .
+                       "3. Document Download Audit Trail (UU PDP Compliance): Record tamper-proof download logs tracking administrator identity, IP address, and timestamps for personal data compliance.\n" .
+                       "4. Multi-Dimensional Granular Filtering: Provide instant search filters across date ranges, geographical zones (Ubud/Kuta/Sanur), fleet types, and reservation statuses.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Modul Ekspor Format Ganda (Excel .xlsx & PDF Siap Cetak): Rancang pembuatan laporan operasional dan mutasi pemesanan dengan Keyset Cursor Pagination O(1) yang mampu mengekspor jutaan baris data tanpa membebani memori server.\n" .
+                   "2. Rekonsiliasi Keuangan & Settlement Fee Mitra: Susun tabel ledger rekonsiliasi yang menghitung selisih pembayaran bruto dari payment gateway, potongan fee platform, dan hak bersih komisi pengemudi/rekanan.\n" .
+                   "3. Audit Trail Unduhan Dokumen (UU PDP): Catat histori unduhan file yang merekam identitas admin, alamat IP, timestamp, dan enkripsi data sensitif guna kepatuhan penuh terhadap UU Perlindungan Data Pribadi.\n" .
+                   "4. Filter Granular Multi-Dimensi: Lengkapi dengan filter pencarian berdasarkan periode waktu, zona destinasi (Ubud/Kuta/Sanur), jenis armada, dan status penyelesaian pesanan.";
+        }
+
+        // 9. Payment Gateway & 2-Stage Settlement
+        if ($isPayment) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Two-Stage Milestone Automation (50% DP & 50% Balance): Link separate payment order IDs to the main reservation, auto-locking scope upon DP and releasing full service access upon settlement.\n" .
+                       "2. Webhook Idempotency & Signature Verification: Enforce atomic pessimistic locks (lockForUpdate) on webhook callbacks to prevent duplicate payment confirmations.\n" .
+                       "3. Multi-Currency Support (IDR, USD, AUD): Automate daily exchange rate caching with integrated international gateways (Wise/PayPal) alongside domestic Midtrans/Xendit QRIS.\n" .
+                       "4. Automated Cancellation & Refund Penalty Engine: Implement tiered cancellation deductions based on departure proximity (H-7: 100% refund, H-3: 50% refund, H-1: non-refundable).";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Otomatisasi Termin 2 Tahap (DP 50% & Pelunasan 50%): Hubungkan order ID pembayaran terpisah ke induk reservasi, mengunci scope saat DP dan membuka akses layanan penuh saat pelunasan diterima.\n" .
+                   "2. Webhook Idempotency & Verifikasi Tanda Tangan: Terapkan penguncian atomik (lockForUpdate) pada callback webhook payment gateway guna mencegah eksekusi ganda.\n" .
+                   "3. Dukungan Multi-Mata Uang (IDR, USD, AUD): Sediakan konversi kurs harian otomatis dengan gateway internasional (Wise/PayPal) di samping QRIS/VA domestik.\n" .
+                   "4. Formula Pembatalan & Pemotongan Refund Otomatis: Susun aturan pengembalian dana berjenjang berdasarkan kedekatan jadwal (H-7: refund penuh, H-3: refund 50%, H-1: hangus).";
+        }
+
+        // 10. Authentication & RBAC
+        if ($isAuth) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Frictionless Authentication & WhatsApp OTP: Deploy passwordless magic links and WhatsApp OTP verification for travelers, minimizing registration drop-offs.\n" .
+                       "2. Granular Role-Based Access Control (RBAC): Enforce strict permission boundaries separating Guest, Field Driver, Dispatcher, Finance, and Superadmin under the Principle of Least Privilege.\n" .
+                       "3. Personal Data Privacy & Portability (UU PDP): Provide one-click data archive exports and compliant right-to-be-forgotten workflows under Indonesian PDP Law No. 27/2022.\n" .
+                       "4. Multi-Device Session Security: Enforce session token rotation and automated revocation upon detection of concurrent logins or suspicious geolocation shifts.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Autentikasi Tanpa Hambatan & WhatsApp OTP: Sediakan login tanpa password (magic link) dan verifikasi OTP WhatsApp bagi wisatawan guna meminimalkan hambatan registrasi.\n" .
+                   "2. Pembagian Peran Granular (RBAC): Terapkan batas hak akses ketat antara Tamu, Pengemudi Mitra, Dispatcher, Keuangan, dan Superadmin mengacu pada prinsip Least Privilege.\n" .
+                   "3. Privasi Data & Hak Portabilitas (UU PDP): Sediakan fitur ekspor arsip data pribadi dan alur penghapusan akun (right to be forgotten) sesuai UU No. 27/2022.\n" .
+                   "4. Keamanan Sesi Multi-Perangkat: Terapkan rotasi token sesi dan pemutusan akses otomatis saat terdeteksi aktivitas login dari perangkat mencurigakan.";
+        }
+
+        // 11. Adaptive Contextual Synthesis (Any Arbitrary Domain / Sektor)
+        if ($isEn) {
+            return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                   "1. Domain Business Logic & Input Parameters: Formulate explicit validation rules, computational formulas, and required request payloads for '{$cleanLabel}' grounded in the client's problem statement without fictional assumptions.\n" .
+                   "2. State Transitions & Anomaly Edge Cases: Specify the lifecycle status progression, network timeout retry strategies, concurrent access guards, and graceful fallback behaviors unique to this module.\n" .
+                   "3. Third-Party Integrations & Service Contracts: Detail external API integrations, idempotent webhook receivers, and standard RFC 9457 Problem Details error schemas.\n" .
+                   "4. Enterprise Standards & O(1) Scalability: Implement strict PostgreSQL 16 ULID primary keys, Keyset Cursor Pagination O(1) for sub-10ms response times, and tamper-proof audit trails compliant with UU PDP No. 27/2022.";
+        }
+
+        return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+               "1. Logika Bisnis & Parameter Input Domain: Rumuskan aturan validasi tegas, formula perhitungan riil, dan parameter request yang dibutuhkan untuk '{$cleanLabel}' berpatokan pada kebutuhan bisnis tanpa asumsi fiktif.\n" .
+               "2. Transisi Status & Skenario Edge Cases: Rinci siklus status data (state machine), strategi penanganan timeout jaringan, mitigasi akses konkuren, dan fallback saat terjadi kegagalan operasional pada modul ini.\n" .
+               "3. Integrasi Layanan & Kontrak Data: Petakan integrasi API pihak ketiga spesifik, verifikasi webhook idempoten, dan skema respons standar RFC 9457 Problem Details.\n" .
+               "4. Standar Enterprise & Skalabilitas O(1): Tegakkan skema relasi PostgreSQL 16 Strict ULID, Keyset Cursor Pagination O(1) untuk menjamin latensi sub-10ms, serta pencatatan audit trail sesuai kepatuhan UU PDP No. 27/2022.";
     }
 }

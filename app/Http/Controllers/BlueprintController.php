@@ -2148,6 +2148,7 @@ class BlueprintController extends Controller
             'custom_title' => 'nullable|string',
             'feature_id' => 'nullable|string',
             'feature_content' => 'nullable',
+            'locale' => 'nullable|string|in:id,en',
         ]);
 
         $segmentKey = $request->input('segment_key');
@@ -2158,13 +2159,31 @@ class BlueprintController extends Controller
             ? $request->input('feature_content') 
             : (is_array($request->input('feature_content')) ? json_encode($request->input('feature_content')) : null);
 
+        $locale = $request->input('locale') 
+            ?: ($request->header('X-Locale') 
+            ?: ($request->cookie('neriah_locale') ?: app()->getLocale()));
+        $locale = $locale === 'en' ? 'en' : 'id';
+        $isEn = $locale === 'en';
+
         try {
-            $directive = $refinementService->elaborateDirective($blueprint, $segmentKey, $aiProvider, $customTitle, $featureId, $featureContent);
+            $directive = $refinementService->elaborateDirective(
+                $blueprint, 
+                $segmentKey, 
+                $aiProvider, 
+                $customTitle, 
+                $featureId, 
+                $featureContent,
+                $locale
+            );
 
             return response()->json([
                 'success' => true,
                 'directive' => $directive,
-                'message' => 'Instruksi penajaman berhasil dielaborasi dari Dokumen Acuan & Standar Industri.',
+                'message' => $isEn 
+                    ? 'Refinement directive successfully compiled from Project Documents & Global Standards.'
+                    : 'Instruksi penajaman berhasil dielaborasi dari Dokumen Acuan & Standar Industri.',
+                'message_en' => 'Refinement directive successfully compiled from Project Documents & Global Standards.',
+                'message_id' => 'Instruksi penajaman berhasil dielaborasi dari Dokumen Acuan & Standar Industri.',
             ]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Elaborate directive failed: '.$e->getMessage(), [
@@ -2173,7 +2192,9 @@ class BlueprintController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengelaborasi instruksi: '.$e->getMessage(),
+                'message' => $isEn 
+                    ? 'Failed to elaborate directive: '.$e->getMessage()
+                    : 'Gagal mengelaborasi instruksi: '.$e->getMessage(),
             ], 422);
         }
     }

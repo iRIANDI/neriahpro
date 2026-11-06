@@ -1968,19 +1968,22 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                         });
                     }
                     try {
+                        const isEnLocale = (typeof isEn !== 'undefined' && isEn) || (typeof currentLocale !== 'undefined' && currentLocale === 'en') || (document.documentElement.lang && document.documentElement.lang.startsWith('en')) || (document.cookie && document.cookie.includes('neriah_locale=en'));
                         const res = await fetch('{{ route('api.blueprint.elaborate-directive', $blueprint->slug) }}', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json'
+                                'Accept': 'application/json',
+                                'X-Locale': isEnLocale ? 'en' : 'id'
                             },
                             body: JSON.stringify({
                                 segment_key: this.tweakSegmentKey,
                                 ai_provider: this.tweakAiProvider,
                                 custom_title: this.tweakSegmentTitle,
                                 feature_id: this.tweakFeatureId,
-                                feature_content: this.tweakContent
+                                feature_content: this.tweakContent,
+                                locale: isEnLocale ? 'en' : 'id'
                             })
                         });
                         const data = await res.json();
@@ -1989,18 +1992,21 @@ Step 5: Automated Verification Gate: Execute "php artisan test --filter=[Model]T
                             if (window.showToast) {
                                 window.showToast({
                                     type: 'success',
-                                    title: 'INSTRUKSI PENAJAMAN BERHASIL DISUSUN',
-                                    message: data.message || 'Instruksi penajaman berhasil dirumuskan berbasis Dokumen Acuan & Standar Industri Dunia.'
+                                    title: isEnLocale ? 'DIRECTIVE ELABORATION COMPILED' : 'INSTRUKSI PENAJAMAN BERHASIL DISUSUN',
+                                    message: isEnLocale 
+                                        ? (data.message_en || data.message || 'Refinement directive successfully compiled from Project Documents & Global Standards.')
+                                        : (data.message_id || data.message || 'Instruksi penajaman berhasil dirumuskan berbasis Dokumen Acuan & Standar Industri Dunia.')
                                 });
                             }
                         } else {
-                            throw new Error(data.message || 'Gagal menyusun instruksi penajaman.');
+                            throw new Error(data.message || (isEnLocale ? 'Failed to compile refinement directive.' : 'Gagal menyusun instruksi penajaman.'));
                         }
                     } catch(err) {
                         if (window.showToast) {
+                            const isEnLocale = (typeof isEn !== 'undefined' && isEn) || (typeof currentLocale !== 'undefined' && currentLocale === 'en') || (document.documentElement.lang && document.documentElement.lang.startsWith('en')) || (document.cookie && document.cookie.includes('neriah_locale=en'));
                             window.showToast({
                                 type: 'error',
-                                title: 'GAGAL MENYUSUN INSTRUKSI',
+                                title: isEnLocale ? 'DIRECTIVE COMPILATION FAILED' : 'GAGAL MENYUSUN INSTRUKSI',
                                 message: err.message
                             });
                         }
@@ -12726,36 +12732,38 @@ class ProcessSecureDataset implements ShouldQueue
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
                             <div class="flex items-center gap-2">
                                 <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
-                                    INSTRUKSI PENAJAMAN KHUSUS (OPSIONAL):
+                                    <span x-text="isEn ? 'SPECIAL REFINEMENT DIRECTIVE (OPTIONAL):' : 'INSTRUKSI PENAJAMAN KHUSUS (OPSIONAL):'">
+                                        INSTRUKSI PENAJAMAN KHUSUS (OPSIONAL):
+                                    </span>
                                 </label>
                                 <button 
                                     type="button" 
                                     @click="elaborateDirectiveFromAi()" 
                                     :disabled="elaboratingDirective"
                                     class="px-2.5 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold border border-emerald-500/40 flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
-                                    title="AI menyusun instruksi penajaman otomatis berdasarkan ide acuan proyek dan standar rekayasa dunia"
+                                    :title="isEn ? 'AI compiles automatic refinement directive based on project documents and global engineering standards' : 'AI menyusun instruksi penajaman otomatis berdasarkan ide acuan proyek dan standar rekayasa dunia'"
                                 >
                                     <template x-if="!elaboratingDirective">
                                         <span class="flex items-center gap-1">
                                             <svg class="w-3 h-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                            <span>✨ ELABORASI DARI IDE &amp; STANDAR DUNIA</span>
+                                            <span x-text="isEn ? '✨ ELABORATE FROM IDEA & WORLD STANDARDS' : '✨ ELABORASI DARI IDE & STANDAR DUNIA'">✨ ELABORASI DARI IDE &amp; STANDAR DUNIA</span>
                                         </span>
                                     </template>
                                     <template x-if="elaboratingDirective">
                                         <span class="flex items-center gap-1 animate-pulse text-zinc-500">
                                             <svg class="animate-spin w-3 h-3 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                            <span>Menyusun dari Acuan &amp; Standar Dunia...</span>
+                                            <span x-text="isEn ? 'Synthesizing from Source & World Standards...' : 'Menyusun dari Acuan & Standar Dunia...'">Menyusun dari Acuan &amp; Standar Dunia...</span>
                                         </span>
                                     </template>
                                 </button>
                             </div>
-                            <span class="text-[10px] font-mono text-zinc-400">Kosongkan jika ingin AI memperdalam otomatis</span>
+                            <span class="text-[10px] font-mono text-zinc-400" x-text="isEn ? 'Leave empty to let AI deepen automatically' : 'Kosongkan jika ingin AI memperdalam otomatis'">Kosongkan jika ingin AI memperdalam otomatis</span>
                         </div>
                         <textarea 
                             x-model="tweakPrompt" 
                             rows="4" 
                             class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 p-3 text-xs sm:text-sm font-sans focus:outline-none focus:border-emerald-500 rounded-none leading-relaxed" 
-                            placeholder="Contoh instruksi: &quot;Fokus perdalam modul rekonsiliasi pembayaran kasir, sertakan tabel ledger transaksi keuangan, serta validasi skenario timeout webhook Midtrans...&quot;"
+                            :placeholder="isEn ? 'Example directive: &quot;Deepen vehicle capacity matching, provide inventory hold state machine with 15-minute TTL, and calculate dynamic holiday surcharges...&quot;' : 'Contoh instruksi: &quot;Fokus perdalam modul rekonsiliasi pembayaran kasir, sertakan tabel ledger transaksi keuangan, serta validasi skenario timeout webhook Midtrans...&quot;'"
                         ></textarea>
                     </div>
 

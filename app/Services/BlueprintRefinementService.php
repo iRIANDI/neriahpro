@@ -245,8 +245,17 @@ class BlueprintRefinementService
             );
         }
 
-        // Save to database
-        $blueprint->update(['prd_content' => $updatedPrd]);
+        // Save to database & update tamper-proof cryptographic checksum
+        $blueprint->prd_content = $updatedPrd;
+        $blueprint->document_sha256 = $blueprint->calculatePrdHash();
+        $blueprint->save();
+
+        // Compile universal schema and persist project
+        try {
+            \App\Services\ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint, ['persist_project' => true]);
+        } catch (\Throwable $e) {
+            Log::warning("Failed to compile universal schema after refinement: " . $e->getMessage());
+        }
 
         // Synchronize official prd.md in project directory
         try {
@@ -673,6 +682,8 @@ TXT;
 
             $isEnTarget = ($additionalContext['locale'] ?? ($blueprint->user_metadata['output_locale'] ?? '')) === 'en';
 
+            $targetFeature = null;
+
             foreach ($specs as $idx => $spec) {
                 if (($featureId && (($spec['id'] ?? '') === $featureId || ($spec['feature_id'] ?? '') === $featureId)) ||
                     ($specIndex !== null && $idx === (int) $specIndex)) {
@@ -683,6 +694,7 @@ TXT;
                         $isEnTarget
                     );
                     $specs[$idx] = $merged;
+                    $targetFeature = $merged;
                     $found = true;
                     break;
                 }
@@ -695,17 +707,16 @@ TXT;
                     $isEnTarget
                 );
                 $specs[] = $parsedData;
+                $targetFeature = $parsedData;
             }
 
             $prd['engineering_specs']['mvp_specs'] = $specs;
             $prd['features']['mvp_phase1'] = $specs;
 
-            // Re-render feature dependency diagram if available
-            try {
-                $actors = $prd['system_actors'] ?? [];
-                $erdTables = $prd['erd_schema']['tables'] ?? [];
-                $prd['virtual_charts']['feature_dependency_mermaid'] = PrdGeneratorService::generateFeatureDependencyMermaid($actors, $specs, $erdTables);
-            } catch (\Throwable $e) {}
+            // Trigger Automatic Cascading Updates (Ripple Effect to ERD, Workflows, Actors, Diagrams & Schema)
+            if ($targetFeature) {
+                $prd = $this->cascadeFeatureUpdates($prd, $targetFeature, $blueprint, $isEnTarget);
+            }
 
             return $prd;
         }
@@ -726,12 +737,12 @@ TXT;
             $prd['engineering_specs']['mvp_specs'] = $featuresList;
             $prd['features']['mvp_phase1'] = $featuresList;
 
-            // Re-render feature dependency diagram
-            try {
-                $actors = $prd['system_actors'] ?? [];
-                $erdTables = $prd['erd_schema']['tables'] ?? [];
-                $prd['virtual_charts']['feature_dependency_mermaid'] = PrdGeneratorService::generateFeatureDependencyMermaid($actors, $featuresList, $erdTables);
-            } catch (\Throwable $e) {}
+            // Trigger Automatic Cascading Updates for all features
+            foreach ($featuresList as $fItem) {
+                if (is_array($fItem)) {
+                    $prd = $this->cascadeFeatureUpdates($prd, $fItem, $blueprint, $isEnTarget);
+                }
+            }
 
             return $prd;
         }
@@ -790,6 +801,190 @@ TXT;
 
         // Generic fallback
         $prd[$segmentKey] = $parsedData;
+        return $prd;
+    }
+
+    /**
+     * Automatic Cascading Synchronization (Ripple Effect Engine).
+     * Synchronizes all interrelated architectural domains whenever a feature is elaborated or updated:
+     * 1. ERD PostgreSQL 16 schema & tables + ERD Mermaid diagram
+     * 2. Workflow & state machine stages + Workflow Mermaid diagram
+     * 3. System Actors & RBAC permissions
+     * 4. Feature Dependency Mermaid diagram
+     * 5. Sprint Gantt Timeline diagram
+     */
+    public function cascadeFeatureUpdates(
+        array $prd,
+        array $feature,
+        VisionBlueprint $blueprint,
+        bool $isEn = false
+    ): array {
+        $title = $feature['title'] ?? 'Core Feature';
+        $pascal = \App\Services\Prd\PrdFeatureSpecificationService::sanitizeEntityClassName($title, $feature['related_table'] ?? null);
+        $tableName = Str::snake(Str::plural($pascal));
+
+        // 1. Synchronize Database ERD Tables
+        $tables = $prd['erd_schema']['tables'] ?? ($prd['database_erd'] ?? []);
+        $tableFound = false;
+
+        foreach ($tables as $tIdx => $tbl) {
+            $existingName = $tbl['name'] ?? ($tbl['table_name'] ?? '');
+            if ($existingName === $tableName || $existingName === Str::plural(Str::snake($title))) {
+                $tableFound = true;
+                break;
+            }
+        }
+
+        if (!$tableFound) {
+            $schemaColumns = [
+                ['name' => 'id', 'type' => 'VARCHAR(26)', 'nullable' => false, 'primary' => true, 'description' => 'Strict ULID Primary Key (PostgreSQL 16)'],
+                ['name' => 'user_id', 'type' => 'VARCHAR(26)', 'nullable' => false, 'primary' => false, 'description' => 'Foreign Key -> users.id'],
+            ];
+
+            $reqSchema = [];
+            if (!empty($feature['integration']['request_schema'])) {
+                $decoded = json_decode($feature['integration']['request_schema'], true);
+                if (is_array($decoded)) {
+                    $reqSchema = $decoded;
+                }
+            }
+
+            foreach ($reqSchema as $colKey => $colVal) {
+                $cleanCol = Str::snake($colKey);
+                if (in_array($cleanCol, ['id', 'user_id', 'created_at', 'updated_at', 'deleted_at'])) continue;
+                $colType = 'VARCHAR(100)';
+                if (is_int($colVal)) $colType = 'INTEGER';
+                elseif (is_float($colVal)) $colType = 'NUMERIC(14,2)';
+                elseif (is_bool($colVal)) $colType = 'BOOLEAN';
+                elseif (is_array($colVal)) $colType = 'JSONB';
+                elseif (str_contains($cleanCol, 'time') || str_contains($cleanCol, 'date')) $colType = 'TIMESTAMPTZ';
+
+                $schemaColumns[] = [
+                    'name' => $cleanCol,
+                    'type' => $colType,
+                    'nullable' => true,
+                    'primary' => false,
+                    'description' => "Domain attribute for {$cleanCol}",
+                ];
+            }
+
+            if (!in_array('status', array_column($schemaColumns, 'name'))) {
+                $schemaColumns[] = ['name' => 'status', 'type' => 'VARCHAR(50)', 'nullable' => false, 'primary' => false, 'description' => 'Lifecycle state machine status'];
+            }
+            $schemaColumns[] = ['name' => 'metadata', 'type' => 'JSONB', 'nullable' => true, 'primary' => false, 'description' => 'Audit metadata & extensible payload'];
+            $schemaColumns[] = ['name' => 'created_at', 'type' => 'TIMESTAMPTZ', 'nullable' => false, 'primary' => false, 'description' => 'Record creation timestamp'];
+            $schemaColumns[] = ['name' => 'updated_at', 'type' => 'TIMESTAMPTZ', 'nullable' => false, 'primary' => false, 'description' => 'Record mutation timestamp'];
+            $schemaColumns[] = ['name' => 'deleted_at', 'type' => 'TIMESTAMPTZ', 'nullable' => true, 'primary' => false, 'description' => 'Soft delete timestamp'];
+
+            $ddlLines = ["CREATE TABLE IF NOT EXISTS \"{$tableName}\" ("];
+            foreach ($schemaColumns as $c) {
+                $cName = $c['name'];
+                $cType = $c['type'];
+                $null = $c['nullable'] ? 'NULL' : 'NOT NULL';
+                $pk = ($c['primary'] ?? false) ? ' PRIMARY KEY' : '';
+                $ddlLines[] = "    \"{$cName}\" {$cType} {$null}{$pk},";
+            }
+            $ddlLines[count($ddlLines) - 1] = rtrim($ddlLines[count($ddlLines) - 1], ',');
+            $ddlLines[] = ');';
+            $ddlLines[] = "CREATE INDEX IF NOT EXISTS \"idx_{$tableName}_created_id\" ON \"{$tableName}\" (\"created_at\" DESC, \"id\" DESC);";
+            $ddlLines[] = "CREATE INDEX IF NOT EXISTS \"idx_{$tableName}_user_id\" ON \"{$tableName}\" (\"user_id\");";
+
+            $newTable = [
+                'name' => $tableName,
+                'table_name' => $tableName,
+                'description' => $isEn ? "Operational persistence table for {$title} module with strict ULID foreign keys and audit trail." : "Tabel operasional data modul {$title} dengan foreign key ULID dan jejak audit.",
+                'primary_key' => 'id (VARCHAR(26), ULID, PK)',
+                'foreign_keys' => ['user_id (users.id)'],
+                'columns' => $schemaColumns,
+                'ddl_sql' => implode("\n", $ddlLines),
+            ];
+
+            $tables[] = $newTable;
+            $prd['erd_schema']['tables'] = $tables;
+            $prd['database_erd'] = $tables;
+
+            try {
+                $prd['virtual_charts']['erd_mermaid'] = PrdGeneratorService::generateErdMermaid($tables);
+            } catch (\Throwable $e) {}
+        }
+
+        // 2. Synchronize Workflow & State Machine Steps
+        $workflows = $prd['workflow'] ?? ($prd['alurs_kerja'] ?? []);
+        $matchedWf = false;
+        $titleKeywords = array_filter(explode(' ', mb_strtolower(preg_replace('/[^a-zA-Z0-9\s]/', '', $title))));
+
+        foreach ($workflows as &$wf) {
+            $wfText = mb_strtolower(($wf['action'] ?? '') . ' ' . ($wf['description'] ?? ''));
+            foreach ($titleKeywords as $kw) {
+                if (strlen($kw) > 3 && str_contains($wfText, $kw)) {
+                    $endpoint = $feature['integration']['endpoint'] ?? ('/api/v1/' . Str::kebab($pascal));
+                    $wf['computation'] = $isEn
+                        ? "Execute atomic {$pascal}Service with DB::transaction(), pessimistic concurrency lock, and strict ULID persistence."
+                        : "Eksekusi {$pascal}Service atomik dibungkus DB::transaction() dengan pessimistic concurrency lock dan integritas data Strict ULID.";
+                    $wf['response'] = $isEn
+                        ? "HTTP 200 OK via {$endpoint} with RFC 9457 error standardization."
+                        : "Respon HTTP 200 OK via endpoint {$endpoint} dengan format error terstandar RFC 9457.";
+                    $matchedWf = true;
+                    break 2;
+                }
+            }
+        }
+        unset($wf);
+
+        if (!$matchedWf && count($workflows) < 8) {
+            $nextStep = count($workflows) + 1;
+            $endpoint = $feature['integration']['endpoint'] ?? ('/api/v1/' . Str::kebab($pascal));
+            $workflows[] = [
+                'step' => $nextStep,
+                'action' => $isEn ? "Execution & Processing of {$title}" : "Eksekusi & Pemrosesan Modul {$title}",
+                'description' => $feature['desc'] ?? ($isEn ? "Operational execution of {$title} module." : "Operasional pemrosesan modul {$title}."),
+                'actor' => $isEn ? 'Authorized System User' : 'Pengguna Sistem Berwenang',
+                'trigger' => $isEn ? "User or background event invokes {$title}." : "Pengguna atau event sistem memicu modul {$title}.",
+                'badge' => 'PROCESSING',
+                'computation' => "Eksekusi {$pascal}Service atomik dengan DB::transaction() dan Strict ULID.",
+                'response' => "Respon terverifikasi HTTP 200 OK via {$endpoint}.",
+                'mitigation' => "Penanganan timeout jaringan dan rollback transaksi otomatis jika terjadi kegagalan.",
+            ];
+        }
+
+        $prd['workflow'] = $workflows;
+        $prd['alurs_kerja'] = $workflows;
+
+        try {
+            $prd['virtual_charts']['workflow_mermaid'] = PrdGeneratorService::generateWorkflowMermaid($workflows);
+        } catch (\Throwable $e) {}
+
+        // 3. Synchronize System Actors RBAC Permissions
+        $actors = $prd['system_actors'] ?? [];
+        $permissionKey = 'manage_' . $tableName;
+        if (!empty($actors) && is_array($actors)) {
+            foreach ($actors as &$act) {
+                $role = mb_strtolower($act['role'] ?? ($act['name'] ?? ''));
+                if (str_contains($role, 'admin') || str_contains($role, 'operator') || str_contains($role, 'super')) {
+                    $perms = (array) ($act['permissions'] ?? []);
+                    if (!in_array('*', $perms) && !in_array($permissionKey, $perms)) {
+                        $perms[] = $permissionKey;
+                        $act['permissions'] = $perms;
+                    }
+                }
+            }
+            unset($act);
+            $prd['system_actors'] = $actors;
+        }
+
+        // 4. Synchronize Diagrams (Feature Dependency & Gantt)
+        try {
+            $allFeatures = $prd['engineering_specs']['mvp_specs'] ?? ($prd['features']['mvp_phase1'] ?? []);
+            $erdTables = $prd['erd_schema']['tables'] ?? [];
+            $prd['virtual_charts']['feature_dependency_mermaid'] = PrdGeneratorService::generateFeatureDependencyMermaid($actors, $allFeatures, $erdTables);
+            $prd['virtual_charts']['feature_dep_mermaid'] = $prd['virtual_charts']['feature_dependency_mermaid'];
+        } catch (\Throwable $e) {}
+
+        try {
+            $prd['virtual_charts']['gantt_mermaid'] = PrdGeneratorService::generateSprintGanttMermaid($blueprint, $blueprint->target_waktu ?? '30 Hari Kerja');
+            $prd['virtual_charts']['sprint_gantt_mermaid'] = $prd['virtual_charts']['gantt_mermaid'];
+        } catch (\Throwable $e) {}
+
         return $prd;
     }
 

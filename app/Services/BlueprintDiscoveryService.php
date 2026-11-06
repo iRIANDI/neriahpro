@@ -1795,7 +1795,123 @@ class BlueprintDiscoveryService
             );
         }
 
+        // Calculate and attach 6-Dimension Architectural Maturity Score (0-100%)
+        $maturity = self::calculateFeatureMaturity($fitur, $isEn);
+        $fitur['maturity_score'] = $maturity['score'];
+        $fitur['maturity_status'] = $maturity['status'];
+        $fitur['maturity_label'] = $maturity['label'];
+        $fitur['is_maximal'] = $maturity['is_maximal'];
+        $fitur['maturity_breakdown'] = $maturity['breakdown'];
+
         return $fitur;
+    }
+
+    /**
+     * Calculate 6-dimension architectural maturity score (0 - 100%) for a feature.
+     * Evaluates completeness, concrete schemas, Gherkin scenarios, and code-readiness.
+     */
+    public static function calculateFeatureMaturity(array $fitur, bool $isEn = false): array
+    {
+        $breakdown = [];
+        $totalScore = 0;
+
+        // 1. User Story & Persona (15%)
+        $story = trim((string)($fitur['user_story'] ?? ''));
+        $storyValid = !empty($story) && strlen($story) >= 35 && !str_contains(mb_strtolower($story), 'poin no') && !str_contains(mb_strtolower($story), 'berdasarkan');
+        $storyScore = $storyValid ? 15 : (!empty($story) ? 8 : 0);
+        $totalScore += $storyScore;
+        $breakdown['story'] = [
+            'score' => $storyScore,
+            'max' => 15,
+            'status' => $storyValid ? 'complete' : 'partial',
+            'label' => $isEn ? 'User Story & Persona' : 'User Story & Persona Aktor',
+        ];
+
+        // 2. Bounded Target Files (15%)
+        $files = (array)($fitur['target_files'] ?? []);
+        $filesCount = count(array_filter($files, fn($f) => !empty($f) && is_string($f)));
+        $filesScore = $filesCount >= 4 ? 15 : ($filesCount >= 3 ? 12 : ($filesCount >= 1 ? 6 : 0));
+        $totalScore += $filesScore;
+        $breakdown['files'] = [
+            'score' => $filesScore,
+            'max' => 15,
+            'status' => $filesCount >= 3 ? 'complete' : 'partial',
+            'label' => $isEn ? 'Bounded Target Files' : 'Isolasi Ruang Lingkup Berkas',
+        ];
+
+        // 3. Gherkin Acceptance Criteria (20%)
+        $ac = (array)($fitur['acceptance_criteria'] ?? []);
+        $validAcCount = 0;
+        foreach ($ac as $item) {
+            if (is_array($item)) {
+                $hasGiven = !empty($item['given']) && $item['given'] !== '-';
+                $hasWhen = !empty($item['when']) && $item['when'] !== '-';
+                $hasThen = !empty($item['then']) && $item['then'] !== '-';
+                if ($hasGiven && $hasWhen && $hasThen) $validAcCount++;
+            } elseif (is_string($item) && strlen($item) > 20) {
+                $validAcCount++;
+            }
+        }
+        $acScore = $validAcCount >= 3 ? 20 : ($validAcCount >= 2 ? 14 : ($validAcCount >= 1 ? 7 : 0));
+        $totalScore += $acScore;
+        $breakdown['gherkin'] = [
+            'score' => $acScore,
+            'max' => 20,
+            'status' => $validAcCount >= 3 ? 'complete' : 'partial',
+            'label' => $isEn ? 'Gherkin Acceptance Criteria' : 'Kriteria Penerimaan (Gherkin)',
+        ];
+
+        // 4. Frontend Specification (15%)
+        $fe = (array)($fitur['frontend'] ?? []);
+        $feTasks = (array)($fe['tasks'] ?? []);
+        $feValid = !empty($fe['components']) && count($feTasks) >= 2 && !empty($fe['states']) && !empty($fe['anti_ai_slop']);
+        $feScore = $feValid ? 15 : (!empty($feTasks) ? 8 : 0);
+        $totalScore += $feScore;
+        $breakdown['frontend'] = [
+            'score' => $feScore,
+            'max' => 15,
+            'status' => $feValid ? 'complete' : 'partial',
+            'label' => $isEn ? 'Frontend UI & Anti-AI-Slop' : 'Frontend UI & Anti-AI-Slop',
+        ];
+
+        // 5. Backend Specification (20%)
+        $be = (array)($fitur['backend'] ?? []);
+        $beTasks = (array)($be['tasks'] ?? []);
+        $beValid = !empty($be['target_files']) && count($beTasks) >= 2 && !empty($be['ulid_migration_rules']) && !empty($be['query_strategy']);
+        $beScore = $beValid ? 20 : (!empty($beTasks) ? 10 : 0);
+        $totalScore += $beScore;
+        $breakdown['backend'] = [
+            'score' => $beScore,
+            'max' => 20,
+            'status' => $beValid ? 'complete' : 'partial',
+            'label' => $isEn ? 'Backend Strict ULID & Keyset O(1)' : 'Backend Strict ULID & Keyset O(1)',
+        ];
+
+        // 6. API Contract & Schemas (15%)
+        $api = (array)($fitur['integration'] ?? []);
+        $reqSchema = trim((string)($api['request_schema'] ?? ''));
+        $resSchema = trim((string)($api['response_schema'] ?? ''));
+        $apiValid = !empty($api['endpoint']) && !empty($api['tasks']) && !empty($reqSchema) && $reqSchema !== '{}' && !empty($resSchema) && $resSchema !== '{}';
+        $apiScore = $apiValid ? 15 : (!empty($api['endpoint']) ? 8 : 0);
+        $totalScore += $apiScore;
+        $breakdown['api'] = [
+            'score' => $apiScore,
+            'max' => 15,
+            'status' => $apiValid ? 'complete' : 'partial',
+            'label' => $isEn ? 'API Contract & Schemas' : 'Kontrak API & Skema Data',
+        ];
+
+        $isMaximal = ($totalScore >= 100);
+
+        return [
+            'score' => min(100, $totalScore),
+            'is_maximal' => $isMaximal,
+            'status' => $isMaximal ? 'maximal' : ($totalScore >= 70 ? 'advanced' : 'in_progress'),
+            'label' => $isMaximal 
+                ? ($isEn ? '100% MAXIMUM // PRODUCTION SCOPE LOCKED' : '100% MAKSIMAL // SCOPE TERKUNCI')
+                : ($isEn ? "{$totalScore}% ELABORATED" : "{$totalScore}% TERELABORASI"),
+            'breakdown' => $breakdown,
+        ];
     }
 
     public function detectDomainCategory(string $text, bool $isEn = false): string

@@ -175,6 +175,11 @@
                                 class="bg-zinc-50 dark:bg-zinc-950 border-2 rounded-none transition prd-scroll-target"
                                 :class="isStepCompleted('{{ $featKey }}') ? 'border-emerald-500/80 shadow-xs' : 'border-zinc-200 dark:border-zinc-800'"
                             >
+                                @php
+                                    $specMaturity = \App\Services\BlueprintDiscoveryService::calculateFeatureMaturity($craftedSpec ?? $spec, $isEn ?? false);
+                                    $isSpecMaximal = $specMaturity['is_maximal'];
+                                    $specScore = $specMaturity['score'];
+                                @endphp
                                 <!-- Feature Spec Header Bar -->
                                 <div class="p-4 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div class="flex items-start sm:items-center gap-3">
@@ -193,6 +198,16 @@
                                                 <span class="px-2 py-0.5 bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/30 text-[10px] font-mono font-bold">
                                                     {{ $spec['sprint_phase'] ?? 'Sprint 1' }}
                                                 </span>
+                                                @if($isSpecMaximal)
+                                                    <span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 text-[10px] font-mono font-black tracking-wider flex items-center gap-1" title="{{ ($isEn ?? false) ? '6 Dimensions 100% Fully Elaborated & Production Scope Locked' : '6 Dimensi Rekayasa 100% Lengkap & Scope Terkunci' }}">
+                                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-none animate-pulse"></span>
+                                                        <span>{{ ($isEn ?? false) ? '✓ 100% MAXIMUM' : '✓ 100% MAKSIMAL' }}</span>
+                                                    </span>
+                                                @else
+                                                    <span class="px-2 py-0.5 bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 border border-amber-400 dark:border-amber-700 text-[10px] font-mono font-bold" title="{{ ($isEn ?? false) ? 'Feature needs deeper elaboration across 6 dimensions' : 'Fitur memerlukan elaborasi lebih lanjut' }}">
+                                                        {{ $specScore }}% {{ ($isEn ?? false) ? 'ELABORATED' : 'TERELABORASI' }}
+                                                    </span>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>
@@ -222,11 +237,11 @@
                                             <button 
                                                 type="button" 
                                                 @click="openTweakFeature('{{ $featKey }}', {{ $specIdx }}, '{{ addslashes($craftedSpec['title'] ?? ($spec['title'] ?? '')) }}')" 
-                                                class="px-2.5 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 text-xs font-mono font-bold border border-sky-500/30 flex items-center gap-1 transition cursor-pointer"
-                                                title="Perdalam rincian Gherkin, edge cases, dan Acceptance Criteria fitur ini dari Dokumen Acuan"
+                                                class="px-2.5 py-1 {{ $isSpecMaximal ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30' : 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 border-sky-500/30' }} text-xs font-mono font-bold border flex items-center gap-1 transition cursor-pointer"
+                                                title="{{ $isSpecMaximal ? (($isEn ?? false) ? 'Feature is 100% fully elaborated. Click to customize or fine-tune.' : 'Modul telah mencapai 100% maksimal. Klik untuk meninjau atau menyesuaikan.') : (($isEn ?? false) ? 'Elaborate this feature to 100% maximum maturity.' : 'Perdalam spesifikasi fitur ini hingga 100% maksimal.') }}"
                                             >
-                                                <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                                <span>PERDALAM FITUR</span>
+                                                <svg class="w-3.5 h-3.5 {{ $isSpecMaximal ? 'text-emerald-500' : 'text-sky-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                                <span>{{ $isSpecMaximal ? (($isEn ?? false) ? '✓ 100% MAKSIMAL' : '✓ 100% MAKSIMAL') : (($isEn ?? false) ? 'PERDALAM FITUR' : 'PERDALAM FITUR') }}</span>
                                             </button>
                                         @endif
                                         <button 

@@ -55,6 +55,9 @@ export default function BlueprintDiscoveryParamsSection({
   handleDeleteListItem = () => {},
   showLocalToast = () => {},
   isExplicitSlugEdit = false,
+  requestedTier = null,
+  hasPaidRetailLicense = false,
+  isRetailCustomer = false,
 }) {
   return (
     <>
@@ -838,179 +841,243 @@ export default function BlueprintDiscoveryParamsSection({
         <section id="section-block-f" className={panelClass}>
           <div className="border-b border-zinc-200 dark:border-zinc-800 pb-4 mb-6">
             <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold block mb-1">
-              {lang === 'en' ? 'PIC SIGN-OFF & CONTRACT // 06' : 'PENGESAHAN PIC & KONTRAK // 06'}
+              {currentTrack === 'retail'
+                ? (lang === 'en' ? 'RETAIL DIGITAL LICENSE ENTITLEMENTS // 06' : 'HAK LISENSI DIGITAL RETAIL & PIC // 06')
+                : (lang === 'en' ? 'PIC SIGN-OFF & CONTRACT // 06' : 'PENGESAHAN PIC & KONTRAK // 06')}
             </span>
             <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
               <Users className="w-5 h-5 text-emerald-500" />
-              {t.blockF}
+              {currentTrack === 'retail'
+                ? (lang === 'en' ? 'BLOCK F: RETAIL DIGITAL LICENSE & PIC VERIFICATION' : 'BLOK F: HAK LISENSI DIGITAL RETAIL & PENGESAHAN PIC')
+                : t.blockF}
             </h3>
-            <p className="text-xs text-zinc-500 mt-1 font-sans">{t.blockFDesc}</p>
+            <p className="text-xs text-zinc-500 mt-1 font-sans">
+              {currentTrack === 'retail'
+                ? (lang === 'en'
+                  ? 'Digital license deliverables, lifetime portal download access, and authorized PIC contacts.'
+                  : 'Entitas serah terima lisensi digital, akses unduhan seumur hidup, dan verifikasi kontak PIC resmi.')
+                : t.blockFDesc}
+            </p>
           </div>
 
           <div className="space-y-6 mb-8">
-            {/* Field 21: kisaranBudget */}
-            <div id="field-kisaranBudget">
-              <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
-                <label className={labelClass}>
-                  {currentTrack === 'retail'
-                    ? (lang === 'en' ? '21. Software Factory OS License Allocation *' : '21. Alokasi Lisensi Digital Retail (Software Factory OS) *')
-                    : (lang === 'en' ? '21. Dedicated Studio Investment Budget *' : '21. Alokasi Kisaran Budget Investasi Turnkey Studio *')}
-                </label>
-                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${currentTrack === 'retail'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
-                  : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
-                  }`}>
-                  {currentTrack === 'retail'
-                    ? (lang === 'en' ? 'Self-Service (In-House Team)' : 'Jalur Mandiri (Programmer Sendiri)')
-                    : (lang === 'en' ? 'Dedicated Studio (Turnkey)' : 'Jalur Turnkey (Dedicated Studio)')}
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2 font-sans">
-                {currentTrack === 'retail'
-                  ? (lang === 'en' ? 'Choose your Software Factory OS architectural blueprint bundle for internal coding (zero development agency markup).' : 'Pilih paket lisensi bundel cetak biru arsitektur Fortune 500 untuk dikoding tim internal Anda.')
-                  : (lang === 'en' ? 'Turnkey end-to-end development by Neriah Pro Senior Architect with bug warranty & managed sprint.' : 'Estimasi alokasi investasi pengerjaan penuh turnkey oleh tim Neriah Pro bergaransi SLA.')}
-              </p>
+            {currentTrack === 'retail' ? (
+              <div className="space-y-4 mb-6">
+                {/* RETAIL ENTITLEMENTS DASHBOARD CARD */}
+                <div className="p-4 sm:p-5 border-2 border-emerald-500 bg-white dark:bg-zinc-900 rounded-none shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-zinc-800">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-emerald-600 text-black flex items-center justify-center font-mono font-black text-base shrink-0">
+                        ✓
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-mono font-black text-sm uppercase tracking-tight text-zinc-950 dark:text-zinc-50">
+                            {lang === 'en' ? 'SOFTWARE FACTORY OS — RETAIL LICENSE' : 'SOFTWARE FACTORY OS — LISENSI DIGITAL RETAIL'}
+                          </span>
+                          <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 font-mono font-black text-[10px] uppercase border border-emerald-400 dark:border-emerald-700">
+                            {hasPaidRetailLicense
+                              ? (lang === 'en' ? '✓ PAID & VERIFIED' : '✓ LUNAS & TERVERIFIKASI')
+                              : (lang === 'en' ? '✓ SELF-SERVICE DELIVERABLE' : '✓ SERAH TERIMA INSTAN')}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5 font-sans leading-relaxed">
+                          {lang === 'en'
+                            ? '100% In-house engineering rights. Instant download of architecture assets with zero agency markup and zero 50/50 milestone debt.'
+                            : 'Hak bangun mandiri oleh tim internal Anda. Akses unduh langsung seluruh artefak arsitektur tanpa markup agensi dan tanpa utang termin DP 50/50.'}
+                        </p>
+                      </div>
+                    </div>
 
-              {/* Presets */}
-              <div className="flex flex-wrap gap-2 mb-2">
-                {(currentTrack === 'retail' ? [
-                  lang === 'en' ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)' : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)',
-                  lang === 'en' ? 'Lite: Rp 99,000 (PRD 26 Parameters, Strict ULID DDL & AI Directives)' : 'Lite: Rp 99.000 (PRD 26 Parameter, Schema DDL & AI Directives)',
-                  lang === 'en' ? 'Pro: Rp 399,000 (Full Architecture Bundle: DDL, 7-Phase Prompts, Docker & Seeder)' : 'Pro: Rp 399.000 (Bundel Lengkap DDL, 7-Fase Prompt AI, Docker & Seeder)',
-                  lang === 'en' ? 'Ultimate: Rp 1,490,000 (Full 10 Pillars Software Factory OS + Live MCP Kit)' : 'Ultimate: Rp 1.490.000 (Full 10 Pilar Software Factory OS + Live MCP Kit)',
-                ] : [
-                  lang === 'en' ? 'Advisory Tier: Rp 2,500,000 (PRD 26 Parameters, Strict DDL & Gantt WBS — 100% DP Credit)' : 'Advisory Tier: Rp 2.500.000 (PRD 26 Parameter, Strict DDL & Gantt WBS — Kredit DP 100%)',
-                  lang === 'en' ? 'UMKM Digital Starter: Rp 3,750,000 (50% Subsidy — Web Engine & Admin Dashboard)' : 'UMKM Digital Starter: Rp 3.750.000 (Subsidi 50% — Engine Transaksi Web & Admin Dashboard)',
-                  lang === 'en' ? 'Mitra Turnkey Project: Algorithmic Fair RAB (30% DP / 50% Staging / 20% Digital BAST)' : 'Mitra Proyek Turnkey: RAB Algoritmik Transparan (Termin 30% DP / 50% Staging / 20% BAST Digital)',
-                  lang === 'en' ? 'Enterprise Monolith / Decoupled: Custom Quotation (Dedicated Senior Architect Squad + SLA)' : 'Enterprise Monolith / Decoupled: Custom Quotation (Dedicated Senior Architect Squad + Garansi SLA)',
-                ]).map((tierOpt, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => updateField('kisaranBudget', tierOpt)}
-                    className={`px-3 py-1.5 text-xs font-mono border transition ${formData.kisaranBudget === tierOpt
-                      ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
-                      : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
-                      }`}
-                  >
-                    {tierOpt}
-                  </button>
-                ))}
-              </div>
-              <input
-                type="text"
-                value={formData.kisaranBudget}
-                onChange={(e) => updateField('kisaranBudget', e.target.value)}
-                placeholder={currentTrack === 'retail' ? (lang === 'en' ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)' : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)') : (lang === 'en' ? '$1,000 - $2,500 (Growth Monolith)' : 'Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)')}
-                className={inputClass}
-              />
-            </div>
+                    <div className="font-mono text-left sm:text-right shrink-0">
+                      <span className="text-[10px] text-zinc-500 block uppercase font-bold">{lang === 'en' ? 'Active Tier' : 'Paket Terpilih'}</span>
+                      <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 uppercase">
+                        {requestedTier ? `Paket Retail ${requestedTier}` : (formData.kisaranBudget?.split('(')[0] || 'Paket Retail Pro')}
+                      </span>
+                    </div>
+                  </div>
 
-            {/* Field 22: garansiSla */}
-            <div id="field-garansiSla">
-              <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
-                <label className={labelClass}>
-                  {currentTrack === 'retail'
-                    ? (lang === 'en' ? '22. Deliverable Model & Technical Support *' : '22. Model Serah Terima Berkas & Dukungan Teknis Lisensi Retail *')
-                    : (lang === 'en' ? '22. Post-Launch Bug Warranty, SLA & Git Repo Handover *' : '22. Skema Garansi Pascameluncur, SLA & Serah Terima Repo Git *')}
-                </label>
-                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${currentTrack === 'retail'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
-                  : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
-                  }`}>
-                  {currentTrack === 'retail'
-                    ? (lang === 'en' ? 'Self-Service Assets Handover' : 'Serah Terima Artefak Siap Pakai')
-                    : (lang === 'en' ? 'Studio Bug Warranty & SLA' : 'Garansi Pengerjaan Kode Studio')}
-                </span>
-              </div>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2 font-sans">
-                {currentTrack === 'retail'
-                  ? (lang === 'en' ? 'Because your internal team develops the code, Neriah Pro delivers verified ready-to-run architecture assets & lifetime portal access.' : 'Karena koding dikerjakan mandiri oleh programmer Anda, Neriah Pro menyerahkan seluruh artefak arsitektur terverifikasi & akses unduhan seumur hidup.')
-                  : (lang === 'en' ? 'Managed quality assurance and bug fixing warranty directly by Neriah Pro engineering squad.' : 'Jaminan penanganan bug pascameluncur dan pemeliharaan kode langsung oleh Neriah Pro.')}
-              </p>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {(currentTrack === 'retail' ? [
-                  lang === 'en' ? 'Self-Service Delivery: Instant PRD Fortune 500, Strict ULID DDL & Docker Starter Kit Handover' : 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit',
-                  lang === 'en' ? 'Permanent Access: Lifetime Downloads & Artifact Archives in Neriah Pro Client Portal' : 'Akses Seumur Hidup: Unduhan Permanen Berkas & Arsip Dokumen di Portal Klien Neriah Pro',
-                  lang === 'en' ? 'Architectural Validation: Verification Support via AI Co-Pilot & Client Portal Gateway' : 'Dukungan Arsitektur: Konsultasi Verifikasi Spesifikasi via AI Co-Pilot & Portal Klien',
-                ] : [
-                  lang === 'en' ? '30 Days Post-Launch Bug Warranty Free of Charge + Full Private GitHub Repository Handover' : '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
-                  lang === 'en' ? '60 Days Bug Warranty + GitHub Handover + Operational Staff Training Session' : '60 Hari Garansi Bug + Handover Repo Git + Sesi Training Staf Operasional',
-                  lang === 'en' ? '30-Day Warranty + Ongoing Monthly Managed Maintenance SLA (Automated Backups & Security Patches)' : 'Garansi 30 Hari + Kontrak Managed Maintenance Bulanan (SLA Backup & Security Patch)',
-                ]).map((sla, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => updateField('garansiSla', sla)}
-                    className={`px-3 py-1.5 text-xs font-mono border transition ${formData.garansiSla === sla
-                      ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
-                      : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
-                      }`}
-                  >
-                    {sla}
-                  </button>
-                ))}
-              </div>
-              <input
-                type="text"
-                value={formData.garansiSla}
-                onChange={(e) => updateField('garansiSla', e.target.value)}
-                className={inputClass}
-              />
-            </div>
+                  {/* 3 Entitlement Pillars */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 text-xs">
+                    {/* 21. Paket & Alokasi */}
+                    <div id="field-kisaranBudget" className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                      <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 block mb-1">
+                        21. {lang === 'en' ? 'LICENSE SPECIFICATION' : 'SPESIFIKASI LISENSI'}
+                      </span>
+                      <p className="font-mono font-black text-zinc-950 dark:text-zinc-100 text-[11px] mb-1">
+                        {formData.kisaranBudget || (lang === 'en' ? 'Retail Digital Architecture License' : 'Lisensi Digital Arsitektur Mandiri')}
+                      </p>
+                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                        {lang === 'en'
+                          ? 'Fortune 500 system architecture blueprint, DDL schema, and AI agent configuration.'
+                          : 'Cetak biru sistem kelas enterprise, skema DDL terisolasi, dan konfigurasi AI agent.'}
+                      </p>
+                    </div>
 
-            {/* Field 23: terminPembayaran */}
-            <div id="field-terminPembayaran">
-              <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
-                <label className={labelClass}>
-                  {currentTrack === 'retail'
-                    ? (lang === 'en' ? '23. Retail License Transaction & Access Scheme *' : '23. Skema Transaksi & Akses Lisensi Retail *')
-                    : (lang === 'en' ? '23. Payment Milestone Terms & Schedule *' : '23. Integrasi Skema Termin Pembayaran & Jadwal Milestone *')}
-                </label>
-                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 border ${currentTrack === 'retail'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800'
-                  : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800'
-                  }`}>
-                  {currentTrack === 'retail'
-                    ? (lang === 'en' ? 'Instant Access (No 50/50 DP)' : 'Akses Instan (Tanpa Termin DP 50/50)')
-                    : (lang === 'en' ? 'Milestone DP 50% Contract' : 'Kontrak Termin Bertahap DP 50%')}
-                </span>
+                    {/* 22. Serah Terima Artefak */}
+                    <div id="field-garansiSla" className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                      <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 block mb-1">
+                        22. {lang === 'en' ? 'DELIVERABLE ARTIFACTS' : 'ARTEFAK SERAH TERIMA'}
+                      </span>
+                      <p className="font-mono font-black text-zinc-950 dark:text-zinc-100 text-[11px] mb-1">
+                        {formData.garansiSla || (lang === 'en' ? 'Instant PRD, Strict ULID DDL & Docker Kit' : 'PRD Fortune 500, Strict DDL & Docker Kit')}
+                      </p>
+                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                        {lang === 'en'
+                          ? 'Immediate download & permanent archive access in Neriah Pro Client Portal.'
+                          : 'Akses unduh seketika & arsip permanen di Portal Klien Neriah Pro seumur hidup.'}
+                      </p>
+                    </div>
+
+                    {/* 23. Ketentuan Transaksi & Termin */}
+                    <div id="field-terminPembayaran" className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                      <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 block mb-1">
+                        23. {lang === 'en' ? 'PAYMENT & IP TERMS' : 'STATUS PEMBAYARAN & HAK CIPTA'}
+                      </span>
+                      <p className="font-mono font-black text-zinc-950 dark:text-zinc-100 text-[11px] mb-1">
+                        {formData.terminPembayaran || (lang === 'en' ? '100% Instant Digital Access (No 50/50 DP)' : 'Akses Instan 100% Lunas (Tanpa DP 50/50)')}
+                      </p>
+                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                        {lang === 'en'
+                          ? 'Zero milestone debt. 100% intellectual property & code ownership belongs to client.'
+                          : 'Bebas utang termin bertahap. Hak cipta & kepemilikan kode 100% milik klien penuh.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Hidden Inputs for 21, 22, 23 to ensure validation passes */}
+                  <input type="hidden" name="kisaranBudget" value={formData.kisaranBudget || ''} />
+                  <input type="hidden" name="garansiSla" value={formData.garansiSla || ''} />
+                  <input type="hidden" name="terminPembayaran" value={formData.terminPembayaran || ''} />
+                </div>
               </div>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2 font-sans">
-                {currentTrack === 'retail'
-                  ? (lang === 'en' ? 'Self-service licenses are instant deliverables. No milestone lock, no agency contractual terms.' : 'Lisensi retail adalah produk digital instan mandiri. Bukan kontrak pengerjaan agensi ber-termin 50/50.')
-                  : (lang === 'en' ? 'Turnkey studio development with milestones protected by Milestone DP 50% & UAT sign-off.' : 'Pengerjaan koding studio dengan termin bertahap yang dilindungi garansi serah terima UAT.')}
-              </p>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {(currentTrack === 'retail' ? [
-                  lang === 'en' ? 'Spark Package (Free): $0 / Free Instant Architectural Audit & Blueprint Access' : 'Paket Spark (Gratis): Rp 0 / Akses Audit Arsitektur & Cetak Biru Gratis 100%',
-                  lang === 'en' ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)',
-                  lang === 'en' ? 'Direct Self-Service: Automated Real-Time Webhook Verification & License Key Issuance' : 'Self-Service Delivery: Verifikasi Otomatis Webhook Midtrans Real-Time & Lisensi Instan',
-                ] : [
-                  lang === 'en' ? 'Standard 50/50: 50% Kickoff DP & 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap)' : 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
-                  lang === 'en' ? 'Milestone 30/40/30: 30% Kickoff DP, 40% MVP Demo Completed, 30% Final Go-Live Settlement' : 'Termin Milestone 30/40/30: 30% DP Kickoff, 40% Demo MVP Selesai, 30% Pelunasan Go-Live',
-                  lang === 'en' ? '100% Full Upfront Payment (Priority Dedicated Squad Allocation)' : 'Termin Pelunasan Penuh 100% Upfront (Prioritas Utama Dedicated Squad)',
-                ]).map((termin, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => updateField('terminPembayaran', termin)}
-                    className={`px-3 py-1.5 text-xs font-mono border transition ${formData.terminPembayaran === termin
-                      ? (currentTrack === 'retail' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-blue-600 text-white border-blue-600 font-bold')
-                      : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
-                      }`}
-                  >
-                    {termin}
-                  </button>
-                ))}
-              </div>
-              <input
-                type="text"
-                value={formData.terminPembayaran}
-                onChange={(e) => updateField('terminPembayaran', e.target.value)}
-                className={inputClass}
-              />
-            </div>
+            ) : (
+              <>
+                {/* Field 21: kisaranBudget */}
+                <div id="field-kisaranBudget">
+                  <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+                    <label className={labelClass}>
+                      {lang === 'en' ? '21. Dedicated Studio Investment Budget *' : '21. Alokasi Kisaran Budget Investasi Turnkey Studio *'}
+                    </label>
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 border bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800">
+                      {lang === 'en' ? 'Dedicated Studio (Turnkey)' : 'Jalur Turnkey (Dedicated Studio)'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2 font-sans">
+                    {lang === 'en' ? 'Turnkey end-to-end development by Neriah Pro Senior Architect with bug warranty & managed sprint.' : 'Estimasi alokasi investasi pengerjaan penuh turnkey oleh tim Neriah Pro bergaransi SLA.'}
+                  </p>
+
+                  {/* Presets */}
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {[
+                      lang === 'en' ? 'Advisory Tier: Rp 2,500,000 (PRD 26 Parameters, Strict DDL & Gantt WBS — 100% DP Credit)' : 'Advisory Tier: Rp 2.500.000 (PRD 26 Parameter, Strict DDL & Gantt WBS — Kredit DP 100%)',
+                      lang === 'en' ? 'UMKM Digital Starter: Rp 3,750,000 (50% Subsidy — Web Engine & Admin Dashboard)' : 'UMKM Digital Starter: Rp 3.750.000 (Subsidi 50% — Engine Transaksi Web & Admin Dashboard)',
+                      lang === 'en' ? 'Mitra Turnkey Project: Algorithmic Fair RAB (30% DP / 50% Staging / 20% Digital BAST)' : 'Mitra Proyek Turnkey: RAB Algoritmik Transparan (Termin 30% DP / 50% Staging / 20% BAST Digital)',
+                      lang === 'en' ? 'Enterprise Monolith / Decoupled: Custom Quotation (Dedicated Senior Architect Squad + SLA)' : 'Enterprise Monolith / Decoupled: Custom Quotation (Dedicated Senior Architect Squad + Garansi SLA)',
+                    ].map((tierOpt, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => updateField('kisaranBudget', tierOpt)}
+                        className={`px-3 py-1.5 text-xs font-mono border transition ${formData.kisaranBudget === tierOpt
+                          ? 'bg-blue-600 text-white border-blue-600 font-bold'
+                          : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
+                          }`}
+                      >
+                        {tierOpt}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={formData.kisaranBudget}
+                    onChange={(e) => updateField('kisaranBudget', e.target.value)}
+                    placeholder={lang === 'en' ? '$1,000 - $2,500 (Growth Monolith)' : 'Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)'}
+                    className={inputClass}
+                  />
+                </div>
+
+                {/* Field 22: garansiSla */}
+                <div id="field-garansiSla">
+                  <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+                    <label className={labelClass}>
+                      {lang === 'en' ? '22. Post-Launch Bug Warranty, SLA & Git Repo Handover *' : '22. Skema Garansi Pascameluncur, SLA & Serah Terima Repo Git *'}
+                    </label>
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 border bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800">
+                      {lang === 'en' ? 'Studio Bug Warranty & SLA' : 'Garansi Pengerjaan Kode Studio'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2 font-sans">
+                    {lang === 'en' ? 'Managed quality assurance and bug fixing warranty directly by Neriah Pro engineering squad.' : 'Jaminan penanganan bug pascameluncur dan pemeliharaan kode langsung oleh Neriah Pro.'}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {[
+                      lang === 'en' ? '30 Days Post-Launch Bug Warranty Free of Charge + Full Private GitHub Repository Handover' : '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
+                      lang === 'en' ? '60 Days Bug Warranty + GitHub Handover + Operational Staff Training Session' : '60 Hari Garansi Bug + Handover Repo Git + Sesi Training Staf Operasional',
+                      lang === 'en' ? '30-Day Warranty + Ongoing Monthly Managed Maintenance SLA (Automated Backups & Security Patches)' : 'Garansi 30 Hari + Kontrak Managed Maintenance Bulanan (SLA Backup & Security Patch)',
+                    ].map((sla, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => updateField('garansiSla', sla)}
+                        className={`px-3 py-1.5 text-xs font-mono border transition ${formData.garansiSla === sla
+                          ? 'bg-blue-600 text-white border-blue-600 font-bold'
+                          : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
+                          }`}
+                      >
+                        {sla}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={formData.garansiSla}
+                    onChange={(e) => updateField('garansiSla', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+
+                {/* Field 23: terminPembayaran */}
+                <div id="field-terminPembayaran">
+                  <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+                    <label className={labelClass}>
+                      {lang === 'en' ? '23. Payment Milestone Terms & Schedule *' : '23. Integrasi Skema Termin Pembayaran & Jadwal Milestone *'}
+                    </label>
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 border bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800">
+                      {lang === 'en' ? 'Milestone DP 50% Contract' : 'Kontrak Termin Bertahap DP 50%'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mb-2 font-sans">
+                    {lang === 'en' ? 'Turnkey studio development with milestones protected by Milestone DP 50% & UAT sign-off.' : 'Pengerjaan koding studio dengan termin bertahap yang dilindungi garansi serah terima UAT.'}
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {[
+                      lang === 'en' ? 'Standard 50/50: 50% Kickoff DP & 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap)' : 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+                      lang === 'en' ? 'Milestone 30/40/30: 30% Kickoff DP, 40% MVP Demo Completed, 30% Final Go-Live Settlement' : 'Termin Milestone 30/40/30: 30% DP Kickoff, 40% Demo MVP Selesai, 30% Pelunasan Go-Live',
+                      lang === 'en' ? '100% Full Upfront Payment (Priority Dedicated Squad Allocation)' : 'Termin Pelunasan Penuh 100% Upfront (Prioritas Utama Dedicated Squad)',
+                    ].map((termin, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => updateField('terminPembayaran', termin)}
+                        className={`px-3 py-1.5 text-xs font-mono border transition ${formData.terminPembayaran === termin
+                          ? 'bg-blue-600 text-white border-blue-600 font-bold'
+                          : 'bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
+                          }`}
+                      >
+                        {termin}
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={formData.terminPembayaran}
+                    onChange={(e) => updateField('terminPembayaran', e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              </>
+            )}
 
             {errorMessage && (
               <div

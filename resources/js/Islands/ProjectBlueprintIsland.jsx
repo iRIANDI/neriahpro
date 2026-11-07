@@ -163,9 +163,22 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   }, [lang, requestedTier]);
 
   // Execution Track: 'retail' (Jalur Mandiri) vs 'studio' (Jalur Turnkey Dedicated / Mitra Proyek)
+  const isRetailCustomer = Boolean(
+    initialData?.is_retail_customer ||
+    initialData?.is_existing_retail ||
+    initialData?.has_paid_retail_license ||
+    (initialData?.selected_tier && ['spark', 'starter', 'pro', 'ultimate', 'lite', 'retail_spark', 'retail_starter', 'retail_pro', 'retail_ultimate'].includes(String(initialData.selected_tier).toLowerCase())) ||
+    (requestedTier && ['spark', 'starter', 'pro', 'ultimate', 'lite', 'retail_spark', 'retail_starter', 'retail_pro', 'retail_ultimate'].includes(String(requestedTier).toLowerCase()))
+  );
+  const hasPaidRetailLicense = Boolean(
+    initialData?.has_paid_retail_license ||
+    initialData?.user_metadata?.paid ||
+    initialData?.paid
+  );
+
   const [currentTrack, setCurrentTrack] = useState(() => {
     // If this blueprint or customer is bound to an active/paid retail license, firmly default to retail
-    if (initialData?.is_retail_customer || initialData?.is_existing_retail || initialData?.has_paid_retail_license || initialData?.selected_track === 'retail' || initialData?.track === 'retail') {
+    if (isRetailCustomer || initialData?.selected_track === 'retail' || initialData?.track === 'retail') {
       return 'retail';
     }
     try {
@@ -187,6 +200,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   });
 
   const handleTrackChange = (newTrack) => {
+    if (hasPaidRetailLicense && newTrack === 'studio') {
+      showLocalToast('warning', lang === 'en'
+        ? 'Your active workspace has a verified and paid Retail License. Switching to Studio requires a new bespoke contract.'
+        : 'Ruang kerja Anda terikat pada Lisensi Retail Mandiri yang telah lunas & terverifikasi. Untuk beralih ke Jalur Dedicated Studio, silakan hubungi tim kami.',
+        'RETAIL LICENSE LOCKED'
+      );
+      return;
+    }
+
     setCurrentTrack(newTrack);
     try {
       const url = new URL(window.location.href);
@@ -2038,6 +2060,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       if (formData.stackPreset) {
         formDataUpload.append('stack_preset', formData.stackPreset);
       }
+      formDataUpload.append('track', currentTrack);
+      formDataUpload.append('current_track', currentTrack);
+      if (requestedTier) {
+        formDataUpload.append('tier', requestedTier);
+      }
 
       attachedFiles.forEach(file => {
         formDataUpload.append('files[]', file);
@@ -2103,8 +2130,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         showLocalToast('warning', result.notification, 'AI FAILOVER STATUS');
       }
 
-      // Align track recommendation if available
-      if (result.track_recommendation?.recommended_track) {
+      // Align track recommendation if available (NEVER flip to studio if user has paid or is in retail mode)
+      const isFirmlyRetail = currentTrack === 'retail' || isRetailCustomer || hasPaidRetailLicense;
+      if (!isFirmlyRetail && result.track_recommendation?.recommended_track) {
         handleTrackChange(result.track_recommendation.recommended_track);
       }
 
@@ -2112,9 +2140,25 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       const resolvedStackPreset = (formData.stackPreset && formData.stackPreset !== 'STACK_M1_LARAVEL_MONOLITH')
         ? formData.stackPreset
         : (synData.stackPreset || formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH');
+
+      const isRetailTarget = currentTrack === 'retail' || isFirmlyRetail;
+      const retailDefaults = getTrackDefaults('retail', requestedTier);
+      const cleanBudget = isRetailTarget
+        ? ((!synData.kisaranBudget || synData.kisaranBudget.includes('15.000.000') || synData.kisaranBudget.includes('Growth') || synData.kisaranBudget.includes('Advisory') || synData.kisaranBudget.includes('UMKM')) ? (formData.kisaranBudget || retailDefaults.kisaranBudget) : synData.kisaranBudget)
+        : synData.kisaranBudget;
+      const cleanSla = isRetailTarget
+        ? ((!synData.garansiSla || synData.garansiSla.includes('Garansi Bug') || synData.garansiSla.includes('Pascameluncur')) ? (formData.garansiSla || retailDefaults.garansiSla) : synData.garansiSla)
+        : synData.garansiSla;
+      const cleanTermin = isRetailTarget
+        ? ((!synData.terminPembayaran || synData.terminPembayaran.includes('50/50') || synData.terminPembayaran.includes('Milestone') || synData.terminPembayaran.includes('DP Kickoff')) ? (formData.terminPembayaran || retailDefaults.terminPembayaran) : synData.terminPembayaran)
+        : synData.terminPembayaran;
+
       const merged = {
         ...formData,
         ...synData,
+        kisaranBudget: cleanBudget || formData.kisaranBudget,
+        garansiSla: cleanSla || formData.garansiSla,
+        terminPembayaran: cleanTermin || formData.terminPembayaran,
         stackPreset: resolvedStackPreset,
         publicUxPreset: synData.publicUxPreset || synData.public_ux_preset || resolveDefaultPublicUxForSector(synData.primarySector || formData.primarySector),
         clientName: synData.clientName || formData.clientName,
@@ -3073,6 +3117,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           handleDeleteListItem={handleDeleteListItem}
           showLocalToast={showLocalToast}
           isExplicitSlugEdit={isExplicitSlugEdit}
+          requestedTier={requestedTier}
+          hasPaidRetailLicense={hasPaidRetailLicense}
+          isRetailCustomer={isRetailCustomer}
         />
       </form>
 

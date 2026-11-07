@@ -424,8 +424,11 @@ class VisionBlueprint extends Model
     public function isRetailLicense(): bool
     {
         return $this->project_status === 'Retail License'
+            || ($this->user_metadata['track'] ?? '') === 'retail'
+            || ($this->user_metadata['selected_track'] ?? '') === 'retail'
             || ! empty($this->user_metadata['retail_tier'])
             || ! empty($this->user_metadata['package_tier'])
+            || (! empty($this->user_metadata['paid']) && ($this->user_metadata['track'] ?? '') !== 'studio')
             || str_contains(strtolower($this->slug ?? ''), '-retail-');
     }
 

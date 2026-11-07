@@ -355,4 +355,45 @@ class RetailBlueprintEditAndSessionLeakTest extends TestCase
         $this->assertEquals('translator-apps-htc.md', $storedFilename2);
         $this->assertEquals($storedFilename1, $storedFilename2);
     }
+
+    /**
+     * Test that AI synthesis preserves Retail track and returns clean Retail deliverables without studio 50/50 leaks.
+     */
+    public function test_ai_synthesis_preserves_retail_track_and_retail_license_entitlements_when_retail_is_selected(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'yoseph@example.com',
+        ]);
+
+        $file = \Illuminate\Http\UploadedFile::fake()->createWithContent(
+            'Translator Apps HTC.md',
+            "# HTC Translator Enterprise System\nFitur Wajib:\n1. Multi-role Audio WebRTC\n2. Real-time chat & moderation\n3. High-concurrency language channels\n4. Cloud stream recording"
+        );
+
+        $response = $this->actingAs($user)->post('/api/blueprint/analyze-idea', [
+            'idea_text' => 'Aplikasi penerjemah audio ibadah gereja secara live streaming terdistribusi.',
+            'locale' => 'id',
+            'track' => 'retail',
+            'tier' => 'pro',
+            'files' => [$file],
+        ], ['Accept' => 'application/json']);
+
+        $response->assertStatus(200);
+        $result = $response->json();
+        $this->assertTrue($result['success']);
+
+        // Must recommend retail and NOT hijack to studio
+        $this->assertEquals('retail', $result['track_recommendation']['recommended_track']);
+
+        $data = $result['data'];
+        $this->assertNotNull($data);
+
+        // Assert Block F parameters are clean Retail defaults, not Studio 15jt / 50% DP
+        $this->assertStringContainsString('Pro', $data['kisaranBudget']);
+        $this->assertStringNotContainsString('15.000.000', $data['kisaranBudget']);
+        $this->assertStringNotContainsString('Growth Monolith', $data['kisaranBudget']);
+        $this->assertStringNotContainsString('50/50', $data['terminPembayaran']);
+        $this->assertStringNotContainsString('DP Kickoff', $data['terminPembayaran']);
+        $this->assertStringContainsString('Lisensi Mandiri', $data['garansiSla']);
+    }
 }

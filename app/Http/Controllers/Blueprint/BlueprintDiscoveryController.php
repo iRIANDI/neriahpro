@@ -96,6 +96,25 @@ class BlueprintDiscoveryController extends Controller
             $draftId = (string) session('blueprint_draft_id');
         }
 
+        $user = auth()->user();
+        $userHasRetailLicense = false;
+        if ($user) {
+            $userEmail = strtolower(trim((string) $user->email));
+            $userHasRetailLicense = VisionBlueprint::where(function ($q) use ($user, $userEmail) {
+                if ($userEmail) {
+                    $q->whereRaw('LOWER(email) = ?', [$userEmail]);
+                }
+                $q->orWhere('user_metadata->user_id', $user->id);
+            })
+            ->where(function ($q) {
+                $q->where('project_status', 'Retail License')
+                    ->orWhereNotNull('user_metadata->retail_tier')
+                    ->orWhereNotNull('user_metadata->package_tier')
+                    ->orWhere('user_metadata->paid', true);
+            })
+            ->exists();
+        }
+
         $initialData = [];
 
         $existingBp = null;
@@ -103,9 +122,14 @@ class BlueprintDiscoveryController extends Controller
         if ($slug) {
             $existingBp = VisionBlueprint::where('slug', $slug)->first();
             if ($existingBp) {
-                $isExistingRetail = ($existingBp->project_status === 'Retail License'
+                $isExistingRetail = ($userHasRetailLicense
+                    || $existingBp->isRetailLicense()
+                    || $existingBp->project_status === 'Retail License'
+                    || ($existingBp->user_metadata['track'] ?? '') === 'retail'
+                    || ($existingBp->user_metadata['selected_track'] ?? '') === 'retail'
                     || ! empty($existingBp->user_metadata['retail_tier'])
                     || ! empty($existingBp->user_metadata['package_tier'])
+                    || ! empty($existingBp->user_metadata['paid'])
                     || str_contains(strtolower($existingBp->slug ?? ''), '-retail-'));
 
                 if ($existingBp->isScopeFrozen() && ! $isExistingRetail && ! auth()->user()?->isSuperAdmin()) {
@@ -135,13 +159,13 @@ class BlueprintDiscoveryController extends Controller
                     'jangkauanPasar' => $existingBp->user_metadata['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
                     'outOfScope' => $existingBp->user_metadata['out_of_scope'] ?? '',
                     'kepatuhanKeamanan' => $existingBp->user_metadata['kepatuhan_keamanan'] ?? 'Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)',
-                    'kisaranBudget' => ($isExistingRetail && (! empty($existingBp->user_metadata['kisaran_budget']) && ! str_contains($existingBp->user_metadata['kisaran_budget'], '15.000.000') && ! str_contains($existingBp->user_metadata['kisaran_budget'], 'Growth') && ! str_contains($existingBp->user_metadata['kisaran_budget'], '50.000.000')))
+                    'kisaranBudget' => ($isExistingRetail && (! empty($existingBp->user_metadata['kisaran_budget']) && ! str_contains($existingBp->user_metadata['kisaran_budget'], '15.000.000') && ! str_contains($existingBp->user_metadata['kisaran_budget'], 'Growth') && ! str_contains($existingBp->user_metadata['kisaran_budget'], '50.000.000') && ! str_contains($existingBp->user_metadata['kisaran_budget'], 'Advisory') && ! str_contains($existingBp->user_metadata['kisaran_budget'], 'UMKM')))
                         ? $existingBp->user_metadata['kisaran_budget']
-                        : ($isExistingRetail ? null : ($existingBp->user_metadata['kisaran_budget'] ?? 'Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)')),
+                        : ($isExistingRetail ? 'Pro: Rp 399.000 (Bundel Lengkap DDL, 7-Fase Prompt AI, Docker & Seeder)' : ($existingBp->user_metadata['kisaran_budget'] ?? 'Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)')),
                     'targetPlatform' => $existingBp->user_metadata['target_platform'] ?? 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)',
                     'migrasiData' => $existingBp->user_metadata['migrasi_data'] ?? 'Database Baru Bersih (Input Mandiri & Dukungan Impor Template Excel/CSV)',
                     'preferensiHosting' => $existingBp->user_metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup)',
-                    'garansiSla' => ($isExistingRetail && (! empty($existingBp->user_metadata['garansi_sla']) && ! str_contains($existingBp->user_metadata['garansi_sla'], 'Garansi Bug') && ! str_contains($existingBp->user_metadata['garansi_sla'], 'Pascameluncur')))
+                    'garansiSla' => ($isExistingRetail && (! empty($existingBp->user_metadata['garansi_sla']) && ! str_contains($existingBp->user_metadata['garansi_sla'], 'Garansi Bug') && ! str_contains($existingBp->user_metadata['garansi_sla'], 'Pascameluncur') && ! str_contains($existingBp->user_metadata['garansi_sla'], 'Private Repo')))
                         ? $existingBp->user_metadata['garansi_sla']
                         : ($isExistingRetail ? 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit' : ($existingBp->user_metadata['garansi_sla'] ?? '30 Hari Garansi Bug Pascameluncur + Penyerahan Akses Penuh Private Repo GitHub')),
                     'terminPembayaran' => ($isExistingRetail && (! empty($existingBp->user_metadata['termin_pembayaran']) && ! str_contains($existingBp->user_metadata['termin_pembayaran'], '50/50') && ! str_contains($existingBp->user_metadata['termin_pembayaran'], 'Milestone') && ! str_contains($existingBp->user_metadata['termin_pembayaran'], 'DP Kickoff')))
@@ -342,6 +366,8 @@ class BlueprintDiscoveryController extends Controller
         $aiModel = $request->input('ai_model') ?: $request->input('ai_provider');
         $explicitSector = $request->input('primary_sector') ?: $request->input('primarySector');
         $explicitStackPreset = $request->input('stack_preset') ?: $request->input('stackPreset');
+        $explicitTrack = $request->input('track') ?: $request->input('current_track') ?: $request->input('selected_track');
+        $explicitTier = $request->input('tier') ?: $request->input('package_tier') ?: $request->input('selected_tier');
         $rawPrimitives = $request->input('selected_primitives') ?? $request->input('selectedPrimitives') ?? [];
         if (is_string($rawPrimitives)) {
             $decodedPrims = json_decode($rawPrimitives, true);
@@ -352,6 +378,26 @@ class BlueprintDiscoveryController extends Controller
 
         // 3. Spark Free Tier Quota Enforcement (2x per month per IP/Guest, auto-reset 1st of month)
         $user = auth()->user();
+        if ($user) {
+            $userEmail = strtolower(trim((string) $user->email));
+            $userHasRetailLicense = VisionBlueprint::where(function ($q) use ($user, $userEmail) {
+                if ($userEmail) {
+                    $q->whereRaw('LOWER(email) = ?', [$userEmail]);
+                }
+                $q->orWhere('user_metadata->user_id', $user->id);
+            })
+            ->where(function ($q) {
+                $q->where('project_status', 'Retail License')
+                    ->orWhereNotNull('user_metadata->retail_tier')
+                    ->orWhereNotNull('user_metadata->package_tier')
+                    ->orWhere('user_metadata->paid', true);
+            })
+            ->exists();
+
+            if ($userHasRetailLicense) {
+                $explicitTrack = 'retail';
+            }
+        }
         $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
         $identifier = $user ? $user->email : ($request->ip() ?: '127.0.0.1');
         $monthKey = 'spark_quota_'.md5($identifier).'_'.now()->format('Y_m');
@@ -385,7 +431,9 @@ class BlueprintDiscoveryController extends Controller
                 $aiModel,
                 $explicitSector ?: null,
                 $explicitPrimitives,
-                $explicitStackPreset ?: null
+                $explicitStackPreset ?: null,
+                $explicitTrack,
+                $explicitTier
             );
 
             // Increment Spark quota usage upon successful synthesis

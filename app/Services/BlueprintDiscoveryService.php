@@ -38,7 +38,9 @@ class BlueprintDiscoveryService
         ?string $preferredAiProvider = null,
         ?string $explicitSectorCode = null,
         array $explicitPrimitiveCodes = [],
-        ?string $explicitStackPresetCode = null
+        ?string $explicitStackPresetCode = null,
+        ?string $explicitTrack = null,
+        ?string $explicitTier = null
     ): array
     {
         $isEn = ($locale === 'en');
@@ -164,7 +166,7 @@ class BlueprintDiscoveryService
         $brief = $this->parseStructuredBrief($corpusText);
 
         // 3. Extract & Synthesize Architectural Blueprint
-        $result = $this->performArchitecturalAnalysis($sanitizedRawIdea, $allDocsMarkdown, $corpusText, $fileSummaries, $isEn, $brief);
+        $result = $this->performArchitecturalAnalysis($sanitizedRawIdea, $allDocsMarkdown, $corpusText, $fileSummaries, $isEn, $brief, $explicitTrack, $explicitTier);
 
         // 3.5 Deep AI Enhancement across Multi-AI Providers (DeepSeek-R1, Claude 3.7, Gemini 2.5, ChatGPT, Grok, Groq)
         $result = $this->enhanceWithMultiAi($result, $corpusText, $locale, $preferredAiProvider, $brief);
@@ -584,7 +586,9 @@ class BlueprintDiscoveryService
         string $corpus, 
         array $fileSummaries, 
         bool $isEn,
-        array $brief = []
+        array $brief = [],
+        ?string $explicitTrack = null,
+        ?string $explicitTier = null
     ): array {
         $textLower = strtolower($corpus);
         $noPaymentGateway = (bool) preg_match('/(?:tanpa|tidak\s*pakai|tanpa\s*adanya|no|without)\s*(?:payment\s*gateway|midtrans|gerbang\s*pembayaran)/i', $corpus);
@@ -916,24 +920,63 @@ class BlueprintDiscoveryService
         ];
 
         $proactiveSuggestions = $this->generateProactiveSuggestions($corpus, $domain, $isEn);
-        $trackRecommendation = $this->evaluateTrackRecommendation($baseData, $corpus, $domain, $isEn);
+        $trackRecommendation = $this->evaluateTrackRecommendation($baseData, $corpus, $domain, $isEn, $explicitTrack);
 
-        // Align fields 21, 22, 23 if retail track is recommended to prevent leaking Studio 50/50 terms into self-service licenses
-        if (($trackRecommendation['recommended_track'] ?? '') === 'retail') {
-            if (empty($brief['kisaranBudget']) && !preg_match('/(?:budget|anggaran|biaya|alokasi|Rp|IDR)/i', $corpus)) {
-                $baseData['kisaranBudget'] = $isEn
-                    ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)'
-                    : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)';
+        // Align fields 21, 22, 23 if retail track is recommended or explicitly requested to prevent leaking Studio 50/50 terms into self-service licenses
+        if (($trackRecommendation['recommended_track'] ?? '') === 'retail' || $explicitTrack === 'retail') {
+            $isStudioBudget = !empty($baseData['kisaranBudget']) && (
+                str_contains((string) $baseData['kisaranBudget'], '15.000.000') ||
+                str_contains((string) $baseData['kisaranBudget'], 'Growth') ||
+                str_contains((string) $baseData['kisaranBudget'], '50.000.000') ||
+                str_contains((string) $baseData['kisaranBudget'], 'Advisory') ||
+                str_contains((string) $baseData['kisaranBudget'], 'UMKM')
+            );
+
+            if (empty($baseData['kisaranBudget']) || $isStudioBudget) {
+                $tierLower = strtolower((string) ($explicitTier ?: 'pro'));
+                $satuPintu = \App\Support\PricingRegistry::getSatuPintuCatalog();
+                if ($tierLower === 'starter' || $tierLower === 'lite' || $tierLower === 'retail_starter' || $tierLower === 'retail_lite') {
+                    $liteLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_LITE]['formatted_price'] ?? 'Rp 99.000';
+                    $baseData['kisaranBudget'] = $isEn
+                        ? "Lite: {$liteLabel} (PRD 26 Parameters, Strict ULID DDL & AI Directives)"
+                        : "Lite: {$liteLabel} (PRD 26 Parameter, Schema DDL & AI Directives)";
+                } elseif ($tierLower === 'pro' || $tierLower === 'retail_pro') {
+                    $proLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_PRO]['formatted_price'] ?? 'Rp 399.000';
+                    $baseData['kisaranBudget'] = $isEn
+                        ? "Pro: {$proLabel} (Full Architecture Bundle: DDL, 7-Phase Prompts, Docker & Seeder)"
+                        : "Pro: {$proLabel} (Bundel Lengkap DDL, 7-Fase Prompt AI, Docker & Seeder)";
+                } elseif ($tierLower === 'ultimate' || $tierLower === 'retail_ultimate') {
+                    $ultLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_ULTIMATE]['formatted_price'] ?? 'Rp 1.490.000';
+                    $baseData['kisaranBudget'] = $isEn
+                        ? "Ultimate: {$ultLabel} (Full 10 Pillars Software Factory OS + Live MCP Kit)"
+                        : "Ultimate: {$ultLabel} (Full 10 Pilar Software Factory OS + Live MCP Kit)";
+                } else {
+                    $baseData['kisaranBudget'] = $isEn
+                        ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)'
+                        : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)';
+                }
             }
-            if (empty($brief['garansiSla'])) {
+
+            $isStudioSla = !empty($baseData['garansiSla']) && (
+                str_contains((string) $baseData['garansiSla'], 'Garansi Bug') ||
+                str_contains((string) $baseData['garansiSla'], 'Pascameluncur') ||
+                str_contains((string) $baseData['garansiSla'], 'Private Repo')
+            );
+            if (empty($baseData['garansiSla']) || $isStudioSla) {
                 $baseData['garansiSla'] = $isEn
                     ? 'Self-Service Delivery: Instant PRD Fortune 500, Strict ULID DDL & Docker Starter Kit Handover'
                     : 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit';
             }
-            if (empty($brief['terminPembayaran'])) {
+
+            $isStudioTermin = !empty($baseData['terminPembayaran']) && (
+                str_contains((string) $baseData['terminPembayaran'], '50/50') ||
+                str_contains((string) $baseData['terminPembayaran'], 'Milestone') ||
+                str_contains((string) $baseData['terminPembayaran'], 'DP Kickoff')
+            );
+            if (empty($baseData['terminPembayaran']) || $isStudioTermin) {
                 $baseData['terminPembayaran'] = $isEn
-                    ? 'Spark Package (Free): $0 / Free Instant Architectural Audit & Blueprint Access'
-                    : 'Paket Spark (Gratis): Rp 0 / Akses Audit Arsitektur & Cetak Biru Gratis 100%';
+                    ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)'
+                    : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
             }
         }
 
@@ -962,7 +1005,7 @@ class BlueprintDiscoveryService
     /**
      * Evaluate system architecture complexity and recommend optimal execution track (Retail vs Studio).
      */
-    public function evaluateTrackRecommendation(array $baseData, string $corpus, string $domain, bool $isEn): array
+    public function evaluateTrackRecommendation(array $baseData, string $corpus, string $domain, bool $isEn, ?string $explicitTrack = null): array
     {
         $featuresRaw = $baseData['fiturWajib'] ?? '';
         $featuresCount = count(array_filter(preg_split('/\r\n|\r|\n/', (string) $featuresRaw)));
@@ -998,7 +1041,17 @@ class BlueprintDiscoveryService
         $recommendedTrack = 'retail';
         $rationale = '';
 
-        if ($wantsTurnkey && !$wantsSelfService) {
+        if ($explicitTrack === 'retail') {
+            $recommendedTrack = 'retail';
+            $rationale = $isEn
+                ? 'Your project is designated for the Software Factory OS Retail License (Self-Service). Complete architecture assets (PRD 26 parameters, Strict ULID DDL, Docker, AI directives) are delivered for independent coding.'
+                : 'Proyek Anda menggunakan Lisensi Digital Retail Software Factory OS (Jalur Mandiri). Seluruh bundel arsitektur (PRD 26 parameter, DDL ULID, Docker, panduan AI) diserahkan untuk koding mandiri tanpa ikatan agensi.';
+        } elseif ($explicitTrack === 'studio') {
+            $recommendedTrack = 'studio';
+            $rationale = $isEn
+                ? 'Your brief is designated for Dedicated Studio turnkey delivery by Neriah Pro Senior Architect.'
+                : 'Proyek Anda dialokasikan untuk pengerjaan penuh turnkey oleh Dedicated Studio Neriah Pro.';
+        } elseif ($wantsTurnkey && !$wantsSelfService) {
             $recommendedTrack = 'studio';
             $rationale = $isEn
                 ? 'Your brief indicates a requirement for turnkey delivery. Neriah Pro Dedicated Studio provides senior engineers to code, test (Pest ApiContractTest), and deploy live with SLA guarantees.'

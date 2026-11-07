@@ -135,10 +135,10 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
   const [wpSpyStyle, setWpSpyStyle] = useState('glowing_pill'); // 'glowing_pill' | 'underline_runner' | 'active_dot' | 'gradient_bar'
   const [wpSpyColor, setWpSpyColor] = useState('#6366f1');
 
-  const [wpPhone, setWpPhone] = useState(content?.personal_info?.phone || '628123456789');
+  const [wpPhone, setWpPhone] = useState(initialData?.personal_info?.phone || '628123456789');
   const [wpCtaText, setWpCtaText] = useState('Hubungi via WhatsApp');
   const [wpMessage, setWpMessage] = useState(
-    `Halo ${content?.personal_info?.name || 'Kandidat'}, saya melihat web portfolio Anda dan tertarik mendiskusikan peluang karir.`
+    `Halo ${initialData?.personal_info?.name || 'Kandidat'}, saya melihat web portfolio Anda dan tertarik mendiskusikan peluang karir.`
   );
 
   const [wpLayout, setWpLayout] = useState('bento_grid'); // 'bento_grid' | 'split_hero' | 'developer_terminal' | 'showcase_cards' | 'editorial_narrative'
@@ -839,6 +839,21 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
   const [fontFamily, setFontFamily] = useState('Inter');
   const [primaryColor, setPrimaryColor] = useState('#4f46e5');
   const [content, setContent] = useState(initialData || {});
+  const avatarConfig = {
+    showPhoto,
+    shape: photoStyle,
+    customUrl: content?.personal_info?.photo_url || null,
+  };
+  const personalInfo = {
+    ...(content?.personal_info || {}),
+    fullName: content?.personal_info?.name || content?.personal_info?.fullName || '',
+  };
+  const experience = content?.experiences || content?.experience || [];
+  const education = content?.education || [];
+  const skills = content?.skills || [];
+  const projects = content?.projects || [];
+  const certifications = content?.certifications || [];
+  const references = content?.references || [];
 
   // UI States
   const [saving, setSaving] = useState(false);

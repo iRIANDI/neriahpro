@@ -64,6 +64,7 @@ export default function BlueprintComposableMatrixSection({
   lang,
   t,
   initialData,
+  currentTrack = 'retail',
 }) {
   return (
     <>

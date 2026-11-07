@@ -2997,6 +2997,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             lang={lang}
             t={t}
             initialData={initialData}
+            currentTrack={currentTrack}
           />
         )}
 
@@ -3046,6 +3047,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         }}
         selectedPaymentRailIds={selectedPaymentRailIds}
         setSelectedPaymentRailIds={setSelectedPaymentRailIds}
+        setPendingPaymentSuggestion={setPendingPaymentSuggestion}
         onApply={handleApplySelectedPaymentRails}
         lang={lang}
       />

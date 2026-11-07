@@ -14,6 +14,9 @@ export default function FooterIsland({
   ownerTitle = 'Independent Full-Stack Developer & Software Architect'
 }) {
   const currentYear = new Date().getFullYear();
+  const isBlueprintEnabled = featureFlags?.blueprint_enabled !== false;
+  const isCvProEnabled = featureFlags?.cv_pro_enabled !== false;
+  const hasAnyPillar = isBlueprintEnabled || isCvProEnabled;
   const effectiveEmail = supportEmail || 'support@neriahpro.com';
   let rawWa = (whatsappNumber || '6281380448253').toString().replace(/\D/g, '');
   if (rawWa.startsWith('938') && rawWa.length >= 11) {

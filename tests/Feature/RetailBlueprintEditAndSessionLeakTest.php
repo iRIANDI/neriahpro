@@ -396,4 +396,68 @@ class RetailBlueprintEditAndSessionLeakTest extends TestCase
         $this->assertStringNotContainsString('DP Kickoff', $data['terminPembayaran']);
         $this->assertStringContainsString('Lisensi Mandiri', $data['garansiSla']);
     }
+
+    /**
+     * Test that blueprint update succeeds and persists data even if remote AI times out or throws an error.
+     */
+    public function test_blueprint_update_succeeds_even_when_remote_ai_prd_generation_throws_or_times_out(): void
+    {
+        // Force HTTP client to simulate a timeout or connection failure for all AI calls
+        \Illuminate\Support\Facades\Http::fake([
+            '*' => function () {
+                throw new \Illuminate\Http\Client\ConnectionException('cURL error 28: Operation timed out after 12000 milliseconds');
+            },
+        ]);
+
+        $blueprint = VisionBlueprint::create([
+            'nama_bisnis' => 'HTC Church Translation App',
+            'client_name' => 'Yoseph Iriandi',
+            'email' => 'yoseph@example.com',
+            'phone' => '+6281380448253',
+            'masalah_utama' => 'Old Problem',
+            'tujuan_utama' => 'Old Goal',
+            'target_audiens' => 'Old Audience',
+            'aktor_sistem' => 'Admin',
+            'fitur_wajib' => 'Old Feature',
+            'alur_kerja' => 'Old Workflow',
+            'project_status' => 'Retail License',
+            'signed_agreement' => true,
+            'is_published' => true,
+            'user_metadata' => [
+                'retail_tier' => 'retail_pro',
+            ],
+        ]);
+
+        $payload = [
+            'slug' => $blueprint->slug,
+            'is_editing_slug' => $blueprint->slug,
+            'namaBisnis' => 'HTC Church Translation Resilient',
+            'clientName' => 'Yoseph Iriandi',
+            'email' => 'yoseph@example.com',
+            'phone' => '+6281380448253',
+            'masalahUtama' => 'Updated Church Live Translation',
+            'tujuanUtama' => 'Updated Goal',
+            'targetAudiens' => 'Updated Audience',
+            'aktorSistem' => 'Superadmin, Translator, Listener',
+            'fiturWajib' => '1. WebRTC Audio 2. Multi-channel 3. Moderation',
+            'alurKerja' => 'Translator talks -> Real-time broadcast',
+            'track' => 'retail',
+            'selected_track' => 'retail',
+        ];
+
+        $response = $this->postJson('/api/vision-blueprint', $payload);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'data' => [
+                'slug' => $blueprint->slug,
+            ],
+        ]);
+
+        $blueprint->refresh();
+        $this->assertEquals('HTC Church Translation Resilient', $blueprint->nama_bisnis);
+        $this->assertEquals('Updated Church Live Translation', $blueprint->masalah_utama);
+        $this->assertNotNull($blueprint->prd_content);
+    }
 }

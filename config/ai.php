@@ -25,10 +25,10 @@ return [
             'api_key' => env('DEEPSEEK_API_KEY'),
             'base_url' => 'https://api.deepseek.com',
             'models' => [
-                'discovery' => env('DEEPSEEK_DISCOVERY_MODEL', 'deepseek-flash'), // DeepSeek-V4.1-Flash (Vision & Fast)
-                'prd' => env('DEEPSEEK_PRD_MODEL', 'deepseek-v4-pro'), // DeepSeek-V4-Pro (1M Konteks Reasoning)
-                'vision' => 'deepseek-flash', // Multimodal vision image support
-                'reasoning' => 'deepseek-v4-pro',
+                'discovery' => env('DEEPSEEK_DISCOVERY_MODEL', 'deepseek-chat'),
+                'prd' => env('DEEPSEEK_PRD_MODEL', 'deepseek-chat'),
+                'vision' => 'deepseek-chat',
+                'reasoning' => 'deepseek-reasoner',
                 'fallback' => 'deepseek-chat',
             ],
             'is_free_tier' => true, // Extremely economical

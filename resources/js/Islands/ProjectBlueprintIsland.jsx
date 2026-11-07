@@ -2775,9 +2775,17 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
+      let result = null;
+      try {
+        result = await response.json();
+      } catch (jsonErr) {
+        result = {
+          success: false,
+          message: response.statusText || (lang === 'en' ? 'Unexpected server response format.' : 'Format respon dari server tidak sesuai.')
+        };
+      }
 
-      if (response.ok && result.success) {
+      if (response.ok && result?.success) {
         // Clear any remaining stroke alert classes
         invalidFields.forEach(k => {
           const el = document.getElementById('field-' + k);
@@ -2792,15 +2800,16 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         let missingKeys = [];
-        if (result.errors && typeof result.errors === 'object') {
+        if (result?.errors && typeof result.errors === 'object') {
           missingKeys = Object.keys(result.errors).map(k => FIELD_MAP[k] || k);
         }
 
-        const serverMsg = result.error || result.message || (result.errors && typeof result.errors === 'object' ? Object.values(result.errors).flat().join(', ') : null);
+        const serverMsg = result?.error || result?.message || (result?.errors && typeof result.errors === 'object' ? Object.values(result.errors).flat().join(', ') : null);
         const errorDetails = serverMsg || (lang === 'en' ? 'An unexpected server error occurred while processing data.' : 'Terjadi kesalahan saat memproses data di server.');
         setErrorMessage(errorDetails);
 
         if (missingKeys.length > 0) {
+          setInvalidFields(missingKeys);
           triggerFieldStrokeAndScroll(missingKeys);
           showLocalToast(
             'error',

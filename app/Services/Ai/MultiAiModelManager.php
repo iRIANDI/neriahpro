@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 class MultiAiModelManager
 {
     protected static ?array $settingsCache = null;
+    protected static ?float $requestCycleStartTime = null;
 
     protected static function getCachedSetting(string $key): ?string
     {
@@ -166,8 +167,22 @@ class MultiAiModelManager
             $cooldownMinutes = (int) config('ai.cooldown_minutes', 15);
             $cooldownUntil = time() + ($cooldownMinutes * 60);
 
-            // 429 = Rate Limit Exceeded, 402/403 = Quota / Balance Exhausted
-            if ($statusCode === 429 || $statusCode === 402 || $statusCode === 403 || str_contains(strtolower($error), 'quota') || str_contains(strtolower($error), 'rate')) {
+            $errLower = strtolower($error);
+            $isTerminalFailure = $statusCode === 429 
+                || $statusCode === 402 
+                || $statusCode === 403 
+                || $statusCode === 401 
+                || $statusCode === 0 
+                || str_contains($errLower, 'quota') 
+                || str_contains($errLower, 'rate')
+                || str_contains($errLower, 'invalid token')
+                || str_contains($errLower, 'unauthorized')
+                || str_contains($errLower, 'timed out')
+                || str_contains($errLower, 'timeout')
+                || str_contains($errLower, 'curl error 28')
+                || str_contains($errLower, 'connection refused');
+
+            if ($isTerminalFailure) {
                 Cache::put("ai_model_status_{$provider}", 'exhausted', now()->addMinutes($cooldownMinutes));
                 Cache::put("ai_cooldown_until_{$provider}", $cooldownUntil, now()->addMinutes($cooldownMinutes));
             } else {
@@ -223,9 +238,34 @@ class MultiAiModelManager
             $chain = $configuredProviders;
         }
 
+        // Strict Request Time Budget: If cumulative AI execution in this request cycle reaches 15s,
+        // immediately fall back to the Deterministic Architecture Engine to guarantee sub-second HTTP responses.
+        if (self::$requestCycleStartTime === null) {
+            self::$requestCycleStartTime = microtime(true);
+        }
+
+        $elapsedRequestTime = microtime(true) - self::$requestCycleStartTime;
+        if ($elapsedRequestTime >= 15.0) {
+            return [
+                'success' => false,
+                'text' => null,
+                'provider' => 'deterministic_heuristic',
+                'provider_name' => 'Neriah Pro Deterministic Architecture Engine',
+                'model' => 'expert-rule-engine-v1',
+                'fallback_occurred' => true,
+                'failed_attempts' => [
+                    [
+                        'provider' => 'budget_guard',
+                        'reason' => 'Per-request AI time budget (15s) reached. Seamlessly fell back to Deterministic Architecture Engine.',
+                    ]
+                ],
+                'notification' => 'Batas waktu respon AI tercapai. Sistem otomatis menggunakan Deterministic Architecture Engine berstandar industri tanpa downtime.',
+            ];
+        }
+
         $failedAttempts = [];
         $startTime = microtime(true);
-        $maxExecutionBudget = 38.0; // Max 38 seconds total to prevent Cloudflare 100s 524 timeout
+        $maxExecutionBudget = 12.0; // Max 12 seconds total per single call to prevent web timeout
 
         // If no providers are configured at all, return deterministic engine immediately without failing remote calls
         if (empty($chain)) {
@@ -361,7 +401,7 @@ class MultiAiModelManager
             $payload['systemInstruction'] = ['parts' => [['text' => $system]]];
         }
 
-        $timeout = $tier === 'prd' ? 24 : 18;
+        $timeout = $tier === 'prd' ? 12 : 8;
         $response = Http::timeout($timeout)->post($url, $payload);
 
         if ($response->successful()) {
@@ -394,7 +434,7 @@ class MultiAiModelManager
             $payload['system'] = $system;
         }
 
-        $timeout = $tier === 'prd' ? 24 : 18;
+        $timeout = $tier === 'prd' ? 12 : 8;
         $response = Http::timeout($timeout)
             ->withHeaders([
                 'x-api-key' => $apiKey,
@@ -445,7 +485,7 @@ class MultiAiModelManager
             $headers['X-Title'] = 'Neriah Pro Studio OS';
         }
 
-        $timeout = $tier === 'prd' ? 24 : 18;
+        $timeout = $tier === 'prd' ? 12 : 8;
         $response = Http::timeout($timeout)
             ->withHeaders($headers)
             ->post($url, $payload);

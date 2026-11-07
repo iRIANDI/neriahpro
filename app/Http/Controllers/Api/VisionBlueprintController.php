@@ -240,7 +240,11 @@ class VisionBlueprintController extends Controller
                 ]);
 
                 // Regenerate PRD with updated specifications
-                $existingBp->generateAndSavePrd();
+                try {
+                    $existingBp->generateAndSavePrd();
+                } catch (\Throwable $prdEx) {
+                    \Illuminate\Support\Facades\Log::warning('Gagal me-regenerate PRD saat update blueprint: ' . $prdEx->getMessage());
+                }
 
                 // Clear draft from session and cache
                 session()->forget('blueprint_draft');
@@ -283,7 +287,11 @@ class VisionBlueprintController extends Controller
             ]);
 
             // Synthesize and attach Ultimate PRD
-            $vision->generateAndSavePrd();
+            try {
+                $vision->generateAndSavePrd();
+            } catch (\Throwable $prdEx) {
+                \Illuminate\Support\Facades\Log::warning('Gagal me-regenerate PRD saat create blueprint: ' . $prdEx->getMessage());
+            }
 
             // Send Email Notification to Customer if valid email provided
             if (!empty($vision->email) && filter_var($vision->email, FILTER_VALIDATE_EMAIL) && !str_contains($vision->email, '@example.com')) {

@@ -261,6 +261,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const [ideaText, setIdeaText] = useState(() => initialData?._meta?.raw_idea_text || '');
   const textareaRef = useRef(null);
   const [attachedFiles, setAttachedFiles] = useState([]);
+  const [serverDocuments, setServerDocuments] = useState(() => {
+    return initialData?._meta?.file_details
+      || initialData?._meta?.stored_files
+      || initialData?.uploaded_files
+      || initialData?.file_details
+      || [];
+  });
   const [convertedMarkdown, setConvertedMarkdown] = useState(() => initialData?._meta?.converted_markdown || '');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState('');
@@ -1438,7 +1445,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           id: 'field-attachedFiles',
           code: 'S2',
           label: lang === 'en' ? 'MarkItDown Document Attachments' : 'Lampiran Dokumen (MarkItDown)',
-          isFilled: attachedFiles.length > 0,
+          isFilled: attachedFiles.length > 0 || serverDocuments.length > 0,
         },
       ],
     },
@@ -2072,6 +2079,26 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         setAiTelemetry(result.ai_telemetry);
       }
 
+      if (result.draft_id) {
+        draftIdRef.current = result.draft_id;
+        if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set('draft_id', result.draft_id);
+          window.history.replaceState({ draft_id: result.draft_id }, '', currentUrl.toString());
+        }
+      }
+
+      const synData = result.data || {};
+      const newServerDocs = synData._meta?.file_details
+        || synData._meta?.stored_files
+        || synData.uploaded_files
+        || synData.file_details
+        || result.file_details
+        || [];
+      if (Array.isArray(newServerDocs) && newServerDocs.length > 0) {
+        setServerDocuments(newServerDocs);
+      }
+
       if (result.notification && result.ai_telemetry?.fallback_occurred) {
         showLocalToast('warning', result.notification, 'AI FAILOVER STATUS');
       }
@@ -2082,7 +2109,6 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       }
 
       // Populate synthesized blueprint data into all 25 fields while preserving user's explicit Stack Preset
-      const synData = result.data || {};
       const resolvedStackPreset = (formData.stackPreset && formData.stackPreset !== 'STACK_M1_LARAVEL_MONOLITH')
         ? formData.stackPreset
         : (synData.stackPreset || formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH');
@@ -2186,6 +2212,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     setFormData(blankForm);
     setIdeaText('');
     setAttachedFiles([]);
+    setServerDocuments([]);
     setConvertedMarkdown('');
     setPhoneDigits('');
     setAiTelemetry(null);
@@ -2940,6 +2967,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         honeypotWebsite={honeypotWebsite}
         setHoneypotWebsite={setHoneypotWebsite}
         attachedFiles={attachedFiles}
+        serverDocuments={serverDocuments}
         handleAnalyzeIdea={handleAnalyzeIdea}
         handleQuickDetectSectorFromIdea={handleQuickDetectSectorFromIdea}
         handleFileChange={handleFileChange}

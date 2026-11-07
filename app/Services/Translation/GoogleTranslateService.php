@@ -23,14 +23,20 @@ class GoogleTranslateService
             return $text;
         }
 
-        // Cache translation to avoid duplicate network requests
+        // Cache translation to avoid duplicate network requests (only cache when translation actually occurred)
         try {
             $cacheKey = 'gt_' . md5($source . '_' . $target . '_' . $text);
-            return Cache::remember($cacheKey, now()->addDays(30), function () use ($text, $target, $source) {
-                return self::directTranslate($text, $target, $source);
-            });
+            $cached = Cache::get($cacheKey);
+            if (!empty($cached) && $cached !== $text) {
+                return $cached;
+            }
+
+            $translated = self::directTranslate($text, $target, $source);
+            if (!empty($translated) && $translated !== $text) {
+                Cache::put($cacheKey, $translated, now()->addDays(30));
+            }
+            return $translated;
         } catch (\Throwable $e) {
-            // If cache storage is temporarily unavailable, fall back to direct translation
             return self::directTranslate($text, $target, $source);
         }
     }
@@ -80,7 +86,38 @@ class GoogleTranslateService
                 }
             }
         } catch (\Throwable $e) {
-            // Silently fallback to original text
+            // Log for monitoring
+            Log::debug("GoogleTranslateService directTranslate HTTP error: " . $e->getMessage());
+        }
+
+        // Secondary Fallback: Multi-AI Model Failover (DeepSeek / Gemini / Groq / RelayRouter)
+        try {
+            if (class_exists(\App\Services\Ai\MultiAiModelManager::class)) {
+                $langMap = ['en' => 'English', 'id' => 'Indonesian'];
+                $targetName = $langMap[$target] ?? $target;
+                $sourceName = $langMap[$source] ?? $source;
+                $prompt = "Translate the following {$sourceName} text into clear, professional {$targetName}. Output ONLY the translated text, preserving original numbering, list structure, and technical terminology. Do NOT add quotes, markdown fences, preambles, or conversational text:\n\n" . $text;
+                $aiRes = \App\Services\Ai\MultiAiModelManager::executeWithFailover(
+                    $prompt,
+                    "You are a professional technical software specification translator.",
+                    'discovery'
+                );
+
+                if (!empty($aiRes['text'])) {
+                    $cleaned = trim($aiRes['text']);
+                    if (preg_match('/^```(?:json|markdown)?\s*([\s\S]*?)\s*```$/i', $cleaned, $m)) {
+                        $cleaned = trim($m[1]);
+                    }
+                    if (preg_match('/^["\']([\s\S]*)["\']$/s', $cleaned, $m) && !str_contains($m[1], "\n")) {
+                        $cleaned = trim($m[1]);
+                    }
+                    if (!empty($cleaned)) {
+                        return $cleaned;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning("GoogleTranslateService MultiAi failover error: " . $e->getMessage());
         }
 
         return $text;

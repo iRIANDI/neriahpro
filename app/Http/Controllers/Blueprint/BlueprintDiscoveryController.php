@@ -91,6 +91,11 @@ class BlueprintDiscoveryController extends Controller
             $draftId = explode('&', $draftId)[0];
         }
 
+        // Fallback to active session draft if user refreshed without query parameters (Zero-Loss refresh)
+        if (! $draftId && session()->has('blueprint_draft_id') && ! $request->boolean('reset') && ! $request->has('new') && ! $request->has('clean')) {
+            $draftId = (string) session('blueprint_draft_id');
+        }
+
         $initialData = [];
 
         $existingBp = null;
@@ -287,6 +292,7 @@ class BlueprintDiscoveryController extends Controller
     public function resetDraft(Request $request): JsonResponse
     {
         session()->forget('blueprint_draft');
+        session()->forget('blueprint_draft_id');
 
         if ($draftId = $request->input('draft_id')) {
             Cache::forget('blueprint_draft_'.$draftId);
@@ -390,6 +396,7 @@ class BlueprintDiscoveryController extends Controller
             $draftId = (string) Str::ulid();
             Cache::put('blueprint_draft_'.$draftId, $synthesized, now()->addHours(24));
             session(['blueprint_draft' => $synthesized]);
+            session(['blueprint_draft_id' => $draftId]);
 
             $aiTelemetry = $synthesized['_meta']['ai_telemetry'] ?? null;
             $failoverNotice = $aiTelemetry['notification'] ?? null;

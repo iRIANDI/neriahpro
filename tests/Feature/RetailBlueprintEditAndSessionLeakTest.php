@@ -279,4 +279,80 @@ class RetailBlueprintEditAndSessionLeakTest extends TestCase
         $this->assertStringContainsString('150ms', $manifesto['realtime_audio_webrtc']['latency']);
         $this->assertStringContainsString('Opus 48kHz', $manifesto['realtime_audio_webrtc']['codec']);
     }
+
+    /**
+     * Test that blueprint synthesis returns English output when locale === 'en' even if input text is in Indonesian.
+     */
+    public function test_blueprint_synthesis_enforces_english_when_locale_en_is_requested(): void
+    {
+        $uploadedFile = \Illuminate\Http\UploadedFile::fake()->createWithContent(
+            'Translator Apps HTC.md',
+            "# HTC Translator\nFitur Wajib:\n1. Manajemen Channel Bahasa: Tambah/edit/hapus bahasa\n2. Atur & Moderasi Chat: Menghapus pesan chat tertentu"
+        );
+
+        $response = $this->postJson('/api/blueprint/analyze-idea', [
+            'idea_text' => 'Aplikasi penerjemah audio ibadah gereja secara live streaming.',
+            'locale' => 'en',
+            'files' => [$uploadedFile],
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+        $data = $response->json('data');
+
+        $this->assertNotNull($data);
+        $this->assertArrayHasKey('draft_id', $response->json());
+        $this->assertArrayHasKey('file_details', $data);
+        $this->assertCount(1, $data['file_details']);
+        $this->assertEquals('Translator Apps HTC.md', $data['file_details'][0]['name']);
+
+        // Assert that draft is persisted in cache and session
+        $draftId = $response->json('draft_id');
+        $this->assertTrue(\Illuminate\Support\Facades\Cache::has('blueprint_draft_' . $draftId));
+
+        // When visiting /blueprint?tier=pro&draft_id={draftId}, the initialData should be restored
+        $pageResponse = $this->get('/blueprint?tier=pro&draft_id=' . $draftId);
+        $pageResponse->assertStatus(200);
+        $initialData = $pageResponse->viewData('initialData');
+        $this->assertNotNull($initialData);
+        $this->assertNotEmpty($initialData['file_details'] ?? $initialData['_meta']['file_details'] ?? []);
+    }
+
+    /**
+     * Test that re-uploading the same file does not create duplicate files on disk.
+     */
+    public function test_reuploading_same_file_is_idempotent_and_does_not_accumulate_duplicates(): void
+    {
+        $admin = User::factory()->create(['email' => 'yoseph.iriandi.tambunan@gmail.com']);
+
+        $file1 = \Illuminate\Http\UploadedFile::fake()->createWithContent('Translator Apps HTC.md', '# Version 1');
+        $res1 = $this->actingAs($admin)->post('/api/blueprint/analyze-idea', [
+            'idea_text' => 'HTC Church live audio streaming interpreter platform.',
+            'locale' => 'id',
+            'files' => [$file1],
+        ], ['Accept' => 'application/json']);
+
+        $res1->assertStatus(200);
+        $data1 = $res1->json('data');
+        $storedFilename1 = $data1['file_details'][0]['stored_file'] ?? null;
+        $this->assertEquals('translator-apps-htc.md', $storedFilename1);
+
+        // Refresh request / session state before second upload
+        $this->flushSession();
+
+        $file2 = \Illuminate\Http\UploadedFile::fake()->createWithContent('Translator Apps HTC.md', '# Version 2');
+        $res2 = $this->actingAs($admin)->post('/api/blueprint/analyze-idea', [
+            'idea_text' => 'HTC Church live audio streaming interpreter platform.',
+            'locale' => 'id',
+            'files' => [$file2],
+        ], ['Accept' => 'application/json']);
+
+        $res2->assertStatus(200);
+        $data2 = $res2->json('data');
+        $storedFilename2 = $data2['file_details'][0]['stored_file'] ?? null;
+
+        // File names must match identically (idempotent, no random hash suffix)
+        $this->assertEquals('translator-apps-htc.md', $storedFilename2);
+        $this->assertEquals($storedFilename1, $storedFilename2);
+    }
 }

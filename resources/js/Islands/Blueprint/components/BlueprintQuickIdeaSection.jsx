@@ -53,6 +53,7 @@ export default function BlueprintQuickIdeaSection({
   honeypotWebsite,
   setHoneypotWebsite,
   attachedFiles,
+  serverDocuments = [],
   handleAnalyzeIdea,
   handleQuickDetectSectorFromIdea = () => {},
   handleFileChange,
@@ -477,6 +478,47 @@ export default function BlueprintQuickIdeaSection({
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Persistent Server Documents (Persists across page refresh) */}
+              {serverDocuments && serverDocuments.length > 0 && (
+                <div className="mt-3 p-3 bg-emerald-50 dark:bg-zinc-950 border border-emerald-500/40 rounded-none text-xs font-mono space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-mono uppercase text-emerald-950 dark:text-emerald-300 font-black flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      {lang === 'en'
+                        ? `Processed & Saved on Server (${serverDocuments.length} Active):`
+                        : `Berkas Tersimpan di Server (${serverDocuments.length} Aktif):`}
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 border border-emerald-400 dark:border-emerald-700">
+                      {lang === 'en' ? 'PERSISTENT WORKSPACE' : 'TERSIMPAN DI SERVER'}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {serverDocuments.map((doc, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-zinc-900 border border-emerald-500/50 text-xs shadow-xs"
+                      >
+                        <FileCode className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span className="font-bold text-zinc-950 dark:text-zinc-100 truncate max-w-[260px]">
+                          {doc.name || doc.stored_file || `Document #${idx + 1}`}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                          ({doc.size_kb ? `${doc.size_kb} KB` : 'MarkItDown'})
+                        </span>
+                        <span className="text-[9px] uppercase px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-950 dark:text-emerald-200 font-black border border-emerald-300 dark:border-emerald-700">
+                          {lang === 'en' ? 'READY' : 'SIAP'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-zinc-700 dark:text-zinc-300">
+                    {lang === 'en'
+                      ? '💡 These files are safely stored in your project workspace on the server and converted by MarkItDown. You do not need to upload them again when refreshing the page.'
+                      : '💡 Berkas ini telah tersimpan aman di workspace proyek Anda di server dan diproses oleh MarkItDown. Anda tidak perlu mengunggah ulang saat refresh halaman.'}
+                  </p>
                 </div>
               )}
             </div>

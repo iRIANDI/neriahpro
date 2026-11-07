@@ -453,6 +453,8 @@ class BlueprintVoucherAndAuditTrailTest extends TestCase
 
     public function test_task_editor_updates_prd_and_recomputes_hash(): void
     {
+        \Illuminate\Support\Facades\Http::fake();
+
         $blueprint = VisionBlueprint::create([
             'client_name' => 'Hendro Wijaya',
             'nama_bisnis' => 'Hendro Smart Warehouse',

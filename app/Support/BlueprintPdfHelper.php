@@ -167,7 +167,9 @@ class BlueprintPdfHelper
         }
 
         // 4. Check bullet points (e.g. "- Foo - Bar" or "• Foo • Bar")
-        if (preg_match('/(?:^|\s+)[-•*]\s+/u', $text)) {
+        // Note: For hyphens (-), only treat as bullet delimiter if string starts with a bullet or uses true bullet glyphs (•, *)
+        // to avoid splitting "Title - Description" into two separate items.
+        if (preg_match('/^\s*[-•*]\s+/u', $text) || preg_match('/(?:^|\s+)[•*]\s+/u', $text)) {
             $parts = preg_split('/(?:^|\s+)(?=[-•*]\s+)/u', $text, -1, PREG_SPLIT_NO_EMPTY);
             $clean = [];
             foreach ($parts as $p) {

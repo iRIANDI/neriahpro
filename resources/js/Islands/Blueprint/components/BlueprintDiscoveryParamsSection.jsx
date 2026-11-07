@@ -54,6 +54,7 @@ export default function BlueprintDiscoveryParamsSection({
   handleAddListItem = () => {},
   handleDeleteListItem = () => {},
   showLocalToast = () => {},
+  isExplicitSlugEdit = false,
 }) {
   return (
     <>
@@ -1095,14 +1096,16 @@ export default function BlueprintDiscoveryParamsSection({
                         </div>
 
                         {/* Local host helper if it looks like connection issue */}
-                        <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-900 dark:text-amber-200 font-sans mb-3 flex items-start gap-2">
-                          <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                          <span>
-                            {lang === 'en'
-                              ? 'Tip: If running on a local development server (XAMPP/Laragon), ensure that the MySQL/MariaDB database service is running.'
-                              : 'Petunjuk: Jika Anda sedang menguji di komputer lokal (XAMPP/Laragon), pastikan service database MySQL/MariaDB sedang aktif (Running). Database MariaDB saat ini telah diaktifkan kembali.'}
-                          </span>
-                        </div>
+                        {(typeof errorMessage === 'string' && (errorMessage.includes('database') || errorMessage.includes('2002') || errorMessage.includes('Connection') || errorMessage.includes('SQLSTATE') || errorMessage.includes('koneksi'))) && (
+                          <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-900 dark:text-amber-200 font-sans mb-3 flex items-start gap-2">
+                            <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                            <span>
+                              {lang === 'en'
+                                ? 'Tip: If running on a local development server (XAMPP/Laragon), ensure that the MySQL/MariaDB database service is running.'
+                                : 'Petunjuk: Jika Anda sedang menguji di komputer lokal (XAMPP/Laragon), pastikan service database MySQL/MariaDB sedang aktif (Running). Database MariaDB saat ini telah diaktifkan kembali.'}
+                            </span>
+                          </div>
+                        )}
 
                         {/* Action buttons for retry */}
                         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-amber-200 dark:border-zinc-800">
@@ -1235,6 +1238,12 @@ export default function BlueprintDiscoveryParamsSection({
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>{t.lockingBtn}</span>
                 </>
+              ) : isExplicitSlugEdit ? (
+                <>
+                  <RotateCcw className="w-4 h-4 text-emerald-400" />
+                  <span>{lang === 'en' ? 'UPDATE BLUEPRINT & REGENERATE PRD →' : 'SIMPAN PEMBARUAN & REGENERASI PRD →'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
               ) : currentTrack === 'studio' ? (
                 <>
                   <Rocket className="w-4 h-4 text-emerald-500" />
@@ -1250,7 +1259,9 @@ export default function BlueprintDiscoveryParamsSection({
               )}
             </button>
             <div className="text-center font-mono text-[11px] text-zinc-500 dark:text-zinc-400">
-              {currentTrack === 'studio' ? (
+              {isExplicitSlugEdit ? (
+                <span>🔄 {lang === 'en' ? 'Refines parameters and immediately regenerates the Ultimate PRD for your existing active blueprint.' : 'Menyimpan pembaruan dan seketika mengompilasi ulang Ultimate PRD untuk blueprint aktif Anda.'}</span>
+              ) : currentTrack === 'studio' ? (
                 <span>🛡️ {lang === 'en' ? 'Includes dedicated senior engineer slot allocation, Pest ApiContractTest, live cloud VPS deploy & SLA guarantee.' : 'Termasuk alokasi slot engineer terisolasi, pengujian Pest ApiContractTest, deploy live cloud VPS & garansi bug SLA.'}</span>
               ) : (
                 <span>📦 {lang === 'en' ? 'Instant download: Ultimate PRD 26 params, PostgreSQL Strict ULID DDL, Docker config & AI directives (.cursorrules).' : 'Unduh instan: PRD 26 parameter Fortune 500, skema DDL PostgreSQL Strict ULID, Docker container & panduan AI agent.'}</span>

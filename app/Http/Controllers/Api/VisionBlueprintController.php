@@ -115,6 +115,9 @@ class VisionBlueprintController extends Controller
             'outputLocale' => 'nullable|string|max:20',
             'persona_mode' => 'nullable|string|max:40',
             'personaMode' => 'nullable|string|max:40',
+            'slug' => 'nullable|string|max:255',
+            'is_editing_slug' => 'nullable|string|max:255',
+            'draft_id' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -173,6 +176,89 @@ class VisionBlueprintController extends Controller
             $clientName = $request->filled('client_name') ? $request->client_name : $request->nama_bisnis;
             $email = $request->filled('email') ? $request->email : 'lead@' . \Illuminate\Support\Str::slug($request->nama_bisnis) . '.com';
 
+            $editingSlug = $request->input('slug') ?: $request->input('is_editing_slug');
+            $existingBp = $editingSlug ? VisionBlueprint::where('slug', $editingSlug)->first() : null;
+
+            if ($existingBp) {
+                // Authorize editing:
+                $user = auth()->user();
+                $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
+                $isRetail = $existingBp->isRetailLicense();
+
+                // Studio MVP / Scope Lock Enforcement: Retail licenses are not locked by studio contracts
+                if (! $isExempt && ! $isRetail && $existingBp->isScopeFrozen()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Ruang lingkup (scope) proyek ini telah dikunci (frozen) sesuai kontrak aktif. Penambahan atau modifikasi memerlukan addendum kontrak resmi.',
+                    ], 403);
+                }
+
+                // Retail active revision window check
+                if (! $isExempt && $isRetail && $existingBp->created_at) {
+                    $tier = strtolower($existingBp->user_metadata['package_tier'] ?? $existingBp->user_metadata['retail_tier'] ?? 'lite');
+                    $allowedDays = match ($tier) {
+                        'retail_lite', 'lite' => 30,
+                        'retail_pro', 'pro' => 180,
+                        'retail_ultimate', 'ultimate' => 365,
+                        default => 30,
+                    };
+                    $expirationDate = $existingBp->created_at->copy()->addDays($allowedDays);
+                    if (now()->greaterThan($expirationDate)) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Jendela revisi '.$allowedDays.' hari untuk lisensi '.ucfirst($tier).' telah berakhir pada '.$expirationDate->format('d M Y').'. Silakan hubungi admin untuk perpanjangan.',
+                        ], 403);
+                    }
+                }
+
+                // Merge metadata preserving paid status and commercial attributes
+                $mergedMetadata = array_merge($existingBp->user_metadata ?? [], $userMetadata);
+                if ($isRetail && ! empty($existingBp->user_metadata['retail_tier'])) {
+                    $mergedMetadata['retail_tier'] = $existingBp->user_metadata['retail_tier'];
+                    $mergedMetadata['package_tier'] = $existingBp->user_metadata['package_tier'] ?? $existingBp->user_metadata['retail_tier'];
+                }
+
+                $existingBp->update([
+                    'client_name' => $clientName,
+                    'nama_bisnis' => $request->nama_bisnis,
+                    'email' => $email,
+                    'phone' => $normalizedPhone,
+                    'masalah_utama' => $request->masalah_utama,
+                    'tujuan_utama' => $request->tujuan_utama,
+                    'target_audiens' => $request->target_audiens,
+                    'aktor_sistem' => $request->aktor_sistem,
+                    'fitur_wajib' => $request->fitur_wajib,
+                    'fitur_tambahan' => $request->fitur_tambahan,
+                    'alur_kerja' => $request->alur_kerja,
+                    'kebutuhan_integrasi' => $request->kebutuhan_integrasi,
+                    'referensi_desain' => $request->referensi_desain,
+                    'kesiapan_aset' => $request->kesiapan_aset ?? $existingBp->kesiapan_aset,
+                    'target_waktu' => $request->target_waktu ?? $existingBp->target_waktu,
+                    'service_options' => $request->service_options ?? $existingBp->service_options,
+                    'ip_address' => $request->ip(),
+                    'user_metadata' => $mergedMetadata,
+                ]);
+
+                // Regenerate PRD with updated specifications
+                $existingBp->generateAndSavePrd();
+
+                // Clear draft from session and cache
+                session()->forget('blueprint_draft');
+                if ($draftId = $request->input('draft_id')) {
+                    \Illuminate\Support\Facades\Cache::forget('blueprint_draft_' . $draftId);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Vision blueprint & Ultimate PRD berhasil diperbarui!',
+                    'data' => [
+                        'id' => $existingBp->id,
+                        'slug' => $existingBp->slug,
+                        'redirect_url' => url('/blueprint/' . $existingBp->slug),
+                    ]
+                ], 200);
+            }
+
             $vision = VisionBlueprint::create([
                 'client_name' => $clientName,
                 'nama_bisnis' => $request->nama_bisnis,
@@ -226,7 +312,7 @@ class VisionBlueprintController extends Controller
                 ]
             ], 201);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             \Log::error('Vision Blueprint Submission Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,

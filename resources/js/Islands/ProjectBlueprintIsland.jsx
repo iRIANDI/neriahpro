@@ -178,6 +178,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       }
     } catch (e) { }
     if (initialData?.selected_track === 'studio' || initialData?.track === 'studio') return 'studio';
+    if (initialData?.selected_track === 'retail' || initialData?.track === 'retail') return 'retail';
     if (initialData?.selected_tier && ['spark', 'starter', 'pro', 'ultimate', 'lite'].includes(String(initialData.selected_tier).toLowerCase())) return 'retail';
     return 'retail';
   });
@@ -2684,6 +2685,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         _hp_check: honeypot,
         _website: honeypotWebsite,
         locale: lang,
+        slug: isExplicitSlugEdit ? (initialData?._meta?.is_editing_slug || null) : null,
+        is_editing_slug: isExplicitSlugEdit ? (initialData?._meta?.is_editing_slug || null) : null,
+        draft_id: draftIdRef.current,
       };
 
       const response = await fetch(submitUrl || '/api/vision-blueprint', {
@@ -2717,9 +2721,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           missingKeys = Object.keys(result.errors).map(k => FIELD_MAP[k] || k);
         }
 
-        const errorDetails = result.errors
-          ? Object.values(result.errors).flat().join(', ')
-          : (result.message || 'Terjadi kesalahan saat memproses data.');
+        const serverMsg = result.error || result.message || (result.errors && typeof result.errors === 'object' ? Object.values(result.errors).flat().join(', ') : null);
+        const errorDetails = serverMsg || (lang === 'en' ? 'An unexpected server error occurred while processing data.' : 'Terjadi kesalahan saat memproses data di server.');
         setErrorMessage(errorDetails);
 
         if (missingKeys.length > 0) {
@@ -3035,6 +3038,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           handleAddListItem={handleAddListItem}
           handleDeleteListItem={handleDeleteListItem}
           showLocalToast={showLocalToast}
+          isExplicitSlugEdit={isExplicitSlugEdit}
         />
       </form>
 

@@ -1658,7 +1658,7 @@
 
                                 @if($isRevisionActive)
                                     <a 
-                                        href="/blueprint?slug={{ $license->slug }}" 
+                                        href="/blueprint?slug={{ $license->slug }}&track=retail" 
                                         class="w-full mt-2 py-2 px-3 bg-amber-500 hover:bg-amber-400 text-black font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none"
                                     >
                                         <span>🔄 {{ $isEn ? 'REFINE PARAMETERS (ACTIVE REVISION)' : 'PERBARUI PARAMETER & REGENERASI PRD' }}</span>

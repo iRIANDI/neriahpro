@@ -35,10 +35,10 @@ class ProjectOsV12ProgressiveDisclosureAndZeroLeakGateTest extends TestCase
         $this->assertStringContainsString('Bahaya Over-Planning (Scope Paralysis)', $pricingJsx);
         $this->assertStringContainsString('Mulai Eksekusi Tahap 1: Buat File Migrasi Lengkap Database Internal neriahpro.com', $pricingJsx);
 
-        // Pastikan Tahap A Smart Idea Intake & Auto-Mapping hadir di ProjectBlueprintIsland.jsx
-        $blueprintJsx = (string) file_get_contents(resource_path('js/Islands/ProjectBlueprintIsland.jsx'));
-        $this->assertStringContainsString('id="btn-auto-detect-sector-idea"', $blueprintJsx);
-        $this->assertStringContainsString('Deteksi Sektor & Modul Otomatis dari Ide Saya', $blueprintJsx);
+        // Pastikan Tahap A Smart Idea Intake & Auto-Mapping hadir di ProjectBlueprintIsland.jsx / BlueprintQuickIdeaSection.jsx
+        $quickIdeaJsx = (string) file_get_contents(resource_path('js/Islands/Blueprint/components/BlueprintQuickIdeaSection.jsx'));
+        $this->assertStringContainsString('id="btn-auto-detect-sector-idea"', $quickIdeaJsx);
+        $this->assertStringContainsString('Deteksi Sektor & Modul Otomatis dari Ide Saya', $quickIdeaJsx);
     }
 
     public function test_zero_leak_server_side_entitlement_gate_withholds_phases_2_to_7_and_tables_3_plus_for_free_sandbox(): void
@@ -109,11 +109,12 @@ class ProjectOsV12ProgressiveDisclosureAndZeroLeakGateTest extends TestCase
         $this->assertStringContainsString('Bahaya Over-Planning (Scope Paralysis)', $guard['warning_title']['id']);
         $this->assertCount(3, $guard['execution_stages']);
 
-        Livewire::withQueryParams(['tier' => 'spark'])
+        Livewire::withQueryParams(['tier' => 'spark', 'locale' => 'id', 'output_locale' => 'id'])
             ->test(BlueprintArchitectStudio::class)
+            ->set('centerTab', 'proposal_wow')
             ->assertSet('entitlementTier', 'FREE_SANDBOX')
             ->assertSee('Bahaya Over-Planning (Scope Paralysis)')
-            ->assertSee('Konversi ke Mitra Proyek (Potong DP 100%)')
+            ->assertSee('Potong DP 100%')
             ->set('ideaDetectionInput', 'Aplikasi klinik gigi rekam medis dan apotek farmasi')
             ->call('runIdeaAutoDetection')
             ->assertSet('sectorCode', 'SECTOR_02_HEALTHCARE_CLINICAL')

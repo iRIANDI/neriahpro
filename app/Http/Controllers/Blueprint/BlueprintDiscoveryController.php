@@ -93,17 +93,22 @@ class BlueprintDiscoveryController extends Controller
 
         $initialData = [];
 
+        $existingBp = null;
+        $isExistingRetail = false;
         if ($slug) {
             $existingBp = VisionBlueprint::where('slug', $slug)->first();
             if ($existingBp) {
-                $isRetail = ($existingBp->project_status === 'Retail License'
+                $isExistingRetail = ($existingBp->project_status === 'Retail License'
                     || ! empty($existingBp->user_metadata['retail_tier'])
                     || ! empty($existingBp->user_metadata['package_tier'])
                     || str_contains(strtolower($existingBp->slug ?? ''), '-retail-'));
 
-                if ($existingBp->isScopeFrozen() && ! $isRetail && ! auth()->user()?->isSuperAdmin()) {
+                if ($existingBp->isScopeFrozen() && ! $isExistingRetail && ! auth()->user()?->isSuperAdmin()) {
                     return redirect()->route('blueprint.show', $existingBp->slug);
                 }
+
+                $existingTier = $existingBp->user_metadata['package_tier'] ?? $existingBp->user_metadata['retail_tier'] ?? ($isExistingRetail ? 'lite' : null);
+
                 $initialData = [
                     'namaBisnis' => $existingBp->nama_bisnis,
                     'clientName' => $existingBp->client_name,
@@ -125,12 +130,18 @@ class BlueprintDiscoveryController extends Controller
                     'jangkauanPasar' => $existingBp->user_metadata['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR, Zona WIB/WITA/WIT)',
                     'outOfScope' => $existingBp->user_metadata['out_of_scope'] ?? '',
                     'kepatuhanKeamanan' => $existingBp->user_metadata['kepatuhan_keamanan'] ?? 'Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)',
-                    'kisaranBudget' => $existingBp->user_metadata['kisaran_budget'] ?? 'Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)',
+                    'kisaranBudget' => ($isExistingRetail && (! empty($existingBp->user_metadata['kisaran_budget']) && ! str_contains($existingBp->user_metadata['kisaran_budget'], '15.000.000') && ! str_contains($existingBp->user_metadata['kisaran_budget'], 'Growth') && ! str_contains($existingBp->user_metadata['kisaran_budget'], '50.000.000')))
+                        ? $existingBp->user_metadata['kisaran_budget']
+                        : ($isExistingRetail ? null : ($existingBp->user_metadata['kisaran_budget'] ?? 'Rp 15.000.000 - Rp 35.000.000 (Growth Monolith)')),
                     'targetPlatform' => $existingBp->user_metadata['target_platform'] ?? 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)',
                     'migrasiData' => $existingBp->user_metadata['migrasi_data'] ?? 'Database Baru Bersih (Input Mandiri & Dukungan Impor Template Excel/CSV)',
                     'preferensiHosting' => $existingBp->user_metadata['preferensi_hosting'] ?? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup)',
-                    'garansiSla' => $existingBp->user_metadata['garansi_sla'] ?? '30 Hari Garansi Bug Pascameluncur + Penyerahan Akses Penuh Private Repo GitHub',
-                    'terminPembayaran' => $existingBp->user_metadata['termin_pembayaran'] ?? 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+                    'garansiSla' => ($isExistingRetail && (! empty($existingBp->user_metadata['garansi_sla']) && ! str_contains($existingBp->user_metadata['garansi_sla'], 'Garansi Bug') && ! str_contains($existingBp->user_metadata['garansi_sla'], 'Pascameluncur')))
+                        ? $existingBp->user_metadata['garansi_sla']
+                        : ($isExistingRetail ? 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit' : ($existingBp->user_metadata['garansi_sla'] ?? '30 Hari Garansi Bug Pascameluncur + Penyerahan Akses Penuh Private Repo GitHub')),
+                    'terminPembayaran' => ($isExistingRetail && (! empty($existingBp->user_metadata['termin_pembayaran']) && ! str_contains($existingBp->user_metadata['termin_pembayaran'], '50/50') && ! str_contains($existingBp->user_metadata['termin_pembayaran'], 'Milestone') && ! str_contains($existingBp->user_metadata['termin_pembayaran'], 'DP Kickoff')))
+                        ? $existingBp->user_metadata['termin_pembayaran']
+                        : ($isExistingRetail ? 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)' : ($existingBp->user_metadata['termin_pembayaran'] ?? 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)')),
                     'primarySector' => $existingBp->user_metadata['primary_sector'] ?? ($existingBp->prd_content['composable_matrix']['primary_sector'] ?? ''),
                     'selectedPrimitives' => $existingBp->user_metadata['selected_primitives'] ?? ($existingBp->prd_content['composable_matrix']['injected_primitives'] ?? []),
                     'selectedMenus' => $existingBp->user_metadata['selected_menus'] ?? [],
@@ -150,6 +161,16 @@ class BlueprintDiscoveryController extends Controller
                         'raw_idea_text' => $existingBp->masalah_utama,
                     ],
                 ];
+
+                if ($isExistingRetail) {
+                    $initialData['selected_track'] = 'retail';
+                    $initialData['track'] = 'retail';
+                    if ($existingTier) {
+                        $initialData['selected_tier'] = $existingTier;
+                        $initialData['tier'] = $existingTier;
+                        $initialData['package_tier'] = $existingTier;
+                    }
+                }
             }
         } elseif ($draftId && ! $request->boolean('reset') && ! $request->has('new') && ! $request->has('clean')) {
             if (Cache::has('blueprint_draft_'.$draftId)) {
@@ -189,18 +210,26 @@ class BlueprintDiscoveryController extends Controller
             $initialData['track'] = $track;
         }
 
+        $tier = $tier ?: ($initialData['selected_tier'] ?? null);
+        $track = $track ?: ($initialData['selected_track'] ?? null);
+
         if ($tier) {
             $initialData['selected_tier'] = $tier;
             $initialData['tier'] = $tier;
             $initialData['package_tier'] = $tier;
         }
 
-        $isRetail = ($track === 'retail' || in_array(strtolower((string) $tier), ['spark', 'starter', 'pro', 'ultimate', 'lite', 'retail_spark', 'retail_starter', 'retail_pro', 'retail_ultimate']));
+        $isRetail = ($isExistingRetail || $track === 'retail' || in_array(strtolower((string) $tier), ['spark', 'starter', 'pro', 'ultimate', 'lite', 'retail_spark', 'retail_starter', 'retail_pro', 'retail_ultimate']));
         if ($isRetail) {
             $initialData['selected_track'] = 'retail';
             $initialData['track'] = 'retail';
+            if ($tier) {
+                $initialData['selected_tier'] = $tier;
+                $initialData['tier'] = $tier;
+                $initialData['package_tier'] = $tier;
+            }
             if (empty($initialData['kisaranBudget']) || str_contains($initialData['kisaranBudget'], 'Growth') || str_contains($initialData['kisaranBudget'], '15.000.000')) {
-                $tierLower = strtolower((string) $tier);
+                $tierLower = strtolower((string) ($tier ?: 'lite'));
                 $satuPintu = PricingRegistry::getSatuPintuCatalog();
                 if ($tierLower === 'starter' || $tierLower === 'lite' || $tierLower === 'retail_starter' || $tierLower === 'retail_lite') {
                     $liteLabel = $satuPintu[PricingRegistry::TIER_RETAIL_LITE]['formatted_price'] ?? 'Rp 99.000';
@@ -397,8 +426,8 @@ class BlueprintDiscoveryController extends Controller
                 $user = auth()->user();
                 $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
 
-                // Studio MVP / Scope Lock Enforcement
-                if (! $isExempt && $existingRecord->isScopeFrozen()) {
+                // Studio MVP / Scope Lock Enforcement: Retail licenses are not locked by studio contracts
+                if (! $isExempt && ! $existingRecord->isRetailLicense() && $existingRecord->isScopeFrozen()) {
                     return response()->json([
                         'success' => false,
                         'error_code' => 'SCOPE_LOCKED',
@@ -485,8 +514,8 @@ class BlueprintDiscoveryController extends Controller
                     $user = auth()->user();
                     $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
 
-                    // Studio MVP / Scope Lock Enforcement
-                    if (! $isExempt && $record->isScopeFrozen()) {
+                    // Studio MVP / Scope Lock Enforcement: Retail licenses are not locked by studio contracts
+                    if (! $isExempt && ! $record->isRetailLicense() && $record->isScopeFrozen()) {
                         return response()->json([
                             'success' => false,
                             'error_code' => 'SCOPE_LOCKED',

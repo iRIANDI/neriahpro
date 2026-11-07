@@ -251,6 +251,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
   // Textarea & Dropzone State
   const [ideaText, setIdeaText] = useState(() => initialData?._meta?.raw_idea_text || '');
+  const textareaRef = useRef(null);
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [convertedMarkdown, setConvertedMarkdown] = useState(() => initialData?._meta?.converted_markdown || '');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -1954,6 +1955,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   // Apply Quick Idea Template
   const applyTemplate = (tplText) => {
     setIdeaText(tplText);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
   };
 
   // Synthesize Idea & Fill All 25 Fields

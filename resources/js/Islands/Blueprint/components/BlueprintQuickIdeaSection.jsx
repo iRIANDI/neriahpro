@@ -346,6 +346,7 @@ export default function BlueprintQuickIdeaSection({
                 </span>
               </div>
               <textarea
+                ref={textareaRef}
                 rows={5}
                 value={ideaText}
                 onChange={(e) => setIdeaText(e.target.value)}

@@ -2742,6 +2742,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   const panelClass = "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-none p-6 sm:p-8 transition-colors duration-200 scroll-mt-24";
   const inputClass = "w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-sm focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-0 outline-none rounded-none transition font-sans";
   const labelClass = "block text-xs font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5 font-bold";
+  const selectClass = "w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-sm focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-0 outline-none rounded-none transition font-sans cursor-pointer";
 
   // SUCCESS VIEW
 
@@ -2917,21 +2918,21 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         honeypotWebsite={honeypotWebsite}
         setHoneypotWebsite={setHoneypotWebsite}
         attachedFiles={attachedFiles}
-        convertedMarkdown={convertedMarkdown}
         handleAnalyzeIdea={handleAnalyzeIdea}
-        handleDrop={handleDrop}
-        handleFileSelect={handleFileSelect}
+        handleFileChange={handleFileChange}
+        fileInputRef={fileInputRef}
         removeFile={removeFile}
-        copyMarkdown={copyMarkdown}
-        downloadMarkdown={downloadMarkdown}
         proactiveSuggestions={proactiveSuggestions}
         appliedSuggestionIds={appliedSuggestionIds}
-        applySuggestion={applySuggestion}
-        isApplyingSuggestion={isApplyingSuggestion}
+        handleApplySuggestion={handleApplySuggestion}
+        selectedPaymentRailIds={selectedPaymentRailIds}
+        formData={formData}
         coPilotInput={coPilotInput}
         setCoPilotInput={setCoPilotInput}
         isCoPilotLoading={isCoPilotLoading}
         handleCoPilotSubmit={handleCoPilotSubmit}
+        labelClass={labelClass}
+        inputClass={inputClass}
       />
 
       {/* 5. THE COMPLETE 25-FIELD BLUEPRINT FORM */}
@@ -2959,7 +2960,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             handleQuickDetectSectorFromIdea={handleQuickDetectSectorFromIdea}
             doctorLoading={doctorLoading}
             doctorReport={doctorReport}
-            runPreFlightDoctorAudit={runPreFlightDoctorAudit}
+            runPreFlightDoctor={runPreFlightDoctor}
             applyDoctorAutoFix={applyDoctorAutoFix}
             livePreFlightHints={livePreFlightHints}
             showBrownfieldLab={showBrownfieldLab}
@@ -3001,13 +3002,11 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           handlePhoneDigitsChange={handlePhoneDigitsChange}
           currentTrack={currentTrack}
           isElaboratingKpi={isElaboratingKpi}
-          elaborateKpiCascade={elaborateKpiCascade}
+          handleTriggerKpiElaboration={handleTriggerKpiElaboration}
           setPaymentModalOpen={setPaymentModalOpen}
           setPendingPaymentSuggestion={setPendingPaymentSuggestion}
           activeAddKey={activeAddKey}
           setActiveAddKey={setActiveAddKey}
-          newFeatureInput={newFeatureInput}
-          setNewFeatureInput={setNewFeatureInput}
         />
       </form>
 
@@ -3020,7 +3019,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         }}
         selectedPaymentRailIds={selectedPaymentRailIds}
         setSelectedPaymentRailIds={setSelectedPaymentRailIds}
-        onApply={applyPaymentRailsSelection}
+        onApply={handleApplySelectedPaymentRails}
         lang={lang}
       />
 

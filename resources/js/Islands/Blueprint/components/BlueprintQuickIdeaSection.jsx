@@ -20,6 +20,10 @@ import {
   Loader2,
   Lightbulb,
   Send,
+  AlertCircle,
+  CheckCircle2,
+  ShieldCheck,
+  Plus,
 } from 'lucide-react';
 import { QUICK_IDEA_CATALOG } from '../constants/blueprintConstants';
 
@@ -44,28 +48,31 @@ export default function BlueprintQuickIdeaSection({
   analysisStep,
   analysisStepIndex,
   analysisError,
-  copySuccess,
   honeypot,
   setHoneypot,
   honeypotWebsite,
   setHoneypotWebsite,
   attachedFiles,
-  convertedMarkdown,
   handleAnalyzeIdea,
-  handleDrop,
-  handleFileSelect,
+  handleFileChange,
+  fileInputRef,
   removeFile,
-  copyMarkdown,
-  downloadMarkdown,
   proactiveSuggestions,
   appliedSuggestionIds,
-  applySuggestion,
-  isApplyingSuggestion,
+  handleApplySuggestion,
+  selectedPaymentRailIds = new Set(['qris_national']),
+  formData = {},
   coPilotInput,
   setCoPilotInput,
   isCoPilotLoading,
   handleCoPilotSubmit,
+  labelClass = "block text-xs font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5 font-bold",
+  inputClass = "w-full px-4 py-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-sm focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-0 outline-none rounded-none transition font-sans",
 }) {
+  const configuredAiList = React.useMemo(() => {
+    return Object.values(aiModels || {}).filter(m => !!m.has_key);
+  }, [aiModels]);
+
   return (
     <>
       <section id="section-ide-studio" className="scroll-mt-24 mb-8 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-none transition-all">

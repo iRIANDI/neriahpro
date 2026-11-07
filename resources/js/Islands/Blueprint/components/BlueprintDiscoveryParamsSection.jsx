@@ -40,13 +40,11 @@ export default function BlueprintDiscoveryParamsSection({
   handlePhoneDigitsChange,
   currentTrack,
   isElaboratingKpi,
-  elaborateKpiCascade,
+  handleTriggerKpiElaboration,
   setPaymentModalOpen,
   setPendingPaymentSuggestion,
   activeAddKey,
   setActiveAddKey,
-  newFeatureInput,
-  setNewFeatureInput,
 }) {
   return (
     <>

@@ -41,7 +41,7 @@ export default function BlueprintComposableMatrixSection({
   handleQuickDetectSectorFromIdea,
   doctorLoading,
   doctorReport,
-  runPreFlightDoctorAudit,
+  runPreFlightDoctor,
   applyDoctorAutoFix,
   livePreFlightHints,
   showBrownfieldLab,

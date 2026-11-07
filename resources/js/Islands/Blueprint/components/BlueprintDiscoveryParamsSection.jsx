@@ -6,6 +6,7 @@ import {
   Sparkles,
   Loader2,
   AlertTriangle,
+  AlertCircle,
   ArrowRight,
   RotateCcw,
   ArrowUpRight,
@@ -13,9 +14,11 @@ import {
   Rocket,
   ShoppingBag,
   ChevronDown,
+  Users,
+  X,
 } from 'lucide-react';
 import { FIELD_LABELS } from '../constants/blueprintConstants';
-import { parseNumberedList, parseCommaList, stringifyCommaList } from '../constants/blueprintTranslations';
+import { parseNumberedList, stringifyNumberedList, parseCommaList, stringifyCommaList } from '../constants/blueprintTranslations';
 
 export default function BlueprintDiscoveryParamsSection({
   formData,
@@ -46,6 +49,8 @@ export default function BlueprintDiscoveryParamsSection({
   setPendingPaymentSuggestion,
   activeAddKey,
   setActiveAddKey,
+  quickInputText = '',
+  setQuickInputText = () => {},
   handleAddListItem = () => {},
   handleDeleteListItem = () => {},
   showLocalToast = () => {},

@@ -40,6 +40,7 @@ export default function BlueprintComposableMatrixSection({
   selectStackPreset,
   handleQuickDetectSectorFromIdea,
   activeStackPresetObj,
+  filteredStackPresets = [],
   effectivePrimitiveCodes = [],
   activeEnterpriseMenuMatrix,
   effectiveSelectedMenus = [],
@@ -1105,7 +1106,7 @@ export default function BlueprintComposableMatrixSection({
                       )}
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                        {filteredStackPresets.map((preset) => {
+                        {(filteredStackPresets.length > 0 ? filteredStackPresets : (matrixCatalog.stack_presets || [])).map((preset) => {
                           const isSelected = (formData.stackPreset || 'STACK_M1_LARAVEL_MONOLITH') === preset.code;
                           const pName = (preset.name && (preset.name[lang] || preset.name.id || preset.name.en)) || preset.code;
                           const pBestObj = preset.best_use_cases || preset.best_for || {};

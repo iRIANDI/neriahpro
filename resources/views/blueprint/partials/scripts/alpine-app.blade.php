@@ -641,7 +641,14 @@
                     this.openTweakModal('feature_single', title, spec || {}, featKey, specIdx);
                 },
                 openTweakModal(key, title, content = null, featureId = null, specIndex = null) {
-                    if ({{ ($isScopeLocked ?? false) ? 'true' : 'false' }} && '{{ $blueprint->project_status }}' !== 'Retail License' && !{{ auth()->user()?->isSuperAdmin() ? 'true' : 'false' }}) {
+                    @php
+                        $canEditBlueprint = !($isScopeLocked ?? false)
+                            || $blueprint->project_status === 'Retail License'
+                            || (method_exists($blueprint, 'isRetailTrack') && $blueprint->isRetailTrack())
+                            || (method_exists($blueprint, 'hasPaidRetailLicense') && $blueprint->hasPaidRetailLicense())
+                            || (auth()->user()?->isSuperAdmin() ?? false);
+                    @endphp
+                    if (!{{ $canEditBlueprint ? 'true' : 'false' }}) {
                         if (window.showToast) {
                             window.showToast({ type: 'warning', title: 'AKSES DITOLAK', message: 'Dokumen berada dalam status Scope Lock (Kontrak Studio).' });
                         }
@@ -718,11 +725,13 @@
                                     'Content-Type': 'application/json',
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                     'Accept': 'application/json',
+                                    'X-Locale': this.isEn ? 'en' : 'id',
                                 },
                                 body: JSON.stringify({
                                     filename: this.scaffoldActiveTab,
                                     prompt: this.tweakPrompt,
                                     ai_provider: this.tweakAiProvider,
+                                    locale: this.isEn ? 'en' : 'id',
                                 })
                             });
                             const data = await res.json();
@@ -731,10 +740,26 @@
                                 if (!this.scaffoldCustomizedFiles.includes(this.scaffoldActiveTab)) {
                                     this.scaffoldCustomizedFiles.push(this.scaffoldActiveTab);
                                 }
+                                if (Array.isArray(data.synced_files)) {
+                                    data.synced_files.forEach((sf) => {
+                                        this.scaffoldFiles[sf] = data.content;
+                                        if (!this.scaffoldCustomizedFiles.includes(sf)) {
+                                            this.scaffoldCustomizedFiles.push(sf);
+                                        }
+                                        this.scaffoldTelemetry[sf] = {
+                                            maturity_score: data.maturity_score || 95,
+                                            is_maximal: !!data.is_maximal,
+                                            added_lines: data.added_lines || 0,
+                                            line_count: data.line_count || 0,
+                                            iterations: data.iterations || 1,
+                                            synced_files: data.synced_files || [sf],
+                                        };
+                                    });
+                                }
                                 if (window.showToast) {
                                     window.showToast({ 
                                         type: 'success', 
-                                        title: 'BERKAS DIPERDALAM', 
+                                        title: this.isEn ? 'SCAFFOLD FILE DEEPENED' : 'BERKAS SCAFFOLD DIPERDALAM', 
                                         message: data.message || ('Berkas ' + this.scaffoldActiveTab + ' berhasil diperdalam dari Dokumen Acuan.') 
                                     });
                                 }
@@ -908,7 +933,184 @@
                 scaffoldSaveStatus: 'idle', // 'idle' | 'typing' | 'saving' | 'saved' | 'error'
                 scaffoldLastSaved: null,
                 scaffoldDebounceTimer: null,
-                scaffoldIsScopeLocked: {{ ($isScopeLocked ?? false) ? 'true' : 'false' }},
+                @php
+                    $isScaffoldLockedForUser = ($isScopeLocked ?? false)
+                        && $blueprint->project_status !== 'Retail License'
+                        && !(method_exists($blueprint, 'isRetailTrack') && $blueprint->isRetailTrack())
+                        && !(method_exists($blueprint, 'hasPaidRetailLicense') && $blueprint->hasPaidRetailLicense())
+                        && !(auth()->user()?->isSuperAdmin() ?? false);
+                @endphp
+                scaffoldIsScopeLocked: {{ $isScaffoldLockedForUser ? 'true' : 'false' }},
+                scaffoldAiPanelOpen: true,
+                scaffoldAiPrompt: '',
+                scaffoldAiLoading: false,
+                scaffoldElaboratingDirective: false,
+                scaffoldTelemetry: @js($blueprint->user_metadata['scaffold_elaboration_telemetry'] ?? []),
+                getScaffoldPresetChips(tabId) {
+                    const lower = String(tabId || '').toLowerCase();
+                    const isEn = this.isEn;
+                    if (lower.endsWith('.sql')) {
+                        return isEn ? [
+                            { label: '+ Strict ULID & FK Constraints', prompt: 'Enforce CHAR(26) Strict ULID primary/foreign keys and explicit ON DELETE RESTRICT/CASCADE rules across all project tables.' },
+                            { label: '+ O(1) Keyset Cursor Indexes', prompt: 'Add composite indexes on (created_at DESC, id DESC) and status filter columns for sub-10ms O(1) cursor pagination.' },
+                            { label: '+ pgvector HNSW + Hybrid RAG', prompt: 'Add pgvector vector(1536) columns, HNSW indexes, and pg_trgm GIN indexes for 18-Technique Hybrid RAG.' },
+                            { label: '+ SHA-256 Audit Triggers', prompt: 'Add immutable audit log table and PostgreSQL trigger functions recording JSONB diffs and SHA-256 checksums.' }
+                        ] : [
+                            { label: '+ Strict ULID & Relasi FK', prompt: 'Pastikan seluruh tabel proyek menggunakan CHAR(26) PRIMARY KEY & FOREIGN KEY dengan aturan ON DELETE RESTRICT/CASCADE.' },
+                            { label: '+ Indeks Keyset Cursor O(1)', prompt: 'Tambahkan composite index (created_at DESC, id DESC) dan kolom filter status untuk paginasi cursor O(1) sub-10ms.' },
+                            { label: '+ pgvector HNSW + Hybrid RAG', prompt: 'Tambahkan tabel & kolom vector(1536) beserta indeks HNSW pgvector dan pg_trgm untuk 18 Teknik Hybrid RAG.' },
+                            { label: '+ Trigger Audit SHA-256', prompt: 'Tambahkan tabel audit trail immutable dan fungsi trigger PostgreSQL pencatat diff JSONB & hash SHA-256.' }
+                        ];
+                    }
+                    if (lower === 'openapi.json') {
+                        return isEn ? [
+                            { label: '+ Full Domain CRUD Endpoints', prompt: 'Expand OpenAPI 3.1.0 paths for all project ERD entities with complete request/response schemas.' },
+                            { label: '+ O(1) Cursor & RFC 9457 Errors', prompt: 'Add cursor/limit query parameters, X-Idempotency-Key headers, and RFC 9457 Problem Details error schemas.' }
+                        ] : [
+                            { label: '+ Endpoint CRUD Seluruh Tabel', prompt: 'Lengkapi path OpenAPI 3.1.0 untuk seluruh entitas tabel proyek beserta skema JSON request/response.' },
+                            { label: '+ Cursor O(1) & Error RFC 9457', prompt: 'Standarisasi parameter cursor ULID 26-karakter, header X-Idempotency-Key, dan skema error RFC 9457 Problem Details.' }
+                        ];
+                    }
+                    if (lower.includes('seeder')) {
+                        return isEn ? [
+                            { label: '+ Realistic Domain Seed Data', prompt: 'Generate 100% realistic domain seed records with 26-char Str::ulid() keys, RBAC actors, and authentic pricing.' },
+                            { label: '+ Multi-State Lifecycle Rows', prompt: 'Add seed transactions covering Draft, Pending, Confirmed, Completed, and Refunded states.' }
+                        ] : [
+                            { label: '+ Data Sintetis Kontekstual', prompt: 'Bangkitkan data seeder realistis sesuai domain bisnis klien dengan Str::ulid() 26-karakter, aktor RBAC, dan tarif nyata.' },
+                            { label: '+ Variasi Siklus State Machine', prompt: 'Tambahkan sampel data di seluruh siklus status (Draft, Verifikasi, Terkonfirmasi, Selesai, Batal/Refund).' }
+                        ];
+                    }
+                    if (lower.includes('test') || lower.endsWith('.spec.ts')) {
+                        return isEn ? [
+                            { label: '+ Cursor O(1) & ULID Assertions', prompt: 'Add contract tests asserting O(1) keyset cursor pagination (next_cursor) and 26-char ULID validation.' },
+                            { label: '+ RBAC Isolation & Idempotency', prompt: 'Add tests for 403 Forbidden cross-role isolation, X-Idempotency-Key replay protection, and zero native dialogs.' }
+                        ] : [
+                            { label: '+ Uji Cursor O(1) & ULID 26-Char', prompt: 'Tambahkan pengujian otomatis untuk memastikan paginasi Keyset Cursor O(1) (next_cursor) dan validasi ULID 26-karakter.' },
+                            { label: '+ Uji Isolasi RBAC & Idempotensi', prompt: 'Tambahkan pengujian 403 Forbidden antar peran RBAC, proteksi X-Idempotency-Key, dan larangan dialog native browser.' }
+                        ];
+                    }
+                    return isEn ? [
+                        { label: '+ Deepen from Source Corpus', prompt: 'Deepen this file using concrete entities, workflows, and business rules from the Project Source Corpus.' },
+                        { label: '+ 18 RAG + 20 Agentic AI Stack', prompt: 'Integrate 18-Technique Production RAG, 20 Agentic AI Concepts, Laravel 13, Filament v5 Schema, and Strict ULID rules.' }
+                    ] : [
+                        { label: '+ Perdalam dari Dokumen Acuan', prompt: 'Perdalam isi berkas ini menggunakan entitas, alur kerja, dan aturan bisnis konkret dari Dokumen Acuan Proyek.' },
+                        { label: '+ 18 Teknik RAG & 20 Agentic AI', prompt: 'Integrasikan arsitektur 18 Teknik Production RAG, 20 Konsep Agentic AI, Laravel 13, Filament v5 Schema, dan Strict ULID.' }
+                    ];
+                },
+                async elaborateScaffoldDirectiveInPlace() {
+                    if (this.scaffoldElaboratingDirective) return;
+                    this.scaffoldElaboratingDirective = true;
+                    try {
+                        const isEnLocale = this.isEn;
+                        const res = await fetch('{{ route('api.blueprint.elaborate-directive', $blueprint->slug) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'X-Locale': isEnLocale ? 'en' : 'id'
+                            },
+                            body: JSON.stringify({
+                                segment_key: 'scaffold_file',
+                                ai_provider: this.tweakAiProvider,
+                                custom_title: this.scaffoldActiveTab,
+                                feature_content: this.getScaffoldCode(this.scaffoldActiveTab),
+                                locale: isEnLocale ? 'en' : 'id'
+                            })
+                        });
+                        const data = await res.json();
+                        if (data && data.success && data.directive) {
+                            this.scaffoldAiPrompt = data.directive;
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: isEnLocale ? 'FILE DIRECTIVE READY' : 'INSTRUKSI AI BERKAS SIAP',
+                                    message: isEnLocale
+                                        ? ('Compiled specific architectural directives for ' + this.scaffoldActiveTab)
+                                        : ('Instruksi penajaman spesifik untuk ' + this.scaffoldActiveTab + ' berhasil dirumuskan.')
+                                });
+                            }
+                        } else {
+                            throw new Error(data.message || 'Gagal merumuskan instruksi berkas.');
+                        }
+                    } catch (err) {
+                        if (window.showToast) {
+                            window.showToast({ type: 'error', title: 'ERROR INSTRUKSI AI', message: err.message });
+                        }
+                    } finally {
+                        this.scaffoldElaboratingDirective = false;
+                    }
+                },
+                async refineActiveScaffoldFileInPlace() {
+                    if (this.scaffoldAiLoading || this.scaffoldIsScopeLocked) return;
+                    this.scaffoldAiLoading = true;
+                    const targetTab = this.scaffoldActiveTab;
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: this.isEn ? 'AI DEEPENING SCAFFOLD FILE...' : 'AI SEDANG MEMPERDALAM BERKAS...',
+                            message: this.isEn
+                                ? ('Elaborating ' + targetTab + ' from Source Corpus, ERD, & Modern Tech Stack...')
+                                : ('Mengelaborasi ' + targetTab + ' berbasis Dokumen Acuan, Tabel ERD, & Modern Tech Stack...')
+                        });
+                    }
+                    try {
+                        const res = await fetch('{{ route('blueprint.scaffold.refine-file', $blueprint->slug) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'X-Locale': this.isEn ? 'en' : 'id',
+                            },
+                            body: JSON.stringify({
+                                filename: targetTab,
+                                prompt: this.scaffoldAiPrompt,
+                                ai_provider: this.tweakAiProvider,
+                                locale: this.isEn ? 'en' : 'id',
+                            })
+                        });
+                        const data = await res.json();
+                        if (data && data.success) {
+                            this.scaffoldFiles[targetTab] = data.content;
+                            if (!this.scaffoldCustomizedFiles.includes(targetTab)) {
+                                this.scaffoldCustomizedFiles.push(targetTab);
+                            }
+                            const syncedList = Array.isArray(data.synced_files) ? data.synced_files : [targetTab];
+                            syncedList.forEach((sf) => {
+                                this.scaffoldFiles[sf] = data.content;
+                                if (!this.scaffoldCustomizedFiles.includes(sf)) {
+                                    this.scaffoldCustomizedFiles.push(sf);
+                                }
+                                this.scaffoldTelemetry[sf] = {
+                                    maturity_score: data.maturity_score || 95,
+                                    is_maximal: !!data.is_maximal,
+                                    added_lines: data.added_lines || 0,
+                                    line_count: data.line_count || 0,
+                                    iterations: data.iterations || 1,
+                                    synced_files: syncedList,
+                                };
+                            });
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: data.is_maximal
+                                        ? (this.isEn ? '100% OPTIMAL / MAXIMAL REACHED' : '100% OPTIMAL / MAKSIMAL TERCAPAI')
+                                        : (this.isEn ? 'SCAFFOLD FILE DEEPENED' : 'BERKAS SCAFFOLD DIPERDALAM'),
+                                    message: data.message
+                                });
+                            }
+                        } else {
+                            throw new Error(data.message || 'Gagal memperdalam berkas scaffold.');
+                        }
+                    } catch (err) {
+                        if (window.showToast) {
+                            window.showToast({ type: 'error', title: 'GAGAL ELABORASI BERKAS', message: err.message });
+                        }
+                    } finally {
+                        this.scaffoldAiLoading = false;
+                    }
+                },
                 collaborators: [],
                 collaboratorCursor: { x: 0, y: 0, visible: false, name: '' },
                 getScaffoldCode(tabId) {

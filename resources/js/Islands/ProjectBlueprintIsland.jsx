@@ -71,6 +71,10 @@ import {
   TRANSLATIONS,
   calculateCompleteness,
   PAYMENT_RAIL_OPTIONS,
+  parseNumberedList,
+  stringifyNumberedList,
+  parseCommaList,
+  stringifyCommaList,
 } from './Blueprint/constants/blueprintTranslations';
 import {
   PUBLIC_UX_PRESETS_V10,
@@ -95,7 +99,7 @@ import BlueprintKpiCascadeModal from './Blueprint/components/BlueprintKpiCascade
 export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialData = {}, countries = [], currentLocale = null }) {
   const initialLang = (currentLocale === 'en')
     || (initialData?.language === 'en' || initialData?.locale === 'en')
-    || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')))
+    || (typeof window !== 'undefined' && typeof document !== 'undefined' && (document.documentElement?.lang?.startsWith('en') || (document.cookie || '').includes('neriah_locale=en')))
     ? 'en'
     : 'id';
   const [lang, setLang] = useState(initialLang);
@@ -2969,6 +2973,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             selectStackPreset={selectStackPreset}
             handleQuickDetectSectorFromIdea={handleQuickDetectSectorFromIdea}
             activeStackPresetObj={activeStackPresetObj}
+            filteredStackPresets={filteredStackPresets}
             effectivePrimitiveCodes={effectivePrimitiveCodes}
             activeEnterpriseMenuMatrix={activeEnterpriseMenuMatrix}
             effectiveSelectedMenus={effectiveSelectedMenus}
@@ -3024,6 +3029,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           setPendingPaymentSuggestion={setPendingPaymentSuggestion}
           activeAddKey={activeAddKey}
           setActiveAddKey={setActiveAddKey}
+          quickInputText={quickInputText}
+          setQuickInputText={setQuickInputText}
           handleAddListItem={handleAddListItem}
           handleDeleteListItem={handleDeleteListItem}
           showLocalToast={showLocalToast}

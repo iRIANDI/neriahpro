@@ -49,6 +49,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -269,7 +270,11 @@ class BlueprintScaffoldController extends Controller
         $this->authorizeBlueprintAccess($blueprint);
 
         // Security check for scope locking unless Retail License or SuperAdmin
-        if ($blueprint->scope_locked && ! ($blueprint->project_status === 'Retail License' || (auth()->user()?->isSuperAdmin() ?? false))) {
+        $isRetailOrPaid = $blueprint->project_status === 'Retail License'
+            || (method_exists($blueprint, 'isRetailTrack') && $blueprint->isRetailTrack())
+            || (method_exists($blueprint, 'hasPaidRetailLicense') && $blueprint->hasPaidRetailLicense());
+
+        if ($blueprint->scope_locked && ! ($isRetailOrPaid || (auth()->user()?->isSuperAdmin() ?? false))) {
             return response()->json([
                 'success' => false,
                 'message' => 'Spesifikasi telah dikunci (Scope Frozen). Pengubahan memerlukan Change Request resmi.',
@@ -279,16 +284,19 @@ class BlueprintScaffoldController extends Controller
         $validated = $request->validate([
             'filename' => 'required|string|max:255',
             'prompt' => 'nullable|string|max:3000',
-            'ai_provider' => 'nullable|string|in:auto,relayrouter,gemini,deepseek,anthropic,openai',
+            'ai_provider' => 'nullable|string|in:auto,relayrouter,gemini,deepseek,anthropic,openai,deterministic',
+            'locale' => 'nullable|string|in:id,en',
         ]);
 
         try {
+            $locale = $validated['locale'] ?? ($request->header('X-Locale') ?: app()->getLocale());
             $refinementService = app(BlueprintRefinementService::class);
             $result = $refinementService->refineScaffoldFile(
                 $blueprint,
                 $validated['filename'],
                 $validated['prompt'] ?? null,
-                $validated['ai_provider'] ?? 'auto'
+                $validated['ai_provider'] ?? 'auto',
+                in_array($locale, ['id', 'en'], true) ? $locale : 'id'
             );
 
             return response()->json($result);

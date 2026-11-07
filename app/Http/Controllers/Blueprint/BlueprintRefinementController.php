@@ -88,7 +88,9 @@ class BlueprintRefinementController extends Controller
         $this->authorizeBlueprintAccess($blueprint);
 
         // Access Logic: Retail, SuperAdmin, or Draft can edit. Studio contracts are locked.
-        $isRetail = $blueprint->project_status === 'Retail License';
+        $isRetail = $blueprint->project_status === 'Retail License'
+            || (method_exists($blueprint, 'isRetailTrack') && $blueprint->isRetailTrack())
+            || (method_exists($blueprint, 'hasPaidRetailLicense') && $blueprint->hasPaidRetailLicense());
         $isSuperAdmin = auth()->check() && auth()->user()->isSuperAdmin();
         $isDraft = ! $blueprint->signed_agreement && ! $blueprint->isScopeFrozen();
 

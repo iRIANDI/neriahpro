@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, CreditCard, Shield, Activity, Truck } from 'lucide-react';
+import { X, Check, CreditCard, Shield, Activity, Truck } from 'lucide-react';
 import { PAYMENT_RAIL_OPTIONS } from '../constants/blueprintTranslations';
 
 export default function BlueprintPaymentRailModal({

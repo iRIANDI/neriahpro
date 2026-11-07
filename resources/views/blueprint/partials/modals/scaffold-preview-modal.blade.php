@@ -147,15 +147,26 @@
                             </button>
                         </div>
 
-                        <!-- AI Grounded Deepener Button for Active Scaffold File -->
+                        <!-- Toggle In-Modal AI Scaffold Elaboration Co-Pilot -->
+                        <button 
+                            type="button" 
+                            @click="scaffoldAiPanelOpen = !scaffoldAiPanelOpen" 
+                            class="px-2 py-0.5 transition cursor-pointer flex items-center gap-1 font-mono text-[10px] font-black border"
+                            :class="scaffoldAiPanelOpen ? 'bg-emerald-500 text-black border-emerald-400' : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/40'"
+                            title="{{ $isEn ? 'Toggle In-Place AI Scaffold Co-Pilot' : 'Buka/Tutup Studio AI Elaborasi Berkas Scaffold' }}"
+                        >
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span>{{ $isEn ? 'AI CO-PILOT' : 'STUDIO AI SCAFFOLD' }}</span>
+                        </button>
+
+                        <!-- AI Grounded Deepener Modal Trigger -->
                         <button 
                             type="button" 
                             @click="openTweakModal('scaffold_file', 'Scaffold // ' + scaffoldActiveTab, getScaffoldCode(scaffoldActiveTab))" 
-                            class="px-2 py-0.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition cursor-pointer flex items-center gap-1 font-mono text-[10px] font-bold"
-                            title="Perdalam file scaffold ini secara langsung menggunakan AI berbasis Dokumen Acuan"
+                            class="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 text-emerald-300 border border-emerald-500/40 transition cursor-pointer flex items-center gap-1 font-mono text-[10px] font-bold"
+                            title="{{ $isEn ? 'Open Full Grounded Spec Deepener Modal for this file' : 'Buka Modal Penajaman Berbasis Dokumen Acuan Penuh' }}"
                         >
-                            <svg class="w-2.5 h-2.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            <span>PERDALAM DARI ACUAN</span>
+                            <span>{{ $isEn ? 'FULL AI MODAL' : 'MODAL ACUAN' }}</span>
                         </button>
 
                         <!-- Reset to AI default button (if customized) -->
@@ -169,6 +180,82 @@
                         <button type="button" @click="copyActiveScaffold()" class="text-emerald-400 hover:text-emerald-300 font-bold uppercase transition flex items-center gap-1 cursor-pointer">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                             <span>Salin</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- IN-MODAL AI SCAFFOLD ELABORATION STUDIO BAR -->
+                <div x-show="scaffoldAiPanelOpen && !scaffoldIsScopeLocked" x-transition class="mb-2 p-2.5 bg-zinc-900/95 border border-emerald-500/40 shrink-0 font-mono">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="px-1.5 py-0.5 bg-emerald-500 text-black text-[9px] font-black uppercase tracking-wider">
+                                ⚡ {{ $isEn ? 'AI SCAFFOLD DEEPENER' : 'ELABORASI AI SCAFFOLDING' }}
+                            </span>
+                            <span class="text-[10px] text-zinc-300 font-bold" x-text="scaffoldActiveTab"></span>
+
+                            <!-- Maturity & Convergence Telemetry Badge -->
+                            <template x-if="scaffoldTelemetry && scaffoldTelemetry[scaffoldActiveTab]">
+                                <span class="px-1.5 py-0.5 text-[9px] font-black uppercase border"
+                                      :class="scaffoldTelemetry[scaffoldActiveTab].is_maximal ? 'bg-emerald-950 text-emerald-200 border-emerald-500' : 'bg-cyan-950 text-cyan-200 border-cyan-600'">
+                                    <span x-text="scaffoldTelemetry[scaffoldActiveTab].is_maximal ? '{{ $isEn ? '✓ 100% OPTIMAL / MAXIMAL' : '✓ 100% OPTIMAL / MAKSIMAL' }}' : ('{{ $isEn ? 'MATURITY: ' : 'KEMATANGAN: ' }}' + scaffoldTelemetry[scaffoldActiveTab].maturity_score + '%')"></span>
+                                    <span x-show="scaffoldTelemetry[scaffoldActiveTab].added_lines > 0" class="ml-1 text-emerald-300" x-text="'(+' + scaffoldTelemetry[scaffoldActiveTab].added_lines + ' {{ $isEn ? 'lines' : 'baris' }})'"></span>
+                                </span>
+                            </template>
+                        </div>
+
+                        <div class="flex items-center gap-1.5">
+                            <button
+                                type="button"
+                                @click="elaborateScaffoldDirectiveInPlace()"
+                                :disabled="scaffoldElaboratingDirective || scaffoldAiLoading"
+                                class="px-2 py-1 bg-zinc-950 hover:bg-zinc-800 text-amber-300 border border-amber-500/50 text-[9px] font-black uppercase transition cursor-pointer disabled:opacity-50 flex items-center gap-1"
+                            >
+                                <span x-show="!scaffoldElaboratingDirective">✨ {{ $isEn ? 'AUTO-DRAFT FILE DIRECTIVE' : 'RUMUSKAN INSTRUKSI AI FILE INI' }}</span>
+                                <span x-show="scaffoldElaboratingDirective">{{ $isEn ? 'ANALYZING FILE...' : 'MENGANALISIS BERKAS...' }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- File-Specific 1-Click Preset Chips -->
+                    <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                        <span class="text-[9px] text-zinc-400 uppercase font-bold">{{ $isEn ? 'Presets:' : 'Preset Cepat:' }}</span>
+                        <template x-for="(chip, cIdx) in getScaffoldPresetChips(scaffoldActiveTab)" :key="cIdx">
+                            <button
+                                type="button"
+                                @click="scaffoldAiPrompt = chip.prompt"
+                                class="px-2 py-0.5 bg-zinc-950 hover:bg-emerald-950/80 text-zinc-200 hover:text-emerald-200 border border-zinc-700 hover:border-emerald-500/60 text-[9px] font-bold transition cursor-pointer"
+                                x-text="chip.label"
+                            ></button>
+                        </template>
+                    </div>
+
+                    <!-- Custom Prompt Input & Execute AI Deepening Button -->
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <div class="relative flex-1">
+                            <input
+                                type="text"
+                                x-model="scaffoldAiPrompt"
+                                @keydown.enter.prevent="refineActiveScaffoldFileInPlace()"
+                                placeholder="{{ $isEn ? 'Write custom AI architectural instruction for this file (or leave blank to auto-deepen from Source Corpus & ERD)...' : 'Ketik instruksi spesifik untuk berkas ini (atau kosongkan agar AI otomatis memperdalam dari Dokumen Acuan & ERD)...' }}"
+                                class="w-full bg-zinc-950 border border-zinc-700 focus:border-emerald-400 text-zinc-100 text-[11px] px-2.5 py-1.5 pr-7 focus:outline-none"
+                            />
+                            <button
+                                type="button"
+                                x-show="scaffoldAiPrompt && scaffoldAiPrompt.length > 0"
+                                @click="scaffoldAiPrompt = ''"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs font-black cursor-pointer"
+                                title="{{ $isEn ? 'Clear instruction' : 'Hapus instruksi' }}"
+                            >&times;</button>
+                        </div>
+                        <button
+                            type="button"
+                            @click="refineActiveScaffoldFileInPlace()"
+                            :disabled="scaffoldAiLoading"
+                            class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-[10px] uppercase tracking-wider transition cursor-pointer disabled:opacity-50 shrink-0 flex items-center justify-center gap-1.5"
+                        >
+                            <svg x-show="!scaffoldAiLoading" class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <svg x-show="scaffoldAiLoading" class="w-3 h-3 text-black animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span x-text="scaffoldAiLoading ? '{{ $isEn ? 'DEEPENING CODE...' : 'MEMPERDALAM KODE...' }}' : '{{ $isEn ? 'ELABORATE THIS FILE (AI)' : 'ELABORASI BERKAS INI (AI)' }}'"></span>
                         </button>
                     </div>
                 </div>

@@ -3129,6 +3129,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           requestedTier={requestedTier}
           hasPaidRetailLicense={hasPaidRetailLicense}
           isRetailCustomer={isRetailCustomer}
+          blueprintId={initialData?.id || null}
+          csrfToken={csrfToken}
         />
       </form>
 

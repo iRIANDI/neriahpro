@@ -157,6 +157,7 @@ class ScaffoldGeneratorService
             || (str_contains($corpusText, 'next.js') && str_contains($corpusText, 'api'));
 
         $schemaSql = self::generateDatabaseMigrationsSql($blueprint, $erdTables);
+        $schemaMySql = self::generateDatabaseMigrationsMySql($blueprint, $erdTables);
         $files = [
             // Pillar 0: Product Discovery & Product-Lens Gate (Filter Ide Mentah)
             'docs/product/PRODUCT-BRIEF.md' => self::generateProductBrief($blueprint),
@@ -164,6 +165,8 @@ class ScaffoldGeneratorService
             // Pillar 1: Contract-First Specifications, Database Architecture & Architecture Decision Records (ADRs)
             'openapi.json' => self::generateOpenApiSpec($blueprint, $erdTables),
             'schema_complete.sql' => $schemaSql,
+            'database/migrations/schema_complete_postgresql.sql' => $schemaSql,
+            'database/migrations/schema_complete_mysql.sql' => $schemaMySql,
             'database/migrations/schema_complete.sql' => $schemaSql,
             'docs/adr/ADR-001-architectural-paradigm.md' => self::generateAdr001($blueprint),
             'docs/architecture/ADR-001-postgresql-ulid.md' => self::generateAdr001($blueprint),
@@ -526,6 +529,138 @@ class ScaffoldGeneratorService
         $sql .= ");\n";
         $sql .= "CREATE INDEX IF NOT EXISTS idx_threat_logs_ip ON security_threat_logs(ip_address);\n";
         $sql .= "CREATE INDEX IF NOT EXISTS idx_threat_logs_type ON security_threat_logs(threat_type);\n";
+
+        return $sql;
+    }
+
+    /**
+     * Generate MySQL 8.0+ / MariaDB InnoDB schema DDL with binary-safe ULID primary keys and Keyset Cursor Indexes.
+     */
+    public static function generateDatabaseMigrationsMySql(VisionBlueprint $blueprint, array $erdTables): string
+    {
+        $projectName = $blueprint->nama_bisnis ?: 'Application';
+        $sql = "-- =============================================================================\n";
+        $sql .= "-- PROJECT OS // DATABASE SCHEMA DDL (MYSQL 8.0+ / MARIADB INNODB STANDARD)\n";
+        $sql .= "-- Project: {$projectName}\n";
+        $sql .= "-- Architecture: Binary-Safe ULID CHAR(26), JSON, Keyset Cursors O(1)\n";
+        $sql .= "-- =============================================================================\n\n";
+        $sql .= "SET FOREIGN_KEY_CHECKS = 0;\n";
+        $sql .= "SET NAMES utf8mb4;\n\n";
+
+        // Generate Users Table first if not present
+        $hasUsers = false;
+        foreach ($erdTables as $t) {
+            if (($t['name'] ?? '') === 'users') {
+                $hasUsers = true;
+                break;
+            }
+        }
+
+        if (! $hasUsers) {
+            $sql .= "-- System Users Core Table\n";
+            $sql .= "CREATE TABLE IF NOT EXISTS `users` (\n";
+            $sql .= "    `id` CHAR(26) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n";
+            $sql .= "    `name` VARCHAR(255) NOT NULL,\n";
+            $sql .= "    `email` VARCHAR(191) NOT NULL,\n";
+            $sql .= "    `password` VARCHAR(255) NOT NULL,\n";
+            $sql .= "    `role` VARCHAR(50) NOT NULL DEFAULT 'client',\n";
+            $sql .= "    `email_verified_at` DATETIME NULL,\n";
+            $sql .= "    `remember_token` VARCHAR(100) NULL,\n";
+            $sql .= "    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n";
+            $sql .= "    `updated_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),\n";
+            $sql .= "    PRIMARY KEY (`id`),\n";
+            $sql .= "    UNIQUE KEY `idx_users_email` (`email`),\n";
+            $sql .= "    KEY `idx_users_role` (`role`),\n";
+            $sql .= "    KEY `idx_users_cursor` (`created_at`, `id`)\n";
+            $sql .= ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;\n\n";
+        }
+
+        // Generate Domain Entity Tables
+        foreach ($erdTables as $table) {
+            $tableName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $table['name'] ?? 'records'));
+            $description = $table['description'] ?? 'Domain table';
+
+            $sql .= "-- Entity: {$tableName} ({$description})\n";
+            $sql .= "CREATE TABLE IF NOT EXISTS `{$tableName}` (\n";
+
+            $columnLines = [];
+            $columnLines[] = '    `id` CHAR(26) CHARACTER SET ascii COLLATE ascii_bin NOT NULL';
+
+            $columns = $table['columns'] ?? [];
+            if (empty($columns)) {
+                $columns = [
+                    ['name' => 'title', 'type' => 'string(255)', 'index' => null],
+                    ['name' => 'status', 'type' => 'string(50)', 'index' => 'INDEX'],
+                    ['name' => 'metadata', 'type' => 'json', 'index' => null],
+                ];
+            }
+
+            $indexes = [];
+            $indexes[] = '    PRIMARY KEY (`id`)';
+
+            foreach ($columns as $col) {
+                $colName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? ''));
+                if ($colName === 'id' || empty($colName)) {
+                    continue;
+                }
+
+                $rawType = strtolower($col['type'] ?? 'string');
+                $sqlType = 'VARCHAR(255) NULL';
+
+                if (str_contains($rawType, 'ulid') || str_ends_with($colName, '_id')) {
+                    $sqlType = 'CHAR(26) CHARACTER SET ascii COLLATE ascii_bin NULL';
+                    $indexes[] = "    KEY `idx_{$tableName}_{$colName}` (`{$colName}`)";
+                } elseif (str_contains($rawType, 'text') || str_contains($rawType, 'desc')) {
+                    $sqlType = 'TEXT NULL';
+                } elseif (str_contains($rawType, 'int') || str_contains($rawType, 'count')) {
+                    $sqlType = 'INT NOT NULL DEFAULT 0';
+                } elseif (str_contains($rawType, 'decimal') || str_contains($rawType, 'price') || str_contains($rawType, 'amount')) {
+                    $sqlType = 'DECIMAL(15, 2) NOT NULL DEFAULT 0.00';
+                } elseif (str_contains($rawType, 'bool')) {
+                    $sqlType = 'TINYINT(1) NOT NULL DEFAULT 0';
+                } elseif (str_contains($rawType, 'json')) {
+                    $sqlType = 'JSON NULL';
+                } elseif (str_contains($rawType, 'date') || str_contains($rawType, 'time')) {
+                    $sqlType = 'DATETIME NULL';
+                }
+
+                if ($colName === 'status' || ($col['index'] ?? '') === 'INDEX') {
+                    $indexes[] = "    KEY `idx_{$tableName}_{$colName}` (`{$colName}`)";
+                }
+
+                $columnLines[] = "    `{$colName}` {$sqlType}";
+            }
+
+            $columnLines[] = '    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)';
+            $columnLines[] = '    `updated_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)';
+            
+            // Keyset Cursor Index O(1) for high-performance pagination
+            $indexes[] = "    KEY `idx_{$tableName}_cursor` (`created_at`, `id`)";
+
+            $allLines = array_merge($columnLines, $indexes);
+            $sql .= implode(",\n", $allLines) . "\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;\n\n";
+        }
+
+        // Security Threats Log Table (AI-Shield integration)
+        $sql .= "-- AI-Shield & Cyber Threat Intrusion Audit Log Table\n";
+        $sql .= "CREATE TABLE IF NOT EXISTS `security_threat_logs` (\n";
+        $sql .= "    `id` CHAR(26) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n";
+        $sql .= "    `ip_address` VARCHAR(45) NOT NULL,\n";
+        $sql .= "    `user_agent` VARCHAR(500) NULL,\n";
+        $sql .= "    `endpoint` VARCHAR(255) NOT NULL,\n";
+        $sql .= "    `http_method` VARCHAR(10) NOT NULL,\n";
+        $sql .= "    `threat_type` VARCHAR(100) NOT NULL,\n";
+        $sql .= "    `matched_pattern` VARCHAR(255) NOT NULL,\n";
+        $sql .= "    `payload_sample` TEXT NULL,\n";
+        $sql .= "    `is_blocked` TINYINT(1) NOT NULL DEFAULT 0,\n";
+        $sql .= "    `created_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n";
+        $sql .= "    `updated_at` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),\n";
+        $sql .= "    PRIMARY KEY (`id`),\n";
+        $sql .= "    KEY `idx_threat_logs_ip` (`ip_address`),\n";
+        $sql .= "    KEY `idx_threat_logs_type` (`threat_type`),\n";
+        $sql .= "    KEY `idx_threat_logs_cursor` (`created_at`, `id`)\n";
+        $sql .= ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;\n\n";
+        $sql .= "SET FOREIGN_KEY_CHECKS = 1;\n";
 
         return $sql;
     }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Check,
   Plus,
@@ -17,6 +17,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import BlueprintIncidentReportModal from './BlueprintIncidentReportModal';
 import { FIELD_LABELS } from '../constants/blueprintConstants';
 import { parseNumberedList, stringifyNumberedList, parseCommaList, stringifyCommaList } from '../constants/blueprintTranslations';
 
@@ -58,7 +59,11 @@ export default function BlueprintDiscoveryParamsSection({
   requestedTier = null,
   hasPaidRetailLicense = false,
   isRetailCustomer = false,
+  blueprintId = null,
+  csrfToken = null,
 }) {
+  const [showIncidentModal, setShowIncidentModal] = useState(false);
+
   return (
     <>
       <section id="section-block-a" className={panelClass}>
@@ -643,17 +648,20 @@ export default function BlueprintDiscoveryParamsSection({
                   ? 'Decoupled Edge & Cloud: Cloudflare Pages (Frontend) + Dedicated VPS Coolify (API Backend) + Cloudflare R2'
                   : 'Topologi Decoupled: Cloudflare Pages (Frontend Edge) + Dedicated VPS Coolify (API Backend) + Cloudflare R2 ($0 Egress)',
                 lang === 'en'
-                  ? 'Hybrid Topology: Central Cloud VPS (PostgreSQL 16+, Redis) + Mobile Client Local DB (SQLite Offline Sync)'
-                  : 'Topologi Hybrid: Cloud Server PostgreSQL 16+ & Redis + Database Lokal Mobile SQLite (Offline-First Sync)',
+                  ? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16 Strict ULID, Redis, Automated Backups)'
+                  : 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16 Strict ULID, Redis, Backup Otomatis)',
                 lang === 'en'
-                  ? 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Automated Backups)'
-                  : 'Managed Dedicated Cloud VPS Neriah Pro (PostgreSQL 16, Redis, Backup Otomatis)',
+                  ? 'Managed Dedicated Cloud VPS Neriah Pro (MySQL 8.0+ / MariaDB Strict ULID, Redis, Automated Backups)'
+                  : 'Managed Dedicated Cloud VPS Neriah Pro (MySQL 8.0+ / MariaDB Strict ULID, Redis, Backup Otomatis)',
+                lang === 'en'
+                  ? 'Hybrid Topology: Central Cloud VPS (PostgreSQL 16+ / MySQL 8.0+, Redis) + Mobile Client Local DB (SQLite Offline Sync)'
+                  : 'Topologi Hybrid: Cloud Server (PostgreSQL 16+ / MySQL 8.0+) & Redis + Database Lokal Mobile SQLite (Offline-First Sync)',
                 lang === 'en'
                   ? 'Client Dedicated Cloud VPS (AWS EC2 / DigitalOcean / Google Cloud Platform)'
                   : 'Private Cloud Server Akun Klien (AWS EC2 / DigitalOcean / Google Cloud)',
                 lang === 'en'
-                  ? 'On-Premise Private Company Local Server (Intranet / Physical Office)'
-                  : 'On-Premise Server Lokal Milik Perusahaan (Intranet / Kantor Fisik)'
+                  ? 'On-Premise Private Company Local Server (Ubuntu Server LTS, MySQL 8.0 / PostgreSQL 16)'
+                  : 'On-Premise Server Lokal Milik Perusahaan (Ubuntu Server LTS, MySQL 8.0 / PostgreSQL 16)'
               ].map((host, idx) => (
                 <button
                   key={idx}
@@ -1217,6 +1225,14 @@ export default function BlueprintDiscoveryParamsSection({
                         </button>
                         <button
                           type="button"
+                          onClick={() => setShowIncidentModal(true)}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-mono font-bold text-xs rounded-none transition cursor-pointer shadow-sm"
+                        >
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          <span>{lang === 'en' ? '🚨 Report Incident & Claim SLA Compensation (Rp 150k)' : '🚨 Lapor Gangguan & Klaim Kompensasi SLA (Voucher Rp 150k)'}</span>
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => setErrorMessage(null)}
                           className="inline-flex items-center gap-1 px-3 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-mono text-xs rounded-none transition cursor-pointer"
                         >
@@ -1352,12 +1368,30 @@ export default function BlueprintDiscoveryParamsSection({
             ) : currentTrack === 'studio' ? (
               <span>🛡️ {lang === 'en' ? 'Includes dedicated senior engineer slot allocation, Pest ApiContractTest, live cloud VPS deploy & SLA guarantee.' : 'Termasuk alokasi slot engineer terisolasi, pengujian Pest ApiContractTest, deploy live cloud VPS & garansi bug SLA.'}</span>
             ) : (
-              <span>📦 {lang === 'en' ? 'Instant download: Ultimate PRD 26 params, PostgreSQL Strict ULID DDL, Docker config & AI directives (.cursorrules).' : 'Unduh instan: PRD 26 parameter Fortune 500, skema DDL PostgreSQL Strict ULID, Docker container & panduan AI agent.'}</span>
+              <span>📦 {lang === 'en' ? 'Instant download: Ultimate PRD 26 params, Dual-Engine DDL (PostgreSQL 16 & MySQL 8.0+), Docker config & AI directives (.cursorrules).' : 'Unduh instan: PRD 26 parameter Fortune 500, skema DDL Dual-Engine (PostgreSQL & MySQL 8.0+), Docker container & panduan AI agent.'}</span>
             )}
           </div>
         </div>
       </section>
 
+      {/* SLA INCIDENT REPORT & COMPENSATION MODAL */}
+      <BlueprintIncidentReportModal
+        isOpen={showIncidentModal}
+        onClose={() => setShowIncidentModal(false)}
+        errorMessage={errorMessage}
+        formData={formData}
+        blueprintId={blueprintId}
+        lang={lang}
+        csrfToken={csrfToken}
+        onSuccessClaim={(claimData) => {
+          showLocalToast(
+            'success',
+            lang === 'en'
+              ? `SLA Compensation Voucher ${claimData.voucher_code} (Rp 150k) granted & +30 days bug warranty added!`
+              : `Voucher kompensasi SLA ${claimData.voucher_code} (Rp 150rb) aktif & +30 hari garansi bug ditambahkan!`
+          );
+        }}
+      />
     </>
   );
 }

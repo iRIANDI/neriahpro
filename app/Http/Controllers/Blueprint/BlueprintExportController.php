@@ -414,6 +414,14 @@ class BlueprintExportController extends Controller
                     : PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($univSchema['data_dictionary'] ?? [], $blueprint->nama_bisnis ?: 'Enterprise App'),
                 'pg16_range_partitioning.sql',
             ],
+            'mysql-ddl' => [
+                ScaffoldGeneratorService::generateDatabaseMigrationsMySql($blueprint, $prd['database_schema'] ?? []),
+                'mysql_migrations.sql',
+            ],
+            'pg-ddl' => [
+                ScaffoldGeneratorService::generateDatabaseMigrationsSql($blueprint, $prd['database_schema'] ?? []),
+                'postgresql_migrations.sql',
+            ],
             'env-blueprint' => [
                 ScaffoldGeneratorService::generateEnvBlueprintFile($univSchema, $blueprint->nama_bisnis ?: 'Enterprise App'),
                 '.env.blueprint',

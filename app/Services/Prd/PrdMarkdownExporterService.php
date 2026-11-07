@@ -268,7 +268,11 @@ class PrdMarkdownExporterService
         $md .= "\n";
 
         // 5. Database ERD
-        $md .= "## 5. Skema Basis Data (PostgreSQL Strict ULID) & Mermaid ERD\n\n";
+        $md .= "## 5. Skema Basis Data Dual-Engine (PostgreSQL 16 & MySQL 8.0+ Strict ULID) & Mermaid ERD\n\n";
+        $md .= "> **Standar Dual-Engine Enterprise**: Project OS mendukung dua engine database tier-1 industri secara native:\n";
+        $md .= "> 1. **PostgreSQL 16+**: Menggunakan `id VARCHAR(26) PRIMARY KEY`, payload dokumen `JSONB`, `TIMESTAMPTZ`, dan ekstensi `pgvector`.\n";
+        $md .= "> 2. **MySQL 8.0+ / MariaDB**: Menggunakan `id CHAR(26) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY`, kolom dokumen `JSON`, `DATETIME(6)`, dan `ENGINE=InnoDB ROW_FORMAT=DYNAMIC`.\n";
+        $md .= "> Kedua engine dioptimalkan dengan indeks komposit `(created_at, id)` untuk Keyset Cursor Pagination O(1) tanpa degradasi performa.\n\n";
         $md .= "```mermaid\n" . PrdGeneratorService::generateErdMermaid($erd) . "\n```\n\n";
 
         foreach ($erd as $table) {

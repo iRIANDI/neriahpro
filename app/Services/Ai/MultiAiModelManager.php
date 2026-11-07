@@ -238,14 +238,34 @@ class MultiAiModelManager
             $chain = $configuredProviders;
         }
 
-        // Strict Request Time Budget: If cumulative AI execution in this request cycle reaches 15s,
+        $corpusLength = strlen($prompt) + strlen($systemInstruction);
+
+        // Adaptive timeout & request budget based on input corpus volume:
+        // Short ideas (< 2,000 chars): fast 12s per call, 25s total request budget.
+        // Medium ideas (2,000 - 8,000 chars): 18s per call, 35s total request budget.
+        // Long ideas / complex docs (> 8,000 chars): 26s per call, 50s total request budget (well within Cloudflare 100s limit).
+        if ($corpusLength > 8000) {
+            $maxRequestBudget = 50.0;
+            $maxExecutionBudget = 26.0;
+            $perCallTimeout = ($tier === 'prd') ? 25 : 20;
+        } elseif ($corpusLength > 2000) {
+            $maxRequestBudget = 35.0;
+            $maxExecutionBudget = 18.0;
+            $perCallTimeout = ($tier === 'prd') ? 16 : 14;
+        } else {
+            $maxRequestBudget = 25.0;
+            $maxExecutionBudget = 12.0;
+            $perCallTimeout = ($tier === 'prd') ? 12 : 8;
+        }
+
+        // Strict Request Time Budget: If cumulative AI execution in this request cycle reaches maxRequestBudget,
         // immediately fall back to the Deterministic Architecture Engine to guarantee sub-second HTTP responses.
         if (self::$requestCycleStartTime === null) {
             self::$requestCycleStartTime = microtime(true);
         }
 
         $elapsedRequestTime = microtime(true) - self::$requestCycleStartTime;
-        if ($elapsedRequestTime >= 15.0) {
+        if ($elapsedRequestTime >= $maxRequestBudget) {
             return [
                 'success' => false,
                 'text' => null,
@@ -256,7 +276,7 @@ class MultiAiModelManager
                 'failed_attempts' => [
                     [
                         'provider' => 'budget_guard',
-                        'reason' => 'Per-request AI time budget (15s) reached. Seamlessly fell back to Deterministic Architecture Engine.',
+                        'reason' => "Per-request AI time budget ({$maxRequestBudget}s) reached for corpus length ({$corpusLength} chars). Seamlessly fell back to Deterministic Architecture Engine.",
                     ]
                 ],
                 'notification' => 'Batas waktu respon AI tercapai. Sistem otomatis menggunakan Deterministic Architecture Engine berstandar industri tanpa downtime.',
@@ -319,9 +339,9 @@ class MultiAiModelManager
 
             try {
                 $resultText = match ($provider) {
-                    'gemini' => self::callGemini($apiKey, $modelName, $prompt, $systemInstruction, $tier),
-                    'anthropic' => self::callAnthropic($apiKey, $modelName, $prompt, $systemInstruction, $tier),
-                    default => self::callOpenAiCompatible($provider, $apiKey, $modelName, $prompt, $systemInstruction, $tier),
+                    'gemini' => self::callGemini($apiKey, $modelName, $prompt, $systemInstruction, $tier, $perCallTimeout),
+                    'anthropic' => self::callAnthropic($apiKey, $modelName, $prompt, $systemInstruction, $tier, $perCallTimeout),
+                    default => self::callOpenAiCompatible($provider, $apiKey, $modelName, $prompt, $systemInstruction, $tier, $perCallTimeout),
                 };
 
                 if (!empty($resultText)) {
@@ -378,7 +398,7 @@ class MultiAiModelManager
     /**
      * Call Google Gemini API
      */
-    protected static function callGemini(string $apiKey, string $model, string $prompt, string $system, string $tier): ?string
+    protected static function callGemini(string $apiKey, string $model, string $prompt, string $system, string $tier, ?int $timeoutOverride = null): ?string
     {
         $maxTokens = $tier === 'prd' ? 8192 : 4000;
         $cleanModel = ltrim($model, 'models/');
@@ -401,7 +421,7 @@ class MultiAiModelManager
             $payload['systemInstruction'] = ['parts' => [['text' => $system]]];
         }
 
-        $timeout = $tier === 'prd' ? 12 : 8;
+        $timeout = $timeoutOverride ?: ($tier === 'prd' ? 14 : 10);
         $response = Http::timeout($timeout)->post($url, $payload);
 
         if ($response->successful()) {
@@ -416,7 +436,7 @@ class MultiAiModelManager
     /**
      * Call Anthropic Claude API
      */
-    protected static function callAnthropic(string $apiKey, string $model, string $prompt, string $system, string $tier): ?string
+    protected static function callAnthropic(string $apiKey, string $model, string $prompt, string $system, string $tier, ?int $timeoutOverride = null): ?string
     {
         $maxTokens = $tier === 'prd' ? 8192 : 4000;
         $url = "https://api.anthropic.com/v1/messages";
@@ -434,7 +454,7 @@ class MultiAiModelManager
             $payload['system'] = $system;
         }
 
-        $timeout = $tier === 'prd' ? 12 : 8;
+        $timeout = $timeoutOverride ?: ($tier === 'prd' ? 14 : 10);
         $response = Http::timeout($timeout)
             ->withHeaders([
                 'x-api-key' => $apiKey,
@@ -455,7 +475,7 @@ class MultiAiModelManager
     /**
      * Call OpenAI-compatible providers: OpenAI, DeepSeek, xAI Grok, Groq, OpenRouter
      */
-    protected static function callOpenAiCompatible(string $provider, string $apiKey, string $model, string $prompt, string $system, string $tier): ?string
+    protected static function callOpenAiCompatible(string $provider, string $apiKey, string $model, string $prompt, string $system, string $tier, ?int $timeoutOverride = null): ?string
     {
         $baseUrl = self::getBaseUrl($provider);
         $url = "{$baseUrl}/chat/completions";
@@ -485,7 +505,7 @@ class MultiAiModelManager
             $headers['X-Title'] = 'Neriah Pro Studio OS';
         }
 
-        $timeout = $tier === 'prd' ? 12 : 8;
+        $timeout = $timeoutOverride ?: ($tier === 'prd' ? 14 : 10);
         $response = Http::timeout($timeout)
             ->withHeaders($headers)
             ->post($url, $payload);

@@ -2928,6 +2928,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         setHoneypotWebsite={setHoneypotWebsite}
         attachedFiles={attachedFiles}
         handleAnalyzeIdea={handleAnalyzeIdea}
+        handleQuickDetectSectorFromIdea={handleQuickDetectSectorFromIdea}
         handleFileChange={handleFileChange}
         fileInputRef={fileInputRef}
         removeFile={removeFile}
@@ -2967,6 +2968,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
             selectMatrixSector={selectMatrixSector}
             selectStackPreset={selectStackPreset}
             handleQuickDetectSectorFromIdea={handleQuickDetectSectorFromIdea}
+            activeStackPresetObj={activeStackPresetObj}
+            effectivePrimitiveCodes={effectivePrimitiveCodes}
+            activeEnterpriseMenuMatrix={activeEnterpriseMenuMatrix}
+            effectiveSelectedMenus={effectiveSelectedMenus}
+            toggleMatrixPrimitive={toggleMatrixPrimitive}
+            injectEnterpriseMenusIntoMvp={injectEnterpriseMenusIntoMvp}
+            toggleEnterpriseMenuCode={toggleEnterpriseMenuCode}
             doctorLoading={doctorLoading}
             doctorReport={doctorReport}
             runPreFlightDoctor={runPreFlightDoctor}
@@ -3016,6 +3024,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
           setPendingPaymentSuggestion={setPendingPaymentSuggestion}
           activeAddKey={activeAddKey}
           setActiveAddKey={setActiveAddKey}
+          handleAddListItem={handleAddListItem}
+          handleDeleteListItem={handleDeleteListItem}
+          showLocalToast={showLocalToast}
         />
       </form>
 

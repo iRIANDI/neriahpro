@@ -15,6 +15,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { FIELD_LABELS } from '../constants/blueprintConstants';
+import { parseNumberedList, parseCommaList, stringifyCommaList } from '../constants/blueprintTranslations';
 
 export default function BlueprintDiscoveryParamsSection({
   formData,
@@ -45,6 +46,9 @@ export default function BlueprintDiscoveryParamsSection({
   setPendingPaymentSuggestion,
   activeAddKey,
   setActiveAddKey,
+  handleAddListItem = () => {},
+  handleDeleteListItem = () => {},
+  showLocalToast = () => {},
 }) {
   return (
     <>

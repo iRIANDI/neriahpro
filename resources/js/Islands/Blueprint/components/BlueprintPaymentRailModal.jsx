@@ -8,9 +8,22 @@ export default function BlueprintPaymentRailModal({
   selectedPaymentRailIds,
   setSelectedPaymentRailIds,
   onApply,
+  setPendingPaymentSuggestion = () => {},
   lang = 'id',
 }) {
   if (!isOpen) return null;
+
+  const handleTogglePaymentRail = (railId) => {
+    setSelectedPaymentRailIds(prev => {
+      const next = new Set(prev);
+      if (next.has(railId)) {
+        next.delete(railId);
+      } else {
+        next.add(railId);
+      }
+      return next;
+    });
+  };
 
   return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
@@ -163,7 +176,7 @@ export default function BlueprintPaymentRailModal({
                 <button
                   type="button"
                   disabled={selectedPaymentRailIds.size === 0}
-                  onClick={handleApplySelectedPaymentRails}
+                  onClick={onApply}
                   className={`px-4 py-1.5 font-mono text-xs font-black rounded-none cursor-pointer uppercase transition ${
                     selectedPaymentRailIds.size > 0
                       ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs'

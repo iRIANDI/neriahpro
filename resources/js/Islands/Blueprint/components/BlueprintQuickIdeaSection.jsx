@@ -54,6 +54,7 @@ export default function BlueprintQuickIdeaSection({
   setHoneypotWebsite,
   attachedFiles,
   handleAnalyzeIdea,
+  handleQuickDetectSectorFromIdea = () => {},
   handleFileChange,
   fileInputRef,
   removeFile,

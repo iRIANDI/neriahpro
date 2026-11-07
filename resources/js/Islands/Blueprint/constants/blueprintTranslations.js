@@ -244,7 +244,7 @@ export const TRANSLATIONS = {
 };
 
 // Helper: Parse string list into array of clean strings
-function parseNumberedList(text) {
+export function parseNumberedList(text) {
   if (!text) return [];
   return text
     .split(/\n+/)
@@ -253,13 +253,13 @@ function parseNumberedList(text) {
 }
 
 // Helper: Convert array of strings into numbered string
-function stringifyNumberedList(items) {
+export function stringifyNumberedList(items) {
   if (!items || !items.length) return '';
   return items.map((it, idx) => `${idx + 1}. ${it}`).join('\n');
 }
 
 // Helper: Parse comma list into array
-function parseCommaList(text) {
+export function parseCommaList(text) {
   if (!text) return [];
   return text
     .split(/,\s*/)

@@ -219,8 +219,30 @@ class BlueprintDiscoveryController extends Controller
             $initialData['package_tier'] = $tier;
         }
 
-        $isRetail = ($isExistingRetail || $track === 'retail' || in_array(strtolower((string) $tier), ['spark', 'starter', 'pro', 'ultimate', 'lite', 'retail_spark', 'retail_starter', 'retail_pro', 'retail_ultimate']));
+        $user = auth()->user();
+        $userHasRetailLicense = false;
+        if ($user) {
+            $userEmail = strtolower(trim((string) $user->email));
+            $userHasRetailLicense = VisionBlueprint::where(function ($q) use ($user, $userEmail) {
+                if ($userEmail) {
+                    $q->whereRaw('LOWER(email) = ?', [$userEmail]);
+                }
+                $q->orWhere('user_metadata->user_id', $user->id);
+            })
+            ->where(function ($q) {
+                $q->where('project_status', 'Retail License')
+                    ->orWhereNotNull('user_metadata->retail_tier')
+                    ->orWhereNotNull('user_metadata->package_tier')
+                    ->orWhere('user_metadata->paid', true);
+            })
+            ->exists();
+        }
+
+        $isRetail = ($isExistingRetail || $userHasRetailLicense || $track === 'retail' || in_array(strtolower((string) $tier), ['spark', 'starter', 'pro', 'ultimate', 'lite', 'retail_spark', 'retail_starter', 'retail_pro', 'retail_ultimate']));
         if ($isRetail) {
+            $initialData['is_retail_customer'] = true;
+            $initialData['is_existing_retail'] = $isExistingRetail;
+            $initialData['has_paid_retail_license'] = $userHasRetailLicense;
             $initialData['selected_track'] = 'retail';
             $initialData['track'] = 'retail';
             if ($tier) {

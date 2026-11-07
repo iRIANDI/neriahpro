@@ -7,7 +7,55 @@ export default function BlueprintTrackSwitcher({
   completeness,
   lang,
   t,
+  initialData = {},
+  isExplicitSlugEdit = false,
 }) {
+  const isRetailCustomerWorkspace = Boolean(
+    initialData?.is_retail_customer ||
+    initialData?.is_existing_retail ||
+    initialData?.has_paid_retail_license ||
+    isExplicitSlugEdit ||
+    (currentTrack === 'retail' && (initialData?.selected_tier || initialData?.tier))
+  );
+
+  if (isRetailCustomerWorkspace) {
+    return (
+      <div className="mb-6 border-2 border-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/10 p-4 sm:p-5 rounded-none shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-9 h-9 bg-emerald-500 text-black flex items-center justify-center shrink-0">
+              <ShoppingBag className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+                <span className="font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-100">
+                  {lang === 'en' ? 'ACTIVE TRACK: RETAIL SELF-DEV (PAID & VERIFIED)' : 'JALUR AKTIF: LISENSI RETAIL MANDIRI (TERVERIFIKASI)'}
+                </span>
+                <span className="px-1.5 py-0.5 bg-emerald-500 text-black font-black text-[10px] uppercase">
+                  {lang === 'en' ? 'PERMANENT ACCESS' : 'AKSES PERMANEN'}
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-1 font-sans">
+                {lang === 'en'
+                  ? 'Your workspace is active in 100% Self-Service Retail mode. All 26 parameters compile directly to your Ultimate PRD, Strict ULID DDL & AI Prompts without any Studio contract lock.'
+                  : 'Ruang kerja Anda aktif dalam mode Jalur Mandiri Retail. Seluruh 26 parameter langsung mengompilasi PRD 26 param, skema DDL Strict ULID & prompt AI tanpa ikatan kontrak Studio.'}
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 flex items-center gap-2">
+            <a
+              href="/pricing#project"
+              className="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 text-[10px] font-mono font-bold uppercase transition"
+              title={lang === 'en' ? 'Need Neriah Pro Senior Architects to code everything? Upgrade with 100% retail fee credit!' : 'Butuh Senior Architect Neriah Pro mengodingkan semuanya? Biaya lisensi retail dipotong 100% dari DP!'}
+            >
+              🤝 {lang === 'en' ? 'Upgrade to Mitra Turnkey?' : 'Butuh Tim Koding Kami?'}
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* EXECUTION TRACK SWITCHER (JALUR MANDIRI RETAIL vs JALUR TURNKEY STUDIO) */}

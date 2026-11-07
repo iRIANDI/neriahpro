@@ -86,10 +86,48 @@ export function resolveDefaultPublicUxForSector(sectorCode) {
 }
 
 export const QUICK_IDEA_CATALOG = {
+  streaming_translation: {
+    categoryKey: 'streaming_translation',
+    label: { id: '🎙️ Audio Streaming & WebRTC Interpreter', en: '🎙️ Audio Streaming & WebRTC Interpreter' },
+    keywords: ['translator', 'translate', 'interpreter', 'webrtc', 'livekit', 'mediamtx', 'streaming', 'audio', 'mic', 'mikrofon', 'penerjemah', 'listener', 'jemaat', 'sfu', 'church', 'gereja', 'ibadah', 'hang tuah', 'multilingual'],
+    templates: [
+      {
+        id: 'church_audio_interpreter',
+        badge: 'Real-time Audio Interpreter',
+        title: {
+          id: '🎙️ Aplikasi Penerjemah Suara Real-time (WebRTC LAN & PWA)',
+          en: '🎙️ Real-time WebRTC Audio Interpreter & Multilingual PWA',
+        },
+        prompt: {
+          id: "Sistem penerjemah (interpreter) audio real-time berbasis jaringan Wi-Fi lokal (LAN) dan browser smartphone untuk gereja / konferensi:\n1. Server WebRTC lokal dengan SFU (LiveKit / MediaMTX) latensi ultra-rendah (<150ms) tanpa membebani kuota internet.\n2. Akses HTTPS lokal otomatis via Local DNS dan SSL Certbot/Caddy (DNS-01 Challenge).\n3. Portal Listener (Jemaat) responsif mobile Dark Mode tanpa perlu login (cukup scan QR code dan pilih channel bahasa).\n4. Portal Translator untuk kontrol mikrofon, status stream live, dan monitor jumlah pendengar.\n5. Dashboard Admin berbasis Laravel 13 + Filament untuk manajemen channel bahasa, akun translator, dan moderasi chat.",
+          en: "Real-time multilingual audio interpreter system operating over local Wi-Fi (LAN) and smartphone browsers for churches/conferences:\n1. Low-latency local WebRTC SFU (LiveKit / MediaMTX) with <150ms audio latency without consuming public internet bandwidth.\n2. Local HTTPS/SSL automated via Local DNS and Caddy/Certbot DNS-01 challenge.\n3. Mobile-first Dark Mode Listener portal requiring zero login (scan QR code, select language channel, instant listening).\n4. Dedicated Translator portal with microphone controls, live audio visualizer, and listener count monitor.\n5. Centralized backoffice powered by Laravel 13 + Filament for language channel CRUD, translator credentials, and chat moderation.",
+        },
+      },
+    ],
+  },
+  cross_platform_apps: {
+    categoryKey: 'cross_platform_apps',
+    label: { id: '📱 Multi-Platform Desktop & Mobile', en: '📱 Multi-Platform Desktop & Mobile' },
+    keywords: ['android', 'ios', 'windows', 'macos', 'mac', 'linux', 'flutter', 'tauri', 'electron', 'cross-platform', 'desktop', 'mobile app', 'sqlite', 'offline-first'],
+    templates: [
+      {
+        id: 'flutter_tauri_omnichannel',
+        badge: 'Mobile & Desktop Native',
+        title: {
+          id: '📱 Aplikasi Desktop (Windows/Mac/Linux) & Mobile (Android/iOS) Offline-First',
+          en: '📱 Cross-Platform Desktop (Windows/Mac/Linux) & Mobile (Android/iOS) Offline-First',
+        },
+        prompt: {
+          id: "Aplikasi cross-platform untuk perangkat mobile (Android & iOS) dan desktop (Windows, macOS, Linux):\n1. Engine client menggunakan Flutter / Tauri dengan basis data lokal SQLite WAL Mode dan enkripsi SQLCipher AES-256.\n2. Sinkronisasi dua arah (Bi-Directional Delta Sync) dengan backend cloud PostgreSQL 16 Strict ULID dan resolusi konflik mikrosekon.\n3. Dukungan penuh 100% Offline-First sehingga operasi pencatatan tetap berjalan tanpa koneksi internet.\n4. Integrasi WebSockets / WebRTC untuk notifikasi push dan komunikasi real-time lintas platform.",
+          en: "Cross-platform application targeting mobile (Android & iOS) and desktop (Windows, macOS, Linux):\n1. Client engine powered by Flutter / Tauri with local SQLite WAL Mode and SQLCipher AES-256 encryption.\n2. Bi-directional delta synchronization with cloud PostgreSQL 16 Strict ULID backend and microsecond conflict resolution.\n3. 100% Offline-First architecture ensuring uninterrupted local operations without internet connectivity.\n4. Real-time push notifications and cross-platform communication powered by WebSockets / WebRTC.",
+        },
+      },
+    ],
+  },
   tourism: {
     categoryKey: 'tourism',
     label: { id: '🌴 Tour & Travel (Bali / Nusantara)', en: '🌴 Tour & Travel (Bali / Destinations)' },
-    keywords: ['tour', 'travel', 'bali', 'wisata', 'liburan', 'hotel', 'itinerary', 'trip', 'bandara', 'ngurah rai', 'pantai', 'bromo', 'ijen', 'overland', 'driver', 'destination', 'tourist', 'gayabalical'],
+    keywords: ['tour', 'travel', 'wisata bali', 'tour bali', 'wisata', 'liburan', 'hotel', 'itinerary', 'trip', 'bandara ngurah rai', 'pantai', 'bromo', 'ijen', 'overland', 'driver', 'destination', 'tourist', 'gayabalical', 'paket wisata'],
     templates: [
       {
         id: 'bali_tour_transfer',

@@ -216,4 +216,67 @@ class RetailBlueprintEditAndSessionLeakTest extends TestCase
         $response->assertStatus(200);
         $response->assertJson(['success' => true]);
     }
+
+    /**
+     * Test that an authenticated user who owns a retail license automatically defaults to Retail track with verified customer flag.
+     */
+    public function test_authenticated_user_with_paid_retail_license_defaults_to_retail_track_and_flags_customer(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'yoseph.retail@example.com',
+        ]);
+
+        VisionBlueprint::create([
+            'user_id' => $user->id,
+            'nama_bisnis' => 'My First Retail Blueprint',
+            'client_name' => 'Yoseph Iriandi',
+            'email' => $user->email,
+            'phone' => '+6281380448253',
+            'project_status' => 'Retail License',
+            'signed_agreement' => true,
+            'is_published' => true,
+            'user_metadata' => [
+                'retail_tier' => 'retail_pro',
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->get('/blueprint?tier=spark');
+
+        $response->assertStatus(200);
+        $initialData = $response->viewData('initialData');
+
+        $this->assertNotNull($initialData);
+        $this->assertEquals('retail', $initialData['selected_track']);
+        $this->assertEquals('retail', $initialData['track']);
+        $this->assertTrue($initialData['is_retail_customer']);
+        $this->assertTrue($initialData['has_paid_retail_license']);
+    }
+
+    /**
+     * Test that PRD Architecture Manifesto generates comprehensive Cross-Platform Desktop, Mobile, and WebRTC Audio architecture.
+     */
+    public function test_prd_architecture_manifesto_supports_cross_platform_desktop_mobile_and_realtime_audio(): void
+    {
+        $manifesto = \App\Services\Prd\PrdArchitectureManifestoService::generateMobileAndSyncArchitecture(
+            'Translator Apps HTC',
+            'Cross-Platform Desktop (Windows, macOS, Linux via Tauri / Flutter Desktop) + Real-Time WebRTC / WebSockets',
+            [['name' => 'language_channels']],
+            [['title' => 'WebRTC Audio Stream']]
+        );
+
+        $this->assertArrayHasKey('mobile_platform', $manifesto);
+        $this->assertArrayHasKey('desktop_platform', $manifesto);
+        $this->assertArrayHasKey('realtime_audio_webrtc', $manifesto);
+
+        // Verify desktop platforms (Windows, macOS, Linux via Tauri / Flutter)
+        $this->assertStringContainsString('Windows 10/11', $manifesto['desktop_platform']['target_os']);
+        $this->assertStringContainsString('macOS', $manifesto['desktop_platform']['target_os']);
+        $this->assertStringContainsString('Linux', $manifesto['desktop_platform']['target_os']);
+        $this->assertStringContainsString('Tauri 2.x', $manifesto['desktop_platform']['framework']);
+
+        // Verify low-latency real-time WebRTC audio architecture
+        $this->assertStringContainsString('LiveKit', $manifesto['realtime_audio_webrtc']['engine']);
+        $this->assertStringContainsString('150ms', $manifesto['realtime_audio_webrtc']['latency']);
+        $this->assertStringContainsString('Opus 48kHz', $manifesto['realtime_audio_webrtc']['codec']);
+    }
 }

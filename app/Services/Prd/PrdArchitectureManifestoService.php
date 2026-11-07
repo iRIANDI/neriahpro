@@ -1073,11 +1073,24 @@ class PrdArchitectureManifestoService
 
         return [
             'mobile_platform' => [
-                'framework' => 'Flutter 3.x (Dart) / React Native with TypeScript',
+                'framework' => 'Flutter 3.x (Dart) / React Native with TypeScript (Android & iOS Native Engine)',
                 'architecture_pattern' => 'Clean Architecture (Domain, Data, Presentation) with Feature-First Modularization',
                 'state_management' => 'Riverpod 2.x / Bloc (Stream-Based Local DB Observers)',
                 'offline_resilience' => '100% Offline-First (Operasi CRUD lokal tanpa dependensi koneksi internet seketika)',
                 'network_interceptor' => 'Dio / Axios dengan Exponential Backoff Retry (1s, 2s, 4s, 8s, max 30s) & Idempotency Header',
+            ],
+            'desktop_platform' => [
+                'framework' => 'Tauri 2.x (Rust Backend + Web Frontend) / Flutter Desktop (Dart + C++) / Electron 34+',
+                'target_os' => 'Windows 10/11 (.exe / .msi), macOS 13+ Apple Silicon & Intel (.dmg / .app), Linux Ubuntu/Debian/Fedora (.AppImage / .deb)',
+                'hardware_access' => 'Native Audio I/O (Microphone capture, Low-Latency ASIO/WASAPI/CoreAudio playback), Local UDP/TCP sockets, LAN mDNS broadcast, USB/Serial devices',
+                'offline_engine' => 'Embedded SQLite 3 (WAL Mode + SQLCipher AES-256) sharing identical schema with mobile and web clients',
+                'package_footprint' => 'Tauri native executable < 15MB installer, RAM idle < 35MB; Flutter Desktop < 45MB installer',
+            ],
+            'realtime_audio_webrtc' => [
+                'engine' => 'Selective Forwarding Unit (SFU) via LiveKit / MediaMTX WebRTC Server',
+                'latency' => 'Ultra-low sub-150ms glass-to-ear latency across LAN and Internet',
+                'codec' => 'Opus 48kHz Stereo / Mono with dynamic bitrate adaptation (16kbps - 64kbps)',
+                'local_network_support' => '100% functional on standalone Local Area Network (Wi-Fi LAN) without public internet gateway, automated via Local DNS & Caddy SSL DNS-01',
             ],
             'local_database' => [
                 'engine' => 'SQLite 3 with WAL Mode & SQLCipher AES-256 Encryption',

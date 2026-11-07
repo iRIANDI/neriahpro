@@ -123,22 +123,24 @@ export default function BlueprintQuickIdeaSection({
 
               {/* Category Switcher Pills */}
               <div className="flex flex-wrap gap-1.5 font-mono text-[10px]">
-                <button
-                  type="button"
-                  onClick={() => setSelectedIdeaCategory(null)}
-                  className={`px-2 py-0.5 border rounded-none cursor-pointer transition ${!selectedIdeaCategory
-                    ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
-                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
-                  }`}
-                >
-                  ⚡ {lang === 'en' ? 'Auto-Detected' : 'Deteksi Otomatis'} ({QUICK_IDEA_CATALOG[detectedIdeaCategory]?.label[lang] || detectedIdeaCategory})
-                </button>
+                {detectedIdeaCategory && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedIdeaCategory(null)}
+                    className={`px-2 py-0.5 border rounded-none cursor-pointer transition ${!selectedIdeaCategory
+                      ? 'bg-emerald-600 text-white border-emerald-600 font-bold shadow-xs'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
+                    }`}
+                  >
+                    ⚡ {lang === 'en' ? 'Auto-Detected' : 'Deteksi Otomatis'} ({QUICK_IDEA_CATALOG[detectedIdeaCategory]?.label[lang] || detectedIdeaCategory})
+                  </button>
+                )}
                 {Object.entries(QUICK_IDEA_CATALOG).map(([catKey, catData]) => (
                   <button
                     key={catKey}
                     type="button"
                     onClick={() => setSelectedIdeaCategory(catKey)}
-                    className={`px-2 py-0.5 border rounded-none cursor-pointer transition ${activeIdeaCategory === catKey && selectedIdeaCategory
+                    className={`px-2 py-0.5 border rounded-none cursor-pointer transition ${(selectedIdeaCategory === catKey || (!detectedIdeaCategory && activeIdeaCategory === catKey))
                       ? 'bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 border-zinc-950 dark:border-zinc-100 font-black'
                       : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700 hover:border-zinc-500'
                     }`}

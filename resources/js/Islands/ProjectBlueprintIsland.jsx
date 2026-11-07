@@ -164,6 +164,10 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
   // Execution Track: 'retail' (Jalur Mandiri) vs 'studio' (Jalur Turnkey Dedicated / Mitra Proyek)
   const [currentTrack, setCurrentTrack] = useState(() => {
+    // If this blueprint or customer is bound to an active/paid retail license, firmly default to retail
+    if (initialData?.is_retail_customer || initialData?.is_existing_retail || initialData?.has_paid_retail_license || initialData?.selected_track === 'retail' || initialData?.track === 'retail') {
+      return 'retail';
+    }
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const qTrack = (urlParams.get('track') || urlParams.get('mode') || '').toLowerCase();
@@ -178,7 +182,6 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       }
     } catch (e) { }
     if (initialData?.selected_track === 'studio' || initialData?.track === 'studio') return 'studio';
-    if (initialData?.selected_track === 'retail' || initialData?.track === 'retail') return 'retail';
     if (initialData?.selected_tier && ['spark', 'starter', 'pro', 'ultimate', 'lite'].includes(String(initialData.selected_tier).toLowerCase())) return 'retail';
     return 'retail';
   });
@@ -526,16 +529,17 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
 
   // Dynamic Domain Detection for Quick Idea Templates (Auto-Adapts to Client Vision & Keywords)
   const detectedIdeaCategory = useMemo(() => {
-    const rawText = `${formData.namaBisnis || ''} ${ideaText || ''} ${formData.primarySector || ''}`.toLowerCase();
+    const rawText = `${formData.namaBisnis || ''} ${ideaText || ''} ${formData.primarySector || ''}`.trim().toLowerCase();
+    if (!rawText) return null;
     for (const [key, data] of Object.entries(QUICK_IDEA_CATALOG)) {
       if (data.keywords && data.keywords.some(kw => rawText.includes(kw))) {
         return key;
       }
     }
-    return 'tourism';
+    return null;
   }, [formData.namaBisnis, ideaText, formData.primarySector]);
 
-  const activeIdeaCategory = selectedIdeaCategory || detectedIdeaCategory;
+  const activeIdeaCategory = selectedIdeaCategory || detectedIdeaCategory || Object.keys(QUICK_IDEA_CATALOG)[0];
 
   // 12-Sector, 36 Visual UI Blueprints, 12 Core Primitives, 9 Curated Tech Stack Presets & 15 Master Pillars (v8.0)
   const [matrixCatalog, setMatrixCatalog] = useState({
@@ -2904,6 +2908,8 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         completeness={completeness}
         lang={lang}
         t={t}
+        initialData={initialData}
+        isExplicitSlugEdit={isExplicitSlugEdit}
       />
 
       {/* 4. SECTION 1: QUICK IDEA STUDIO & PROACTIVE AI ASSISTANT */}

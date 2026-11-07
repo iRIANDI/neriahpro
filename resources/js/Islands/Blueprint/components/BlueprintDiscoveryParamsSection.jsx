@@ -289,17 +289,20 @@ export default function BlueprintDiscoveryParamsSection({
               <div className="flex flex-wrap gap-2 mb-2">
                 {[
                   lang === 'en'
+                    ? 'Cross-Platform Mobile (Android & iOS via Flutter / React Native) + Offline SQLite WAL + Cloud Sync'
+                    : 'Cross-Platform Mobile (Android & iOS via Flutter / React Native) + Offline SQLite WAL + Cloud Sync',
+                  lang === 'en'
+                    ? 'Cross-Platform Desktop (Windows, macOS, Linux via Tauri / Flutter Desktop) + Real-Time WebRTC / WebSockets'
+                    : 'Cross-Platform Desktop (Windows, macOS, Linux via Tauri / Flutter Desktop) + Real-Time WebRTC / WebSockets',
+                  lang === 'en'
+                    ? 'Universal All-in-One: Mobile (Android & iOS) + Desktop (Windows, macOS) + Web PWA (Single Codebase Flutter / Tauri)'
+                    : 'Universal All-in-One: Mobile (Android & iOS) + Desktop (Windows, macOS) + Web PWA (Single Codebase Flutter / Tauri)',
+                  lang === 'en'
+                    ? 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile) + Low-Latency WebRTC Audio/Video'
+                    : 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile) + Low-Latency WebRTC Audio/Video',
+                  lang === 'en'
                     ? 'Decoupled Headless: Next.js 15 / Nuxt 3 Frontend + Headless Laravel 13 / NestJS REST & GraphQL API'
                     : 'Decoupled Headless: Next.js 15 / Nuxt 3 Frontend + Headless Laravel 13 / NestJS REST & GraphQL API',
-                  lang === 'en'
-                    ? 'Hybrid: Web App + Mobile Apps (Flutter / React Native - iOS & Android) + SQLite Local DB'
-                    : 'Hybrid: Web App + Mobile Apps (Flutter / React Native - iOS & Android) + SQLite Local DB',
-                  lang === 'en'
-                    ? 'Mobile-First Native App (Flutter / Swift / Kotlin) + Offline Local DB + Cloud PostgreSQL Sync'
-                    : 'Mobile-First Native App (Flutter / Swift / Kotlin) + Offline Local DB + Cloud PostgreSQL Sync',
-                  lang === 'en'
-                    ? 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)'
-                    : 'Modern Web Application Responsive & PWA (Desktop, Tablet & Mobile)',
                   lang === 'en'
                     ? 'Web Desktop Backoffice & High-Density Operational Portal'
                     : 'Web Desktop Backoffice (Khusus Monitor & Komputer Kantor)',

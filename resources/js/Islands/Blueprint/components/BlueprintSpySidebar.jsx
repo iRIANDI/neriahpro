@@ -9,6 +9,8 @@ import {
   ChevronLeft,
   Check,
   RotateCcw,
+  AlertCircle,
+  ArrowUp,
 } from 'lucide-react';
 
 export default function BlueprintSpySidebar({
@@ -22,6 +24,7 @@ export default function BlueprintSpySidebar({
   toggleAccordionGroup,
   expandedSubBlocks,
   toggleSubBlock,
+  isSubBlockOpen = () => false,
   expandAllGroups,
   collapseAllGroups,
   activeSection,
@@ -35,6 +38,14 @@ export default function BlueprintSpySidebar({
   completeness,
   lang = 'id',
   t,
+  autoSyncAccordion = true,
+  setAutoSyncAccordion = () => {},
+  toggleAllSubBlocks = () => {},
+  isAllSubExpanded = false,
+  handleResetForm = () => {},
+  accordionGroups = [],
+  filteredIndexSections = [],
+  getActiveSectionTitle = () => '',
 }) {
   return (
     <>

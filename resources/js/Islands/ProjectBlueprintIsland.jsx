@@ -2850,6 +2850,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         toggleAccordionGroup={toggleAccordionGroup}
         expandedSubBlocks={expandedSubBlocks}
         toggleSubBlock={toggleSubBlock}
+        isSubBlockOpen={isSubBlockOpen}
         expandAllGroups={expandAllGroups}
         collapseAllGroups={collapseAllGroups}
         activeSection={activeSection}
@@ -2863,6 +2864,14 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         completeness={completeness}
         lang={lang}
         t={t}
+        autoSyncAccordion={autoSyncAccordion}
+        setAutoSyncAccordion={setAutoSyncAccordion}
+        toggleAllSubBlocks={toggleAllSubBlocks}
+        isAllSubExpanded={isAllSubExpanded}
+        handleResetForm={handleResetForm}
+        accordionGroups={accordionGroups}
+        filteredIndexSections={filteredIndexSections}
+        getActiveSectionTitle={getActiveSectionTitle}
       />
 
       {/* 2. SATU PINTU & TOP TOOLBAR */}

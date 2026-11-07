@@ -96,7 +96,12 @@ class BlueprintDiscoveryController extends Controller
         if ($slug) {
             $existingBp = VisionBlueprint::where('slug', $slug)->first();
             if ($existingBp) {
-                if ($existingBp->isScopeFrozen()) {
+                $isRetail = ($existingBp->project_status === 'Retail License'
+                    || ! empty($existingBp->user_metadata['retail_tier'])
+                    || ! empty($existingBp->user_metadata['package_tier'])
+                    || str_contains(strtolower($existingBp->slug ?? ''), '-retail-'));
+
+                if ($existingBp->isScopeFrozen() && ! $isRetail && ! auth()->user()?->isSuperAdmin()) {
                     return redirect()->route('blueprint.show', $existingBp->slug);
                 }
                 $initialData = [

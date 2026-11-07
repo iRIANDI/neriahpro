@@ -398,7 +398,12 @@ class BlueprintDiscoveryController extends Controller
                 $explicitTrack = 'retail';
             }
         }
-        $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
+        $isExempt = $user && (
+            $user->isSuperAdmin()
+            || $user->hasRole('super_admin')
+            || ($userHasRetailLicense ?? false)
+            || (method_exists($user, 'hasRole') && ($user->hasRole('client_retail') || $user->hasRole('client_partner')))
+        );
         $identifier = $user ? $user->email : ($request->ip() ?: '127.0.0.1');
         $monthKey = 'spark_quota_'.md5($identifier).'_'.now()->format('Y_m');
         $currentUsage = (int) Cache::get($monthKey, 0);
@@ -501,7 +506,12 @@ class BlueprintDiscoveryController extends Controller
             $existingRecord = VisionBlueprint::where('slug', $editingSlug)->first();
             if ($existingRecord) {
                 $user = auth()->user();
-                $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
+                $isExempt = $user && (
+            $user->isSuperAdmin()
+            || $user->hasRole('super_admin')
+            || ($userHasRetailLicense ?? false)
+            || (method_exists($user, 'hasRole') && ($user->hasRole('client_retail') || $user->hasRole('client_partner')))
+        );
 
                 // Studio MVP / Scope Lock Enforcement: Retail licenses are not locked by studio contracts
                 if (! $isExempt && ! $existingRecord->isRetailLicense() && $existingRecord->isScopeFrozen()) {
@@ -589,7 +599,12 @@ class BlueprintDiscoveryController extends Controller
                 $record = VisionBlueprint::where('slug', $slug)->first();
                 if ($record) {
                     $user = auth()->user();
-                    $isExempt = $user && ($user->isSuperAdmin() || $user->hasRole('super_admin'));
+                    $isExempt = $user && (
+            $user->isSuperAdmin()
+            || $user->hasRole('super_admin')
+            || ($userHasRetailLicense ?? false)
+            || (method_exists($user, 'hasRole') && ($user->hasRole('client_retail') || $user->hasRole('client_partner')))
+        );
 
                     // Studio MVP / Scope Lock Enforcement: Retail licenses are not locked by studio contracts
                     if (! $isExempt && ! $record->isRetailLicense() && $record->isScopeFrozen()) {

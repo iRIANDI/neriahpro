@@ -201,9 +201,28 @@ class BlueprintExportController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
+
+        $gateService = app(\App\Services\Entitlement\BlueprintEntitlementGateService::class);
+        $tier = $gateService->resolveUserTier(Auth::user(), $blueprint->slug);
+
         $prd = $blueprint->prd_content ?? [];
         $schema = $prd['universal_blueprint_schema']
             ?? ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+
+        if ($tier === 'FREE_SANDBOX') {
+            if (! empty($schema['data_dictionary']['tables']) && is_array($schema['data_dictionary']['tables'])) {
+                $schema['data_dictionary']['tables'] = $gateService->filterDataDictionaryForTier(
+                    $schema['data_dictionary']['tables'],
+                    'FREE_SANDBOX'
+                );
+            }
+            if (! empty($schema['symbol_manifest']) && is_array($schema['symbol_manifest'])) {
+                $schema['symbol_manifest'] = $gateService->filterSymbolManifestForTier(
+                    $schema['symbol_manifest'],
+                    'FREE_SANDBOX'
+                );
+            }
+        }
 
         return response(
             json_encode($schema, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
@@ -222,6 +241,9 @@ class BlueprintExportController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
+
+        $gateService = app(\App\Services\Entitlement\BlueprintEntitlementGateService::class);
+        $tier = $gateService->resolveUserTier(Auth::user(), $blueprint->slug);
 
         $activeLocale = $request->query('locale')
             ?: ($request->cookie('neriah_locale')
@@ -242,7 +264,11 @@ class BlueprintExportController extends Controller
             ?? ProjectOsBlueprintCompilerService::compilePhasedPrompts($univSchema);
 
         if (preg_match('/^phase-([1-7])$/', $format, $m)) {
-            $phaseIdx = ((int) $m[1]) - 1;
+            $phaseNum = (int) $m[1];
+            if ($tier === 'FREE_SANDBOX' && $phaseNum > 1) {
+                abort(403, 'Akses Ditolak: Fase ' . $phaseNum . ' terkunci pada paket gratis Spark. Silakan upgrade ke Single-App Pass atau Pro Agentic untuk mengunduh seluruh 7 fase prompt AI.');
+            }
+            $phaseIdx = $phaseNum - 1;
             $phaseItem = $phasedPrompts[$phaseIdx] ?? null;
             if ($phaseItem) {
                 return response((string) ($phaseItem['prompt'] ?? ''), 200, [
@@ -253,6 +279,9 @@ class BlueprintExportController extends Controller
         }
 
         if (preg_match('/^subpart-([0-9]+\.[0-9]+)$/', $format, $sm)) {
+            if ($tier === 'FREE_SANDBOX' && ! str_starts_with($sm[1], '1.')) {
+                abort(403, 'Akses Ditolak: Sub-part DAG prompt ' . $sm[1] . ' terkunci pada paket gratis Spark. Silakan upgrade ke lisensi berbayar.');
+            }
             $subParts = $univSchema['sub_chunked_prompts']
                 ?? TopologicalPromptChunker::compileSubChunkedPrompts($univSchema);
             foreach ($subParts as $sp) {
@@ -266,6 +295,9 @@ class BlueprintExportController extends Controller
         }
 
         if ($format === 'symbol-manifest') {
+            if ($tier === 'FREE_SANDBOX') {
+                abort(403, 'Akses Ditolak: SYMBOL_MANIFEST.json eksklusif untuk lisensi Retail Pro / Ultimate.');
+            }
             $manifest = $univSchema['symbol_manifest']
                 ?? TopologicalPromptChunker::generateSymbolManifest($univSchema);
 
@@ -377,7 +409,9 @@ class BlueprintExportController extends Controller
                 'CLIENT_SOP_AND_TRAINING_MANUAL.md',
             ],
             'pg16-partition' => [
-                PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($univSchema['data_dictionary'] ?? [], $blueprint->nama_bisnis ?: 'Enterprise App'),
+                $tier === 'FREE_SANDBOX'
+                    ? abort(403, 'Akses Ditolak: Skrip PostgreSQL 16 Range Partitioning eksklusif untuk lisensi Ultimate / Enterprise.')
+                    : PosRealWorldRuntimeCatalog::renderPg16RangePartitioningSql($univSchema['data_dictionary'] ?? [], $blueprint->nama_bisnis ?: 'Enterprise App'),
                 'pg16_range_partitioning.sql',
             ],
             'env-blueprint' => [
@@ -385,7 +419,9 @@ class BlueprintExportController extends Controller
                 '.env.blueprint',
             ],
             'mcp-json' => [
-                ScaffoldGeneratorService::generateMcpJsonFile($blueprint),
+                $tier === 'FREE_SANDBOX'
+                    ? abort(403, 'Akses Ditolak: Konfigurasi MCP Server Bridge (.mcp.json) eksklusif untuk lisensi Ultimate / Agency Partner.')
+                    : ScaffoldGeneratorService::generateMcpJsonFile($blueprint),
                 '.mcp.json',
             ],
             'claude' => [

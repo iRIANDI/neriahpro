@@ -30,9 +30,9 @@ final class BlueprintEntitlementGateService
      */
     public function resolveUserTier(?object $user = null, ?string $projectId = null, ?string $requestedTier = null): string
     {
-        // 1. Check concrete PosProject record by exact ULID primary key
+        // 1. Check concrete PosProject record by exact ULID primary key or slug
         if ($projectId !== null && $projectId !== '') {
-            $posProject = PosProject::query()->find($projectId);
+            $posProject = PosProject::query()->where('id', $projectId)->orWhere('slug', $projectId)->first();
             if ($posProject !== null) {
                 if ($posProject->track === 'MITRA') {
                     return 'MITRA_TURNKEY';
@@ -42,17 +42,46 @@ final class BlueprintEntitlementGateService
                 }
             }
 
-            // 2. Check concrete VisionBlueprint record & settled Transaction by concrete foreign key
-            $blueprint = VisionBlueprint::query()->find($projectId);
+            // 2. Check concrete VisionBlueprint record & settled Transaction by concrete foreign key / metadata
+            $blueprint = VisionBlueprint::query()->where('id', $projectId)->orWhere('slug', $projectId)->first();
             if ($blueprint !== null) {
+                $metaTier = $blueprint->user_metadata['retail_tier'] ?? $blueprint->user_metadata['package_tier'] ?? null;
+                $orderId = $blueprint->user_metadata['order_id'] ?? null;
+
                 $hasSettledTx = Transaction::query()
-                    ->where('related_type', VisionBlueprint::class)
-                    ->where('related_id', $blueprint->id)
                     ->where('status', 'settlement')
+                    ->where(function ($q) use ($blueprint, $orderId) {
+                        $q->where(function ($sq) use ($blueprint) {
+                            $sq->where('related_type', VisionBlueprint::class)
+                                ->where('related_id', $blueprint->id);
+                        });
+                        if ($orderId) {
+                            $q->orWhere('midtrans_order_id', $orderId);
+                        }
+                    })
                     ->exists();
 
                 if ($hasSettledTx || $blueprint->project_status === 'Active Sprint') {
+                    if ($blueprint->isRetailLicense() || ($blueprint->user_metadata['track'] ?? '') === 'retail') {
+                        if ($metaTier) {
+                            return $this->normalizeRequestedTierSlug($metaTier);
+                        }
+                        return 'PRO_RETAIL';
+                    }
                     return 'MITRA_TURNKEY';
+                }
+
+                // If marked as retail license or has paid metadata
+                if (! empty($blueprint->user_metadata['paid']) || $blueprint->project_status === 'Retail License') {
+                    if ($metaTier) {
+                        return $this->normalizeRequestedTierSlug($metaTier);
+                    }
+                    return 'PRO_RETAIL';
+                }
+
+                // Explicit free spark
+                if ($metaTier && in_array(strtolower($metaTier), ['retail_spark', 'spark', 'free_sandbox'], true)) {
+                    return 'FREE_SANDBOX';
                 }
             }
         }
@@ -99,11 +128,76 @@ final class BlueprintEntitlementGateService
 
         return match ($normalized) {
             'retail_single_app', 'single_app_pass', 'single_app' => 'SINGLE_APP_PASS',
-            'retail_starter', 'retail_pro', 'impact_nonprofit_grant', 'pro_retail', 'pro', 'starter' => 'PRO_RETAIL',
-            'retail_agency', 'retail_whitelabel', 'agency_partner', 'agency', 'whitelabel' => 'AGENCY_PARTNER',
+            'retail_starter', 'retail_lite', 'lite', 'retail_pro', 'impact_nonprofit_grant', 'pro_retail', 'pro', 'starter' => 'PRO_RETAIL',
+            'retail_ultimate', 'ultimate', 'retail_agency', 'retail_whitelabel', 'agency_partner', 'agency', 'whitelabel' => 'AGENCY_PARTNER',
             'advisory', 'monolith', 'enterprise', 'mitra_turnkey', 'mitra' => 'MITRA_TURNKEY',
             default => 'FREE_SANDBOX',
         };
+    }
+
+    /**
+     * Check if a specific export / download artifact is entitled for the given tier.
+     */
+    public function isArtifactEntitled(string $tier, string $artifact): bool
+    {
+        $normalized = $this->normalizeRequestedTierSlug($tier);
+
+        // Paid tiers have full download entitlements
+        if ($normalized !== 'FREE_SANDBOX') {
+            return true;
+        }
+
+        // In FREE_SANDBOX, only basic documentation and Phase 1 prompt are allowed
+        return match ($artifact) {
+            'pdf', 'md', 'raw-md', 'phase-1', 'cursorrules', 'claude', 'agents', 'ui-ux-contract', 'engineering-rules' => true,
+            'scaffold_zip' => false,
+            'symbol_manifest' => false,
+            'pg16_partition' => false,
+            'mcp_json' => false,
+            'phase_prompts_2_to_7' => false,
+            default => false,
+        };
+    }
+
+    /**
+     * Filter scaffold files for the given tier.
+     * On FREE_SANDBOX, proprietary production code (tests, deploy scripts, seeders) is withheld.
+     *
+     * @param  array<string, string>  $files
+     * @return array<string, string>
+     */
+    public function filterScaffoldFilesForTier(array $files, string $tier, string $locale = 'id'): array
+    {
+        $normalized = $this->normalizeRequestedTierSlug($tier);
+        if ($normalized !== 'FREE_SANDBOX') {
+            return $files;
+        }
+
+        $isEn = $locale === 'en';
+        $lockedPlaceholder = $isEn
+            ? "// [LOCKED IN FREE SANDBOX — ZERO-LEAK SERVER-SIDE GATE]\n// This production file is exclusive to Retail Pro/Ultimate or Mitra Turnkey licenses.\n// Upgrade your license to unlock full implementation code."
+            : "// [TERKUNCI PADA SANDBOX GRATIS — ZERO-LEAK SERVER-SIDE GATE]\n// Berkas produksi ini eksklusif untuk lisensi Retail Pro/Ultimate atau Proyek Mitra Turnkey.\n// Upgrade lisensi Anda untuk membuka kode implementasi lengkap.";
+
+        $proprietaryPatterns = [
+            'tests/Feature/ApiContractTest.php',
+            'tests/e2e/critical-flows.spec.ts',
+            'database/seeders/SyntheticDataSeeder.php',
+            'app/Http/Controllers/HealthProbeController.php',
+            'deploy.sh',
+            '.github/workflows/deploy.yml',
+            'scripts/backup.sh',
+            'scripts/restore.sh',
+            'docs/runbooks/disaster-recovery.md',
+            'docs/disaster-recovery-runbook.md',
+        ];
+
+        foreach ($files as $filePath => $content) {
+            if (in_array($filePath, $proprietaryPatterns, true)) {
+                $files[$filePath] = $lockedPlaceholder;
+            }
+        }
+
+        return $files;
     }
 
     /**

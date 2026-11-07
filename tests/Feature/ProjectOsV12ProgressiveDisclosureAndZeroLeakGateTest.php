@@ -263,4 +263,71 @@ class ProjectOsV12ProgressiveDisclosureAndZeroLeakGateTest extends TestCase
         // Model deleting hook harus membersihkan direktori entitas dari storage private (zero zombie files)
         Storage::disk('private')->assertMissing($filePath);
     }
+
+    public function test_spark_free_tier_has_strict_server_side_download_and_scaffold_entitlement_gates(): void
+    {
+        $sparkBlueprint = VisionBlueprint::create([
+            'slug' => 'translator-spark-demo',
+            'nama_bisnis' => 'Translator Spark Demo',
+            'client_name' => 'Demo User',
+            'email' => 'guest@example.com',
+            'phone' => '08123456789',
+            'project_status' => 'Idea In Review',
+            'is_published' => true,
+            'user_metadata' => [
+                'retail_tier' => 'retail_spark',
+                'package_tier' => 'retail_spark',
+            ],
+            'prd_content' => [
+                'features' => ['Translation Engine'],
+                'universal_blueprint_schema' => [
+                    'data_dictionary' => [
+                        'tables' => [
+                            ['table' => 'orgs', 'columns' => [['name' => 'id', 'type' => 'CHAR(26)']]],
+                            ['table' => 'users', 'columns' => [['name' => 'id', 'type' => 'CHAR(26)']]],
+                            ['table' => 'secret_audit_table', 'columns' => [['name' => 'id', 'type' => 'CHAR(26)'], ['name' => 'secret', 'type' => 'TEXT']]],
+                        ],
+                    ],
+                    'phased_prompt_sequencer' => [
+                        ['phase' => 1, 'filename' => '01-phase.md', 'prompt' => 'PHASE_1_PROMPT_CONTENT'],
+                        ['phase' => 2, 'filename' => '02-phase.md', 'prompt' => 'PHASE_2_PROMPT_CONTENT'],
+                    ],
+                ],
+            ],
+        ]);
+
+        // 1. Spark TIDAK BOLEH unduh ZIP starter kit scaffold (403)
+        $resScaffold = $this->get("/blueprint/{$sparkBlueprint->slug}/export/scaffold");
+        $resScaffold->assertStatus(403);
+
+        // 2. Spark TIDAK BOLEH unduh prompt Fase 2 ke atas (403)
+        $resPhase2 = $this->get("/blueprint/{$sparkBlueprint->slug}/download/cursorrules?format=phase-2");
+        $resPhase2->assertStatus(403);
+
+        // 3. Spark TIDAK BOLEH unduh symbol-manifest / pg16-partition (403)
+        $resManifest = $this->get("/blueprint/{$sparkBlueprint->slug}/download/cursorrules?format=symbol-manifest");
+        $resManifest->assertStatus(403);
+
+        $resPg16 = $this->get("/blueprint/{$sparkBlueprint->slug}/download/cursorrules?format=pg16-partition");
+        $resPg16->assertStatus(403);
+
+        // 4. Spark DIIZINKAN unduh prompt Fase 1 (200)
+        $resPhase1 = $this->get("/blueprint/{$sparkBlueprint->slug}/download/cursorrules?format=phase-1");
+        $resPhase1->assertStatus(200);
+        $this->assertSame('PHASE_1_PROMPT_CONTENT', $resPhase1->getContent());
+
+        // 5. Spark previewScaffold menyamarkan berkas produksi eksklusif
+        $resPreview = $this->get("/blueprint/{$sparkBlueprint->slug}/scaffold/preview");
+        $resPreview->assertStatus(200);
+        $previewFiles = $resPreview->json('files');
+        $this->assertStringContainsString('LOCKED IN FREE SANDBOX', $previewFiles['deploy.sh'] ?? '');
+
+        // 6. Spark downloadSchemaJson menyaring tabel 3+ (DDL locked)
+        $resSchema = $this->get("/blueprint/{$sparkBlueprint->slug}/download/schema-json");
+        $resSchema->assertStatus(200);
+        $schemaData = $resSchema->json();
+        $tables = $schemaData['data_dictionary']['tables'];
+        $this->assertFalse($tables[0]['ddl_locked'] ?? false);
+        $this->assertTrue($tables[2]['ddl_locked'] ?? false);
+    }
 }

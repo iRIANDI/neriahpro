@@ -67,6 +67,13 @@ class BlueprintScaffoldController extends Controller
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
 
+        $gateService = app(\App\Services\Entitlement\BlueprintEntitlementGateService::class);
+        $tier = $gateService->resolveUserTier(Auth::user(), $blueprint->slug);
+
+        if (! $gateService->isArtifactEntitled($tier, 'scaffold_zip')) {
+            abort(403, 'Akses Ditolak: Unduhan arsip ZIP Starter Kit Scaffold (25+ berkas) eksklusif untuk lisensi Retail Pro / Ultimate atau Proyek Mitra Turnkey. Pada paket Spark Free, Anda dapat meninjau pratinjau arsitektur & DDL 2 tabel utama.');
+        }
+
         try {
             $zipPath = ScaffoldGeneratorService::createZipArchive($blueprint);
             $downloadFilename = ($blueprint->slug ?: 'project').'-starter-kit.zip';
@@ -89,6 +96,9 @@ class BlueprintScaffoldController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
         $this->authorizeBlueprintAccess($blueprint);
+
+        $gateService = app(\App\Services\Entitlement\BlueprintEntitlementGateService::class);
+        $tier = $gateService->resolveUserTier(Auth::user(), $blueprint->slug);
 
         try {
             $files = ScaffoldGeneratorService::generateFiles($blueprint);
@@ -149,6 +159,8 @@ class BlueprintScaffoldController extends Controller
                 }
             }
 
+            $files = $gateService->filterScaffoldFilesForTier($files, $tier, app()->getLocale());
+
             return response()->json([
                 'success' => true,
                 'slug' => $blueprint->slug,
@@ -164,6 +176,7 @@ class BlueprintScaffoldController extends Controller
 
             // Resilient fallback so the in-browser scaffold modal NEVER fails with HTTP 500
             $fallbackFiles = ScaffoldGeneratorService::generateFallbackFiles($blueprint);
+            $fallbackFiles = $gateService->filterScaffoldFilesForTier($fallbackFiles, $tier, app()->getLocale());
 
             return response()->json([
                 'success' => true,

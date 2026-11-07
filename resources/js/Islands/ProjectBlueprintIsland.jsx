@@ -2011,7 +2011,7 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       formDataUpload.append('output_locale', lang);
       formDataUpload.append('outputLocale', lang);
       formDataUpload.append('ai_model', selectedAiModel);
-      if (formData.namaBisnis && formData.namaBisnis.trim()) {
+      if (isExplicitSlugEdit && formData.namaBisnis && formData.namaBisnis.trim()) {
         formDataUpload.append('nama_bisnis', formData.namaBisnis.trim());
       }
       if (formData.primarySector) {

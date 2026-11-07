@@ -809,14 +809,33 @@
                         this.tweakLoading = false;
                     }
                 },
+                async autoElaborateFeatureTo100() {
+                    if (this.tweakLoading) return;
+                    this.tweakMode = 'ai';
+                    this.tweakPrompt = this.isEn
+                        ? 'Deepen all 6 dimensions of this feature to 100% production maturity: synthesize grounded English user story, guarantee 4+ bounded target files, provide 3 concrete Gherkin scenarios (Happy Path, 422 Validation Error, and Concurrency Locking), frontend anti-AI-slop states, backend PostgreSQL/MySQL Strict ULID & Keyset cursor O(1), and RFC 9457 API schemas.'
+                        : 'Perdalam seluruh 6 dimensi fitur ini ke kematangan produksi 100%: lengkapi user story persona aktor, pastikan 4+ bounded target files, sediakan 3 skenario Gherkin konkret (Happy Path, 422 Validasi Error, dan Konkurensi Database Locking), frontend anti-AI-slop states, backend PostgreSQL/MySQL Strict ULID & Keyset cursor O(1), dan skema API RFC 9457.';
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: this.isEn ? 'AUTO-ELABORATING SPECIFICATION' : 'MEMPERDALAM SPESIFIKASI OTOMATIS',
+                            message: this.isEn 
+                                ? 'Synthesizing all 6 dimensions to achieve 100% maximal production maturity...' 
+                                : 'Membedah dokumen acuan dan menyempurnakan 6 dimensi menuju kematangan 100%...'
+                        });
+                    }
+                    await this.submitTweak();
+                },
                 async elaborateDirectiveFromAi() {
                     if (this.elaboratingDirective) return;
                     this.elaboratingDirective = true;
                     if (window.showToast) {
                         window.showToast({
                             type: 'info',
-                            title: 'MENGEKSTRAK STANDAR DUNIA & DOKUMEN ACUAN',
-                            message: 'AI sedang menganalisis dokumen acuan proyek klien dan menyelaraskannya dengan standar industri global...'
+                            title: this.isEn ? 'COMPILING REFINEMENT DIRECTIVE' : 'MENYUSUN DRAF INSTRUKSI ARSITEKTUR',
+                            message: this.isEn
+                                ? 'AI is analyzing grounded project corpus and world engineering standards...'
+                                : 'AI sedang menganalisis dokumen acuan proyek klien dan menyelaraskannya dengan standar industri global...'
                         });
                     }
                     try {
@@ -844,10 +863,10 @@
                             if (window.showToast) {
                                 window.showToast({
                                     type: 'success',
-                                    title: isEnLocale ? 'DIRECTIVE ELABORATION COMPILED' : 'INSTRUKSI PENAJAMAN BERHASIL DISUSUN',
+                                    title: isEnLocale ? 'DIRECTIVE COMPILED TO PROMPT' : 'DRAF INSTRUKSI BERHASIL DISUSUN',
                                     message: isEnLocale 
-                                        ? (data.message_en || data.message || 'Refinement directive successfully compiled from Project Documents & Global Standards.')
-                                        : (data.message_id || data.message || 'Instruksi penajaman berhasil dirumuskan berbasis Dokumen Acuan & Standar Industri Dunia.')
+                                        ? 'Refinement directive successfully compiled into prompt box! Click \'EXECUTE AI ELABORATION\' below or use \'1-CLICK ELABORATE\' above to apply.'
+                                        : 'Draf instruksi berhasil disusun ke dalam kotak teks! Klik \'EKSEKUSI PENDALAMAN AI\' di bawah atau gunakan tombol \'1-KLIK PERDALAM\' di atas untuk menerapkan.'
                                 });
                             }
                         } else {
@@ -902,9 +921,9 @@
                     }
 
                     if (isEn) {
-                        return `✨ ELABORATE SPEC: ${areaName.toUpperCase()} (WORLD STANDARDS)`;
+                        return `📝 COMPILE DIRECTIVE: ${areaName.toUpperCase()}`;
                     } else {
-                        return `✨ ELABORASI SPESIFIKASI: ${areaName.toUpperCase()} (STANDAR DUNIA)`;
+                        return `📝 SUSUN DRAF INSTRUKSI: ${areaName.toUpperCase()}`;
                     }
                 },
 
@@ -921,8 +940,8 @@
                         areaName = isEn ? 'Spec' : 'Modul';
                     }
                     return isEn 
-                        ? `Synthesizing ${areaName} from Source & World Standards...` 
-                        : `Menyusun ${areaName} dari Acuan & Standar Dunia...`;
+                        ? `Compiling ${areaName} Directive from Corpus...` 
+                        : `Menyusun Draf Instruksi ${areaName}...`;
                 },
 
                 scaffoldLoading: false,

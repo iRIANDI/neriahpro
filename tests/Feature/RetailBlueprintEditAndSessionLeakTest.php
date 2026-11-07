@@ -460,4 +460,80 @@ class RetailBlueprintEditAndSessionLeakTest extends TestCase
         $this->assertEquals('Updated Church Live Translation', $blueprint->masalah_utama);
         $this->assertNotNull($blueprint->prd_content);
     }
+
+    /**
+     * Test that feature maturity reaches 100% maximum when elaborated across 6 dimensions
+     * and that English mode eliminates Indonesian textual leakage in User Story & Gherkin scenarios.
+     */
+    public function test_feature_elaboration_achieves_100_percent_and_english_localization(): void
+    {
+        $rawFeature = [
+            'feature_id' => 'FEAT-MVP-01-LANGUAGE_CHANN',
+            'title' => 'Language Channel Management',
+            'user_story' => 'Sebagai Multimedia Operator / Sound Engineer (Admin), saya ingin menggunakan fitur Language Channel Management pada sistem Hang Tuah Church – Live Audio Interpreter, sehingga Add/edit/delete languages.',
+            'target_files' => [
+                'app/Models/LanguageChannel.php',
+                'app/Services/LanguageChannelService.php',
+                'app/Http/Controllers/LanguageChannelController.php',
+                'tests/Feature/LanguageChannelContractTest.php',
+            ],
+            'acceptance_criteria' => [
+                [
+                    'title' => 'Eksekusi Fungsional Utama Berjalan Normal',
+                    'given' => 'Pengguna memiliki hak akses terhadap modul Language Channel Management',
+                    'when' => 'Pengguna mengeksekusi operasi penambahan atau pembaruan data',
+                    'then' => 'Sistem menyimpan perubahan dan mencatat entri audit log',
+                ],
+                [
+                    'title' => 'Validasi Input dan Penanganan Kesalahan (422)',
+                    'given' => 'Pengguna mengirimkan payload tidak valid atau parameter wajib kosong',
+                    'when' => 'Sistem memvalidasi request melalui FormRequest validator',
+                    'then' => 'Sistem menolak request dan mengembalikan respons HTTP 422 Problem Details',
+                ],
+            ],
+            'frontend' => [
+                'components' => ['LanguageChannelIndex.blade.php', 'LanguageChannelForm.blade.php'],
+                'tasks' => ['Implement reactive audio switch', 'Display active listener counter'],
+                'states' => 'Loading skeleton, Empty channel prompt, Active stream audio visualizer, Error toast',
+                'anti_ai_slop' => 'Clean solid monochrome borders, subtle rounded-xs corners, no gaudy gradients',
+            ],
+            'backend' => [
+                'target_files' => ['app/Models/LanguageChannel.php', 'app/Services/LanguageChannelService.php'],
+                'tasks' => ['DB transaction wrapping', 'WebRTC token generator with TTL'],
+                'ulid_migration_rules' => 'Primary Key CHAR(26) Strict ULID, Foreign Keys foreignUlid, Indexed status',
+                'query_strategy' => 'Keyset Cursor Pagination O(1) via cursorPaginate(), sub-10ms query execution',
+            ],
+            'integration' => [
+                'endpoint' => 'POST /api/v1/language-channels',
+                'tasks' => ['Register route in routes/api.php', 'Write Pest contract test'],
+                'request_schema' => '{"type": "object", "properties": {"channel_name": {"type": "string"}}}',
+                'response_schema' => '{"type": "object", "properties": {"id": {"type": "string"}}}',
+            ],
+        ];
+
+        // 1. Polish in English Mode
+        $polishedEn = \App\Services\BlueprintDiscoveryService::polishFeatureSpecification($rawFeature, 'live_audio_streaming', true);
+
+        // Verify user story was translated to English
+        $this->assertStringStartsWith('As a Multimedia Operator / Sound Engineer (Admin), I want to use Language Channel Management', $polishedEn['user_story']);
+        $this->assertStringNotContainsString(',, so that', $polishedEn['user_story']);
+        $this->assertStringNotContainsString('Sebagai', $polishedEn['user_story']);
+
+        // Verify at least 3 Gherkin scenarios (Scenario 3 synthesized)
+        $this->assertGreaterThanOrEqual(3, count($polishedEn['acceptance_criteria']));
+        $this->assertStringContainsString('Happy Path', $polishedEn['acceptance_criteria'][0]['title']);
+
+        // Verify maturity is 100% MAXIMUM
+        $maturityEn = \App\Services\BlueprintDiscoveryService::calculateFeatureMaturity($polishedEn, true);
+        $this->assertEquals(100, $maturityEn['score']);
+        $this->assertTrue($maturityEn['is_maximal']);
+        $this->assertEquals('100% MAXIMUM // PRODUCTION SCOPE LOCKED', $maturityEn['label']);
+
+        // 2. Polish in Indonesian Mode
+        $polishedId = \App\Services\BlueprintDiscoveryService::polishFeatureSpecification($rawFeature, 'live_audio_streaming', false);
+        $maturityId = \App\Services\BlueprintDiscoveryService::calculateFeatureMaturity($polishedId, false);
+        $this->assertEquals(100, $maturityId['score']);
+        $this->assertTrue($maturityId['is_maximal']);
+        $this->assertEquals('100% MAKSIMAL // SCOPE TERKUNCI', $maturityId['label']);
+    }
 }

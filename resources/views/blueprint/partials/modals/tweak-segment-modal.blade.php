@@ -11,9 +11,7 @@
                         <span>AI ARCHITECTURE DEEPENER // GROUNDED SPEC TWEAKER</span>
                     </div>
                     <h3 class="font-black text-lg sm:text-xl text-zinc-900 dark:text-zinc-100 uppercase tracking-tight" x-text="tweakSegmentTitle"></h3>
-                    <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
-                        Lengkapi dan perdalam segmen spesifikasi ini dengan berpijak langsung pada Dokumen Acuan Proyek (MarkItDown Corpus, Berkas Lampiran, &amp; Brief Awal).
-                    </p>
+                    <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed" x-text="isEn ? 'Complete and deepen this specification segment grounded directly in Project Reference Documents (MarkItDown Corpus, Uploaded Attachments, & Initial Vision Brief).' : 'Lengkapi dan perdalam segmen spesifikasi ini dengan berpijak langsung pada Dokumen Acuan Proyek (MarkItDown Corpus, Berkas Lampiran, & Brief Awal).'"></p>
                 </div>
                 <button type="button" @click="tweakModalOpen = false" class="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white bg-zinc-100 dark:bg-zinc-800 transition rounded-none font-bold">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -34,14 +32,14 @@
                             <div>
                                 <div class="font-mono text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider flex items-center gap-2">
                                     <span>GROUNDED SOURCE CORPUS</span>
-                                    <span class="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold">TERKUNCI KE DOKUMEN ACUAN</span>
+                                    <span class="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-mono font-bold" x-text="isEn ? 'LOCKED TO GROUNDED CORPUS' : 'TERKUNCI KE DOKUMEN ACUAN'"></span>
                                 </div>
                                 <div class="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 mt-0.5">
                                     <template x-if="sourceCorpusLoading">
-                                        <span>Memindai berkas spesifikasi &amp; MarkItDown...</span>
+                                        <span x-text="isEn ? 'Scanning specification files & MarkItDown...' : 'Memindai berkas spesifikasi & MarkItDown...'"></span>
                                     </template>
                                     <template x-if="!sourceCorpusLoading && sourceCorpusData">
-                                        <span x-text="sourceCorpusData.source_files.length + ' berkas acuan terdeteksi (' + (sourceCorpusData.word_count || 0).toLocaleString() + ' kata, ' + (sourceCorpusData.character_count || 0).toLocaleString() + ' karakter)'"></span>
+                                        <span x-text="isEn ? (sourceCorpusData.source_files.length + ' reference file(s) detected (' + (sourceCorpusData.word_count || 0).toLocaleString() + ' words, ' + (sourceCorpusData.character_count || 0).toLocaleString() + ' chars)') : (sourceCorpusData.source_files.length + ' berkas acuan terdeteksi (' + (sourceCorpusData.word_count || 0).toLocaleString() + ' kata, ' + (sourceCorpusData.character_count || 0).toLocaleString() + ' karakter)')"></span>
                                     </template>
                                 </div>
                             </div>
@@ -53,7 +51,7 @@
                             class="px-2.5 py-1 text-xs font-mono font-bold border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 flex items-center gap-1.5 transition self-start sm:self-auto shrink-0"
                         >
                             <svg class="w-3.5 h-3.5 transition-transform" :class="sourceCorpusExpanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            <span x-text="sourceCorpusExpanded ? 'Tutup Ringkasan Acuan' : 'Lihat Ringkasan Acuan'"></span>
+                            <span x-text="sourceCorpusExpanded ? (isEn ? 'Collapse Reference Summary' : 'Tutup Ringkasan Acuan') : (isEn ? 'View Reference Summary' : 'Lihat Ringkasan Acuan')"></span>
                         </button>
                     </div>
 
@@ -73,17 +71,17 @@
                         <div 
                             :class="sourceCorpusFullView ? 'max-h-80' : 'max-h-40'"
                             class="overflow-y-auto bg-zinc-950 text-zinc-300 font-mono text-[11px] p-3 border border-zinc-800 custom-prd-scrollbar select-all leading-relaxed whitespace-pre-wrap transition-all duration-200" 
-                            x-text="sourceCorpusData ? (sourceCorpusFullView ? sourceCorpusData.corpus_text : (sourceCorpusData.corpus_text.slice(0, 1500) + (sourceCorpusData.corpus_text.length > 1500 ? '\n\n[... sisa ' + (sourceCorpusData.character_count - 1500).toLocaleString() + ' karakter lainnya terindeks untuk AI ...]' : ''))) : 'Belum ada konten.'"
+                            x-text="sourceCorpusData ? (sourceCorpusFullView ? sourceCorpusData.corpus_text : (sourceCorpusData.corpus_text.slice(0, 1500) + (sourceCorpusData.corpus_text.length > 1500 ? (isEn ? '\n\n[... remaining ' + (sourceCorpusData.character_count - 1500).toLocaleString() + ' characters indexed for AI ...]' : '\n\n[... sisa ' + (sourceCorpusData.character_count - 1500).toLocaleString() + ' karakter lainnya terindeks untuk AI ...]') : ''))) : (isEn ? 'No content yet.' : 'Belum ada konten.')"
                         ></div>
                         <template x-if="sourceCorpusData && sourceCorpusData.character_count > 1500">
                             <div class="flex items-center justify-between pt-1 text-[10px] font-mono text-zinc-500">
-                                <span>Status: <strong class="text-emerald-500">100% Utuh &amp; Terindeks untuk AI</strong> (tidak ada pemotongan di backend).</span>
+                                <span x-html="isEn ? 'Status: <strong class=\"text-emerald-500\">100% Intact &amp; Indexed for AI</strong> (no truncation on backend).' : 'Status: <strong class=\"text-emerald-500\">100% Utuh &amp; Terindeks untuk AI</strong> (tidak ada pemotongan di backend).'"></span>
                                 <button 
                                     type="button" 
                                     @click="sourceCorpusFullView = !sourceCorpusFullView" 
                                     class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-bold underline cursor-pointer flex items-center gap-1"
                                 >
-                                    <span x-text="sourceCorpusFullView ? '▲ Ringkas Pratinjau (1.500 Karakter)' : '▼ Baca Seluruh Dokumen Acuan Lengkap (' + sourceCorpusData.character_count.toLocaleString() + ' Karakter)'"></span>
+                                    <span x-text="sourceCorpusFullView ? (isEn ? '▲ Collapse Preview (1,500 Chars)' : '▲ Ringkas Pratinjau (1.500 Karakter)') : (isEn ? '▼ Read Full Grounded Document (' + sourceCorpusData.character_count.toLocaleString() + ' Chars)' : '▼ Baca Seluruh Dokumen Acuan Lengkap (' + sourceCorpusData.character_count.toLocaleString() + ' Karakter)')"></span>
                                 </button>
                             </div>
                         </template>
@@ -94,9 +92,29 @@
                 <div x-show="tweakSegmentKey === 'database_erd'" class="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 flex items-start gap-2.5">
                     <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <div class="text-xs font-mono text-emerald-950 dark:text-emerald-200">
-                        <span class="font-bold uppercase tracking-wider block mb-0.5">STATUS SKEMA BASIS DATA: 100% TERVERIFIKASI &amp; SKALABEL</span>
-                        <span>Skema ERD ini telah memenuhi standar enterprise (Strict ULID PK/FK, Keyset Cursor O(1), dan Multi-Bahasa Tier 1 JSONB). Anda dapat menambahkan entitas kustom spesifik melalui form instruksi di bawah, atau membiarkan skema prima ini tetap terjaga.</span>
+                        <span class="font-bold uppercase tracking-wider block mb-0.5" x-text="isEn ? 'DATABASE SCHEMA STATUS: 100% VERIFIED & SCALABLE' : 'STATUS SKEMA BASIS DATA: 100% TERVERIFIKASI & SKALABEL'"></span>
+                        <span x-text="isEn ? 'This ERD schema satisfies enterprise standards (Strict ULID PK/FK, Keyset Cursor O(1), and Multi-Language Tier 1 JSONB). You can add specific custom entities via the directive form below, or keep this pristine schema intact.' : 'Skema ERD ini telah memenuhi standar enterprise (Strict ULID PK/FK, Keyset Cursor O(1), dan Multi-Bahasa Tier 1 JSONB). Anda dapat menambahkan entitas kustom spesifik melalui form instruksi di bawah, atau membiarkan skema prima ini tetap terjaga.'"></span>
                     </div>
+                </div>
+
+                <!-- 1-Click Auto-Elaborate Quick Action Banner for Single Feature -->
+                <div x-show="tweakSegmentKey === 'feature_single' || tweakFeatureId" class="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div class="space-y-0.5">
+                        <div class="flex items-center gap-1.5 font-mono text-xs font-black uppercase text-emerald-800 dark:text-emerald-300">
+                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                            <span x-text="isEn ? 'INSTANT 1-CLICK ELABORATE SPEC (100% MAXIMUM)' : 'INSTAN 1-KLIK PERDALAM FITUR (100% MAKSIMAL)'"></span>
+                        </div>
+                        <p class="text-[11px] font-mono text-zinc-600 dark:text-zinc-400 leading-snug" x-text="isEn ? 'Deepens user story, guarantees 4+ bounded files, synthesizes 3 Gherkin scenarios (Happy Path, 422, Concurrency), and locks 100% production maturity.' : 'Memperdalam user story, memastikan 4+ bounded file, menyusun 3 skenario Gherkin (Happy Path, 422, Konkurensi), dan mengunci 100% kematangan produksi.'"></p>
+                    </div>
+                    <button 
+                        type="button" 
+                        @click="autoElaborateFeatureTo100()" 
+                        :disabled="tweakLoading"
+                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-black font-mono font-black text-xs uppercase tracking-tight flex items-center gap-1.5 shadow-[2px_2px_0px_#065f46] disabled:opacity-50 shrink-0 cursor-pointer"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span x-text="tweakLoading ? (isEn ? 'ELABORATING...' : 'MEMPROSES...') : (isEn ? '✨ 1-CLICK ELABORATE (100%)' : '✨ 1-KLIK PERDALAM (100%)')"></span>
+                    </button>
                 </div>
 
                 <!-- Mode Switch Tabs -->
@@ -108,7 +126,7 @@
                         class="px-4 py-2 text-xs font-mono uppercase tracking-wider transition flex items-center gap-1.5"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                        <span>AI DEEPENER DARI ACUAN (REKOMENDASI)</span>
+                        <span x-text="isEn ? 'AI GROUNDED DEEPENER (RECOMMENDED)' : 'AI DEEPENER DARI ACUAN (REKOMENDASI)'"></span>
                     </button>
                     <button 
                         type="button" 
@@ -117,7 +135,7 @@
                         class="px-4 py-2 text-xs font-mono uppercase tracking-wider transition flex items-center gap-1.5"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                        <span>EDITOR MANUAL (JSON / CODE)</span>
+                        <span x-text="isEn ? 'MANUAL CODE EDITOR (JSON / CODE)' : 'EDITOR MANUAL (JSON / CODE)'"></span>
                     </button>
                 </div>
 
@@ -125,7 +143,7 @@
                 <div x-show="tweakMode === 'ai'" class="space-y-4">
                     <!-- Model / Provider Selector -->
                     <div>
-                        <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5">
+                        <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300 mb-1.5" x-text="isEn ? 'SELECT MULTI-MODEL AI ENGINE:' : 'PILIH ENGINE MULTI-MODEL AI:'">
                             PILIH ENGINE MULTI-MODEL AI:
                         </label>
                         <select x-model="tweakAiProvider" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono px-3 py-2.5 outline-none focus:border-emerald-500 rounded-none">
@@ -147,7 +165,7 @@
                                         INSTRUKSI PENAJAMAN KHUSUS (OPSIONAL):
                                     </span>
                                 </label>
-                                <span class="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 block mt-0.5" x-text="isEn ? 'Leave empty for auto-deepening, or click the dynamic button to auto-synthesize from project corpus & world standards:' : 'Kosongkan untuk pendalaman otomatis, atau klik tombol dinamis untuk merumuskan instruksi dari acuan & standar dunia:'">
+                                <span class="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 block mt-0.5" x-text="isEn ? 'Leave empty for auto-deepening, or click the directive button to compile custom prompts from project documents:' : 'Kosongkan untuk pendalaman otomatis, atau klik tombol draf untuk merumuskan instruksi dari acuan & standar dunia:'">
                                     Kosongkan untuk pendalaman otomatis, atau klik tombol dinamis untuk merumuskan instruksi dari acuan &amp; standar dunia:
                                 </span>
                             </div>
@@ -158,18 +176,18 @@
                                 @click="elaborateDirectiveFromAi()" 
                                 :disabled="elaboratingDirective"
                                 class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 active:bg-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-mono text-xs font-bold border border-emerald-500/50 hover:border-emerald-500 flex items-center gap-2 transition cursor-pointer disabled:opacity-50 shadow-xs self-start sm:self-auto shrink-0 max-w-full rounded-none"
-                                :title="isEn ? 'AI compiles automatic refinement directive based on project documents and global engineering standards' : 'AI menyusun instruksi penajaman otomatis berdasarkan ide acuan proyek dan standar rekayasa dunia'"
+                                :title="isEn ? 'AI compiles automatic refinement directive based on project documents and global engineering standards into prompt box' : 'AI menyusun instruksi penajaman otomatis berdasarkan ide acuan proyek dan standar rekayasa dunia ke dalam kotak teks'"
                             >
                                 <template x-if="!elaboratingDirective">
                                     <span class="flex items-center gap-1.5 truncate">
                                         <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                        <span class="truncate uppercase tracking-tight" x-text="getElaborateButtonLabel()">✨ ELABORASI DARI IDE &amp; STANDAR DUNIA</span>
+                                        <span class="truncate uppercase tracking-tight" x-text="getElaborateButtonLabel()">✨ DRAF INSTRUKSI ARSITEKTUR</span>
                                     </span>
                                 </template>
                                 <template x-if="elaboratingDirective">
                                     <span class="flex items-center gap-2 animate-pulse text-zinc-600 dark:text-zinc-400 truncate">
                                         <svg class="animate-spin w-3.5 h-3.5 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                        <span class="truncate font-medium" x-text="getElaboratingLoadingLabel()">Menyusun dari Acuan &amp; Standar Dunia...</span>
+                                        <span class="truncate font-medium" x-text="getElaboratingLoadingLabel()">Menyusun Draf Instruksi...</span>
                                     </span>
                                 </template>
                             </button>
@@ -186,15 +204,15 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
                         <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-600 dark:text-zinc-400">
                             <div class="font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">✓ Strict ULID &amp; O(1)</div>
-                            <div>Skema database &amp; entitas patuh standar performa jutaan data.</div>
+                            <div x-text="isEn ? 'Database schema & entities satisfy million-row scale standards.' : 'Skema database & entitas patuh standar performa jutaan data.'"></div>
                         </div>
                         <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-600 dark:text-zinc-400">
                             <div class="font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">✓ Gherkin &amp; Edge Cases</div>
-                            <div>Skenario pengujian konkret bebas placeholder generik.</div>
+                            <div x-text="isEn ? 'Concrete test scenarios with zero generic placeholders.' : 'Skenario pengujian konkret bebas placeholder generik.'"></div>
                         </div>
                         <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono text-zinc-600 dark:text-zinc-400">
                             <div class="font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">✓ Auto-Sync Diagram</div>
-                            <div>Diagram Mermaid &amp; DDL SQL PostgreSQL terupdate otomatis.</div>
+                            <div x-text="isEn ? 'Mermaid diagrams & PostgreSQL/MySQL DDL automatically synchronized.' : 'Diagram Mermaid & DDL SQL PostgreSQL/MySQL terupdate otomatis.'"></div>
                         </div>
                     </div>
                 </div>
@@ -202,16 +220,16 @@
                 <!-- Manual Mode -->
                 <div x-show="tweakMode === 'manual'">
                     <div class="flex items-center justify-between mb-2">
-                        <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
+                        <label class="block text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300" x-text="isEn ? 'STRUCTURAL CONTENT EDITOR (JSON / MARKDOWN):' : 'EDITOR KONTEN STRUKTURAL (JSON / MARKDOWN):'">
                             EDITOR KONTEN STRUKTURAL (JSON / MARKDOWN):
                         </label>
-                        <span class="text-[10px] font-mono text-zinc-400">Edit langsung data mentah segmen ini</span>
+                        <span class="text-[10px] font-mono text-zinc-400" x-text="isEn ? 'Directly edit raw data of this segment' : 'Edit langsung data mentah segmen ini'">Edit langsung data mentah segmen ini</span>
                     </div>
                     <textarea 
                         x-model="tweakContent" 
                         rows="14" 
                         class="w-full bg-zinc-950 text-emerald-400 border border-zinc-700 font-mono text-xs p-3 focus:outline-none focus:border-emerald-500 custom-prd-scrollbar leading-relaxed rounded-none" 
-                        placeholder="Ketik data JSON atau aturan bisnis baru di sini..."
+                        :placeholder="isEn ? 'Type raw JSON data or new business rules here...' : 'Ketik data JSON atau aturan bisnis baru di sini...'"
                     ></textarea>
                 </div>
 
@@ -220,7 +238,7 @@
             <!-- Footer -->
             <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between gap-3 shrink-0">
                 <div class="text-[11px] font-mono text-zinc-500 hidden sm:block">
-                    Perubahan akan disimpan permanen ke <code class="text-emerald-600 dark:text-emerald-400">prd_content</code> &amp; <code class="text-emerald-600 dark:text-emerald-400">prd.md</code>.
+                    <span x-html="isEn ? 'Changes will be permanently saved to <code class=\'text-emerald-600 dark:text-emerald-400\'>prd_content</code> &amp; <code class=\'text-emerald-600 dark:text-emerald-400\'>prd.md</code>.' : 'Perubahan akan disimpan permanen ke <code class=\'text-emerald-600 dark:text-emerald-400\'>prd_content</code> &amp; <code class=\'text-emerald-600 dark:text-emerald-400\'>prd.md</code>.'"></span>
                 </div>
 
                 <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
@@ -228,6 +246,7 @@
                         type="button" 
                         @click="tweakModalOpen = false" 
                         class="px-4 py-2 text-xs font-mono font-bold uppercase text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 transition rounded-none"
+                        x-text="isEn ? 'Cancel' : 'Batal'"
                     >
                         Batal
                     </button>
@@ -241,13 +260,13 @@
                         <template x-if="!tweakLoading">
                             <span class="flex items-center gap-1.5">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                <span x-text="tweakMode === 'manual' ? 'SIMPAN PERUBAHAN' : 'EKSEKUSI PENDALAMAN AI'"></span>
+                                <span x-text="tweakMode === 'manual' ? (isEn ? 'SAVE CHANGES' : 'SIMPAN PERUBAHAN') : (isEn ? 'EXECUTE AI ELABORATION' : 'EKSEKUSI PENDALAMAN AI')"></span>
                             </span>
                         </template>
                         <template x-if="tweakLoading">
                             <span class="flex items-center gap-2">
                                 <svg class="animate-spin w-4 h-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                <span x-text="tweakMode === 'manual' ? 'Menyimpan...' : 'Membedah Acuan...'"></span>
+                                <span x-text="tweakMode === 'manual' ? (isEn ? 'Saving...' : 'Menyimpan...') : (isEn ? 'Analyzing Grounded Corpus...' : 'Membedah Acuan...')"></span>
                             </span>
                         </template>
                     </button>

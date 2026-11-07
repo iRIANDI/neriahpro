@@ -2258,14 +2258,14 @@ PROMPT;
      *     ]
      * ]
      */
-    public static function normalizeAcceptanceCriteria(mixed $rawAc, string $featureTitle = '', string $userStory = ''): array
+    public static function normalizeAcceptanceCriteria(mixed $rawAc, string $featureTitle = '', string $userStory = '', bool $isEn = false): array
     {
         $featureTitle = trim($featureTitle);
-        $titleLabel = $featureTitle ?: 'Fitur';
+        $titleLabel = $featureTitle ?: ($isEn ? 'Feature' : 'Fitur');
 
         // 1. If null or empty, provide standard 3-tier Gherkin scenarios
         if (empty($rawAc)) {
-            return self::getDefaultAcceptanceCriteria($titleLabel, $userStory);
+            return self::getDefaultAcceptanceCriteria($titleLabel, $userStory, $isEn);
         }
 
         // 2. If it's a JSON string, decode first
@@ -2290,13 +2290,13 @@ PROMPT;
         }
 
         if (!is_array($rawAc) || empty($rawAc)) {
-            return self::getDefaultAcceptanceCriteria($titleLabel, $userStory);
+            return self::getDefaultAcceptanceCriteria($titleLabel, $userStory, $isEn);
         }
 
         $normalized = [];
 
         foreach ($rawAc as $idx => $item) {
-            $defaultIndexTitle = 'Skenario ' . ($idx + 1);
+            $defaultIndexTitle = $isEn ? ('Scenario ' . ($idx + 1)) : ('Skenario ' . ($idx + 1));
 
             // Case A: Item is an associative array / object
             if (is_array($item)) {
@@ -2311,19 +2311,28 @@ PROMPT;
 
                 // Check for fallback in case fields are missing or equal to '-'
                 if ($given === '' || $given === '-') {
-                    $given = self::deriveGivenCondition($scenarioTitle, $titleLabel, $idx);
+                    $given = self::deriveGivenCondition($scenarioTitle, $titleLabel, $idx, $isEn);
                 }
                 if ($when === '' || $when === '-') {
-                    $when = self::deriveWhenCondition($scenarioTitle, $titleLabel, $idx);
+                    $when = self::deriveWhenCondition($scenarioTitle, $titleLabel, $idx, $isEn);
                 }
                 if ($then === '' || $then === '-') {
                     $then = !empty($item['description']) && $item['description'] !== '-'
                         ? trim((string)$item['description'])
-                        : self::deriveThenCondition($scenarioTitle, $titleLabel, $idx);
+                        : self::deriveThenCondition($scenarioTitle, $titleLabel, $idx, $isEn);
+                }
+
+                // If in English mode and scenario / condition are in Indonesian, map them cleanly
+                if ($isEn) {
+                    $scenarioTitle = self::translateScenarioTitleToEn($scenarioTitle, $idx);
+                    $given = self::translateGherkinTextToEn($given, $titleLabel, 'given');
+                    $when = self::translateGherkinTextToEn($when, $titleLabel, 'when');
+                    $then = self::translateGherkinTextToEn($then, $titleLabel, 'then');
                 }
 
                 $normalized[] = [
                     'scenario' => $scenarioTitle,
+                    'title' => $scenarioTitle,
                     'given' => $given,
                     'when' => $when,
                     'then' => $then,
@@ -2339,11 +2348,22 @@ PROMPT;
                 // Check if string contains explicit Given/When/Then
                 if (preg_match('/(?:Given|GIVEN)\s*:\s*(.*?)\s*(?:When|WHEN)\s*:\s*(.*?)\s*(?:Then|THEN)\s*:\s*(.*)/is', $str, $gm) ||
                     preg_match('/(?:Given|GIVEN)\s+(.*?)\s+(?:When|WHEN)\s+(.*?)\s+(?:Then|THEN)\s+(.*)/is', $str, $gm)) {
+                    $g = trim($gm[1]);
+                    $w = trim($gm[2]);
+                    $t = trim($gm[3]);
+                    $sTitle = $defaultIndexTitle;
+                    if ($isEn) {
+                        $sTitle = self::translateScenarioTitleToEn($sTitle, $idx);
+                        $g = self::translateGherkinTextToEn($g, $titleLabel, 'given');
+                        $w = self::translateGherkinTextToEn($w, $titleLabel, 'when');
+                        $t = self::translateGherkinTextToEn($t, $titleLabel, 'then');
+                    }
                     $normalized[] = [
-                        'scenario' => $defaultIndexTitle,
-                        'given' => trim($gm[1]),
-                        'when' => trim($gm[2]),
-                        'then' => trim($gm[3]),
+                        'scenario' => $sTitle,
+                        'title' => $sTitle,
+                        'given' => $g,
+                        'when' => $w,
+                        'then' => $t,
                     ];
                     continue;
                 }
@@ -2358,12 +2378,20 @@ PROMPT;
                 }
 
                 // Intelligently derive Given/When/Then based on scenario type
-                $given = self::deriveGivenCondition($scenarioTitle, $titleLabel, $idx);
-                $when = self::deriveWhenCondition($scenarioTitle, $titleLabel, $idx);
-                $then = !empty($body) ? $body : self::deriveThenCondition($scenarioTitle, $titleLabel, $idx);
+                $given = self::deriveGivenCondition($scenarioTitle, $titleLabel, $idx, $isEn);
+                $when = self::deriveWhenCondition($scenarioTitle, $titleLabel, $idx, $isEn);
+                $then = !empty($body) ? $body : self::deriveThenCondition($scenarioTitle, $titleLabel, $idx, $isEn);
+
+                if ($isEn) {
+                    $scenarioTitle = self::translateScenarioTitleToEn($scenarioTitle, $idx);
+                    $given = self::translateGherkinTextToEn($given, $titleLabel, 'given');
+                    $when = self::translateGherkinTextToEn($when, $titleLabel, 'when');
+                    $then = self::translateGherkinTextToEn($then, $titleLabel, 'then');
+                }
 
                 $normalized[] = [
                     'scenario' => $scenarioTitle,
+                    'title' => $scenarioTitle,
                     'given' => $given,
                     'when' => $when,
                     'then' => $then,
@@ -2371,34 +2399,128 @@ PROMPT;
             }
         }
 
+        // Guarantee at least 3 valid Gherkin scenarios for 100% architectural completeness
+        $defaults = self::getDefaultAcceptanceCriteria($titleLabel, $userStory, $isEn);
         if (empty($normalized)) {
-            return self::getDefaultAcceptanceCriteria($titleLabel, $userStory);
+            return $defaults;
+        }
+
+        while (count($normalized) < 3) {
+            $nextIdx = count($normalized);
+            $normalized[] = $defaults[$nextIdx] ?? $defaults[2];
         }
 
         return $normalized;
     }
 
+    /**
+     * Map common Indonesian scenario titles to crisp English.
+     */
+    public static function translateScenarioTitleToEn(string $scenarioTitle, int $idx = 0): string
+    {
+        $clean = trim($scenarioTitle);
+        $lower = strtolower($clean);
+
+        if (str_contains($lower, 'eksekusi fungsional utama') || str_contains($lower, 'happy path') || str_contains($lower, 'eksekusi sukses')) {
+            return 'Scenario 1: Primary Functional Flow Executes Normally (Happy Path)';
+        }
+        if (str_contains($lower, 'validation') || str_contains($lower, 'integritas data') || str_contains($lower, 'validasi') || str_contains($lower, '422')) {
+            return 'Scenario 2: Validation Error & Boundary Integrity';
+        }
+        if (str_contains($lower, 'edge case') || str_contains($lower, 'konkurensi') || str_contains($lower, 'race condition') || str_contains($lower, 'simultan')) {
+            return 'Scenario 3: Concurrency Protection & Race Condition Prevention';
+        }
+
+        // Remove Indonesian prefixes
+        $clean = preg_replace('/^Skenario\s+(\d+)\s*[:\-–]?\s*/i', 'Scenario $1: ', $clean);
+        return $clean;
+    }
+
+    /**
+     * Translate Indonesian Gherkin phrases to English.
+     */
+    public static function translateGherkinTextToEn(string $text, string $title = 'Feature', string $type = 'given'): string
+    {
+        $clean = trim($text);
+        if (empty($clean) || $clean === '-') {
+            return $clean;
+        }
+
+        $lower = strtolower($clean);
+        if (str_contains($lower, 'pengguna memiliki hak akses') || str_contains($lower, 'pengguna terautentikasi')) {
+            return "User is authenticated and has authorized access permissions to {$title} module.";
+        }
+        if (str_contains($lower, 'dua atau lebih sesi') || str_contains($lower, 'mutasi data simultan')) {
+            return "Two or more concurrent user sessions perform mutations on the same {$title} record simultaneously.";
+        }
+        if (str_contains($lower, 'terdapat parameter wajib') || str_contains($lower, 'tidak valid') || str_contains($lower, 'melanggar aturan')) {
+            return "Required parameters are missing, invalid, or violate form request validation rules.";
+        }
+        if (str_contains($lower, 'mengirimkan permintaan eksekusi') || str_contains($lower, 'mengirimkan transaksi')) {
+            return "User submits an execution or transaction request to the system.";
+        }
+        if (str_contains($lower, 'berhasil memproses data') || str_contains($lower, 'status 200 ok')) {
+            return "System successfully processes {$title} data with HTTP 200 OK and persists to Strict ULID database.";
+        }
+        if (str_contains($lower, 'menolak mutasi data') || str_contains($lower, '422 unprocessable')) {
+            return "System rejects mutation and returns structured HTTP 422 Unprocessable Content error response.";
+        }
+        if (str_contains($lower, 'mencegah race condition') || str_contains($lower, 'integritas acid')) {
+            return "System applies database transaction locking to prevent race conditions and guarantee ACID consistency.";
+        }
+
+        return $clean;
+    }
 
     /**
      * Generate 3 default Gherkin acceptance criteria scenarios for a feature.
      */
-    public static function getDefaultAcceptanceCriteria(string $title, string $userStory = ''): array
+    public static function getDefaultAcceptanceCriteria(string $title, string $userStory = '', bool $isEn = false): array
     {
+        if ($isEn) {
+            return [
+                [
+                    'scenario' => 'Scenario 1 (Happy Path - Normal Execution)',
+                    'title' => 'Scenario 1 (Happy Path - Normal Execution)',
+                    'given' => "User is authenticated and provides valid data parameters for {$title}.",
+                    'when' => "User submits the execution or transaction request to the server.",
+                    'then' => "System successfully processes {$title} with HTTP 200 OK and persists state to Strict ULID database.",
+                ],
+                [
+                    'scenario' => 'Scenario 2 (Validation Error & Boundary Integrity)',
+                    'title' => 'Scenario 2 (Validation Error & Boundary Integrity)',
+                    'given' => "User accesses the form or endpoint for {$title}.",
+                    'when' => "Required parameters are missing, malformed, or violate form request validation rules.",
+                    'then' => "System rejects mutation and returns structured HTTP 422 Unprocessable Content error response.",
+                ],
+                [
+                    'scenario' => 'Scenario 3 (Edge Case & Concurrency Protection)',
+                    'title' => 'Scenario 3 (Edge Case & Concurrency Protection)',
+                    'given' => "Two or more concurrent user sessions perform mutations on the same {$title} record simultaneously.",
+                    'when' => "Parallel mutation requests are received by the server at the exact same moment.",
+                    'then' => "System applies database transaction locking (pessimistic lock) to prevent race conditions and guarantee ACID consistency.",
+                ],
+            ];
+        }
+
         return [
             [
                 'scenario' => 'Skenario 1 (Happy Path - Eksekusi Sukses)',
+                'title' => 'Skenario 1 (Happy Path - Eksekusi Sukses)',
                 'given' => "Pengguna terautentikasi dan memasukkan parameter data {$title} yang valid.",
                 'when' => "Pengguna mengirimkan permintaan eksekusi atau transaksi ke server.",
                 'then' => "Sistem berhasil memproses data {$title} dengan status 200 OK dan menyimpan relasi database PostgreSQL Strict ULID.",
             ],
             [
                 'scenario' => 'Skenario 2 (Validation Error & Integritas Data)',
+                'title' => 'Skenario 2 (Validation Error & Integritas Data)',
                 'given' => "Pengguna mengakses formulir atau endpoint modul {$title}.",
                 'when' => "Terdapat parameter wajib yang kosong, tidak valid, atau format melanggar aturan form request.",
                 'then' => "Sistem menolak mutasi data dan mengembalikan respons HTTP 422 Unprocessable Content dengan pesan error terstruktur.",
             ],
             [
                 'scenario' => 'Skenario 3 (Edge Case & Perlindungan Konkurensi)',
+                'title' => 'Skenario 3 (Edge Case & Perlindungan Konkurensi)',
                 'given' => "Dua atau lebih sesi pengguna melakukan aksi transaksi secara simultan pada data {$title} yang sama.",
                 'when' => "Permintaan mutasi data paralel diterima oleh server secara bersamaan.",
                 'then' => "Sistem menerapkan database transaction locking untuk mencegah race condition dan menjamin integritas konsistensi ACID.",
@@ -2407,48 +2529,70 @@ PROMPT;
     }
 
 
-    public static function deriveGivenCondition(string $scenarioTitle, string $title, int $idx): string
+    public static function deriveGivenCondition(string $scenarioTitle, string $title, int $idx, bool $isEn = false): string
     {
         $lower = strtolower($scenarioTitle);
         if (str_contains($lower, 'validation') || str_contains($lower, 'error') || str_contains($lower, '422') || str_contains($lower, 'validasi')) {
-            return "Pengguna mengirimkan request pada antarmuka atau endpoint {$title}.";
+            return $isEn 
+                ? "User submits request on the {$title} interface or endpoint with invalid parameters."
+                : "Pengguna mengirimkan request pada antarmuka atau endpoint {$title}.";
         }
         if (str_contains($lower, 'edge') || str_contains($lower, 'concurrency') || str_contains($lower, 'race') || str_contains($lower, 'simultan')) {
-            return "Dua atau lebih sesi pengguna melakukan aksi transaksi secara bersamaan pada data {$title} yang sama.";
+            return $isEn
+                ? "Two or more concurrent user sessions attempt mutations on the same {$title} record simultaneously."
+                : "Dua atau lebih sesi pengguna melakukan aksi transaksi secara bersamaan pada data {$title} yang sama.";
         }
         if (str_contains($lower, 'auth') || str_contains($lower, 'security') || str_contains($lower, 'rbac') || str_contains($lower, 'akses')) {
-            return "Pengguna mencoba mengakses fungsi {$title} dengan kredensial atau peran otorisasi tertentu.";
+            return $isEn
+                ? "User attempts to access {$title} functions with specific authorization credentials or roles."
+                : "Pengguna mencoba mengakses fungsi {$title} dengan kredensial atau peran otorisasi tertentu.";
         }
-        return "Pengguna terautentikasi dan memiliki hak akses valid pada modul {$title}.";
+        return $isEn
+            ? "User is authenticated and has authorized access permissions to {$title} module."
+            : "Pengguna terautentikasi dan memiliki hak akses valid pada modul {$title}.";
     }
 
 
-    public static function deriveWhenCondition(string $scenarioTitle, string $title, int $idx): string
+    public static function deriveWhenCondition(string $scenarioTitle, string $title, int $idx, bool $isEn = false): string
     {
         $lower = strtolower($scenarioTitle);
         if (str_contains($lower, 'validation') || str_contains($lower, 'error') || str_contains($lower, '422') || str_contains($lower, 'validasi')) {
-            return "Terdapat parameter wajib yang kosong, format data salah, atau melanggar aturan integritas form.";
+            return $isEn
+                ? "Required parameters are missing, malformed, or fail form request validation rules."
+                : "Terdapat parameter wajib yang kosong, format data salah, atau melanggar aturan integritas form.";
         }
         if (str_contains($lower, 'edge') || str_contains($lower, 'concurrency') || str_contains($lower, 'race') || str_contains($lower, 'simultan')) {
-            return "Percobaan mutasi data simultan dikirimkan ke server secara paralel.";
+            return $isEn
+                ? "Simultaneous write/mutation requests are received in parallel by the server."
+                : "Percobaan mutasi data simultan dikirimkan ke server secara paralel.";
         }
         if (str_contains($lower, 'auth') || str_contains($lower, 'security') || str_contains($lower, 'rbac') || str_contains($lower, 'akses')) {
-            return "Sistem melakukan evaluasi terhadap token sesi dan kebijakan izin (Spatie/Shield RBAC).";
+            return $isEn
+                ? "System evaluates the session token and RBAC permission policies."
+                : "Sistem melakukan evaluasi terhadap token sesi dan kebijakan izin (Spatie/Shield RBAC).";
         }
-        return "Pengguna mengirimkan permintaan eksekusi atau transaksi ke sistem.";
+        return $isEn
+            ? "User executes the primary operational transaction or data mutation."
+            : "Pengguna mengirimkan permintaan eksekusi atau transaksi ke sistem.";
     }
 
 
-    public static function deriveThenCondition(string $scenarioTitle, string $title, int $idx): string
+    public static function deriveThenCondition(string $scenarioTitle, string $title, int $idx, bool $isEn = false): string
     {
         $lower = strtolower($scenarioTitle);
         if (str_contains($lower, 'validation') || str_contains($lower, 'error') || str_contains($lower, '422') || str_contains($lower, 'validasi')) {
-            return "Sistem mengembalikan respons HTTP 422 Unprocessable Content dengan detail validasi inline dan rollback transaksi.";
+            return $isEn
+                ? "System returns HTTP 422 Unprocessable Content with structured RFC 9457 inline validation details and rolls back transaction."
+                : "Sistem mengembalikan respons HTTP 422 Unprocessable Content dengan detail validasi inline dan rollback transaksi.";
         }
         if (str_contains($lower, 'edge') || str_contains($lower, 'concurrency') || str_contains($lower, 'race') || str_contains($lower, 'simultan')) {
-            return "Sistem menerapkan database transaction locking untuk mencegah race condition dan menjamin integritas ACID.";
+            return $isEn
+                ? "System applies database transaction locking (pessimistic lock) to prevent race conditions and guarantee ACID consistency."
+                : "Sistem menerapkan database transaction locking untuk mencegah race condition dan menjamin integritas ACID.";
         }
-        return "Sistem memproses transaksi secara akurat dengan status 200 OK dan menyimpan state ke basis data PostgreSQL Strict ULID.";
+        return $isEn
+            ? "System accurately processes the transaction with HTTP 200 OK and persists state to Strict ULID database."
+            : "Sistem memproses transaksi secara akurat dengan status 200 OK dan menyimpan state ke basis data PostgreSQL Strict ULID.";
     }
 
 

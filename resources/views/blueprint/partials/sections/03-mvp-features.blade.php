@@ -3,42 +3,46 @@
                     <div class="flex items-center gap-2 cursor-pointer select-none" @click="toggleSection('section-3')">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">03</span>
                         <div>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Spesifikasi Rekayasa Fitur & Agent Task Matrix</h2>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Dekomposisi vertikal per fitur: Frontend Anti-AI-Slop, Backend Keyset O(1) &amp; ULID, API Contracts, dan Agent Directive Prompt.</p>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
+                                {{ ($isEn ?? false) ? 'Feature Engineering Specifications & Agent Task Matrix' : 'Spesifikasi Rekayasa Fitur & Agent Task Matrix' }}
+                            </h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                                {{ ($isEn ?? false) ? 'Vertical feature decomposition: Frontend Anti-AI-Slop, Backend Keyset O(1) & ULID, API Contracts, and Agent Directive Prompts.' : 'Dekomposisi vertikal per fitur: Frontend Anti-AI-Slop, Backend Keyset O(1) & ULID, API Contracts, dan Agent Directive Prompt.' }}
+                            </p>
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 no-print">
                         @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                             <button 
                                 type="button" 
-                                @click="openTweakModal('features', 'Seluruh Fitur MVP (Fase 1)')" 
+                                @click="openTweakModal('features', '{{ ($isEn ?? false) ? "All MVP Features (Phase 1)" : "Seluruh Fitur MVP (Fase 1)" }}')" 
                                 class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition cursor-pointer"
-                                title="Perdalam dan sinkronkan seluruh fitur dari Dokumen Acuan Proyek (MarkItDown Corpus)"
+                                title="{{ ($isEn ?? false) ? 'Elaborate and synchronize all features from Grounded Project Corpus (MarkItDown)' : 'Perdalam dan sinkronkan seluruh fitur dari Dokumen Acuan Proyek (MarkItDown Corpus)' }}"
                             >
                                 <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                <span>PERDALAM DARI DOKUMEN ACUAN</span>
+                                <span>{{ ($isEn ?? false) ? 'ELABORATE FROM GROUNDED CORPUS' : 'PERDALAM DARI DOKUMEN ACUAN' }}</span>
                             </button>
                             <button type="button" @click="taskEditorOpen = true" class="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-mono font-bold border border-amber-500/30 flex items-center gap-1.5 transition cursor-pointer">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                <span>ELABORASI TASK</span>
+                                <span>{{ ($isEn ?? false) ? 'ELABORATE TASKS' : 'ELABORASI TASK' }}</span>
                             </button>
                         @else
-                            <div class="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs font-mono font-bold border border-zinc-700 flex items-center gap-1.5 cursor-not-allowed" title="Dokumen ini telah ditandatangani secara digital dengan integritas SHA-256 (Scope Freeze). Setiap perubahan task harus melalui Addendum.">
+                            <div class="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs font-mono font-bold border border-zinc-700 flex items-center gap-1.5 cursor-not-allowed" title="{{ ($isEn ?? false) ? 'This document is digitally signed with SHA-256 seal (Scope Freeze). Any task changes must go through an Addendum.' : 'Dokumen ini telah ditandatangani secara digital dengan integritas SHA-256 (Scope Freeze). Setiap perubahan task harus melalui Addendum.' }}">
                                 <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                <span>SCOPE FREEZE (TERKUNCI)</span>
+                                <span>{{ ($isEn ?? false) ? 'SCOPE FREEZE (LOCKED)' : 'SCOPE FREEZE (TERKUNCI)' }}</span>
                             </div>
                         @endif
                         <button type="button" onclick="copyFullPrdMarkdown(this)" class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono font-bold border border-emerald-500/30 flex items-center gap-1.5 transition">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                            <span>SALIN SEMUA PROMPT AGENT</span>
+                            <span>{{ ($isEn ?? false) ? 'COPY ALL AGENT PROMPTS' : 'SALIN SEMUA PROMPT AGENT' }}</span>
                         </button>
                         <button 
                             type="button" 
                             @click.stop="toggleSection('section-3')" 
                             class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"
-                            :title="sectionCollapses['section-3'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                            :title="sectionCollapses['section-3'] ? '{{ ($isEn ?? false) ? "Expand this section" : "Buka seksi ini" }}' : '{{ ($isEn ?? false) ? "Collapse this section" : "Ciutkan seksi ini" }}'"
                         >
-                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-3'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-3'] ? '{{ ($isEn ?? false) ? "EXPAND" : "BUKA" }}' : '{{ ($isEn ?? false) ? "COLLAPSE" : "CIUTKAN" }}'"></span>
                             <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-3'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                     </div>
@@ -160,7 +164,7 @@
                     <div class="space-y-6">
                         <div class="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                            <span>DEKOMPOSISI VERTIKAL PER FITUR (SIAP OVER KE AI CODE AGENT)</span>
+                            <span>{{ ($isEn ?? false) ? 'VERTICAL DECOMPOSITION PER FEATURE (READY FOR AI CODE AGENTS)' : 'DEKOMPOSISI VERTIKAL PER FITUR (SIAP OVER KE AI CODE AGENT)' }}</span>
                         </div>
 
                         @foreach($mvpEngineeringSpecs as $specIdx => $spec)
@@ -168,10 +172,18 @@
                                 $featKey = $spec['feature_id'] ?? ($spec['id'] ?? ('FEAT-SPEC-' . $specIdx));
                                 $spec = \App\Services\BlueprintDiscoveryService::polishFeatureSpecification($spec, $blueprint->domain_category ?? 'custom_portal', $isEn ?? false);
                                 $craftedSpec = $spec;
+                                $sprintPhaseLabel = $spec['sprint_phase'] ?? 'Sprint 1';
+                                if ($isEn ?? false) {
+                                    $sprintPhaseLabel = str_replace(
+                                        ['Fondasi & CRUD', 'Fitur Inti & Transaksi', 'Integrasi & Laporan', 'UAT & Optimasi', 'Peluncuran & BAST'],
+                                        ['Foundation & CRUD', 'Core Features & Transactions', 'Integration & Reporting', 'UAT & Optimization', 'Launch & Handover'],
+                                        $sprintPhaseLabel
+                                    );
+                                }
                             @endphp
                             <div 
                                 id="card-feat-{{ $specIdx }}"
-                                x-data="{ specTab: &apos;gherkin&apos;, expanded: true }" 
+                                x-data="{ specTab: 'gherkin', expanded: true }" 
                                 class="bg-zinc-50 dark:bg-zinc-950 border-2 rounded-none transition prd-scroll-target"
                                 :class="isStepCompleted('{{ $featKey }}') ? 'border-emerald-500/80 shadow-xs' : 'border-zinc-200 dark:border-zinc-800'"
                             >
@@ -196,7 +208,7 @@
                                                     {{ $spec['complexity_label'] ?? 'Standard (3 SP)' }}
                                                 </span>
                                                 <span class="px-2 py-0.5 bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/30 text-[10px] font-mono font-bold">
-                                                    {{ $spec['sprint_phase'] ?? 'Sprint 1' }}
+                                                    {{ $sprintPhaseLabel }}
                                                 </span>
                                                 @if($isSpecMaximal)
                                                     <span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-300 border border-emerald-400 dark:border-emerald-700 text-[10px] font-mono font-black tracking-wider flex items-center gap-1" title="{{ ($isEn ?? false) ? '6 Dimensions 100% Fully Elaborated & Production Scope Locked' : '6 Dimensi Rekayasa 100% Lengkap & Scope Terkunci' }}">
@@ -218,20 +230,20 @@
                                             @click="toggleStepCompleted('{{ $featKey }}', '{{ addslashes($craftedSpec['title'] ?? ($spec['title'] ?? '')) }}')"
                                             :class="isStepCompleted('{{ $featKey }}') ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 border-zinc-300 dark:border-zinc-700'"
                                             class="px-2.5 py-1 text-xs font-mono border flex items-center gap-1.5 transition rounded-none"
-                                            title="Tandai Status Pengerjaan Fitur Ini di Cockpit Sprint"
+                                            title="{{ ($isEn ?? false) ? 'Toggle Feature Completion Status in Sprint Cockpit' : 'Tandai Status Pengerjaan Fitur Ini di Cockpit Sprint' }}"
                                         >
                                             <span class="w-1.5 h-1.5 rounded-none" :class="isStepCompleted('{{ $featKey }}') ? 'bg-black' : 'bg-zinc-400'"></span>
-                                            <span x-text="isStepCompleted('{{ $featKey }}') ? '✓ VERIFIED & COMMITTED' : 'TANDAI SELESAI'"></span>
+                                            <span x-text="isStepCompleted('{{ $featKey }}') ? '✓ VERIFIED & COMMITTED' : '{{ ($isEn ?? false) ? 'MARK AS DONE' : 'TANDAI SELESAI' }}'"></span>
                                         </button>
 
                                         <button 
                                             type="button" 
                                             onclick="copyFeaturePrompt(this, 'prompt-code-{{ $specIdx }}')" 
                                             class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono font-bold border border-emerald-500/30 flex items-center gap-1 transition"
-                                            title="Salin Prompt Directive Khusus Fitur Ini"
+                                            title="{{ ($isEn ?? false) ? 'Copy Dedicated Feature Directive Prompt' : 'Salin Prompt Directive Khusus Fitur Ini' }}"
                                         >
                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                            <span>SALIN PROMPT FITUR</span>
+                                            <span>{{ ($isEn ?? false) ? 'COPY FEATURE PROMPT' : 'SALIN PROMPT FITUR' }}</span>
                                         </button>
                                         @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                                             <button 
@@ -241,14 +253,14 @@
                                                 title="{{ $isSpecMaximal ? (($isEn ?? false) ? 'Feature is 100% fully elaborated. Click to customize or fine-tune.' : 'Modul telah mencapai 100% maksimal. Klik untuk meninjau atau menyesuaikan.') : (($isEn ?? false) ? 'Elaborate this feature to 100% maximum maturity.' : 'Perdalam spesifikasi fitur ini hingga 100% maksimal.') }}"
                                             >
                                                 <svg class="w-3.5 h-3.5 {{ $isSpecMaximal ? 'text-emerald-500' : 'text-sky-500' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                                <span>{{ $isSpecMaximal ? (($isEn ?? false) ? '✓ 100% MAKSIMAL' : '✓ 100% MAKSIMAL') : (($isEn ?? false) ? 'PERDALAM FITUR' : 'PERDALAM FITUR') }}</span>
+                                                <span>{{ $isSpecMaximal ? (($isEn ?? false) ? '✓ 100% MAXIMUM' : '✓ 100% MAKSIMAL') : (($isEn ?? false) ? 'ELABORATE SPEC' : 'PERDALAM FITUR') }}</span>
                                             </button>
                                         @endif
                                         <button 
                                             type="button" 
                                             @click="expanded = !expanded" 
                                             class="p-1 text-zinc-400 hover:text-zinc-200"
-                                            title="Buka / Tutup Detail"
+                                            title="{{ ($isEn ?? false) ? 'Expand / Collapse Detail' : 'Buka / Tutup Detail' }}"
                                         >
                                             <svg class="w-4 h-4 transition-transform" :class="expanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                         </button>
@@ -268,7 +280,7 @@
                                         <div class="p-3 bg-zinc-100 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 font-mono text-xs mb-4">
                                             <div class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                                                <span>BOUNDED TARGET FILES (ISOLASI RUANG LINGKUP AGENT):</span>
+                                                <span>{{ ($isEn ?? false) ? 'BOUNDED TARGET FILES (AGENT SCOPE ISOLATION):' : 'BOUNDED TARGET FILES (ISOLASI RUANG LINGKUP AGENT):' }}</span>
                                             </div>
                                             <div class="flex flex-wrap gap-1.5">
                                                 @foreach($spec['target_files'] as $tf)
@@ -286,43 +298,43 @@
                                     <!-- Navigation Sub-Tabs -->
                                     <div class="flex flex-wrap items-center gap-1 font-mono text-xs border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-4 no-print">
                                         <button 
-                                            @click="specTab = &apos;gherkin&apos;" 
-                                            :class="specTab === &apos;gherkin&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            @click="specTab = 'gherkin'" 
+                                            :class="specTab === 'gherkin' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'"
                                             class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition"
                                         >
-                                            1. GHERKIN &amp; ACCEPTANCE CRITERIA
+                                            1. {{ ($isEn ?? false) ? 'GHERKIN & ACCEPTANCE CRITERIA' : 'GHERKIN & KRITERIA PENERIMAAN' }}
                                         </button>
                                         <button 
-                                            @click="specTab = &apos;frontend&apos;" 
-                                            :class="specTab === &apos;frontend&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            @click="specTab = 'frontend'" 
+                                            :class="specTab === 'frontend' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'"
                                             class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition"
                                         >
                                             2. FRONTEND (ANTI-AI-SLOP)
                                         </button>
                                         <button 
-                                            @click="specTab = &apos;backend&apos;" 
-                                            :class="specTab === &apos;backend&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            @click="specTab = 'backend'" 
+                                            :class="specTab === 'backend' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'"
                                             class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition"
                                         >
                                             3. BACKEND (KEYSET &amp; ULID)
                                         </button>
                                         <button 
-                                            @click="specTab = &apos;integration&apos;" 
-                                            :class="specTab === &apos;integration&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            @click="specTab = 'integration'" 
+                                            :class="specTab === 'integration' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'"
                                             class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition"
                                         >
-                                            4. API &amp; KONTRAK
+                                            4. {{ ($isEn ?? false) ? 'API & CONTRACT' : 'API & KONTRAK' }}
                                         </button>
                                         <button 
-                                            @click="specTab = &apos;prompt&apos;" 
-                                            :class="specTab === &apos;prompt&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            @click="specTab = 'prompt'" 
+                                            :class="specTab === 'prompt' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'"
                                             class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition"
                                         >
-                                            5. PROMPT AGENT DIRECTIVE
+                                            5. {{ ($isEn ?? false) ? 'AGENT DIRECTIVE PROMPT' : 'PROMPT AGENT DIRECTIVE' }}
                                         </button>
                                         <button 
-                                            @click="specTab = &apos;uat&apos;" 
-                                            :class="specTab === &apos;uat&apos; ? &apos;bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold&apos; : &apos;bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800&apos;"
+                                            @click="specTab = 'uat'" 
+                                            :class="specTab === 'uat' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-bold' : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'"
                                             class="px-3 py-1 border border-zinc-200 dark:border-zinc-800 transition flex items-center gap-1.5"
                                         >
                                             <span class="w-1.5 h-1.5 bg-sky-500 rounded-none animate-pulse block"></span>
@@ -331,29 +343,45 @@
                                     </div>
 
                                     <!-- Tab 1: Gherkin -->
-                                    <div x-show="specTab === &apos;gherkin&apos;" class="space-y-3 font-mono text-xs">
+                                    <div x-show="specTab === 'gherkin'" class="space-y-3 font-mono text-xs">
                                         @php
                                             $normalizedAc = \App\Services\PrdGeneratorService::normalizeAcceptanceCriteria(
                                                 $spec['acceptance_criteria'] ?? [], 
                                                 $spec['title'] ?? '', 
-                                                $spec['user_story'] ?? ''
+                                                $spec['user_story'] ?? '',
+                                                $isEn ?? false
                                             );
                                         @endphp
                                         @foreach($normalizedAc as $acIdx => $ac)
+                                            @php
+                                                $scenarioLabel = $ac['scenario'] ?? (($isEn ?? false) ? ('Scenario ' . ($acIdx + 1)) : ('Skenario ' . ($acIdx + 1)));
+                                                if ($isEn ?? false) {
+                                                    $scenarioLabel = \App\Services\Prd\PrdFeatureSpecificationService::translateScenarioTitleToEn($scenarioLabel, $acIdx);
+                                                }
+                                                $givenCondition = (!empty($ac['given']) && $ac['given'] !== '-') 
+                                                    ? (($isEn ?? false) ? \App\Services\Prd\PrdFeatureSpecificationService::translateGherkinTextToEn($ac['given'], $spec['title'] ?? 'Feature', 'given') : $ac['given'])
+                                                    : \App\Services\PrdGeneratorService::deriveGivenCondition($ac['scenario'] ?? '', $spec['title'] ?? 'Feature', $acIdx, $isEn ?? false);
+                                                $whenCondition = (!empty($ac['when']) && $ac['when'] !== '-') 
+                                                    ? (($isEn ?? false) ? \App\Services\Prd\PrdFeatureSpecificationService::translateGherkinTextToEn($ac['when'], $spec['title'] ?? 'Feature', 'when') : $ac['when'])
+                                                    : \App\Services\PrdGeneratorService::deriveWhenCondition($ac['scenario'] ?? '', $spec['title'] ?? 'Feature', $acIdx, $isEn ?? false);
+                                                $thenCondition = (!empty($ac['then']) && $ac['then'] !== '-') 
+                                                    ? (($isEn ?? false) ? \App\Services\Prd\PrdFeatureSpecificationService::translateGherkinTextToEn($ac['then'], $spec['title'] ?? 'Feature', 'then') : $ac['then'])
+                                                    : \App\Services\PrdGeneratorService::deriveThenCondition($ac['scenario'] ?? '', $spec['title'] ?? 'Feature', $acIdx, $isEn ?? false);
+                                            @endphp
                                             <div class="p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
                                                 <div class="font-bold text-zinc-900 dark:text-white flex items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
                                                     <div class="flex items-center gap-1.5">
                                                         <span class="w-1.5 h-1.5 bg-emerald-500 inline-block"></span>
-                                                        <span class="uppercase tracking-tight text-xs">{{ $ac['scenario'] ?? ('Skenario ' . ($acIdx + 1)) }}</span>
+                                                        <span class="uppercase tracking-tight text-xs">{{ $scenarioLabel }}</span>
                                                     </div>
                                                     <span class="text-[9px] font-mono px-2 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 uppercase font-bold tracking-wider">
                                                         GHERKIN VERIFIED
                                                     </span>
                                                 </div>
                                                 <div class="pl-3 space-y-1.5 text-zinc-700 dark:text-zinc-300 text-[11px] leading-relaxed border-l-2 border-emerald-500/40 font-mono">
-                                                    <div><strong class="text-emerald-600 dark:text-emerald-400 font-black">GIVEN:</strong> {{ (!empty($ac['given']) && $ac['given'] !== '-') ? $ac['given'] : \App\Services\PrdGeneratorService::deriveGivenCondition($ac['scenario'] ?? '', $spec['title'] ?? 'Fitur', $acIdx) }}</div>
-                                                    <div><strong class="text-sky-600 dark:text-sky-400 font-black">WHEN:</strong> {{ (!empty($ac['when']) && $ac['when'] !== '-') ? $ac['when'] : \App\Services\PrdGeneratorService::deriveWhenCondition($ac['scenario'] ?? '', $spec['title'] ?? 'Fitur', $acIdx) }}</div>
-                                                    <div><strong class="text-amber-600 dark:text-amber-400 font-black">THEN:</strong> {{ (!empty($ac['then']) && $ac['then'] !== '-') ? $ac['then'] : \App\Services\PrdGeneratorService::deriveThenCondition($ac['scenario'] ?? '', $spec['title'] ?? 'Fitur', $acIdx) }}</div>
+                                                    <div><strong class="text-emerald-600 dark:text-emerald-400 font-black">GIVEN:</strong> {{ $givenCondition }}</div>
+                                                    <div><strong class="text-sky-600 dark:text-sky-400 font-black">WHEN:</strong> {{ $whenCondition }}</div>
+                                                    <div><strong class="text-amber-600 dark:text-amber-400 font-black">THEN:</strong> {{ $thenCondition }}</div>
                                                 </div>
                                             </div>
                                         @endforeach
@@ -367,13 +395,13 @@
                                     <div x-show="specTab === &apos;frontend&apos;" class="space-y-3 font-mono text-xs">
                                         <div class="p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
                                             <div class="flex items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
-                                                <strong class="text-zinc-900 dark:text-white uppercase">KOMPONEN &amp; TAMPILAN ANTARMUKA</strong>
+                                                <strong class="text-zinc-900 dark:text-white uppercase">{{ ($isEn ?? false) ? 'COMPONENTS & UI VIEWS' : 'KOMPONEN & TAMPILAN ANTARMUKA' }}</strong>
                                                 <span class="text-[10px] px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-emerald-600 dark:text-emerald-400 font-bold border border-zinc-200 dark:border-zinc-700">
                                                     {{ $feComponents }}
                                                 </span>
                                             </div>
                                             <div class="space-y-1.5">
-                                                <span class="text-zinc-400 text-[10px] block font-bold">DAFTAR TASK FRONTEND:</span>
+                                                <span class="text-zinc-400 text-[10px] block font-bold">{{ ($isEn ?? false) ? 'FRONTEND TASK LIST:' : 'DAFTAR TASK FRONTEND:' }}</span>
                                                 <ul class="space-y-1 text-zinc-700 dark:text-zinc-300 text-[11px]">
                                                     @foreach((array)($feData['tasks'] ?? []) as $feTask)
                                                         <li class="flex items-start gap-1.5">
@@ -385,12 +413,12 @@
                                             </div>
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] pt-1 border-t border-zinc-100 dark:border-zinc-800">
                                                 <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
-                                                    <span class="text-zinc-400 text-[10px] block font-bold mb-0.5">STATE KELENGKAPAN (UI STATES):</span>
+                                                    <span class="text-zinc-400 text-[10px] block font-bold mb-0.5">{{ ($isEn ?? false) ? 'UI COMPLETENESS STATES:' : 'STATE KELENGKAPAN (UI STATES):' }}</span>
                                                     <span class="text-zinc-700 dark:text-zinc-300">{{ $feData['states'] ?? 'Default, Loading Skeleton, Empty State, Error Toast' }}</span>
                                                 </div>
                                                 <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
                                                     <span class="text-emerald-500 text-[10px] block font-bold mb-0.5">ANTI-AI-SLOP DIRECTIVE:</span>
-                                                    <span class="text-zinc-700 dark:text-zinc-300">{{ $feData['anti_ai_slop'] ?? 'Palet Zinc monokrom dengan aksen tajam. Dilarang window.alert() / prompt().' }}</span>
+                                                    <span class="text-zinc-700 dark:text-zinc-300">{{ $feData['anti_ai_slop'] ?? (($isEn ?? false) ? 'Monochrome Zinc palette with sharp accents, border-radius max 4px, strictly ban window.alert().' : 'Palet Zinc monokrom dengan aksen tajam. Dilarang window.alert() / prompt().') }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -404,13 +432,13 @@
                                     <div x-show="specTab === &apos;backend&apos;" class="space-y-3 font-mono text-xs">
                                         <div class="p-3.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3">
                                             <div class="flex items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-2">
-                                                <strong class="text-zinc-900 dark:text-white uppercase">LOGIKA BISNIS &amp; PERSISTENSI DATA</strong>
+                                                <strong class="text-zinc-900 dark:text-white uppercase">{{ ($isEn ?? false) ? 'BUSINESS LOGIC & DATA PERSISTENCE' : 'LOGIKA BISNIS & PERSISTENSI DATA' }}</strong>
                                                 <span class="text-[10px] px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-sky-600 dark:text-sky-400 font-bold border border-zinc-200 dark:border-zinc-700">
                                                     {{ $beTargets }}
                                                 </span>
                                             </div>
                                             <div class="space-y-1.5">
-                                                <span class="text-zinc-400 text-[10px] block font-bold">DAFTAR TASK BACKEND:</span>
+                                                <span class="text-zinc-400 text-[10px] block font-bold">{{ ($isEn ?? false) ? 'BACKEND TASK LIST:' : 'DAFTAR TASK BACKEND:' }}</span>
                                                 <ul class="space-y-1 text-zinc-700 dark:text-zinc-300 text-[11px]">
                                                     @foreach((array)($beData['tasks'] ?? []) as $beTask)
                                                         <li class="flex items-start gap-1.5">
@@ -422,7 +450,7 @@
                                             </div>
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] pt-1 border-t border-zinc-100 dark:border-zinc-800">
                                                 <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
-                                                    <span class="text-amber-500 text-[10px] block font-bold mb-0.5">STANDAR DATABASE (STRICT ULID):</span>
+                                                    <span class="text-amber-500 text-[10px] block font-bold mb-0.5">{{ ($isEn ?? false) ? 'DATABASE STANDARD (STRICT ULID):' : 'STANDAR DATABASE (STRICT ULID):' }}</span>
                                                     <span class="text-zinc-700 dark:text-zinc-300">{{ $beData['ulid_migration_rules'] ?? 'Wajib gunakan ->ulid("id")->primary() (VARCHAR(26)). Dilarang AUTO_INCREMENT.' }}</span>
                                                 </div>
                                                 <div class="p-2 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
@@ -448,7 +476,7 @@
                                                 <span class="text-[10px] text-zinc-400">MIDDLEWARE: <strong class="text-zinc-200">{{ $intMiddleware }}</strong></span>
                                             </div>
                                             <div class="space-y-1">
-                                                <span class="text-zinc-400 text-[10px] block font-bold">TASK INTEGRASI:</span>
+                                                <span class="text-zinc-400 text-[10px] block font-bold">{{ ($isEn ?? false) ? 'INTEGRATION TASK LIST:' : 'TASK INTEGRASI:' }}</span>
                                                 <ul class="space-y-1 text-zinc-700 dark:text-zinc-300 text-[11px]">
                                                     @foreach((array)($intData['tasks'] ?? []) as $intTask)
                                                         <li class="flex items-start gap-1.5">
@@ -478,13 +506,15 @@
                                     <div x-show="specTab === 'prompt'" class="space-y-3 font-mono text-xs">
                                         <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-2">
                                             <div class="flex items-center justify-between text-zinc-500 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800 pb-2">
-                                                <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase text-[11px]">Prompt Directive Siap Di-Paste ke Cursor Composer / Claude Code / Antigravity:</span>
+                                                <span class="text-emerald-700 dark:text-emerald-400 font-bold uppercase text-[11px]">
+                                                    {{ ($isEn ?? false) ? 'Prompt Directive Ready to Paste into Cursor Composer / Claude Code / Antigravity:' : 'Prompt Directive Siap Di-Paste ke Cursor Composer / Claude Code / Antigravity:' }}
+                                                </span>
                                                 <button 
                                                     type="button" 
                                                     onclick="copyFeaturePrompt(this, 'prompt-code-{{ $specIdx }}')" 
                                                     class="px-2 py-0.5 bg-emerald-500 text-black font-bold text-[10px] hover:bg-emerald-400 transition"
                                                 >
-                                                    SALIN PROMPT
+                                                    {{ ($isEn ?? false) ? 'COPY PROMPT' : 'SALIN PROMPT' }}
                                                 </button>
                                             </div>
                                             <pre id="prompt-code-{{ $specIdx }}" class="bg-zinc-950 p-3 text-[11px] text-emerald-300/90 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap font-mono border border-zinc-800">{{ $spec['code_agent_directive'] ?? ($spec['agent_directive_prompt'] ?? '') }}</pre>

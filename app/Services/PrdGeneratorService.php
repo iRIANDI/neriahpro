@@ -570,32 +570,32 @@ class PrdGeneratorService
      *     ]
      * ]
      */
-    public static function normalizeAcceptanceCriteria(mixed $rawAc, string $featureTitle = '', string $userStory = ''): array
+    public static function normalizeAcceptanceCriteria(mixed $rawAc, string $featureTitle = '', string $userStory = '', bool $isEn = false): array
     {
-        return PrdFeatureSpecificationService::normalizeAcceptanceCriteria($rawAc, $featureTitle, $userStory);
+        return PrdFeatureSpecificationService::normalizeAcceptanceCriteria($rawAc, $featureTitle, $userStory, $isEn);
     }
 
     /**
      * Generate 3 default Gherkin acceptance criteria scenarios for a feature.
      */
-    public static function getDefaultAcceptanceCriteria(string $title, string $userStory = ''): array
+    public static function getDefaultAcceptanceCriteria(string $title, string $userStory = '', bool $isEn = false): array
     {
-        return PrdFeatureSpecificationService::getDefaultAcceptanceCriteria($title, $userStory);
+        return PrdFeatureSpecificationService::getDefaultAcceptanceCriteria($title, $userStory, $isEn);
     }
 
-    public static function deriveGivenCondition(string $scenarioTitle, string $title, int $idx): string
+    public static function deriveGivenCondition(string $scenarioTitle, string $title, int $idx, bool $isEn = false): string
     {
-        return PrdFeatureSpecificationService::deriveGivenCondition($scenarioTitle, $title, $idx);
+        return PrdFeatureSpecificationService::deriveGivenCondition($scenarioTitle, $title, $idx, $isEn);
     }
 
-    public static function deriveWhenCondition(string $scenarioTitle, string $title, int $idx): string
+    public static function deriveWhenCondition(string $scenarioTitle, string $title, int $idx, bool $isEn = false): string
     {
-        return PrdFeatureSpecificationService::deriveWhenCondition($scenarioTitle, $title, $idx);
+        return PrdFeatureSpecificationService::deriveWhenCondition($scenarioTitle, $title, $idx, $isEn);
     }
 
-    public static function deriveThenCondition(string $scenarioTitle, string $title, int $idx): string
+    public static function deriveThenCondition(string $scenarioTitle, string $title, int $idx, bool $isEn = false): string
     {
-        return PrdFeatureSpecificationService::deriveThenCondition($scenarioTitle, $title, $idx);
+        return PrdFeatureSpecificationService::deriveThenCondition($scenarioTitle, $title, $idx, $isEn);
     }
 
     /**

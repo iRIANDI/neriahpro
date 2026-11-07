@@ -1,4 +1,7 @@
-@php $isExecutiveImpacted = in_array('executive_summary', $prd['_impacted_segments'] ?? []); @endphp
+@php 
+    $isExecutiveImpacted = in_array('executive_summary', $prd['_impacted_segments'] ?? []); 
+    $isEn = ($isEn ?? false) || ($locale ?? 'id') === 'en';
+@endphp
             <section id="section-1" class="bg-white dark:bg-zinc-900 border {{ $isExecutiveImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target transition-all">
                 <div class="flex flex-col gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center justify-between gap-2 cursor-pointer select-none" @click="toggleSection('section-1')">
@@ -6,7 +9,7 @@
                             <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">01</span>
                             <div>
                                 <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Executive Technical Discovery</h2>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">26 Parameter Arsitektur &amp; Analisis Kebutuhan Bisnis</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">{{ $isEn ? '26 Architecture Parameters & Business Requirements Discovery' : '26 Parameter Arsitektur & Analisis Kebutuhan Bisnis' }}</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
@@ -18,9 +21,9 @@
                                 type="button" 
                                 @click.stop="toggleSection('section-1')" 
                                 class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700"
-                                :title="sectionCollapses['section-1'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                                :title="sectionCollapses['section-1'] ? (isEn ? 'Expand this section' : 'Buka seksi ini') : (isEn ? 'Collapse this section' : 'Ciutkan seksi ini')"
                             >
-                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-1'] ? 'BUKA' : 'CIUTKAN'"></span>
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-1'] ? (isEn ? 'EXPAND' : 'BUKA') : (isEn ? 'COLLAPSE' : 'CIUTKAN')"></span>
                                 <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-1'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
@@ -37,7 +40,7 @@
                 <div x-show="sectionCollapses['section-1']" @click="toggleSection('section-1')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mt-2">
                     <span class="flex items-center gap-2">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>Seksi 01 diciutkan (26 Parameter Discovery). Klik untuk membuka...</span>
+                        <span>{{ $isEn ? 'Section 01 collapsed (26 Parameter Discovery). Click to expand...' : 'Seksi 01 diciutkan (26 Parameter Discovery). Klik untuk membuka...' }}</span>
                     </span>
                     <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
                 </div>

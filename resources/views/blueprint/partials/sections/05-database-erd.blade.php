@@ -1,33 +1,36 @@
-@php $isErdImpacted = in_array('erd_schema', $prd['_impacted_segments'] ?? []); @endphp
+@php 
+    $isErdImpacted = in_array('erd_schema', $prd['_impacted_segments'] ?? []); 
+    $isEn = ($isEn ?? false) || ($locale ?? 'id') === 'en';
+@endphp
             <section id="section-5" class="bg-white dark:bg-zinc-900 border {{ $isErdImpacted ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-zinc-200 dark:border-zinc-800' }} p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target transition-all">
                 <div class="flex flex-col gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none" @click="toggleSection('section-5')">
                         <div class="flex items-center gap-2">
                             <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">07</span>
                             <div>
-                                <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Database ERD &amp; Skema Relasi (PostgreSQL Strict ULID)</h2>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Topologi Basis Data Relasional, Entitas Kunci &amp; Foreign Key Constraints</p>
+                                <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">{{ $isEn ? 'Database ERD & Relational Schema (PostgreSQL Strict ULID)' : 'Database ERD & Skema Relasi (PostgreSQL Strict ULID)' }}</h2>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">{{ $isEn ? 'Relational Database Topology, Key Entities & Foreign Key Constraints' : 'Topologi Basis Data Relasional, Entitas Kunci & Foreign Key Constraints' }}</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
                             @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                                 <button 
                                     type="button" 
-                                    @click.stop="openTweakModal('database_erd', 'Database ERD (PostgreSQL Strict ULID)')" 
+                                    @click.stop="openTweakModal('database_erd', '{{ $isEn ? 'Database ERD (PostgreSQL Strict ULID)' : 'Database ERD (PostgreSQL Strict ULID)' }}')" 
                                     class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
-                                    title="Sinkronkan dan perdalam skema tabel serta relasi ERD dari Dokumen Acuan Proyek"
+                                    title="{{ $isEn ? 'Synchronize and deepen table schemas and ERD relations from grounded project documents' : 'Sinkronkan dan perdalam skema tabel serta relasi ERD dari Dokumen Acuan Proyek' }}"
                                 >
                                     <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                    <span>PERDALAM ERD DARI DOKUMEN ACUAN</span>
+                                    <span>{{ $isEn ? 'ELABORATE ERD FROM GROUNDED CORPUS' : 'PERDALAM ERD DARI DOKUMEN ACUAN' }}</span>
                                 </button>
                             @endif
                             <button 
                                 type="button" 
                                 @click.stop="toggleSection('section-5')" 
                                 class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
-                                :title="sectionCollapses['section-5'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                                :title="sectionCollapses['section-5'] ? (isEn ? 'Expand this section' : 'Buka seksi ini') : (isEn ? 'Collapse this section' : 'Ciutkan seksi ini')"
                             >
-                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-5'] ? 'BUKA' : 'CIUTKAN'"></span>
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-5'] ? (isEn ? 'EXPAND' : 'BUKA') : (isEn ? 'COLLAPSE' : 'CIUTKAN')"></span>
                                 <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-5'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
@@ -44,7 +47,7 @@
                 <div x-show="sectionCollapses['section-5']" @click="toggleSection('section-5')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
                     <span class="flex items-center gap-2">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>Seksi 07 diciutkan (Database ERD &amp; Skema Relasi). Klik untuk membuka...</span>
+                        <span>{{ $isEn ? 'Section 07 collapsed (Database ERD & Relational Schema). Click to expand...' : 'Seksi 07 diciutkan (Database ERD & Skema Relasi). Klik untuk membuka...' }}</span>
                     </span>
                     <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
                 </div>

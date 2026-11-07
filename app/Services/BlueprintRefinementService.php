@@ -416,7 +416,22 @@ class BlueprintRefinementService
         // Segment 1: FEATURES (Entire List or Single Feature)
         if ($segmentKey === 'feature_single') {
             $featureTitle = $existingData['title'] ?? ($isEn ? 'Feature' : 'Fitur');
-            $systemInstruction = <<<TXT
+            $systemInstruction = $isEn ? <<<TXT
+You are the Principal Software Architect at Neriah Pro.
+Your Mission: Deepen and thoroughly specify ONE FEATURE SPECIFICATION grounded in the PROJECT SOURCE CORPUS (MarkItDown Corpus / Client Project Specifications).
+STRICT MANDATE:
+1. Extract and enforce all business domain rules, calculation formulas, edge cases, and exception conditions documented in the Project Corpus.
+2. Gherkin Scenarios MUST be concrete, realistic (Given/When/Then), and contain AT LEAST 3 SCENARIOS (Happy Path, 422 Validation Error, and Concurrency / Locking Path).
+3. Acceptance Criteria must be verifiable via automated testing (Pest PHP / Playwright).
+4. Do NOT use generic placeholders or filler text.
+5. Preserve the same Feature ID, tier ('mvp'), and index.
+6. Return ONLY valid JSON (no markdown fences or code blocks).
+7. {$langMandate}
+8. CURRENT ARCHITECTURAL STANDARDS:
+   If the feature involves search, catalog filters, recommendations, or AI, strictly integrate:
+   a) 18 RAG Concepts: Hybrid Search (pgvector HNSW + BM25 tsvector), Cross-Encoder Reranking, structured chunking, and Grounded citations.
+   b) 20 Agentic AI Concepts: Tool Use, Model Context Protocol (MCP), multi-turn workflows, Guardrails, and Observability.
+TXT : <<<TXT
 Anda adalah Principal Software Architect di Neriah Pro.
 Tugas Anda: Memperdalam SATU SPESIFIKASI FITUR TERTENTU berdasarkan DOKUMEN ACUAN PROYEK (MarkItDown Corpus / Spesifikasi Klien).
 ATURAN KETAT:
@@ -432,6 +447,21 @@ ATURAN KETAT:
    a) 18 Konsep RAG (Brij Kishore Pandey): Hybrid Search (pgvector HNSW + BM25 tsvector), Cross-Encoder Reranking, Chunking terstruktur (overlap 50 token), Parent-Child / Contextual Retrieval, Corrective RAG (CRAG) & Self-RAG untuk verifikasi akurasi, serta sitasi sumber (Grounded RAG). Dilarang keras query SQL LIKE '%...' atau pencarian naif.
    b) 20 Konsep Agentic AI (Balawant Kadam): Tool Use (function calling), Model Context Protocol (MCP), Agentic Workflows multi-tahap, Guardrails (penyaringan PII & kepatuhan UU PDP), dan Observability (telemetri latency/token).
 TXT;
+
+            $storySample = $isEn ? "As an Authorized System User, I want to ..., so that ..." : "Sebagai ..., saya ingin ... sehingga ...";
+            $sc1Name = $isEn ? "Scenario 1 (Happy Path - Normal Execution)" : "Skenario 1 (Happy Path)";
+            $sc1Given = $isEn ? "User is authenticated and data parameters are valid..." : "Pengguna terautentikasi dan data input valid...";
+            $sc1When = $isEn ? "Primary feature operation is executed..." : "Aksi utama modul dieksekusi...";
+            $sc1Then = $isEn ? "System successfully processes data with HTTP 200 OK and persists to database..." : "Sistem berhasil memproses data dengan HTTP 200 OK dan menyimpan ke database Strict ULID...";
+            $sc2Name = $isEn ? "Scenario 2 (Validation Error & Integrity Boundary)" : "Skenario 2 (Validation Error)";
+            $sc2Given = $isEn ? "User is accessing the module interface or endpoint..." : "Pengguna berada pada antarmuka modul...";
+            $sc2When = $isEn ? "Mandatory parameters are missing or invalid..." : "Input tidak lengkap atau format parameter salah...";
+            $sc2Then = $isEn ? "System rejects mutation and returns HTTP 422 Unprocessable Content error response..." : "Sistem merespons HTTP 422 Unprocessable Content dengan pesan error terstruktur...";
+            $sc3Name = $isEn ? "Scenario 3 (Edge Case & Concurrency Protection)" : "Skenario 3 (Edge Case & Concurrency)";
+            $sc3Given = $isEn ? "Two concurrent user sessions mutate the same resource simultaneously..." : "Dua sesi pengguna melakukan mutasi data simultan...";
+            $sc3When = $isEn ? "Parallel mutation requests hit the server concurrently..." : "Request konkuren dikirimkan serentak...";
+            $sc3Then = $isEn ? "Database locking prevents race conditions and ensures ACID consistency..." : "Database locking mencegah race condition dan integritas ACID terjamin...";
+            $directivePrompt = $isEn ? "Technical implementation directive for AI Coding Agent..." : "Instruksi teknis langsung ke AI Coding Agent...";
 
             $prompt = <<<TXT
 === DOKUMEN ACUAN SUMBER PROYEK (SOURCE CORPUS) ===
@@ -454,47 +484,47 @@ Kembalikan satu objek JSON yang diperdalam dengan struktur kunci:
   "complexity_label": "High (5 SP)",
   "sprint_phase": "Sprint 2",
   "target_files": ["..."],
-  "user_story": "Sebagai ..., saya ingin ... sehingga ...",
+  "user_story": "{$storySample}",
   "acceptance_criteria": [
     {
-      "scenario": "Skenario 1 (Happy Path)",
-      "given": "Pengguna terautentikasi dan data input valid...",
-      "when": "Aksi utama modul dieksekusi...",
-      "then": "Sistem berhasil memproses data dengan HTTP 200 OK dan menyimpan ke database Strict ULID..."
+      "scenario": "{$sc1Name}",
+      "given": "{$sc1Given}",
+      "when": "{$sc1When}",
+      "then": "{$sc1Then}"
     },
     {
-      "scenario": "Skenario 2 (Validation Error)",
-      "given": "Pengguna berada pada antarmuka modul...",
-      "when": "Input tidak lengkap atau format parameter salah...",
-      "then": "Sistem merespons HTTP 422 Unprocessable Content dengan pesan error terstruktur..."
+      "scenario": "{$sc2Name}",
+      "given": "{$sc2Given}",
+      "when": "{$sc2When}",
+      "then": "{$sc2Then}"
     },
     {
-      "scenario": "Skenario 3 (Edge Case & Concurrency)",
-      "given": "Dua sesi pengguna melakukan mutasi data simultan...",
-      "when": "Request konkuren dikirimkan serentak...",
-      "then": "Database locking mencegah race condition dan integritas ACID terjamin..."
+      "scenario": "{$sc3Name}",
+      "given": "{$sc3Given}",
+      "when": "{$sc3When}",
+      "then": "{$sc3Then}"
     }
   ],
   "frontend": {
     "components": ["ComponentName.blade.php", "CardComponent.blade.php"],
-    "tasks": ["Task frontend 1: Bangun antarmuka...", "Task frontend 2: Validasi..."],
+    "tasks": ["Task frontend 1", "Task frontend 2"],
     "states": "Default, Loading Skeleton, Empty State, Error Toast",
-    "anti_ai_slop": "Palet Zinc monokrom dengan aksen tajam, border presisi rounded-none, dilarang window.alert()."
+    "anti_ai_slop": "Monochrome Zinc palette with sharp accents, border-radius max 4px, zero capsule buttons, ban window.alert()."
   },
   "backend": {
     "target_files": ["app/Models/...", "app/Services/..."],
-    "tasks": ["Task backend 1: Migration tabel...", "Task backend 2: Service class..."],
-    "ulid_migration_rules": "Wajib gunakan ->ulid('id')->primary() (VARCHAR(26)). Dilarang AUTO_INCREMENT.",
-    "query_strategy": "Keyset Cursor Pagination cursorPaginate() dengan ->orderBy('id', 'asc')."
+    "tasks": ["Task backend 1", "Task backend 2"],
+    "ulid_migration_rules": "Mandatory ->ulid('id')->primary() (VARCHAR(26)) & foreignUlid. Strictly ban AUTO_INCREMENT.",
+    "query_strategy": "Keyset Cursor Pagination cursorPaginate() with ->orderBy('id', 'asc')."
   },
   "integration": {
     "endpoint": "POST /api/v1/resource-name",
     "middleware": ["api", "auth:sanctum", "throttle:60,1"],
-    "tasks": ["Task integrasi 1: Daftarkan route API...", "Task integrasi 2: Verifikasi signature..."],
+    "tasks": ["Task integrasi 1", "Task integrasi 2"],
     "request_schema": "{\"field\": \"value\"}",
     "response_schema": "{\"success\": true, \"data\": {\"id\": \"01J...\"}}"
   },
-  "code_agent_directive": "Instruksi teknis langsung ke AI Coding Agent..."
+  "code_agent_directive": "{$directivePrompt}"
 }
 TXT;
 
@@ -1998,7 +2028,29 @@ CUPLIKAN ISI BERKAS SAAT INI ({$targetFile}):
 TUGAS ARSITEK:
 Analisis berkas scaffold '{$targetFile}' di atas dan rumuskan 4 poin instruksi penajaman teknis (Actionable AI Directive) yang SANGAT SPESIFIK untuk memperdalam berkas '{$targetFile}' ini agar 100% komplit, siap produksi (zero-placeholder), dan selaras dengan entitas tabel, fitur MVP, serta standar Laravel 13 / PostgreSQL 16 ULID / Cursor O(1) / RAG & Agentic AI proyek '{$businessName}'.";
         } elseif ($isFeatureTweak) {
-            $prompt = "PROYEK / CLIENT: {$businessName}
+            $prompt = $isEn
+                ? "PROJECT / CLIENT: {$businessName}
+SECTOR / ARCHITECTURE: {$sector}
+TARGET FEATURE / MODULE: {$featureName}" . ($featureId ? " [{$featureId}]" : "") . "
+MANDATORY OUTPUT LANGUAGE: English (strictly professional engineering vocabulary)
+
+GROUNDED PROJECT CORPUS (MARKITDOWN DOCUMENTS / CLIENT BRIEF):
+" . Str::limit($corpusText ?: ($rawProblems ?: 'The client requires an automated enterprise digital platform solution.'), 3000) . "
+
+CURRENT FEATURE SPECIFICATION:
+" . Str::limit($featureContent ?: 'Core business operational module.', 2000) . "
+
+ARCHITECTURAL DIRECTIVE ASSIGNMENT:
+Perform a deep technical analysis of the '{$featureName}' module based strictly on the project documents and enterprise engineering best practices.
+Identify critical requirements that are MISSING or UNDER-SPECIFIED in the current draft.
+Formulate 3 to 4 crisp, actionable technical refinement directives tailored 100% to '{$featureName}':
+1. Domain Business Logic & Computational Formulas (input parameters, threshold constraints, calculation rules).
+2. Realistic Anomaly Scenarios & Edge Cases (network timeout retries, concurrency locking, TTL availability, collision mitigation).
+3. State Machine Transitions & Service Integrations (lifecycle statuses, external API contracts, RFC 9457 error responses).
+4. Sub-10ms O(1) Keyset Cursor Scalability & Data Protection Compliance.
+
+STRICTLY FORBIDDEN to output generic, boilerplate filler. Provide concrete, technical directives specifically addressing '{$featureName}'."
+                : "PROYEK / CLIENT: {$businessName}
 SEKTOR / ARSITEKTUR: {$sector}
 TARGET FITUR / MODUL: {$featureName}" . ($featureId ? " [{$featureId}]" : "") . "
 BAHASA OUTPUT WAJIB: {$langPrompt}
@@ -2020,7 +2072,19 @@ Rumuskan 3 hingga 4 poin instruksi penajaman teknis yang 100% EKSKLUSIF untuk fi
 
 DILARANG KERAS memberikan teks template generik. Tulis instruksi yang secara langsung membedah seluk-beluk teknis fitur '{$featureName}'.";
         } else {
-            $prompt = "PROYEK / CLIENT: {$businessName}
+            $prompt = $isEn
+                ? "PROJECT / CLIENT: {$businessName}
+SECTOR / ARCHITECTURE: {$sector}
+CORE BUSINESS PROBLEMS: {$rawProblems}
+SEGMENT TO REFINE: {$segmentKey}" . ($customTitle ? " ({$customTitle})" : "") . "
+MANDATORY OUTPUT LANGUAGE: English (strictly professional engineering vocabulary)
+
+GROUNDED PROJECT CORPUS (MARKITDOWN DOCUMENTS / CLIENT BRIEF):
+" . Str::limit($corpusText ?: 'The client requires an automated enterprise digital platform with workflow integration and administrative tracking.', 4000) . "
+
+ARCHITECTURAL DIRECTIVE ASSIGNMENT:
+Formulate 3-4 concrete, deeply technical architectural directives for '{$segmentKey}' in English without fictitious assumptions."
+                : "PROYEK / CLIENT: {$businessName}
 SEKTOR / ARSITEKTUR: {$sector}
 MASALAH UTAMA: {$rawProblems}
 SEGMEN YANG DIELABORASI: {$segmentKey}" . ($customTitle ? " ({$customTitle})" : "") . "
@@ -2168,6 +2232,24 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
         // Title and ID provide the highest domain-specificity anchor for the active feature
         $titleCorpus = mb_strtolower($cleanLabel . ' ' . ($featureId ?? ''));
         $contentCorpus = mb_strtolower(is_string($featureContent) ? $featureContent : json_encode($featureContent ?? []));
+
+        // 0. Audio Translation, Language Channels & Live Interpreter (e.g. Live Audio Interpreter / Church / Streaming)
+        $isAudioChannel = preg_match('/(?:audio|language|channel|bahasa|penerjemah|interpreter|broadcast|webrtc|stream|translator|suara)/i', $titleCorpus);
+        if ($isAudioChannel) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Real-Time Low-Latency Audio Streaming & WebRTC Architecture: Architect sub-150ms ultra-low latency audio streaming pipelines for language channels, detailing Opus codec parameters (48kHz/stereo, adaptive bitrate 32-96 kbps) and WebRTC/WebSocket transport fallbacks.\n" .
+                       "2. Channel State Machine & Concurrency Control: Define channel lifecycle states (INACTIVE, STANDBY, LIVE_STREAMING, MUTED), enforcing optimistic/pessimistic locking to prevent simultaneous conflicting translator broadcast claims on the same channel.\n" .
+                       "3. Role-Based Broadcast & Listener Access Boundaries: Specify granular access permissions distinguishing Multimedia Operators (channel provisioning, master mute), Assigned Interpreters (audio stream ingest, push-to-talk toggle), and Public Listeners (zero-install mobile browser streaming with instant channel switching).\n" .
+                       "4. Stream Telemetry, Buffer Health & Network Degrade Fallback: Formulate automated packet-loss mitigation, jitter buffer adjustments, and graceful degradation to lower bitrate streams when audience network conditions fluctuate during live sessions.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Arsitektur Audio Streaming Real-Time Berlatensi Ultra Rendah (<150ms): Rancang pipeline streaming audio WebRTC untuk kanal bahasa, mendefinisikan parameter Opus codec (48kHz/stereo, adaptive bitrate 32-96 kbps) serta auto-fallback ke WebSocket audio stream.\n" .
+                   "2. Siklus Status Kanal & Kontrol Konkurensi: Rumuskan state machine kanal bahasa (NONAKTIF, STANDBY, LIVE_STREAMING, MUTED), lengkap dengan locking database atomik guna mencegah bentrok dua penerjemah siaran di kanal yang sama.\n" .
+                   "3. Isolasi Otoritas Penyiar & Pendengar: Tentukan hak akses RBAC tegas antara Operator Multimedia (pengelolaan kanal, master force-mute), Penerjemah Terpilih (ingest mikrofon, push-to-talk), dan Jemaat/Pendengar (akses web browser responsif tanpa install aplikasi).\n" .
+                   "4. Telemetri Kualitas Siaran & Mitigasi Fluktuasi Jaringan: Rancang penanganan packet loss, jitter buffer dinamis, dan fallback otomatis ke bitrate lebih rendah saat koneksi internet jemaat tidak stabil di area ibadah.";
+        }
 
         // 1. Airport Transfer (Ngurah Rai DPS In/Out) - Specific Airport Radar & Flight Sync
         $isAirportTransfer = preg_match('/(?:bandara|airport|transfer in|transfer out|ngurah rai|\bdps\b|flight|penerbangan|antar jemput)/i', $titleCorpus);

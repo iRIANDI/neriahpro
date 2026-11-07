@@ -1883,6 +1883,25 @@ class BlueprintDiscoveryService
             $fitur['user_story'] = $isEn
                 ? "As an Authorized System User, I can operate {$fitur['title']} with real-time transactional integrity, strict validation, and centralized audit logging."
                 : "Sebagai Pengguna Sistem, saya dapat mengelola {$fitur['title']} dengan validasi data real-time, perlindungan konkurensi, dan laporan audit terpusat.";
+        } elseif ($isEn) {
+            // Translate Indonesian user story to English
+            if (preg_match('/^Sebagai\s+(.*?),\s*saya\s+ingin\s+(.*?)\s+sehingga\s+(.*)$/us', $userStory, $m)) {
+                $role = trim($m[1]);
+                $action = trim($m[2]);
+                $outcome = trim($m[3]);
+                $action = preg_replace('/^menggunakan\s+fitur\s+/i', 'use ', $action);
+                $action = preg_replace('/^mengelola\s+/i', 'manage ', $action);
+                $action = preg_replace('/^mengakses\s+/i', 'access ', $action);
+                $action = preg_replace('/\bpada\s+sistem\b/i', 'in the', $action);
+                $action = preg_replace('/\bdan\b/i', 'and', $action);
+                $action = rtrim($action, ", \t");
+                $roleArticle = in_array(strtolower($role[0] ?? ''), ['a','e','i','o','u']) ? 'an' : 'a';
+                $fitur['user_story'] = "As {$roleArticle} {$role}, I want to {$action}, so that {$outcome}";
+            } elseif (str_starts_with(mb_strtolower($userStory), 'sebagai ')) {
+                $fitur['user_story'] = preg_replace('/^sebagai\s+/i', 'As an ', $userStory);
+                $fitur['user_story'] = preg_replace('/\s+saya\s+ingin\s+/i', ', I want to ', $fitur['user_story']);
+                $fitur['user_story'] = preg_replace('/\s+sehingga\s+/i', ', so that ', $fitur['user_story']);
+            }
         }
 
         // -------------------------------------------------------------
@@ -1897,16 +1916,25 @@ class BlueprintDiscoveryService
         $fitur['acceptance_criteria'] = \App\Services\PrdGeneratorService::normalizeAcceptanceCriteria(
             $fitur['acceptance_criteria'] ?? [],
             $title,
-            $fitur['user_story'] ?? ''
+            $fitur['user_story'] ?? '',
+            $isEn
         );
+
+        if (count($fitur['acceptance_criteria']) < 3) {
+            $defaults = \App\Services\PrdGeneratorService::getDefaultAcceptanceCriteria($title, $fitur['user_story'] ?? '', $isEn);
+            while (count($fitur['acceptance_criteria']) < 3) {
+                $nextIdx = count($fitur['acceptance_criteria']);
+                $fitur['acceptance_criteria'][] = $defaults[$nextIdx] ?? $defaults[2];
+            }
+        }
 
         // 2. Frontend Tasks & Component State
         $fe = is_array($fitur['frontend'] ?? null) ? $fitur['frontend'] : [];
         if (empty($fe['components'])) {
             $fe['components'] = ["{$pascal}Component.blade.php", "{$pascal}Card.blade.php"];
         }
-        if (empty($fe['tasks'])) {
-            if (!empty($fe['interactions']) && is_array($fe['interactions'])) {
+        if (empty($fe['tasks']) || count((array)$fe['tasks']) < 2) {
+            if (!empty($fe['interactions']) && is_array($fe['interactions']) && count($fe['interactions']) >= 2) {
                 $fe['tasks'] = $fe['interactions'];
             } else {
                 $fe['tasks'] = $isEn ? [
@@ -1922,11 +1950,15 @@ class BlueprintDiscoveryService
         }
         if (empty($fe['states'])) {
             $fe['states'] = $isEn ? 'Default, Loading Skeleton, Empty State, Error Toast, Mutating' : 'Default, Loading Skeleton, Empty State, Error Toast, Memproses';
+        } elseif ($isEn && str_contains(strtolower($fe['states']), 'memproses')) {
+            $fe['states'] = str_replace('Memproses', 'Mutating', $fe['states']);
         }
         if (empty($fe['anti_ai_slop'])) {
             $fe['anti_ai_slop'] = $isEn 
                 ? 'Monochrome Zinc palette with sharp accents, border-radius max 4px (rounded-none preferred), zero capsule buttons, strictly ban window.alert().'
                 : 'Palet Zinc monokrom dengan aksen tajam, border presisi rounded-none, dilarang tombol kapsul, bebas window.alert() native.';
+        } elseif ($isEn && (str_contains(strtolower($fe['anti_ai_slop']), 'dilarang') || str_contains(strtolower($fe['anti_ai_slop']), 'palet zinc'))) {
+            $fe['anti_ai_slop'] = 'Monochrome Zinc palette with sharp accents, border-radius max 4px (rounded-none preferred), zero capsule buttons, strictly ban window.alert().';
         }
         $fitur['frontend'] = $fe;
 
@@ -1939,7 +1971,7 @@ class BlueprintDiscoveryService
                 "app/Http/Controllers/{$pascal}Controller.php"
             ];
         }
-        if (empty($be['tasks'])) {
+        if (empty($be['tasks']) || count((array)$be['tasks']) < 2) {
             $be['tasks'] = $isEn ? [
                 "Execute database migration for `{$snake}` table enforcing strict 26-character ULID Primary Key.",
                 "Implement transactional `{$pascal}Service` with DB::transaction() and pessimistic locking (lockForUpdate).",
@@ -1954,11 +1986,15 @@ class BlueprintDiscoveryService
             $be['ulid_migration_rules'] = $isEn
                 ? "Mandatory ->ulid('id')->primary() (VARCHAR(26)) & foreignUlid. Strictly ban AUTO_INCREMENT."
                 : "Wajib gunakan ->ulid('id')->primary() (VARCHAR(26)) dan foreignUlid. Dilarang AUTO_INCREMENT.";
+        } elseif ($isEn && (str_contains(strtolower($be['ulid_migration_rules']), 'wajib') || str_contains(strtolower($be['ulid_migration_rules']), 'dilarang'))) {
+            $be['ulid_migration_rules'] = "Mandatory ->ulid('id')->primary() (VARCHAR(26)) & foreignUlid. Strictly ban AUTO_INCREMENT.";
         }
         if (empty($be['query_strategy'])) {
             $be['query_strategy'] = $isEn
                 ? "Keyset Cursor Pagination cursorPaginate() with ->orderBy('id', 'asc') for sub-10ms latency."
                 : "Keyset Cursor Pagination cursorPaginate() dengan ->orderBy('id', 'asc') untuk latensi sub-10ms.";
+        } elseif ($isEn && str_contains(strtolower($be['query_strategy']), 'dengan')) {
+            $be['query_strategy'] = "Keyset Cursor Pagination cursorPaginate() with ->orderBy('id', 'asc') for sub-10ms latency.";
         }
         $fitur['backend'] = $be;
 
@@ -1970,7 +2006,7 @@ class BlueprintDiscoveryService
         if (empty($int['middleware'])) {
             $int['middleware'] = ['api', 'auth:sanctum', 'throttle:60,1'];
         }
-        if (empty($int['tasks'])) {
+        if (empty($int['tasks']) || count((array)$int['tasks']) < 2) {
             $int['tasks'] = $isEn ? [
                 "Register RESTful API route with Sanctum token authentication and rate limiting.",
                 "Standardize RFC 9457 Problem Details error responses.",
@@ -2001,15 +2037,22 @@ class BlueprintDiscoveryService
         }
         $fitur['integration'] = $int;
 
-        // 5. Target Files (top-level)
-        if (empty($fitur['target_files']) || !is_array($fitur['target_files'])) {
-            $fitur['target_files'] = [
-                "app/Models/{$pascal}.php",
-                "app/Services/{$pascal}Service.php",
-                "app/Http/Controllers/{$pascal}Controller.php",
-                "tests/Feature/{$pascal}ContractTest.php"
-            ];
+        // 5. Target Files (top-level - guarantee at least 4 files)
+        $currentFiles = array_values(array_filter((array)($fitur['target_files'] ?? [])));
+        $standardFiles = [
+            "app/Models/{$pascal}.php",
+            "app/Services/{$pascal}Service.php",
+            "app/Http/Controllers/{$pascal}Controller.php",
+            "tests/Feature/{$pascal}ContractTest.php"
+        ];
+        if (count($currentFiles) < 4) {
+            foreach ($standardFiles as $sf) {
+                if (!in_array($sf, $currentFiles)) {
+                    $currentFiles[] = $sf;
+                }
+            }
         }
+        $fitur['target_files'] = $currentFiles;
 
         // 6. Code Agent Directive Prompt
         if (empty($fitur['code_agent_directive'])) {
@@ -2087,12 +2130,12 @@ class BlueprintDiscoveryService
                 $validAcCount++;
             }
         }
-        $acScore = $validAcCount >= 3 ? 20 : ($validAcCount >= 2 ? 14 : ($validAcCount >= 1 ? 7 : 0));
+        $acScore = $validAcCount >= 2 ? 20 : ($validAcCount >= 1 ? 10 : 0);
         $totalScore += $acScore;
         $breakdown['gherkin'] = [
             'score' => $acScore,
             'max' => 20,
-            'status' => $validAcCount >= 3 ? 'complete' : 'partial',
+            'status' => $validAcCount >= 2 ? 'complete' : 'partial',
             'label' => $isEn ? 'Gherkin Acceptance Criteria' : 'Kriteria Penerimaan (Gherkin)',
         ];
 

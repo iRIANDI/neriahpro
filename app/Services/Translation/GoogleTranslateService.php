@@ -12,7 +12,7 @@ class GoogleTranslateService
      * Translate text from source language to target language.
      * Supported: 'id' <-> 'en' or any standard ISO-639-1 code.
      */
-    public static function translate(string $text, string $target = 'en', string $source = 'id'): string
+    public static function translate(string $text, string $target = 'en', string $source = 'id', bool $allowAiFallback = false): string
     {
         $text = trim($text);
         if (empty($text)) {
@@ -31,20 +31,20 @@ class GoogleTranslateService
                 return $cached;
             }
 
-            $translated = self::directTranslate($text, $target, $source);
+            $translated = self::directTranslate($text, $target, $source, $allowAiFallback);
             if (!empty($translated) && $translated !== $text) {
                 Cache::put($cacheKey, $translated, now()->addDays(30));
             }
             return $translated;
         } catch (\Throwable $e) {
-            return self::directTranslate($text, $target, $source);
+            return self::directTranslate($text, $target, $source, $allowAiFallback);
         }
     }
 
     /**
      * Direct HTTP translation without relying on cache store.
      */
-    public static function directTranslate(string $text, string $target = 'en', string $source = 'id'): string
+    public static function directTranslate(string $text, string $target = 'en', string $source = 'id', bool $allowAiFallback = false): string
     {
         $text = trim($text);
         if (empty($text) || $target === $source) {
@@ -57,7 +57,7 @@ class GoogleTranslateService
 
             if (class_exists(\Illuminate\Support\Facades\Http::class)) {
                 try {
-                    $response = \Illuminate\Support\Facades\Http::timeout(3)->get($url);
+                    $response = \Illuminate\Support\Facades\Http::timeout(2)->get($url);
                     if ($response->successful()) {
                         $raw = $response->body();
                     }
@@ -67,7 +67,7 @@ class GoogleTranslateService
             }
 
             if ($raw === null && function_exists('file_get_contents')) {
-                $ctx = stream_context_create(['http' => ['timeout' => 3]]);
+                $ctx = stream_context_create(['http' => ['timeout' => 2]]);
                 $raw = @file_get_contents($url, false, $ctx);
             }
 
@@ -90,34 +90,36 @@ class GoogleTranslateService
             Log::debug("GoogleTranslateService directTranslate HTTP error: " . $e->getMessage());
         }
 
-        // Secondary Fallback: Multi-AI Model Failover (DeepSeek / Gemini / Groq / RelayRouter)
-        try {
-            if (class_exists(\App\Services\Ai\MultiAiModelManager::class)) {
-                $langMap = ['en' => 'English', 'id' => 'Indonesian'];
-                $targetName = $langMap[$target] ?? $target;
-                $sourceName = $langMap[$source] ?? $source;
-                $prompt = "Translate the following {$sourceName} text into clear, professional {$targetName}. Output ONLY the translated text, preserving original numbering, list structure, and technical terminology. Do NOT add quotes, markdown fences, preambles, or conversational text:\n\n" . $text;
-                $aiRes = \App\Services\Ai\MultiAiModelManager::executeWithFailover(
-                    $prompt,
-                    "You are a professional technical software specification translator.",
-                    'discovery'
-                );
+        // Secondary Fallback: Multi-AI Model Failover (only if explicitly enabled to prevent blocking document generators)
+        if ($allowAiFallback) {
+            try {
+                if (class_exists(\App\Services\Ai\MultiAiModelManager::class)) {
+                    $langMap = ['en' => 'English', 'id' => 'Indonesian'];
+                    $targetName = $langMap[$target] ?? $target;
+                    $sourceName = $langMap[$source] ?? $source;
+                    $prompt = "Translate the following {$sourceName} text into clear, professional {$targetName}. Output ONLY the translated text, preserving original numbering, list structure, and technical terminology. Do NOT add quotes, markdown fences, preambles, or conversational text:\n\n" . $text;
+                    $aiRes = \App\Services\Ai\MultiAiModelManager::executeWithFailover(
+                        $prompt,
+                        "You are a professional technical software specification translator.",
+                        'discovery'
+                    );
 
-                if (!empty($aiRes['text'])) {
-                    $cleaned = trim($aiRes['text']);
-                    if (preg_match('/^```(?:json|markdown)?\s*([\s\S]*?)\s*```$/i', $cleaned, $m)) {
-                        $cleaned = trim($m[1]);
-                    }
-                    if (preg_match('/^["\']([\s\S]*)["\']$/s', $cleaned, $m) && !str_contains($m[1], "\n")) {
-                        $cleaned = trim($m[1]);
-                    }
-                    if (!empty($cleaned)) {
-                        return $cleaned;
+                    if (!empty($aiRes['text'])) {
+                        $cleaned = trim($aiRes['text']);
+                        if (preg_match('/^```(?:json|markdown)?\s*([\s\S]*?)\s*```$/i', $cleaned, $m)) {
+                            $cleaned = trim($m[1]);
+                        }
+                        if (preg_match('/^["\']([\s\S]*)["\']$/s', $cleaned, $m) && !str_contains($m[1], "\n")) {
+                            $cleaned = trim($m[1]);
+                        }
+                        if (!empty($cleaned)) {
+                            return $cleaned;
+                        }
                     }
                 }
+            } catch (\Throwable $e) {
+                Log::warning("GoogleTranslateService MultiAi failover error: " . $e->getMessage());
             }
-        } catch (\Throwable $e) {
-            Log::warning("GoogleTranslateService MultiAi failover error: " . $e->getMessage());
         }
 
         return $text;

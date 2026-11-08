@@ -344,12 +344,13 @@
                                     </a>
                                 </template>
 
-                                <!-- Re-generate Button (Expired or Failed) -->
-                                <template x-if="item.is_expired || item.status === 'expired' || item.status === 'failed'">
+                                <!-- Re-generate Button (Expired, Failed, or Stalled) -->
+                                <template x-if="item.is_expired || item.status === 'expired' || item.status === 'failed' || (item.status === 'processing' && item.progress >= 60)">
                                     <button 
                                         type="button" 
                                         @click="requestDownloadArtifact(item.artifact_type, true)" 
                                         class="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-bold uppercase text-xs rounded-none border border-zinc-700 flex items-center gap-1 transition cursor-pointer whitespace-nowrap"
+                                        :title="locale === 'en' ? 'Force regenerate this file' : 'Paksa buat ulang berkas ini'"
                                     >
                                         <span>🔄 <span x-show="locale === 'en'">REGENERATE</span><span x-show="locale !== 'en'">BUAT ULANG</span></span>
                                     </button>

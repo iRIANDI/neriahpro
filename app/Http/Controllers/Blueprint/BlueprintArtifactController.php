@@ -259,16 +259,26 @@ class BlueprintArtifactController extends Controller
             }
         }
 
-        // Auto-rescue stalled jobs if queued on server with no queue worker daemon running
-        if ($artifact->status === BlueprintDownloadArtifact::STATUS_QUEUED) {
-            $createdAt = $artifact->created_at;
-            if ($createdAt && Carbon::now()->diffInSeconds($createdAt) >= 2) {
-                try {
-                    GenerateBlueprintArtifactJob::dispatchSync($artifact->id);
-                    $artifact->refresh();
-                } catch (\Throwable $e) {
-                    Log::error('Auto-rescue inline artifact job execution failed: ' . $e->getMessage());
-                }
+        // Auto-rescue stalled jobs:
+        // 1. Queued for > 2 seconds (queue worker not running)
+        // 2. Stuck in 'processing' for > 20 seconds (previous process timed out or crashed)
+        $isQueuedStalled = ($artifact->status === BlueprintDownloadArtifact::STATUS_QUEUED)
+            && ($artifact->created_at && Carbon::now()->diffInSeconds($artifact->created_at) >= 2);
+
+        $isProcessingStalled = ($artifact->status === BlueprintDownloadArtifact::STATUS_PROCESSING)
+            && ($artifact->updated_at && Carbon::now()->diffInSeconds($artifact->updated_at) >= 20);
+
+        if ($isQueuedStalled || $isProcessingStalled) {
+            try {
+                GenerateBlueprintArtifactJob::dispatchSync($artifact->id);
+                $artifact->refresh();
+            } catch (\Throwable $e) {
+                Log::error('Auto-rescue inline artifact job execution failed: ' . $e->getMessage());
+                $artifact->update([
+                    'status' => BlueprintDownloadArtifact::STATUS_FAILED,
+                    'error_message' => 'Gagal memproses berkas: ' . $e->getMessage(),
+                ]);
+                $artifact->refresh();
             }
         }
 

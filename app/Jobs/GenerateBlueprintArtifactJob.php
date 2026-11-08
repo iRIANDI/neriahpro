@@ -42,6 +42,9 @@ class GenerateBlueprintArtifactJob implements ShouldQueue
      */
     public function handle(): void
     {
+        @set_time_limit(300);
+        @ini_set('memory_limit', '512M');
+
         $artifact = BlueprintDownloadArtifact::find($this->artifactId);
         if (! $artifact) {
             Log::warning("GenerateBlueprintArtifactJob: Artifact {$this->artifactId} not found.");
@@ -79,39 +82,54 @@ class GenerateBlueprintArtifactJob implements ShouldQueue
             $mimeType = 'application/octet-stream';
 
             if ($artifact->artifact_type === BlueprintDownloadArtifact::TYPE_PDF) {
-                // Step 1: Ensure PRD content exists
+                // Step 1: Ensure PRD content exists (matching locale)
                 $artifact->update(['progress' => 30]);
                 $prd = $blueprint->prd_content;
-                if (empty($prd) || ! is_array($prd) || empty($prd['features'])) {
+                $prdLocale = $prd['output_locale'] ?? $prd['meta']['output_locale'] ?? 'id';
+                if (empty($prd) || ! is_array($prd) || empty($prd['features']) || ($isEn && $prdLocale !== 'en')) {
                     try {
                         $prd = PrdGeneratorService::generate($blueprint, null, $locale);
-                        $blueprint->prd_content = $prd;
-                        $blueprint->saveQuietly();
+                        if (! $isEn) {
+                            $blueprint->prd_content = $prd;
+                            $blueprint->saveQuietly();
+                        }
                     } catch (\Throwable $pe) {
                         Log::warning('GenerateBlueprintArtifactJob: Auto-generate PRD failed: ' . $pe->getMessage());
                         $prd = $prd ?: [];
                     }
                 }
 
-                // Step 2: Render DomPDF
+                // Step 2: Render DomPDF with memory & network protection
                 $artifact->update(['progress' => 60]);
-                $pdf = Pdf::loadView('pdf.blueprint', [
-                    'blueprint' => $blueprint,
-                    'prd' => $prd,
-                    'locale' => $locale,
-                    'isEn' => $isEn,
-                ])->setPaper('a4', 'portrait')
-                    ->setOptions([
-                        'isHtml5ParserEnabled' => true,
-                        'isRemoteEnabled' => true,
-                        'defaultFont' => 'Helvetica',
+                try {
+                    $pdf = Pdf::loadView('pdf.blueprint', [
+                        'blueprint' => $blueprint,
+                        'prd' => $prd,
+                        'locale' => $locale,
+                        'isEn' => $isEn,
+                    ])->setPaper('a4', 'portrait')
+                        ->setOptions([
+                            'isHtml5ParserEnabled' => true,
+                            'isRemoteEnabled' => false,
+                            'defaultFont' => 'Helvetica',
+                        ]);
+
+                    $artifact->update(['progress' => 85]);
+                    $pdfContent = $pdf->output();
+                    $fileSize = strlen($pdfContent);
+                    $mimeType = 'application/pdf';
+
+                    Storage::disk($disk)->put($relPath, $pdfContent);
+                } catch (\Throwable $pdfError) {
+                    Log::error("DomPDF rendering failed for artifact {$artifact->id}: " . $pdfError->getMessage(), [
+                        'trace' => $pdfError->getTraceAsString(),
                     ]);
-
-                $pdfContent = $pdf->output();
-                $fileSize = strlen($pdfContent);
-                $mimeType = 'application/pdf';
-
-                Storage::disk($disk)->put($relPath, $pdfContent);
+                    $artifact->update([
+                        'status' => BlueprintDownloadArtifact::STATUS_FAILED,
+                        'error_message' => 'Gagal merender dokumen PDF: ' . $pdfError->getMessage(),
+                    ]);
+                    throw $pdfError;
+                }
             } elseif ($artifact->artifact_type === BlueprintDownloadArtifact::TYPE_MARKDOWN) {
                 // Step 1: Generate PRD Markdown
                 $artifact->update(['progress' => 35]);

@@ -202,6 +202,17 @@ class BlueprintPdfHelper
             return '';
         }
 
+        // In-memory runtime cache for the current request cycle
+        static $runtimeCache = [];
+        if (isset($runtimeCache[$trimmed])) {
+            return $runtimeCache[$trimmed];
+        }
+
+        // Fast check: If text already starts with standard English technical prefixes
+        if (preg_match('/^(?:Module|Feature|POST|GET|PUT|DELETE|\/api\/|User Story|As a|I want|Acceptance Criteria|Scenario|Given|When|Then|Authentication|Database|Keyset|PostgreSQL|Filament|Livewire)\b/i', $trimmed)) {
+            return $runtimeCache[$trimmed] = $trimmed;
+        }
+
         // Direct dictionary lookup for common domain phrases
         static $dict = [
             'Otomatisasi proses bisnis dan administrasi operasional' => 'Automation of business processes and operational administration',
@@ -233,18 +244,19 @@ class BlueprintPdfHelper
         ];
 
         if (isset($dict[$trimmed])) {
-            return $dict[$trimmed];
+            return $runtimeCache[$trimmed] = $dict[$trimmed];
         }
 
-        // Try GoogleTranslateService
+        // Check persistent Cache (sub-millisecond)
         try {
-            $translated = \App\Services\Translation\GoogleTranslateService::directTranslate($trimmed, 'en', 'id');
-            if (!empty($translated) && $translated !== $trimmed) {
-                return $translated;
+            $cacheKey = 'gt_id_en_' . md5($trimmed);
+            $cached = \Illuminate\Support\Facades\Cache::get($cacheKey);
+            if (!empty($cached) && $cached !== $trimmed) {
+                return $runtimeCache[$trimmed] = $cached;
             }
         } catch (\Throwable) {}
 
-        // Fallback: Perform term-by-term replacements
+        // Fast fallback: Dictionary & term-by-term replacement (Zero network latency, 0.001s)
         static $termReplacements = [
             'Hari Kerja' => 'Business Days',
             'Pascameluncur' => 'Post-Launch',
@@ -261,6 +273,23 @@ class BlueprintPdfHelper
             'Tabel akun otentikasi' => 'Authentication user account table',
             'Entitas utama' => 'Primary entity',
             'Jejak audit' => 'Audit trail',
+            'Pengguna Mengakses Sistem' => 'User Accesses System',
+            'Input Data Tervalidasi' => 'Validated Data Input',
+            'Pemrosesan State Machine' => 'State Machine Processing',
+            'Notifikasi & Verifikasi di Dasbor' => 'Notification & Dashboard Verification',
+            'Autentikasi Aman & RBAC' => 'Secure Authentication & RBAC',
+            'Formulir Intake Tervalidasi' => 'Validated Intake Forms',
+            'Dasbor Administrasi Filament v5' => 'Filament v5 Admin Dashboard',
+            'Rekapitulasi Data & Ekspor PDF/Excel' => 'Data Ledger & PDF/Excel Export',
+            'Midtrans Snap Payment Gateway' => 'Midtrans Snap Payment Gateway',
+            'Cloud Storage S3' => 'S3 Cloud Storage',
+            'WhatsApp API Gateway' => 'WhatsApp API Gateway',
+            'Jemaat gereja dan penerjemah bahasa.' => 'Church congregation and language translators.',
+            'Penerjemah bicara' => 'Translator speaks',
+            'Audio dikirim via WebRTC' => 'Audio streamed via WebRTC',
+            'Jemaat dengar' => 'Congregation listens',
+            'Rekaman khotbah' => 'Sermon recordings',
+            'transkripsi otomatis' => 'automatic transcription',
         ];
 
         $result = $trimmed;
@@ -268,6 +297,6 @@ class BlueprintPdfHelper
             $result = str_ireplace($idTerm, $enTerm, $result);
         }
 
-        return $result;
+        return $runtimeCache[$trimmed] = $result;
     }
 }

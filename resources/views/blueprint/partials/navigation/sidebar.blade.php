@@ -27,8 +27,8 @@
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
                         <div class="text-[10px] font-bold text-emerald-400 bg-zinc-800 px-2 py-0.5 border border-zinc-700 whitespace-nowrap">
-                            <span x-show="locale === 'en'">12 CH // 13 BLOCKS</span>
-                            <span x-show="locale !== 'en'">12 BAB // 13 BLOK</span>
+                            <span x-show="locale === 'en'">13 CH // {{ count($blueprintSections ?? []) }} BLOCKS</span>
+                            <span x-show="locale !== 'en'">13 BAB // {{ count($blueprintSections ?? []) }} BLOK</span>
                         </div>
                         <button 
                             type="button" 

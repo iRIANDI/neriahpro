@@ -580,7 +580,6 @@
                         </p>
                     </div>
                 </div>
-                </div>
             </div>
 
             <!-- DEVELOPER AI EXECUTION COCKPIT & SPRINT PLAYBOOK (HIGH-RETENTION HELPER FOR YOSEPH) -->
@@ -912,8 +911,8 @@
                                 <span x-show="locale !== 'en'">DOKUMEN SPESIFIKASI ARSITEKTUR &amp; PRD SISTEM</span>
                             </span>
                             <span class="text-[10px] font-mono px-2 py-0.5 bg-emerald-100 text-emerald-950 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-black">
-                                <span x-show="locale === 'en'">13 SECTIONS</span>
-                                <span x-show="locale !== 'en'">13 SEKSI</span>
+                                <span x-show="locale === 'en'">{{ count($blueprintSections ?? []) }} SECTIONS</span>
+                                <span x-show="locale !== 'en'">{{ count($blueprintSections ?? []) }} SEKSI</span>
                             </span>
                         </div>
                         <div class="text-xs text-zinc-600 dark:text-zinc-400 font-sans mt-0.5">

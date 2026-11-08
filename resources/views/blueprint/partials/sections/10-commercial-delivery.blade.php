@@ -404,7 +404,6 @@
                                 </button>
                             </div>
                         </div>
-                            </div>
                         @endif
 
                         <!-- UPGRADE TO DEDICATED STUDIO TURNKEY (UPSELL BANNER WITH 100% RETAIL DEDUCTION) -->

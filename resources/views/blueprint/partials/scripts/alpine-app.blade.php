@@ -5,6 +5,7 @@
                 roiRecalculating: false,
                 fullRegenerating: false,
                 sectionCollapses: {
+                    'section-00-execution-guide': false,
                     'section-1': false,
                     'section-1-5': false,
                     'section-2': false,
@@ -18,6 +19,7 @@
                     'section-8': false,
                     'section-9': false,
                     'section-10': false,
+                    'section-13': false,
                 },
                 toggleSection(id) {
                     this.sectionCollapses[id] = !this.sectionCollapses[id];
@@ -1969,6 +1971,7 @@
                 },
                 autoSyncAccordion: true,
                 sectionGroupMap: {
+                    'section-00-execution-guide': 'scope',
                     'section-1': 'scope',
                     'section-1-5': 'scope',
                     'section-2': 'scope',
@@ -1981,7 +1984,8 @@
                     'section-7': 'legal',
                     'section-8': 'legal',
                     'section-9': 'legal',
-                    'section-10': 'legal'
+                    'section-10': 'legal',
+                    'section-13': 'infra'
                 },
                 accordionGroups: {
                     scope: true,
@@ -2051,6 +2055,7 @@
                 },
                 getActiveSectionNumber() {
                     const numbers = {
+                        'section-00-execution-guide': '00',
                         'section-1': '01',
                         'section-1-5': '01.5',
                         'section-2': '02',
@@ -2063,12 +2068,14 @@
                         'section-7': '09',
                         'section-8': '10',
                         'section-9': '11',
-                        'section-10': '12'
+                        'section-10': '12',
+                        'section-13': '13'
                     };
                     return numbers[this.activeSectionId] || '01';
                 },
                 getActiveSectionTitle() {
                     const titles = {
+                        'section-00-execution-guide': { id: '00. Peta Jalan & 3 Cara Mulai', en: '00. Roadmap & 3 Ways to Start' },
                         'section-1': { id: '01. Executive Discovery', en: '01. Executive Discovery' },
                         'section-1-5': { id: '01.5 Analisis ROI & Garansi', en: '01.5 Business ROI & Guarantees' },
                         'section-2': { id: '02. RBAC & Aktor Sistem', en: '02. RBAC & System Actors' },
@@ -2081,13 +2088,20 @@
                         'section-7': { id: '09. Velocity Pricing', en: '09. Velocity Pricing' },
                         'section-8': { id: '10. Timeline Sprint Gantt', en: '10. Sprint Timeline' },
                         'section-9': { id: '11. Tata Kelola & SLA', en: '11. Governance & SLA' },
-                        'section-10': { id: '{{ $blueprint->isRetailLicense() ? "12. Kunci Scope & Lisensi" : "12. Kunci Scope & DP" }}', en: '{{ $blueprint->isRetailLicense() ? "12. Scope Freeze & License" : "12. Scope Freeze & DP" }}' }
+                        'section-10': { id: '{{ $blueprint->isRetailLicense() ? "12. Kunci Scope & Lisensi" : "12. Kunci Scope & DP" }}', en: '{{ $blueprint->isRetailLicense() ? "12. Scope Freeze & License" : "12. Scope Freeze & DP" }}' },
+                        'section-13': { id: '13. Ekspor Repo Project OS', en: '13. Export Project OS Repo' }
                     };
                     const s = titles[this.activeSectionId] || { id: 'Daftar Isi PRD', en: 'PRD Directory' };
                     return this.locale === 'en' ? s.en : s.id;
                 },
                 getActiveSectionIndex() {
-                    const order = ['section-1', 'section-1-5', 'section-2', 'section-3', 'section-3-5', 'section-3-8', 'section-4', 'section-5', 'section-6', 'section-7', 'section-8', 'section-9', 'section-10'];
+                    const order = [
+                        'section-00-execution-guide',
+                        'section-1', 'section-1-5', 'section-2', 'section-3',
+                        'section-3-5', 'section-3-8', 'section-4', 'section-5',
+                        'section-6', 'section-7', 'section-8', 'section-9',
+                        'section-10', 'section-13'
+                    ];
                     const idx = order.indexOf(this.activeSectionId);
                     return idx >= 0 ? (idx + 1) : 1;
                 },

@@ -335,9 +335,10 @@
 
         window.setupBlueprintScrollSpy = function(onActiveChange) {
             const sectionIds = [
+                'section-00-execution-guide',
                 'section-1', 'section-1-5', 'section-2', 'section-3', 'section-3-5',
                 'section-3-8', 'section-4', 'section-5', 'section-6',
-                'section-7', 'section-8', 'section-9', 'section-10'
+                'section-7', 'section-8', 'section-9', 'section-10', 'section-13'
             ];
             let ticking = false;
             let lastActive = null;

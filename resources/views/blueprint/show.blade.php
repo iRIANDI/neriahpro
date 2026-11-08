@@ -193,6 +193,16 @@
         @php
             $blueprintSections = [
                 [
+                    'id' => 'section-00-execution-guide',
+                    'num' => '00',
+                    'group' => 'scope',
+                    'title_id' => 'Peta Jalan & 3 Cara Mulai',
+                    'title_en' => 'Roadmap & 3 Ways to Start',
+                    'subtitle_id' => 'Sesi Chat Antigravity, Standalone App ZIP, atau AI Cockpit',
+                    'subtitle_en' => 'Antigravity Chat Session, Standalone App ZIP, or AI Cockpit',
+                    'badge' => '3 WAYS',
+                ],
+                [
                     'id' => 'section-1',
                     'num' => '01',
                     'group' => 'scope',
@@ -340,7 +350,7 @@
                     'title_en' => 'Scope & Business Requirements',
                     'desc_id' => 'Spesifikasi discovery, aktor pengguna, dan dekomposisi fitur MVP',
                     'desc_en' => 'Discovery specs, user actors, and MVP feature decomposition',
-                    'count' => 4,
+                    'count' => 5,
                 ],
                 'studio' => [
                     'title_id' => 'Studio Visual & Diagram Arsitektur',
@@ -354,7 +364,7 @@
                     'title_en' => 'Cloud Infrastructure & AI Database',
                     'desc_id' => 'Evaluasi arsitektur VPS, PostgreSQL strict, Redis cache & backup',
                     'desc_en' => 'VPS architecture evaluation, PostgreSQL strict, Redis cache & backup',
-                    'count' => 1,
+                    'count' => 2,
                 ],
                 'legal' => [
                     'title_id' => 'Investasi, SLA, Kontrak & Pembayaran',

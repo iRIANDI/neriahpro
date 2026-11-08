@@ -30,7 +30,7 @@ export default function BlueprintSuccessView({
           {t.successDesc}
         </p>
 
-        <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 mb-8 font-mono text-xs space-y-2">
+        <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 mb-6 font-mono text-xs space-y-2">
           <div className="flex justify-between">
             <span className="text-zinc-500">PROJECT_NAME:</span>
             <span className="text-zinc-900 dark:text-zinc-100 font-bold">{formData.namaBisnis}</span>
@@ -56,6 +56,28 @@ export default function BlueprintSuccessView({
             <span className={`font-bold font-mono uppercase ${currentTrack === 'studio' ? 'text-blue-500' : 'text-emerald-500'}`}>
               {currentTrack === 'studio' ? (lang === 'en' ? 'Turnkey Studio (SLA & Managed Sprint)' : 'Jalur Turnkey (Dedicated Studio & SLA)') : (lang === 'en' ? 'Self-Service Retail (Software Factory OS)' : 'Jalur Mandiri (Lisensi Digital Retail)')}
             </span>
+          </div>
+        </div>
+
+        {/* 3 WAYS TO START ROADMAP NOTIFICATION */}
+        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-400 dark:border-emerald-700 mb-8 font-mono text-xs space-y-2">
+          <div className="flex items-center gap-2 text-emerald-950 dark:text-emerald-300 font-black uppercase">
+            <span>🚀</span>
+            <span>{lang === 'en' ? '3 WAYS TO START ARE READY INSIDE YOUR BLUEPRINT:' : '3 PILIHAN CARA MULAI MENUNGGU DI DOKUMEN CETAK BIRU:'}</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] font-sans text-zinc-700 dark:text-zinc-300 pt-1">
+            <div className="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+              <strong className="block text-zinc-950 dark:text-zinc-100 font-bold">🚀 {lang === 'en' ? 'Option A: Antigravity Chat' : 'Pilihan A: Sesi Chat Antigravity'}</strong>
+              <span>{lang === 'en' ? 'Instant execution in this session with 1-click prompts.' : 'Langsung koding di sesi ini dengan prompt 1-klik.'}</span>
+            </div>
+            <div className="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+              <strong className="block text-zinc-950 dark:text-zinc-100 font-bold">📦 {lang === 'en' ? 'Option B: Standalone App' : 'Pilihan B: Standalone App'}</strong>
+              <span>{lang === 'en' ? 'Download 22-file ZIP with Docker Compose stack.' : 'Unduh paket ZIP 22 file dengan Docker Compose.'}</span>
+            </div>
+            <div className="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+              <strong className="block text-zinc-950 dark:text-zinc-100 font-bold">🎯 {lang === 'en' ? 'Option C: AI Cockpit' : 'Pilihan C: AI Cockpit'}</strong>
+              <span>{lang === 'en' ? 'Step-by-step phased vertical slice prompts.' : 'Eksekusi bertahap anti context-rot per sprint.'}</span>
+            </div>
           </div>
         </div>
 

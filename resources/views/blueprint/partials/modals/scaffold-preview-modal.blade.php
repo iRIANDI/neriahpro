@@ -28,15 +28,51 @@
                 </button>
             </div>
 
-            <!-- Modal Info Banner -->
-            <div class="mb-3 p-2.5 bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-                <div>
-                    <span class="text-emerald-400 font-bold">{{ $isEn ? 'Target Stack:' : 'Target Framework:' }}</span> Laravel 13 (PHP 8.5+) &bull; PostgreSQL 16 Strict ULID &bull; Redis 7 &bull; Next.js App Router
+            <!-- Modal Info Banner & Background Job Engine -->
+            <div class="mb-3 p-3 bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                <div class="space-y-1">
+                    <div>
+                        <span class="text-emerald-400 font-bold">{{ $isEn ? 'Target Stack:' : 'Target Framework:' }}</span> Laravel 13 (PHP 8.5+) &bull; PostgreSQL 16 Strict ULID &bull; Redis 7 &bull; Next.js App Router
+                    </div>
+                    <div class="flex items-center gap-2 text-[11px]">
+                        <button type="button" @click="showExecutionGuideModal = true" class="text-emerald-400 hover:text-emerald-300 underline font-bold cursor-pointer">
+                            🚀 {{ $isEn ? 'How to start & Docker guide (3 options)' : 'Panduan 3 Cara Mulai & Setup Docker' }} &rarr;
+                        </button>
+                        <span class="text-zinc-600">&bull;</span>
+                        <span class="text-zinc-400" x-text="scaffoldJobMessage || '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? 'Starter kit .ZIP siap diunduh' : 'Generasi efisien via background queue' }}'"></span>
+                    </div>
                 </div>
-                <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[11px] flex items-center gap-1.5 transition cursor-pointer w-fit">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    <span>{{ $isEn ? 'DOWNLOAD FULL ZIP (.ZIP)' : 'UNDUH ZIP LENGKAP (.ZIP)' }}</span>
-                </a>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <!-- Background Job Button -->
+                    <button 
+                        type="button" 
+                        @click="startBackgroundScaffoldGeneration()"
+                        :disabled="scaffoldJobStatus === 'processing' || scaffoldJobStatus === 'queued'"
+                        class="px-3 py-1.5 bg-zinc-950 hover:bg-zinc-800 disabled:opacity-50 text-emerald-400 font-bold uppercase text-[11px] border border-emerald-500/60 flex items-center gap-1.5 transition cursor-pointer"
+                        title="Proses generasi file dan kompilasi ZIP di background queue server"
+                    >
+                        <span class="w-2 h-2 rounded-none" :class="(scaffoldJobStatus === 'processing' || scaffoldJobStatus === 'queued') ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'"></span>
+                        <span x-text="(scaffoldJobStatus === 'processing' || scaffoldJobStatus === 'queued') ? (scaffoldJobProgress + '% MEMPROSES...') : '⚡ PROSES BACKGROUND JOB'"></span>
+                    </button>
+
+                    <!-- Instant Download Button -->
+                    <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[11px] flex items-center gap-1.5 transition cursor-pointer w-fit shadow-xs">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>{{ $isEn ? 'DOWNLOAD FULL ZIP (.ZIP)' : 'UNDUH ZIP LENGKAP (.ZIP)' }}</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Background Job Live Progress Strip (Visible when queued or processing) -->
+            <div x-show="scaffoldJobStatus === 'processing' || scaffoldJobStatus === 'queued'" x-cloak class="mb-3 p-2 bg-black border border-zinc-800 text-[11px] font-mono space-y-1.5 shrink-0">
+                <div class="flex items-center justify-between text-zinc-400">
+                    <span class="text-emerald-400 font-bold" x-text="scaffoldJobMessage || 'Memproses background job...'"></span>
+                    <span x-text="scaffoldJobProgress + '%'"></span>
+                </div>
+                <div class="w-full bg-zinc-900 h-1.5 overflow-hidden">
+                    <div class="bg-emerald-500 h-full transition-all duration-300" :style="'width: ' + scaffoldJobProgress + '%'"></div>
+                </div>
             </div>
 
             <!-- Tab Selector (All 10 Pillars of Software Factory OS) -->

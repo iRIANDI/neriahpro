@@ -86,6 +86,15 @@
                 3-PANE STUDIO v11.0
             </span>
 
+            <button
+                type="button"
+                wire:click="$set('centerTab', 'execution_guide')"
+                class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider rounded-none border border-emerald-400 cursor-pointer transition flex items-center gap-1.5 shadow-xs"
+                title="{{ $isEnLoc ? 'Open Developer Execution Guide (3 Options & Docker)' : 'Buka Panduan Eksekusi Developer (3 Cara Mulai & Setup Docker)' }}"
+            >
+                <span>🚀 {{ $isEnLoc ? '3 WAYS TO START' : '3 CARA MULAI' }}</span>
+            </button>
+
             <div class="flex items-center gap-1.5 font-mono text-xs">
                 <input
                     type="text"
@@ -711,6 +720,16 @@
                                     ? 'Inspect sprint milestones, deliverables, and role assignments.'
                                     : 'Tinjau capaian target per sprint dan alokasi tanggung jawab engineer.',
                             ],
+                            'execution_guide' => [
+                                'label' => $isEnLoc ? '13. 🚀 3 Ways to Start & Docker' : '13. 🚀 3 Cara Mulai & Docker',
+                                'title' => $isEnLoc ? '3 Ways to Start, Docker Stack & ECC Agent Harness (.agents/)' : '3 Pilihan Cara Mulai, Setup Docker & ECC Harness (.agents/)',
+                                'explain' => $isEnLoc
+                                    ? 'World-class developer roadmap: direct execution in Antigravity chat, standalone project with Docker, or step-by-step vertical slice with AI Cockpit.'
+                                    : 'Peta jalan eksekusi kelas dunia: eksekusi langsung di chat Antigravity, proyek standalone dengan Docker, atau eksekusi bertahap via AI Cockpit.',
+                                'action' => $isEnLoc
+                                    ? 'Copy starter prompts, run Docker compose, or inspect the 5-sprint roadmap.'
+                                    : 'Salin prompt perdana, jalankan Docker compose, atau tinjau peta jalan 5 sprint.',
+                            ],
                         ],
                     ],
                 ];
@@ -730,6 +749,7 @@
                     'codesign_room' => '10. 🤝 Co-Design & Sign-Off',
                     'agentshield_tasks' => '11. 🧱 AgentShield & 5-Sprint',
                     'seo_geo_v11' => $isEnLoc ? '12. 🌐 SEO/GEO, Data Privacy & Sandbox' : '12. 🌐 SEO/GEO, UU PDP & Sandbox',
+                    'execution_guide' => $isEnLoc ? '13. 🚀 3 Ways to Start & Docker' : '13. 🚀 3 Cara Mulai & Docker',
                 ];
 
                 // Detect active hub from $centerTab
@@ -2483,6 +2503,201 @@
                                         <span class="shrink-0 px-1.5 py-0.5 bg-zinc-950 text-emerald-300 font-black text-[9px]">{{ $pRow['status'] ?? '100% LOCKED' }}</span>
                                     </div>
                                 @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- TAB 13: 3 PILIHAN CARA MULAI & PANDUAN EKSEKUSI DEVELOPER // DOCKER & ECC HARNESS -->
+                @if($centerTab === 'execution_guide')
+                    <div class="space-y-3 font-mono text-[11px]">
+                        <!-- Header Banner -->
+                        <div class="p-3.5 bg-white dark:bg-zinc-900 border-2 border-emerald-600 dark:border-emerald-500 rounded-none space-y-2 shadow-xs">
+                            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 bg-emerald-500 rounded-none animate-pulse"></span>
+                                    <h3 class="font-black text-sm uppercase text-zinc-950 dark:text-zinc-100 tracking-wider">
+                                        🚀 {{ $isEnLoc ? 'DEVELOPER EXECUTION ROADMAP: 3 WAYS TO START & DOCKER DEV STACK' : 'PETA JALAN & PANDUAN EKSEKUSI DEVELOPER: 3 CARA MULAI & DOCKER DEV STACK' }}
+                                    </h3>
+                                </div>
+                                <span class="px-2 py-0.5 bg-emerald-500 text-black text-[10px] font-black uppercase">
+                                    100% EXECUTABLE
+                                </span>
+                            </div>
+                            <p class="font-sans text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                                {{ $isEnLoc
+                                    ? 'This blueprint is not just a specification document—it is a production-grade Software Factory OS execution contract. Choose one of the 3 approaches below according to your project setup:'
+                                    : 'Blueprint ini bukan sekadar dokumen bacaan, melainkan kontrak eksekusi Software Factory OS berstandar industri. Pilih salah satu dari 3 cara berikut untuk mengeksekusi proyek Anda:' }}
+                            </p>
+                        </div>
+
+                        <!-- 3 Choices Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                            <!-- Choice A -->
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border-2 border-emerald-500/80 rounded-none space-y-2 flex flex-col justify-between">
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[9px] uppercase">PILIHAN A</span>
+                                        <span class="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">Paling Cepat</span>
+                                    </div>
+                                    <div class="font-black text-xs text-zinc-950 dark:text-zinc-100 uppercase">
+                                        {{ $isEnLoc ? 'Direct Antigravity Chat Execution' : 'Eksekusi Langsung di Chat Antigravity' }}
+                                    </div>
+                                    <p class="font-sans text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                                        {{ $isEnLoc
+                                            ? 'Because you are currently inside Antigravity IDE and this agent has direct access to the workspace, you can command it immediately in chat.'
+                                            : 'Karena Anda sudah berada di dalam Antigravity IDE dan agen ini memiliki akses langsung ke codebase, Anda bisa langsung memerintahkan agen di chat ini.' }}
+                                    </p>
+                                </div>
+                                <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                                    <div class="text-[10px] font-bold text-zinc-500 uppercase">Perintah Mulai Sprint 1:</div>
+                                    <div class="p-2 bg-black border border-zinc-800 text-[10px] text-emerald-400 select-all leading-tight">
+                                        "Antigravity, tolong baca Blueprint '{{ $projectName }}'. Mulai eksekusi Sprint 1: Buat migration PostgreSQL Strict ULID dan Model Eloquent untuk modul utama sesuai spesifikasi Section 05."
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Choice B -->
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2 flex flex-col justify-between">
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="px-2 py-0.5 bg-blue-600 text-white font-black text-[9px] uppercase">PILIHAN B</span>
+                                        <span class="text-[9px] text-blue-500 font-bold">Standalone App</span>
+                                    </div>
+                                    <div class="font-black text-xs text-zinc-950 dark:text-zinc-100 uppercase">
+                                        {{ $isEnLoc ? 'Clean Standalone Repository' : 'Bikin Proyek Baru Bersih dari Nol' }}
+                                    </div>
+                                    <p class="font-sans text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                                        {{ $isEnLoc
+                                            ? 'Download the Starter Kit ZIP (.zip) with 22+ files, Docker compose, migrations, and .agents/ rules pre-wired.'
+                                            : 'Unduh paket Starter Kit ZIP (22+ berkas, Docker compose, migrasi, dan aturan .agents/ AGENTS.md terpasang otomatis).' }}
+                                    </p>
+                                </div>
+                                <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                                    <a href="/blueprint/{{ $slug ?: $blueprintId }}/export/scaffold" class="block w-full text-center py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[10px] transition">
+                                        UNDUH STARTER KIT .ZIP &darr;
+                                    </a>
+                                    <div class="text-[9px] text-zinc-500 text-center font-sans">Ekstrak &rarr; Buka di Antigravity IDE (File &gt; Open Folder)</div>
+                                </div>
+                            </div>
+
+                            <!-- Choice C -->
+                            <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2 flex flex-col justify-between">
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="px-2 py-0.5 bg-purple-600 text-white font-black text-[9px] uppercase">PILIHAN C</span>
+                                        <span class="text-[9px] text-purple-400 font-bold">Anti Context-Rot</span>
+                                    </div>
+                                    <div class="font-black text-xs text-zinc-950 dark:text-zinc-100 uppercase">
+                                        {{ $isEnLoc ? 'Phased AI Cockpit Execution' : 'Eksekusi Bertahap via AI Cockpit' }}
+                                    </div>
+                                    <p class="font-sans text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                                        {{ $isEnLoc
+                                            ? 'Feed prompts sprint-by-sprint using vertical slice orchestration to eliminate AI hallucination and truncation.'
+                                            : 'Salin prompt per tahapan sprint dari AI Cockpit untuk mencegah context-rot dan kode terpotong.' }}
+                                    </p>
+                                </div>
+                                <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                                    <button type="button" wire:click="$set('rightDockMode', 'phases')" class="w-full text-center py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-[10px] transition cursor-pointer">
+                                        BUKA DOCK PROMPT FASE 1–7 &rarr;
+                                    </button>
+                                    <div class="text-[9px] text-zinc-500 text-center font-sans">Tersedia untuk Antigravity, Cursor &amp; Claude</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Docker Quickstart & ECC Agent Harness Row -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-2.5">
+                            <!-- Docker Commands -->
+                            <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
+                                <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
+                                    <div class="font-black text-xs text-zinc-950 dark:text-zinc-100 uppercase flex items-center gap-1.5">
+                                        <span>🐳</span>
+                                        <span>DOCKER COMPOSE QUICKSTART</span>
+                                    </div>
+                                    <span class="text-[9px] text-sky-500 font-bold">PHP 8.5 + PG 16</span>
+                                </div>
+                                <pre class="p-2.5 bg-black border border-zinc-800 text-[10px] text-sky-300 overflow-x-auto select-all leading-tight whitespace-pre font-mono"># 1. Jalankan container
+docker compose up -d
+
+# 2. Pasang dependensi & migrasi database
+docker compose exec app composer install
+docker compose exec app php artisan migrate
+docker compose exec app php artisan db:seed --class=SyntheticDataSeeder
+
+# 3. Build frontend
+docker compose exec app npm install && docker compose exec app npm run build</pre>
+                            </div>
+
+                            <!-- ECC Harness .agents/ -->
+                            <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
+                                <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
+                                    <div class="font-black text-xs text-zinc-950 dark:text-zinc-100 uppercase flex items-center gap-1.5">
+                                        <span>🧠</span>
+                                        <span>ECC HARNESS (.agents/)</span>
+                                    </div>
+                                    <span class="text-[9px] text-emerald-500 font-bold">GUARDRAILS AKTIF</span>
+                                </div>
+                                <ul class="space-y-1 text-[10px] text-zinc-700 dark:text-zinc-300 font-sans">
+                                    <li>&bull; <strong class="font-mono">AGENTS.md:</strong> SOP arsitektur, Strict ULID, Keyset Cursor O(1), no native alert.</li>
+                                    <li>&bull; <strong class="font-mono">PONYTAIL.md:</strong> 4 anak tangga keputusan (Native &rarr; Reuse &rarr; Config &rarr; Minimal Diff).</li>
+                                    <li>&bull; <strong class="font-mono">GRAPH_REPORT.md:</strong> Knowledge graph 19 model &amp; controller tanpa scan berulang.</li>
+                                    <li>&bull; <strong class="font-mono">Skills Library:</strong> code-reviewer, security-reviewer, verification-loop, tdd-workflow.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- 5 Sprints Standard Roadmap -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
+                            <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
+                                <div class="font-black text-xs text-zinc-950 dark:text-zinc-100 uppercase">
+                                    📊 URUTAN 5 SPRINT STANDAR // BEST PRACTICE VERTICAL SLICE
+                                </div>
+                                <span class="text-[9px] text-zinc-500 font-mono">5 Tahap Eksekusi</span>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-[10px] border-collapse font-mono">
+                                    <thead class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-800 font-black">
+                                        <tr>
+                                            <th class="p-1.5 w-20 border-r border-zinc-200 dark:border-zinc-800">SPRINT</th>
+                                            <th class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">FOKUS PEKERJAAN</th>
+                                            <th class="p-1.5 w-44 border-r border-zinc-200 dark:border-zinc-800">VERIFIKASI KUALITAS</th>
+                                            <th class="p-1.5 w-28">GUARDRAIL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800 font-sans">
+                                        <tr>
+                                            <td class="p-1.5 font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-zinc-200 dark:border-zinc-800">Sprint 1</td>
+                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">Migration PostgreSQL Strict ULID <code>->ulid('id')->primary()</code> &amp; Model HasUlids.</td>
+                                            <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800"><code>php artisan migrate</code></td>
+                                            <td class="p-1.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">Strict ULID</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-1.5 font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-zinc-200 dark:border-zinc-800">Sprint 2</td>
+                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">Backend Service, FormRequest validasi ketat, endpoint REST API dengan Keyset Cursor O(1).</td>
+                                            <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800"><code>php artisan test</code></td>
+                                            <td class="p-1.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">Keyset O(1)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-1.5 font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-zinc-200 dark:border-zinc-800">Sprint 3</td>
+                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">Frontend UI Clean Solid Brutalist, subtle rounded corner, dark/light mode, toast central.</td>
+                                            <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800">Browser Interaction</td>
+                                            <td class="p-1.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">Anti-Slop</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-1.5 font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-zinc-200 dark:border-zinc-800">Sprint 4</td>
+                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">Security: Honeypot anti-bot, rate limiting, error RFC 9457 Problem Details, audit logging.</td>
+                                            <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800">Security Test</td>
+                                            <td class="p-1.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">UU PDP</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-1.5 font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-zinc-200 dark:border-zinc-800">Sprint 5</td>
+                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">Build &amp; Deploy: <code>npm run build</code>, health check probe <code>/api/health</code>, deploy script.</td>
+                                            <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800"><code>./deploy.sh 1|2</code></td>
+                                            <td class="p-1.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">Zero-Downtime</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>

@@ -1491,4 +1491,9 @@ class BlueprintArchitectStudio extends Component
         $this->centerTab = 'commercial_mitra';
         $this->showRescueMitraModal = true;
     }
+
+    public function openExecutionGuide(): void
+    {
+        $this->centerTab = 'execution_guide';
+    }
 }

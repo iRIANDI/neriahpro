@@ -114,6 +114,8 @@ Route::get('/blueprint/{slug}/download/cursorrules', [BlueprintExportController:
 Route::get('/blueprint/{slug}/download/schema-json', [BlueprintExportController::class, 'downloadSchemaJson'])->name('blueprint.download-schema-json')->middleware('throttle:30,1');
 Route::get('/blueprint/{slug}/raw-md', [BlueprintExportController::class, 'rawMd'])->name('blueprint.raw-md')->middleware('throttle:30,1');
 Route::get('/blueprint/{slug}/export/scaffold', [BlueprintScaffoldController::class, 'exportScaffold'])->name('blueprint.export-scaffold');
+Route::post('/blueprint/{slug}/scaffold/generate-async', [BlueprintScaffoldController::class, 'generateAsync'])->name('blueprint.scaffold.generate-async');
+Route::get('/blueprint/{slug}/scaffold/job-status', [BlueprintScaffoldController::class, 'getJobStatus'])->name('blueprint.scaffold.job-status');
 Route::get('/blueprint/{slug}/scaffold/preview', [BlueprintScaffoldController::class, 'previewScaffold'])->name('blueprint.scaffold.preview');
 Route::get('/blueprint/{slug}/scaffold-preview', [BlueprintScaffoldController::class, 'previewScaffold'])->name('blueprint.scaffold-preview');
 Route::post('/blueprint/{slug}/scaffold/save-file', [BlueprintScaffoldController::class, 'saveScaffoldFile'])->name('blueprint.scaffold.save-file');

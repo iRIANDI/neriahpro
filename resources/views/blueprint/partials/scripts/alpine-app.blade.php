@@ -569,6 +569,144 @@
                     }
                 },
                 scaffoldModalOpen: false,
+                showExecutionGuideModal: false,
+                executionGuideTab: 'choice-a',
+                scaffoldJobStatus: '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? 'completed' : 'idle' }}',
+                scaffoldJobProgress: {{ !empty($blueprint->user_metadata['scaffold_ready']) ? 100 : 0 }},
+                scaffoldJobMessage: '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? 'Arsip Starter Kit ZIP siap diunduh' : '' }}',
+                scaffoldJobPolling: false,
+
+                copyExecutionPrompt(text, title = 'PROMPT DISALIN') {
+                    if (!text) return;
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(() => {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: title,
+                                    message: 'Perintah berhasil disalin ke clipboard! Silakan tempelkan ke chat AI Agent.'
+                                });
+                            }
+                        }).catch(() => {
+                            this.fallbackCopyText(text, title);
+                        });
+                    } else {
+                        this.fallbackCopyText(text, title);
+                    }
+                },
+
+                fallbackCopyText(text, title) {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.left = '-9999px';
+                    document.body.appendChild(ta);
+                    ta.focus();
+                    ta.select();
+                    try {
+                        document.execCommand('copy');
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'success',
+                                title: title,
+                                message: 'Perintah berhasil disalin ke clipboard!'
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Fallback copy failed', e);
+                    }
+                    document.body.removeChild(ta);
+                },
+
+                async startBackgroundScaffoldGeneration() {
+                    if (this.scaffoldJobStatus === 'processing' || this.scaffoldJobStatus === 'queued') return;
+                    this.scaffoldJobStatus = 'queued';
+                    this.scaffoldJobProgress = 5;
+                    this.scaffoldJobMessage = 'Menjadwalkan job ke antrean server...';
+
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: 'BACKGROUND JOB DIJADWALKAN',
+                            message: 'Pembuatan 22+ file & Docker compose sedang diproses di antrean server.'
+                        });
+                    }
+
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const res = await fetch('{{ route('blueprint.scaffold.generate-async', $blueprint->slug) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token || ''
+                            }
+                        });
+                        const data = await res.json();
+                        if (data && data.success) {
+                            this.pollScaffoldJobStatus();
+                        } else {
+                            throw new Error(data.message || 'Gagal menjadwalkan job');
+                        }
+                    } catch (err) {
+                        this.scaffoldJobStatus = 'failed';
+                        this.scaffoldJobMessage = err.message || 'Gagal memulai background job.';
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: 'GAGAL MEMULAI JOB',
+                                message: err.message || 'Terjadi kesalahan sistem.'
+                            });
+                        }
+                    }
+                },
+
+                async pollScaffoldJobStatus() {
+                    if (this.scaffoldJobPolling) return;
+                    this.scaffoldJobPolling = true;
+
+                    const checkStatus = async () => {
+                        try {
+                            const res = await fetch('{{ route('blueprint.scaffold.job-status', $blueprint->slug) }}', {
+                                headers: { 'Accept': 'application/json' }
+                            });
+                            const data = await res.json();
+                            if (data && data.success) {
+                                this.scaffoldJobStatus = data.status || this.scaffoldJobStatus;
+                                this.scaffoldJobProgress = data.progress !== undefined ? data.progress : this.scaffoldJobProgress;
+                                this.scaffoldJobMessage = data.message || this.scaffoldJobMessage;
+
+                                if (data.status === 'completed') {
+                                    this.scaffoldJobPolling = false;
+                                    if (window.showToast) {
+                                        window.showToast({
+                                            type: 'success',
+                                            title: 'SCAFFOLD SELESAI DIGENERATE',
+                                            message: 'Arsip ZIP Starter Kit siap diunduh!'
+                                        });
+                                    }
+                                    return;
+                                }
+
+                                if (data.status === 'failed') {
+                                    this.scaffoldJobPolling = false;
+                                    return;
+                                }
+                            }
+                        } catch (err) {
+                            console.warn('Scaffold status check failed:', err);
+                        }
+
+                        // Poll again in 2.5 seconds if still running
+                        if (this.scaffoldJobStatus === 'processing' || this.scaffoldJobStatus === 'queued') {
+                            setTimeout(checkStatus, 2500);
+                        } else {
+                            this.scaffoldJobPolling = false;
+                        }
+                    };
+
+                    checkStatus();
+                },
                 crModalOpen: false,
                 prdData: @json($prd),
 

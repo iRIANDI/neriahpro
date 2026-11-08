@@ -378,6 +378,9 @@
                 
                 @include('blueprint.partials.hero-header')
 
+                <!-- SECTION 00: PETA JALAN & PANDUAN EKSEKUSI DEVELOPER // 3 CARA MULAI & DOCKER DEV STACK -->
+                @include('blueprint.partials.sections.00-developer-execution-guide')
+
                 <!-- SECTION 1: EXECUTIVE TECHNICAL DISCOVERY -->
                 @include('blueprint.partials.sections.01-executive-summary')
 
@@ -423,6 +426,7 @@
     @endif
 
     <!-- MODAL DIALOGS -->
+    @include('blueprint.partials.modals.execution-guide-modal')
     @include('blueprint.partials.modals.task-scope-editor-modal')
     @include('blueprint.partials.modals.payment-voucher-modal')
     @include('blueprint.partials.modals.ai-cockpit-modal')

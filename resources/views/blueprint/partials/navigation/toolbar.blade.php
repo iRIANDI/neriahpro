@@ -20,6 +20,11 @@
                     <span class="text-zinc-700 dark:text-zinc-300 font-bold" x-text="collaborators.length + ' Kolaborator Live'"></span>
                 </div>
 
+                <!-- Launch World-Class Developer Execution Guide (3 Cara Mulai & Docker Guide) -->
+                <button type="button" @click="showExecutionGuideModal = true" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none border border-emerald-400 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer shadow-xs" title="Panduan Eksekusi Developer: 3 Pilihan Cara Mulai (Antigravity Chat, Standalone App, AI Cockpit) + Docker Stack">
+                    <span>🚀 3 CARA MULAI</span>
+                </button>
+
                 <!-- Launch Full-Screen 100vh 3-Pane Architect Studio v5.0 (Dual-Mode Retail & Mitra) -->
                 <a href="{{ route('blueprint.studio', ['slug' => $blueprint->slug]) }}" class="px-2.5 sm:px-3 py-1 bg-zinc-950 hover:bg-zinc-800 text-emerald-400 dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:text-zinc-950 text-xs font-mono uppercase font-black rounded-none border border-emerald-500 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap" title="Buka Meja Kerja 3-Pane Architect Studio v5.0 (Dual-Mode Retail & Mitra, Decision Matrix, Delta v1.1 & Live MCP)">
                     <span>🖥️ 3-PANE STUDIO</span>

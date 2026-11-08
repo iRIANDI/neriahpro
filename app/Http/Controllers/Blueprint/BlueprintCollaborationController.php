@@ -170,7 +170,7 @@ class BlueprintCollaborationController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menganalisis task: ' . $e->getMessage(),
+                'message' => ($locale === 'en' ? 'Failed to analyze tasks: ' : 'Gagal menganalisis task: ') . $e->getMessage(),
             ], 500);
         }
     }

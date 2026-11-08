@@ -2489,8 +2489,9 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
 
         // 1. Attempt AI analysis if provider is not deterministic
         if ($aiProvider !== 'deterministic') {
-            $langInstruction = $isEn ? 'Respond strictly in English.' : 'Gunakan Bahasa Indonesia formal.';
-            $systemInstruction = <<<TXT
+            try {
+                $langInstruction = $isEn ? 'Respond strictly in English.' : 'Gunakan Bahasa Indonesia formal.';
+                $systemInstruction = <<<TXT
 You are an Enterprise Solutions Architect & Systems Analyst specializing in Laravel 13, Filament v5, and PostgreSQL 16 Strict ULID.
 Your job is to analyze the current tasks of {$businessName} for {$phaseLabel} against the Project Source Documents (Source Corpus).
 
@@ -2502,15 +2503,16 @@ CRITICAL ARCHITECTURE RULES:
 {$langInstruction}
 TXT;
 
-            $existingJson = json_encode($currentTasks, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-            $prompt = <<<TXT
+                $existingJson = json_encode($currentTasks, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                $taskCount = count($currentTasks);
+                $prompt = <<<TXT
 === DOKUMEN ACUAN SUMBER PROYEK (SOURCE CORPUS) ===
 {$corpusText}
 
 === SEKTOR / SISTEM: {$sector} ===
 === TARGET FASE: {$phaseLabel} ===
 
-=== DAFTAR TASK SAAT INI ({count($currentTasks)} TASK) ===
+=== DAFTAR TASK SAAT INI ({$taskCount} TASK) ===
 {$existingJson}
 
 TUGAS ANDA:
@@ -2534,7 +2536,6 @@ Format JSON Wajib:
 }
 TXT;
 
-            try {
                 $aiResult = MultiAiModelManager::executeWithFailover(
                     $prompt,
                     $systemInstruction,
@@ -2622,6 +2623,34 @@ TXT;
         $recommendations = [];
 
         if ($phase === 'mvp') {
+            // Check A1: Audio Streaming & WebRTC Live Translation (e.g. Church / Live Translation Platforms)
+            $isAudioDomain = preg_match('/(?:audio|language|channel|bahasa|penerjemah|interpreter|broadcast|webrtc|stream|translator|church|gereja)/i', $lowerCorpus);
+            if ($isAudioDomain) {
+                $hasAudioStream = preg_match('/(?:stream|webrtc|broadcast|audio streaming|pemutar suara)/i', $existingCorpus);
+                if (!$hasAudioStream) {
+                    $recommendations[] = [
+                        'title' => $isEn ? 'Sub-150ms WebRTC Real-Time Audio Streaming Engine' : 'Engine Streaming Audio Real-Time WebRTC Berlatensi Sub-150ms',
+                        'desc' => $isEn ? 'Ultra-low latency Opus audio streaming (48kHz/stereo, 32-96 kbps adaptive) with WebSocket fallback and jitter buffer smoothing.' : 'Pipeline streaming audio latensi ultra-rendah Opus (48kHz, adaptif 32-96 kbps) dengan fallback WebSocket dan jitter buffer dinamis.',
+                        'category' => 'AUDIO_STREAMING_CORE',
+                        'sprint_phase' => 'Sprint 1 (Fondasi & CRUD)',
+                        'urgency_reason' => $isEn ? 'Core delivery engine enabling attendees to listen to live sermons in real-time.' : 'Engine inti penyiaran audio agar jemaat dapat mendengarkan khotbah secara real-time.',
+                        'selected' => true,
+                    ];
+                }
+
+                $hasMicIngest = preg_match('/(?:ingest|mic|mikrofon|push-to-talk|siaran)/i', $existingCorpus);
+                if (!$hasMicIngest) {
+                    $recommendations[] = [
+                        'title' => $isEn ? 'Interpreter Push-To-Talk Microphone Ingest & Channel Lock' : 'Konsol Mikrofon Push-To-Talk Penerjemah & Kunci Siaran Kanal',
+                        'desc' => $isEn ? 'Dedicated translator web console with browser getUserMedia mic capture, push-to-talk gating, and exclusive channel broadcast lock.' : 'Konsol web khusus penerjemah dengan tangkapan mikrofon browser, tombol push-to-talk, dan penguncian kanal siaran eksklusif.',
+                        'category' => 'INTERPRETER_CONSOLE',
+                        'sprint_phase' => 'Sprint 2 (Business Logic & Workflow)',
+                        'urgency_reason' => $isEn ? 'Prevents multiple translators from talking over each other on the same language channel.' : 'Mencegah bentrok dua penerjemah berbicara bersamaan di satu kanal bahasa yang sama.',
+                        'selected' => true,
+                    ];
+                }
+            }
+
             // Check T1: Airport Transfer
             $hasAirportTransfer = preg_match('/(?:bandara|airport|transfer in|transfer out|ngurah rai|\bdps\b|flight)/i', $existingCorpus);
             $needsAirportTransfer = preg_match('/(?:bandara|airport|transfer|ngurah rai|\bdps\b)/i', $lowerCorpus);

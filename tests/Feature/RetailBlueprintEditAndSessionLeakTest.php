@@ -536,4 +536,59 @@ class RetailBlueprintEditAndSessionLeakTest extends TestCase
         $this->assertTrue($maturityId['is_maximal']);
         $this->assertEquals('100% MAKSIMAL // SCOPE TERKUNCI', $maturityId['label']);
     }
+
+    /**
+     * Test that AI Gap Analysis for Phase 1 & Phase 2 executes without "Array to string conversion" error.
+     */
+    public function test_task_gap_analysis_succeeds_without_array_to_string_conversion_error(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'yoseph@example.com',
+            'name' => 'Yoseph Iriandi',
+        ]);
+
+        $blueprint = VisionBlueprint::create([
+            'nama_bisnis' => 'Hang Tuah Church Live Audio Translation',
+            'client_name' => 'Yoseph Iriandi',
+            'email' => 'yoseph@example.com',
+            'phone' => '+6281380448253',
+            'masalah_utama' => 'Need church real-time multilingual translator application.',
+            'tujuan_utama' => 'Provide real-time translation for international congregation.',
+            'target_audiens' => 'Church congregation and foreign visitors',
+            'aktor_sistem' => 'Admin, Translator, Listener',
+            'fitur_wajib' => 'Language channels, live audio streaming, moderation chat',
+            'alur_kerja' => 'Translator speaks -> Audio streamed to listener channel',
+            'project_status' => 'Retail License',
+            'signed_agreement' => true,
+            'is_published' => true,
+            'user_metadata' => [
+                'retail_tier' => 'retail_pro',
+                'user_id' => $user->id,
+            ],
+        ]);
+
+        $payload = [
+            'phase' => 'mvp',
+            'current_tasks' => [
+                ['title' => 'Language Channel Management', 'desc' => 'Manage language channels'],
+                ['title' => 'Translator Account Management', 'desc' => 'Create new accounts, reset passwords'],
+                ['title' => 'Manage & Moderate Chat', 'desc' => 'Chat moderation controls'],
+            ],
+            'ai_provider' => 'auto',
+            'locale' => 'en',
+        ];
+
+        $response = $this->actingAs($user)->postJson(route('blueprint.tasks.analyze-gap', $blueprint->slug), $payload);
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'success',
+            'is_maximal',
+            'summary',
+            'recommendations',
+            'telemetry',
+        ]);
+        $this->assertTrue($response->json('success'));
+        $this->assertNotEmpty($response->json('summary'));
+    }
 }

@@ -84,6 +84,11 @@ import {
   CANONICAL_FIELD_MAP,
   FIELD_SECTION_MAP,
   FIELD_LABELS,
+  TRACKS,
+  TIERS,
+  getCanonicalTrackDefaults,
+  isStudioDefaultValue,
+  isRetailDefaultValue,
 } from './Blueprint/constants/blueprintConstants';
 
 import BlueprintSuccessView from './Blueprint/components/BlueprintSuccessView';
@@ -116,50 +121,9 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     }
   }, [initialData]);
 
-  // Track Default Presets Generator (Prevents Studio 50/50 contract terms from leaking into Retail licenses)
+  // Track Default Presets Generator (Derived from centralized PricingRegistry & blueprintConstants)
   const getTrackDefaults = useCallback((track, tier = '') => {
-    const isEn = lang === 'en';
-    const cleanTier = String(tier || requestedTier || '').toLowerCase();
-    if (track === 'retail') {
-      let defaultBudget = isEn
-        ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)'
-        : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)';
-      let defaultTermin = isEn
-        ? 'Spark Package (Free): $0 / Free Instant Architectural Audit & Blueprint Access'
-        : 'Paket Spark (Gratis): Rp 0 / Akses Audit Arsitektur & Cetak Biru Gratis 100%';
-
-      if (cleanTier === 'starter' || cleanTier === 'lite' || cleanTier === 'retail_starter' || cleanTier === 'retail_lite') {
-        defaultBudget = isEn ? 'Lite: Rp 99,000 (PRD 26 Parameters, Strict ULID DDL & AI Directives)' : 'Lite: Rp 99.000 (PRD 26 Parameter, Schema DDL & AI Directives)';
-        defaultTermin = isEn ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
-      } else if (cleanTier === 'pro' || cleanTier === 'retail_pro') {
-        defaultBudget = isEn ? 'Pro: Rp 399,000 (Full Architecture Bundle: DDL, 7-Phase Prompts, Docker & Seeder)' : 'Pro: Rp 399.000 (Bundel Lengkap DDL, 7-Fase Prompt AI, Docker & Seeder)';
-        defaultTermin = isEn ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
-      } else if (cleanTier === 'ultimate' || cleanTier === 'retail_ultimate') {
-        defaultBudget = isEn ? 'Ultimate: Rp 1,490,000 (Full 10 Pillars Software Factory OS + Live MCP Kit)' : 'Ultimate: Rp 1.490.000 (Full 10 Pilar Software Factory OS + Live MCP Kit)';
-        defaultTermin = isEn ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)' : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
-      }
-
-      return {
-        kisaranBudget: defaultBudget,
-        garansiSla: isEn
-          ? 'Self-Service Delivery: Instant PRD Fortune 500, Strict ULID DDL & Docker Starter Kit Handover'
-          : 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit',
-        terminPembayaran: defaultTermin,
-      };
-    }
-
-    // Studio Defaults
-    return {
-      kisaranBudget: isEn
-        ? '$1,000 - $3,000 USD (Growth / Custom Business Portal - Multi-Role & Gateway)'
-        : 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
-      garansiSla: isEn
-        ? '30 Days Post-Launch Bug Warranty Free of Charge + Full Private GitHub Repository Handover'
-        : '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
-      terminPembayaran: isEn
-        ? 'Standard 50/50: 50% Kickoff DP & 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap)'
-        : 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
-    };
+    return getCanonicalTrackDefaults(track, tier || requestedTier, lang);
   }, [lang, requestedTier]);
 
   // Execution Track: 'retail' (Jalur Mandiri) vs 'studio' (Jalur Turnkey Dedicated / Mitra Proyek)
@@ -225,23 +189,23 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       let nextTermin = prev.terminPembayaran;
 
       if (isRetailTarget) {
-        if (!nextBudget || nextBudget.includes('15.000.000') || nextBudget.includes('Growth') || nextBudget.includes('50.000.000') || nextBudget.includes('Advisory') || nextBudget.includes('Starter UMKM')) {
+        if (!nextBudget || isStudioDefaultValue('budget', nextBudget)) {
           nextBudget = trackDefs.kisaranBudget;
         }
-        if (!nextSla || nextSla.includes('Garansi Bug') || nextSla.includes('Pascameluncur')) {
+        if (!nextSla || isStudioDefaultValue('sla', nextSla)) {
           nextSla = trackDefs.garansiSla;
         }
-        if (!nextTermin || nextTermin.includes('50/50') || nextTermin.includes('Milestone') || nextTermin.includes('DP Kickoff')) {
+        if (!nextTermin || isStudioDefaultValue('termin', nextTermin)) {
           nextTermin = trackDefs.terminPembayaran;
         }
       } else {
-        if (!nextBudget || nextBudget.includes('Spark') || nextBudget.includes('Lite: Rp 99') || nextBudget.includes('Starter: Rp 190') || nextBudget.includes('Pro: Rp 399') || nextBudget.includes('Pro: Rp 490') || nextBudget.includes('Ultimate: Rp 1.490')) {
+        if (!nextBudget || isRetailDefaultValue('budget', nextBudget)) {
           nextBudget = trackDefs.kisaranBudget;
         }
-        if (!nextSla || nextSla.includes('Lisensi Mandiri') || nextSla.includes('Akses Seumur Hidup') || nextSla.includes('Dukungan Arsitektur')) {
+        if (!nextSla || isRetailDefaultValue('sla', nextSla)) {
           nextSla = trackDefs.garansiSla;
         }
-        if (!nextTermin || nextTermin.includes('Spark') || nextTermin.includes('Pembayaran Penuh 100%') || nextTermin.includes('Self-Service Delivery')) {
+        if (!nextTermin || isRetailDefaultValue('termin', nextTermin)) {
           nextTermin = trackDefs.terminPembayaran;
         }
       }
@@ -491,15 +455,15 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
     kepatuhanKeamanan: initialData.kepatuhanKeamanan || 'Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)',
 
     // BLOK F: Budget, Garansi SLA & PIC (6)
-    kisaranBudget: (currentTrack === 'retail' && (!initialData.kisaranBudget || initialData.kisaranBudget.includes('15.000.000') || initialData.kisaranBudget.includes('Growth') || initialData.kisaranBudget.includes('50.000.000')))
+    kisaranBudget: (currentTrack === 'retail' && (!initialData.kisaranBudget || isStudioDefaultValue('budget', initialData.kisaranBudget)))
       ? getTrackDefaults('retail', requestedTier).kisaranBudget
-      : (initialData.kisaranBudget || 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)'),
-    garansiSla: (currentTrack === 'retail' && (!initialData.garansiSla || initialData.garansiSla.includes('Garansi Bug') || initialData.garansiSla.includes('Pascameluncur')))
+      : (initialData.kisaranBudget || getTrackDefaults('studio', requestedTier).kisaranBudget),
+    garansiSla: (currentTrack === 'retail' && (!initialData.garansiSla || isStudioDefaultValue('sla', initialData.garansiSla)))
       ? getTrackDefaults('retail', requestedTier).garansiSla
-      : (initialData.garansiSla || '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub'),
-    terminPembayaran: (currentTrack === 'retail' && (!initialData.terminPembayaran || initialData.terminPembayaran.includes('50/50') || initialData.terminPembayaran.includes('Milestone') || initialData.terminPembayaran.includes('DP Kickoff')))
+      : (initialData.garansiSla || getTrackDefaults('studio', requestedTier).garansiSla),
+    terminPembayaran: (currentTrack === 'retail' && (!initialData.terminPembayaran || isStudioDefaultValue('termin', initialData.terminPembayaran)))
       ? getTrackDefaults('retail', requestedTier).terminPembayaran
-      : (initialData.terminPembayaran || 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)'),
+      : (initialData.terminPembayaran || getTrackDefaults('studio', requestedTier).terminPembayaran),
     clientName: initialData.clientName || '',
     email: initialData.email || '',
     phone: initialData.phone || '',
@@ -2144,13 +2108,13 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
       const isRetailTarget = currentTrack === 'retail' || isFirmlyRetail;
       const retailDefaults = getTrackDefaults('retail', requestedTier);
       const cleanBudget = isRetailTarget
-        ? ((!synData.kisaranBudget || synData.kisaranBudget.includes('15.000.000') || synData.kisaranBudget.includes('Growth') || synData.kisaranBudget.includes('Advisory') || synData.kisaranBudget.includes('UMKM')) ? (formData.kisaranBudget || retailDefaults.kisaranBudget) : synData.kisaranBudget)
+        ? ((!synData.kisaranBudget || isStudioDefaultValue('budget', synData.kisaranBudget)) ? (formData.kisaranBudget || retailDefaults.kisaranBudget) : synData.kisaranBudget)
         : synData.kisaranBudget;
       const cleanSla = isRetailTarget
-        ? ((!synData.garansiSla || synData.garansiSla.includes('Garansi Bug') || synData.garansiSla.includes('Pascameluncur')) ? (formData.garansiSla || retailDefaults.garansiSla) : synData.garansiSla)
+        ? ((!synData.garansiSla || isStudioDefaultValue('sla', synData.garansiSla)) ? (formData.garansiSla || retailDefaults.garansiSla) : synData.garansiSla)
         : synData.garansiSla;
       const cleanTermin = isRetailTarget
-        ? ((!synData.terminPembayaran || synData.terminPembayaran.includes('50/50') || synData.terminPembayaran.includes('Milestone') || synData.terminPembayaran.includes('DP Kickoff')) ? (formData.terminPembayaran || retailDefaults.terminPembayaran) : synData.terminPembayaran)
+        ? ((!synData.terminPembayaran || isStudioDefaultValue('termin', synData.terminPembayaran)) ? (formData.terminPembayaran || retailDefaults.terminPembayaran) : synData.terminPembayaran)
         : synData.terminPembayaran;
 
       const merged = {

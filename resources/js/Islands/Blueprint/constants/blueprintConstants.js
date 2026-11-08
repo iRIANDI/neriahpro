@@ -389,3 +389,180 @@ export const FIELD_LABELS = {
   email: { num: '25', id: '25. Email Resmi PIC', en: '25. PIC Official Email' },
   phone: { num: '26', id: '26. WhatsApp / Telepon PIC', en: '26. PIC WhatsApp / Phone' },
 };
+
+// Concrete Track & Tier Enums
+export const TRACKS = {
+  RETAIL: 'retail',
+  STUDIO: 'studio',
+};
+
+export const TIERS = {
+  SPARK: 'retail_spark',
+  LITE: 'retail_lite',
+  PRO: 'retail_pro',
+  ULTIMATE: 'retail_ultimate',
+  ADVISORY: 'blueprint_advisory',
+  UMKM: 'umkm_starter',
+  FULL_MVP: 'full_mvp',
+};
+
+export function normalizeTierKey(tier) {
+  const t = String(tier || '').toLowerCase().trim();
+  if (['starter', 'lite', 'retail_starter', 'retail_lite'].includes(t)) return 'lite';
+  if (['pro', 'retail_pro'].includes(t)) return 'pro';
+  if (['ultimate', 'retail_ultimate'].includes(t)) return 'ultimate';
+  if (['advisory', 'blueprint_advisory'].includes(t)) return 'advisory';
+  if (['umkm', 'starter_umkm', 'umkm_starter'].includes(t)) return 'umkm';
+  if (['mvp', 'full_mvp'].includes(t)) return 'full_mvp';
+  return 'spark';
+}
+
+export const TRACK_PRESETS = {
+  retail: {
+    spark: {
+      budget: {
+        id: 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)',
+        en: 'Spark: $0 / Free (Architectural Audit & Blueprint Access)',
+      },
+      termin: {
+        id: 'Paket Spark (Gratis): Rp 0 / Akses Audit Arsitektur & Cetak Biru Gratis 100%',
+        en: 'Spark Package (Free): $0 / Free Instant Architectural Audit & Blueprint Access',
+      },
+    },
+    lite: {
+      budget: {
+        id: 'Lite: Rp 99.000 (PRD 26 Parameter, Skema DDL & AI Directives)',
+        en: 'Lite: Rp 99,000 (PRD 26 Parameters, Strict ULID DDL & AI Directives)',
+      },
+      termin: {
+        id: 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)',
+        en: 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)',
+      },
+    },
+    pro: {
+      budget: {
+        id: 'Pro: Rp 399.000 (Bundel Lengkap DDL, 7-Fase Prompt AI, Docker & Seeder)',
+        en: 'Pro: Rp 399,000 (Full Architecture Bundle: DDL, 7-Phase Prompts, Docker & Seeder)',
+      },
+      termin: {
+        id: 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)',
+        en: 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)',
+      },
+    },
+    ultimate: {
+      budget: {
+        id: 'Ultimate: Rp 1.490.000 (Full 10 Pilar Software Factory OS + Live MCP Kit)',
+        en: 'Ultimate: Rp 1,490,000 (Full 10 Pillars Software Factory OS + Live MCP Kit)',
+      },
+      termin: {
+        id: 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)',
+        en: 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)',
+      },
+    },
+    sla: {
+      id: 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit',
+      en: 'Self-Service Delivery: Instant PRD Fortune 500, Strict ULID DDL & Docker Starter Kit Handover',
+    },
+  },
+  studio: {
+    growth: {
+      budget: {
+        id: 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
+        en: '$1,000 - $3,000 USD (Growth / Custom Business Portal - Multi-Role & Gateway)',
+      },
+      termin: {
+        id: 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+        en: 'Standard 50/50: 50% Kickoff DP & 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap)',
+      },
+    },
+    sla: {
+      id: '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
+      en: '30 Days Post-Launch Bug Warranty Free of Charge + Full Private GitHub Repository Handover',
+    },
+  },
+};
+
+export function getCanonicalTrackDefaults(track, tier = '', lang = 'id') {
+  const isEn = lang === 'en';
+  const cleanTrack = String(track || 'retail').toLowerCase();
+  const normalizedTier = normalizeTierKey(tier);
+
+  if (cleanTrack === 'retail') {
+    const tierConfig = TRACK_PRESETS.retail[normalizedTier] || TRACK_PRESETS.retail.spark;
+    return {
+      kisaranBudget: isEn ? tierConfig.budget.en : tierConfig.budget.id,
+      garansiSla: isEn ? TRACK_PRESETS.retail.sla.en : TRACK_PRESETS.retail.sla.id,
+      terminPembayaran: isEn ? tierConfig.termin.en : tierConfig.termin.id,
+    };
+  }
+
+  // Studio Defaults
+  const studioPreset = TRACK_PRESETS.studio;
+  return {
+    kisaranBudget: isEn ? studioPreset.growth.budget.en : studioPreset.growth.budget.id,
+    garansiSla: isEn ? studioPreset.sla.en : studioPreset.sla.id,
+    terminPembayaran: isEn ? studioPreset.growth.termin.en : studioPreset.growth.termin.id,
+  };
+}
+
+export function isStudioDefaultValue(type, value) {
+  if (!value || typeof value !== 'string') return false;
+  const v = value.trim();
+  switch (type) {
+    case 'budget':
+      return v.includes('15.000.000') ||
+        v.includes('35.000.000') ||
+        v.includes('50.000.000') ||
+        v.includes('2.500.000') ||
+        v.includes('Growth') ||
+        v.includes('Advisory') ||
+        v.includes('UMKM') ||
+        v.includes('Full MVP') ||
+        v.includes('$1,000');
+    case 'sla':
+      return v.includes('Garansi Bug') ||
+        v.includes('Pascameluncur') ||
+        v.includes('Private Repo') ||
+        v.includes('Bug Warranty');
+    case 'termin':
+      return v.includes('50/50') ||
+        v.includes('Milestone') ||
+        v.includes('DP Kickoff') ||
+        v.includes('Kickoff DP') ||
+        v.includes('Final Settlement');
+    default:
+      return false;
+  }
+}
+
+export function isRetailDefaultValue(type, value) {
+  if (!value || typeof value !== 'string') return false;
+  const v = value.trim();
+  switch (type) {
+    case 'budget':
+      return v.includes('Spark') ||
+        v.includes('Lite') ||
+        v.includes('Pro:') ||
+        v.includes('Ultimate:') ||
+        v.includes('Rp 99.000') ||
+        v.includes('Rp 99,000') ||
+        v.includes('Rp 399.000') ||
+        v.includes('Rp 399,000') ||
+        v.includes('Rp 1.490.000') ||
+        v.includes('Rp 1,490,000');
+    case 'sla':
+      return v.includes('Lisensi Mandiri') ||
+        v.includes('Self-Service Delivery') ||
+        v.includes('Akses Seumur Hidup') ||
+        v.includes('Dukungan Arsitektur');
+    case 'termin':
+      return v.includes('Pembayaran Penuh 100%') ||
+        v.includes('Instant 100% Full Payment') ||
+        v.includes('Paket Spark') ||
+        v.includes('Spark Package') ||
+        v.includes('Self-Service Delivery');
+    default:
+      return false;
+  }
+}
+

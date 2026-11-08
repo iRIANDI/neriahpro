@@ -28,14 +28,16 @@ class PrdFeatureSpecificationService
 
             // Check if line contains casual conversation or raw conversational bullet points
             $lower = mb_strtolower($line);
-            $hasConversationalMarker = str_contains($lower, 'berdasarkan') || 
-                                       str_contains($lower, 'poin no') || 
-                                       str_contains($lower, 'ada juga') || 
-                                       str_contains($lower, 'saya mau') || 
-                                       str_contains($lower, 'kami ingin') || 
-                                       str_contains($lower, 'tolong buatkan') ||
-                                       str_contains($lower, 'sediakan fitur') ||
-                                       str_contains($lower, 'alias wisata');
+            $markers = (array) config('discovery.conversational_markers', [
+                'berdasarkan', 'poin no', 'ada juga', 'saya mau', 'kami ingin', 'tolong buatkan', 'sediakan fitur',
+            ]);
+            $hasConversationalMarker = false;
+            foreach ($markers as $marker) {
+                if (str_contains($lower, $marker)) {
+                    $hasConversationalMarker = true;
+                    break;
+                }
+            }
 
             if ($hasConversationalMarker || (!str_contains($line, ':') && !str_contains($line, ' - '))) {
                 $crafted = BlueprintDiscoveryService::craftFeatureFromRawItem($line, $domain, $isEn);

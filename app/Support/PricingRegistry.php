@@ -457,4 +457,153 @@ class PricingRegistry
 
         return $resolved;
     }
+
+    /**
+     * Canonical track defaults for Blueprint form and auto-discovery.
+     * Prevents leakage of Studio 50/50 terms into Retail self-service licenses.
+     *
+     * @return array{kisaranBudget: string, garansiSla: string, terminPembayaran: string}
+     */
+    public static function getTrackDefaults(string $track, ?string $tier = null, bool $isEn = false): array
+    {
+        $cleanTrack = strtolower(trim($track));
+        $cleanTier = strtolower(trim((string) $tier));
+
+        if ($cleanTrack === 'retail') {
+            $satuPintu = self::getSatuPintuCatalog();
+
+            if (in_array($cleanTier, ['starter', 'lite', 'retail_starter', 'retail_lite'], true)) {
+                $liteLabel = $satuPintu[self::TIER_RETAIL_LITE]['formatted_price'] ?? 'Rp 99.000';
+                $budget = $isEn
+                    ? "Lite: {$liteLabel} (PRD 26 Parameters, Strict ULID DDL & AI Directives)"
+                    : "Lite: {$liteLabel} (PRD 26 Parameter, Schema DDL & AI Directives)";
+                $termin = $isEn
+                    ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)'
+                    : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
+            } elseif (in_array($cleanTier, ['pro', 'retail_pro'], true)) {
+                $proLabel = $satuPintu[self::TIER_RETAIL_PRO]['formatted_price'] ?? 'Rp 399.000';
+                $budget = $isEn
+                    ? "Pro: {$proLabel} (Full Architecture Bundle: DDL, 7-Phase Prompts, Docker & Seeder)"
+                    : "Pro: {$proLabel} (Bundel Lengkap DDL, 7-Fase Prompt AI, Docker & Seeder)";
+                $termin = $isEn
+                    ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)'
+                    : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
+            } elseif (in_array($cleanTier, ['ultimate', 'retail_ultimate'], true)) {
+                $ultLabel = $satuPintu[self::TIER_RETAIL_ULTIMATE]['formatted_price'] ?? 'Rp 1.490.000';
+                $budget = $isEn
+                    ? "Ultimate: {$ultLabel} (Full 10 Pillars Software Factory OS + Live MCP Kit)"
+                    : "Ultimate: {$ultLabel} (Full 10 Pilar Software Factory OS + Live MCP Kit)";
+                $termin = $isEn
+                    ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)'
+                    : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
+            } else {
+                $budget = $isEn
+                    ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)'
+                    : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)';
+                $termin = $isEn
+                    ? 'Spark Package (Free): $0 / Free Instant Architectural Audit & Blueprint Access'
+                    : 'Paket Spark (Gratis): Rp 0 / Akses Audit Arsitektur & Cetak Biru Gratis 100%';
+            }
+
+            return [
+                'kisaranBudget' => $budget,
+                'garansiSla' => $isEn
+                    ? 'Self-Service Delivery: Instant PRD Fortune 500, Strict ULID DDL & Docker Starter Kit Handover'
+                    : 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit',
+                'terminPembayaran' => $termin,
+            ];
+        }
+
+        // Studio Defaults
+        return [
+            'kisaranBudget' => $isEn
+                ? '$1,000 - $3,000 USD (Growth / Custom Business Portal - Multi-Role & Gateway)'
+                : 'Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)',
+            'garansiSla' => $isEn
+                ? '30 Days Post-Launch Bug Warranty Free of Charge + Full Private GitHub Repository Handover'
+                : '30 Hari Garansi Bug Pascameluncur Bebas Biaya + Penyerahan Akses Penuh Private Repo GitHub',
+            'terminPembayaran' => $isEn
+                ? 'Standard 50/50: 50% Kickoff DP & 50% Final Settlement Post-UAT Acceptance & Key Handover (via Midtrans Snap)'
+                : 'Termin Standar 50/50: 50% DP Kickoff & 50% Pelunasan setelah lolos UAT & Serah Terima Kunci (via Midtrans Snap)',
+        ];
+    }
+
+    /**
+     * Determine if a value matches known Studio engineering presets.
+     */
+    public static function isStudioPreset(string $field, ?string $value): bool
+    {
+        if (empty($value)) {
+            return false;
+        }
+
+        $val = trim($value);
+
+        switch ($field) {
+            case 'budget':
+                return str_contains($val, '15.000.000')
+                    || str_contains($val, '35.000.000')
+                    || str_contains($val, '50.000.000')
+                    || str_contains($val, '2.500.000')
+                    || str_contains($val, 'Growth')
+                    || str_contains($val, 'Advisory')
+                    || str_contains($val, 'UMKM')
+                    || str_contains($val, 'Full MVP')
+                    || str_contains($val, '$1,000');
+
+            case 'sla':
+                return str_contains($val, 'Garansi Bug')
+                    || str_contains($val, 'Pascameluncur')
+                    || str_contains($val, 'Private Repo')
+                    || str_contains($val, 'Bug Warranty');
+
+            case 'termin':
+                return str_contains($val, '50/50')
+                    || str_contains($val, 'Milestone')
+                    || str_contains($val, 'DP Kickoff')
+                    || str_contains($val, 'Kickoff DP')
+                    || str_contains($val, 'Final Settlement');
+
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Determine if a value matches known Retail self-service presets.
+     */
+    public static function isRetailPreset(string $field, ?string $value): bool
+    {
+        if (empty($value)) {
+            return false;
+        }
+
+        $val = trim($value);
+
+        switch ($field) {
+            case 'budget':
+                return str_contains($val, 'Spark')
+                    || str_contains($val, 'Lite')
+                    || str_contains($val, 'Pro:')
+                    || str_contains($val, 'Ultimate:')
+                    || str_contains($val, 'Rp 99.000')
+                    || str_contains($val, 'Rp 399.000')
+                    || str_contains($val, 'Rp 1.490.000');
+
+            case 'sla':
+                return str_contains($val, 'Lisensi Mandiri')
+                    || str_contains($val, 'Self-Service Delivery')
+                    || str_contains($val, 'Akses Seumur Hidup')
+                    || str_contains($val, 'Dukungan Arsitektur');
+
+            case 'termin':
+                return str_contains($val, 'Pembayaran Penuh 100%')
+                    || str_contains($val, 'Instant 100% Full Payment')
+                    || str_contains($val, 'Paket Spark')
+                    || str_contains($val, 'Spark Package');
+
+            default:
+                return false;
+        }
+    }
 }

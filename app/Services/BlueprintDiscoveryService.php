@@ -697,7 +697,8 @@ class BlueprintDiscoveryService
             : "Domestik Indonesia (IDR, Zona WIB/WITA/WIT)";
         $kepatuhanKeamanan = "Standar Web Application & OWASP Top 10 (CSRF, XSS, HTTPS)";
 
-        $kisaranBudget = "Rp 15.000.000 - Rp 35.000.000 (Growth / Custom Business Portal - Multi-Role & Gateway)";
+        $studioDefaults = \App\Support\PricingRegistry::getTrackDefaults('studio', null, $isEn);
+        $kisaranBudget = $studioDefaults['kisaranBudget'];
         if (!empty($brief['kisaranBudget'])) {
             $kisaranBudget = $brief['kisaranBudget'];
         } elseif (preg_match('/(?:budget|anggaran|biaya|dana)\s*[^.\n\r]*?(\d+)\s*(?:-|sampai|hingga)\s*(\d+)\s*(?:jt|juta|jutaan)/i', $corpus, $jtm)) {
@@ -924,59 +925,18 @@ class BlueprintDiscoveryService
 
         // Align fields 21, 22, 23 if retail track is recommended or explicitly requested to prevent leaking Studio 50/50 terms into self-service licenses
         if (($trackRecommendation['recommended_track'] ?? '') === 'retail' || $explicitTrack === 'retail') {
-            $isStudioBudget = !empty($baseData['kisaranBudget']) && (
-                str_contains((string) $baseData['kisaranBudget'], '15.000.000') ||
-                str_contains((string) $baseData['kisaranBudget'], 'Growth') ||
-                str_contains((string) $baseData['kisaranBudget'], '50.000.000') ||
-                str_contains((string) $baseData['kisaranBudget'], 'Advisory') ||
-                str_contains((string) $baseData['kisaranBudget'], 'UMKM')
-            );
+            $retailDefaults = \App\Support\PricingRegistry::getTrackDefaults('retail', $explicitTier, $isEn);
 
-            if (empty($baseData['kisaranBudget']) || $isStudioBudget) {
-                $tierLower = strtolower((string) ($explicitTier ?: 'pro'));
-                $satuPintu = \App\Support\PricingRegistry::getSatuPintuCatalog();
-                if ($tierLower === 'starter' || $tierLower === 'lite' || $tierLower === 'retail_starter' || $tierLower === 'retail_lite') {
-                    $liteLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_LITE]['formatted_price'] ?? 'Rp 99.000';
-                    $baseData['kisaranBudget'] = $isEn
-                        ? "Lite: {$liteLabel} (PRD 26 Parameters, Strict ULID DDL & AI Directives)"
-                        : "Lite: {$liteLabel} (PRD 26 Parameter, Schema DDL & AI Directives)";
-                } elseif ($tierLower === 'pro' || $tierLower === 'retail_pro') {
-                    $proLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_PRO]['formatted_price'] ?? 'Rp 399.000';
-                    $baseData['kisaranBudget'] = $isEn
-                        ? "Pro: {$proLabel} (Full Architecture Bundle: DDL, 7-Phase Prompts, Docker & Seeder)"
-                        : "Pro: {$proLabel} (Bundel Lengkap DDL, 7-Fase Prompt AI, Docker & Seeder)";
-                } elseif ($tierLower === 'ultimate' || $tierLower === 'retail_ultimate') {
-                    $ultLabel = $satuPintu[\App\Support\PricingRegistry::TIER_RETAIL_ULTIMATE]['formatted_price'] ?? 'Rp 1.490.000';
-                    $baseData['kisaranBudget'] = $isEn
-                        ? "Ultimate: {$ultLabel} (Full 10 Pillars Software Factory OS + Live MCP Kit)"
-                        : "Ultimate: {$ultLabel} (Full 10 Pilar Software Factory OS + Live MCP Kit)";
-                } else {
-                    $baseData['kisaranBudget'] = $isEn
-                        ? 'Spark: $0 / Free (Architectural Audit & Blueprint Access)'
-                        : 'Spark: Rp 0 (Akses Audit Arsitektur & Cetak Biru Gratis)';
-                }
+            if (empty($baseData['kisaranBudget']) || \App\Support\PricingRegistry::isStudioPreset('budget', (string) $baseData['kisaranBudget'])) {
+                $baseData['kisaranBudget'] = $retailDefaults['kisaranBudget'];
             }
 
-            $isStudioSla = !empty($baseData['garansiSla']) && (
-                str_contains((string) $baseData['garansiSla'], 'Garansi Bug') ||
-                str_contains((string) $baseData['garansiSla'], 'Pascameluncur') ||
-                str_contains((string) $baseData['garansiSla'], 'Private Repo')
-            );
-            if (empty($baseData['garansiSla']) || $isStudioSla) {
-                $baseData['garansiSla'] = $isEn
-                    ? 'Self-Service Delivery: Instant PRD Fortune 500, Strict ULID DDL & Docker Starter Kit Handover'
-                    : 'Lisensi Mandiri: Penyerahan Langsung Dokumen PRD Fortune 500, Skema DDL Strict ULID & Docker Starter Kit';
+            if (empty($baseData['garansiSla']) || \App\Support\PricingRegistry::isStudioPreset('sla', (string) $baseData['garansiSla'])) {
+                $baseData['garansiSla'] = $retailDefaults['garansiSla'];
             }
 
-            $isStudioTermin = !empty($baseData['terminPembayaran']) && (
-                str_contains((string) $baseData['terminPembayaran'], '50/50') ||
-                str_contains((string) $baseData['terminPembayaran'], 'Milestone') ||
-                str_contains((string) $baseData['terminPembayaran'], 'DP Kickoff')
-            );
-            if (empty($baseData['terminPembayaran']) || $isStudioTermin) {
-                $baseData['terminPembayaran'] = $isEn
-                    ? 'Instant 100% Full Payment: Midtrans Snap QRIS / Virtual Account (Immediate Download)'
-                    : 'Pembayaran Penuh 100% Instan: QRIS / Virtual Account Midtrans Snap (Langsung Unduh Berkas)';
+            if (empty($baseData['terminPembayaran']) || \App\Support\PricingRegistry::isStudioPreset('termin', (string) $baseData['terminPembayaran'])) {
+                $baseData['terminPembayaran'] = $retailDefaults['terminPembayaran'];
             }
         }
 

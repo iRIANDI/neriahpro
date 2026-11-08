@@ -382,8 +382,16 @@ class ScaffoldGeneratorService
     /**
      * Derive a concise, meaningful short slug for container names, databases, and Docker projects.
      */
-    public static function deriveShortSlug(string $slug): string
+    public static function deriveShortSlug(string $slug, ?VisionBlueprint $blueprint = null): string
     {
+        // 0. Use explicit custom short slug if defined in user_metadata
+        if ($blueprint && !empty($blueprint->user_metadata['short_slug'])) {
+            $custom = preg_replace('/[^a-z0-9_-]/', '', strtolower((string)$blueprint->user_metadata['short_slug']));
+            if (!empty($custom)) {
+                return $custom;
+            }
+        }
+
         // 1. Strip random hash suffixes like '-wxe8k', '-8x9k', or numeric suffixes
         $clean = preg_replace('/-[a-z0-9]{4,8}$/i', '', strtolower($slug));
 

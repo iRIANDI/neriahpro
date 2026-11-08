@@ -1,6 +1,7 @@
 @php
     $bizTitle = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Aplikasi Proyek');
     $slugVal = $blueprint->slug ?: 'app';
+    $shortSlugVal = \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? 'app');
     $firstModule = 'Modul Utama';
     $firstTables = 'Tabel Database';
     if (!empty($prd['features']['mvp_phase1'][0]['title'])) {
@@ -211,8 +212,8 @@
                             <span x-show="locale !== 'en'">Langkah 2: Buka di Antigravity IDE</span>
                         </div>
                         <p class="text-zinc-400 text-xs font-sans">
-                            <span x-show="locale === 'en'">Extract the ZIP file into your new workspace directory (e.g. <code>c:\projects\{{ $slugVal }}</code>). In Antigravity IDE, select <strong>File &rarr; Open Folder</strong> and pick that folder.</span>
-                            <span x-show="locale !== 'en'">Ekstrak file ZIP ke direktori kerja baru Anda (misal <code>c:\projects\{{ $slugVal }}</code>). Di Antigravity IDE, pilih <strong>File &rarr; Open Folder</strong> lalu pilih folder tersebut.</span>
+                            <span x-show="locale === 'en'">Extract the ZIP file into your new workspace directory (e.g. <code class="text-sky-300" x-text="`c:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">c:\projects\{{ $shortSlugVal }}</code>). In Antigravity IDE, select <strong>File &rarr; Open Folder</strong> and pick that folder.</span>
+                            <span x-show="locale !== 'en'">Ekstrak file ZIP ke direktori kerja baru Anda (misal <code class="text-sky-300" x-text="`c:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">c:\projects\{{ $shortSlugVal }}</code>). Di Antigravity IDE, pilih <strong>File &rarr; Open Folder</strong> lalu pilih folder tersebut.</span>
                         </p>
                     </div>
                 </div>
@@ -329,6 +330,42 @@
                     </button>
                 </div>
 
+                <!-- Interactive Workspace Folder Customizer Bar -->
+                <div class="p-3 bg-zinc-900 border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="space-y-0.5">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 bg-emerald-400 rounded-none inline-block"></span>
+                            <span class="text-xs font-mono font-bold uppercase text-zinc-100">
+                                <span x-show="locale === 'en'">Local Workspace Directory / Folder:</span>
+                                <span x-show="locale !== 'en'">Nama Folder / Direktori Kerja Lokal:</span>
+                            </span>
+                            <span class="text-[9px] font-mono px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">CUSTOMIZABLE</span>
+                        </div>
+                        <p class="text-[11px] text-zinc-400 font-sans">
+                            <span x-show="locale === 'en'">Customize this folder name to match your local extracted directory (e.g. <code>htctranslator</code>). All terminal commands below will auto-update!</span>
+                            <span x-show="locale !== 'en'">Ubah nama folder ini sesuai folder hasil ekstrak di komputer Anda (misal <code>htctranslator</code>). Seluruh perintah terminal di bawah akan otomatis menyesuaikan!</span>
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="font-mono text-xs text-zinc-400 bg-zinc-950 px-2 py-1 border border-zinc-800">C:\projects\</span>
+                        <input 
+                            type="text" 
+                            :value="workspaceDir"
+                            @input="setWorkspaceDir($event.target.value)"
+                            placeholder="{{ $shortSlugVal }}" 
+                            class="px-2.5 py-1 bg-black border border-emerald-500 text-emerald-400 font-mono text-xs focus:ring-1 focus:ring-emerald-400 focus:outline-none w-40 sm:w-44 rounded-none font-bold"
+                        />
+                        <button 
+                            type="button" 
+                            @click="setWorkspaceDir('{{ $shortSlugVal }}')"
+                            title="Reset ke default pendek"
+                            class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-[10px] font-mono rounded-none cursor-pointer"
+                        >
+                            RESET
+                        </button>
+                    </div>
+                </div>
+
                 <!-- SUB-TAB A: WINDOWS (DOCKER DESKTOP + WSL 2) -->
                 <div x-show="dockerOsTab === 'windows'" class="space-y-4 font-mono text-xs">
                     <div class="p-3 bg-zinc-900 border border-zinc-800 text-zinc-300">
@@ -384,10 +421,11 @@ wsl --update</pre>
                             <span class="text-[10px] text-emerald-400 font-mono font-bold">STARTER KIT .ZIP</span>
                         </div>
                         <p class="text-zinc-300 font-sans text-xs leading-relaxed">
-                            Unduh arsip scaffold melalui tombol <strong>DOWNLOAD FULL ZIP (.ZIP)</strong>. Ekstrak isi ZIP tersebut ke folder kerja di Windows (disarankan path tanpa spasi, misal: <code class="text-amber-400">C:\projects\{{ $slugVal }}</code> atau <code class="text-amber-400">C:\xampp\htdocs\{{ $slugVal }}</code>).
+                            Unduh arsip scaffold melalui tombol <strong>DOWNLOAD FULL ZIP (.ZIP)</strong>. Ekstrak isi ZIP tersebut ke folder kerja di Windows (disarankan path tanpa spasi, misal: <code class="text-amber-400" x-text="`C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">C:\projects\{{ $shortSlugVal }}</code> atau <code class="text-amber-400" x-text="`C:\\xampp\\htdocs\\${workspaceDir || '{{ $shortSlugVal }}'}`">C:\xampp\htdocs\{{ $shortSlugVal }}</code>).
                         </p>
                         <div class="p-2 bg-zinc-950 border border-zinc-800 text-[11px] text-zinc-400 font-mono space-y-1">
                             <div class="text-zinc-200 font-bold">&bull; Berkas Kunci yang Siap Digunakan di Dalam Folder:</div>
+                            <div class="pl-2">&rarr; <code>Dockerfile</code> (PHP 8.5 FPM Alpine — tanpa ekstensi)</div>
                             <div class="pl-2">&rarr; <code>docker-compose.yml</code> (PHP 8.5+, PostgreSQL 16 Strict, Redis 7, Nginx)</div>
                             <div class="pl-2">&rarr; <code>.env.blueprint</code> (Konfigurasi environment siap pakai)</div>
                             <div class="pl-2">&rarr; <code>.agents/AGENTS.md</code> &amp; <code>.cursorrules</code> (SOP &amp; Guardrails ECC)</div>
@@ -407,13 +445,13 @@ wsl --update</pre>
                             <span class="text-[10px] text-zinc-500 font-mono">TERMINAL WINDOWS</span>
                         </div>
                         <p class="text-zinc-300 font-sans text-xs leading-relaxed">
-                            Buka File Explorer Windows di folder hasil ekstrak. Tahan tombol <kbd class="px-1 bg-zinc-800 text-zinc-300">Shift</kbd> lalu <strong>Klik Kanan</strong> di area kosong &rarr; pilih <strong>"Open in Terminal"</strong> (atau buka PowerShell biasa lalu <code class="text-sky-300">cd C:\projects\{{ $slugVal }}</code>). Salin environment template:
+                            Buka File Explorer Windows di folder hasil ekstrak. Tahan tombol <kbd class="px-1 bg-zinc-800 text-zinc-300">Shift</kbd> lalu <strong>Klik Kanan</strong> di area kosong &rarr; pilih <strong>"Open in Terminal"</strong> (atau buka PowerShell biasa lalu <code class="text-sky-300" x-text="`cd C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">cd C:\projects\{{ $shortSlugVal }}</code>). Salin environment template:
                         </p>
                         <div class="relative">
                             <pre class="p-2.5 bg-zinc-950 border border-zinc-800 text-sky-300 select-all overflow-x-auto text-[11px] leading-relaxed">Copy-Item .env.blueprint .env</pre>
                             <button 
                                 type="button" 
-                                @click="copyExecutionPrompt(`Copy-Item .env.blueprint .env`, locale === 'en' ? 'ENV COMMAND COPIED' : 'PERINTAH ENV DISALIN')"
+                                @click="copyExecutionPrompt(`cd C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}\nCopy-Item .env.blueprint .env`, locale === 'en' ? 'ENV COMMAND COPIED' : 'PERINTAH ENV DISALIN')"
                                 class="absolute right-2 top-2 px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[10px] rounded-none cursor-pointer"
                             >
                                 <span x-show="locale === 'en'">COPY</span>
@@ -432,7 +470,7 @@ wsl --update</pre>
                             </span>
                             <button 
                                 type="button" 
-                                @click="copyExecutionPrompt(`docker compose up -d\ndocker compose exec app composer install\ndocker compose exec app php artisan key:generate\ndocker compose exec app php artisan migrate\ndocker compose exec app php artisan db:seed --class=SyntheticDataSeeder\ndocker compose exec app npm install\ndocker compose exec app npm run build\ncurl http://localhost:8000/api/health`, locale === 'en' ? 'POWERSHELL DOCKER SCRIPT COPIED' : 'SKRIP DOCKER POWERSHELL DISALIN')"
+                                @click="copyExecutionPrompt(`cd C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}\ndocker compose up --build -d\ndocker compose exec app composer install\ndocker compose exec app php artisan key:generate\ndocker compose exec app php artisan migrate\ndocker compose exec app php artisan db:seed --class=SyntheticDataSeeder\ndocker compose exec app npm install\ndocker compose exec app npm run build\ncurl http://localhost:8000/api/health`, locale === 'en' ? 'POWERSHELL DOCKER SCRIPT COPIED' : 'SKRIP DOCKER POWERSHELL DISALIN')"
                                 class="px-2.5 py-1 bg-sky-500 hover:bg-sky-400 text-black font-black uppercase text-[10px] rounded-none cursor-pointer"
                             >
                                 <span x-show="locale === 'en'">COPY ALL POWERSHELL COMMANDS</span>
@@ -442,8 +480,11 @@ wsl --update</pre>
                         <p class="text-zinc-300 font-sans text-xs leading-relaxed">
                             Jalankan perintah-perintah berikut di PowerShell untuk menyalakan container, menginstall dependencies, menjalankan migrasi database PostgreSQL Strict ULID, dan mengisi data sintetis:
                         </p>
-                        <pre class="p-3.5 bg-zinc-950 border border-zinc-800 text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre text-xs"># 1. Nyalakan seluruh container service di latar belakang
-docker compose up -d
+                        <pre class="p-3.5 bg-zinc-950 border border-zinc-800 text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre text-xs"># 0. Pindah ke direktori kerja lokal
+<span x-text="`cd C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">cd C:\projects\{{ $shortSlugVal }}</span>
+
+# 1. Nyalakan seluruh container service di latar belakang (build lokal PHP 8.5)
+docker compose up --build -d
 
 # 2. Install dependency backend PHP 8.5+ via Composer
 docker compose exec app composer install
@@ -466,7 +507,7 @@ curl http://localhost:8000/api/health</pre>
 
                         <div class="p-2.5 bg-zinc-900 border border-zinc-800 text-zinc-300 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                             <div>&bull; <strong>Aplikasi Web:</strong> <a href="http://localhost:8000" target="_blank" class="text-sky-400 underline">http://localhost:8000</a></div>
-                            <div>&bull; <strong>PostgreSQL 16:</strong> <code>localhost:5432</code> (DB: <code>{{ $slugVal }}</code>)</div>
+                            <div>&bull; <strong>PostgreSQL 16:</strong> <code>localhost:5432</code> (DB: <code x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_db`">{{ $shortSlugVal }}_db</code>)</div>
                             <div>&bull; <strong>Redis Cache:</strong> <code>localhost:6379</code></div>
                             <div>&bull; <strong>Living API Docs:</strong> <a href="http://localhost:8000/api/docs" target="_blank" class="text-emerald-400 underline">http://localhost:8000/api/docs</a></div>
                         </div>
@@ -517,7 +558,7 @@ curl http://localhost:8000/api/health</pre>
                             </span>
                             <button 
                                 type="button" 
-                                @click="copyExecutionPrompt(`cp .env.blueprint .env\ndocker compose up -d\ndocker compose exec app composer install\ndocker compose exec app php artisan key:generate\ndocker compose exec app php artisan migrate\ndocker compose exec app php artisan db:seed --class=SyntheticDataSeeder\ndocker compose exec app npm install && docker compose exec app npm run build\ncurl http://localhost:8000/api/health`, locale === 'en' ? 'BASH COMMANDS COPIED' : 'PERINTAH BASH DISALIN')"
+                                @click="copyExecutionPrompt(`cp .env.blueprint .env\ndocker compose up --build -d\ndocker compose exec app composer install\ndocker compose exec app php artisan key:generate\ndocker compose exec app php artisan migrate\ndocker compose exec app php artisan db:seed --class=SyntheticDataSeeder\ndocker compose exec app npm install && docker compose exec app npm run build\ncurl http://localhost:8000/api/health`, locale === 'en' ? 'BASH COMMANDS COPIED' : 'PERINTAH BASH DISALIN')"
                                 class="px-2.5 py-1 bg-sky-500 hover:bg-sky-400 text-black font-black uppercase text-[10px] rounded-none cursor-pointer"
                             >
                                 <span x-show="locale === 'en'">COPY BASH COMMANDS</span>
@@ -527,8 +568,8 @@ curl http://localhost:8000/api/health</pre>
                         <pre class="p-3.5 bg-black border border-zinc-800 text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre text-xs"># 1. Setup environment file
 cp .env.blueprint .env
 
-# 2. Start container services in background
-docker compose up -d
+# 2. Start container services in background (build local PHP 8.5)
+docker compose up --build -d
 
 # 3. Enter container and install backend dependencies
 docker compose exec app composer install
@@ -553,7 +594,7 @@ curl http://localhost:8000/api/health</pre>
                             <span x-show="locale !== 'en'">Port Konfigurasi Docker:</span>
                         </div>
                         <div>&bull; Nginx Web Server: <code>http://localhost:8000</code></div>
-                        <div>&bull; PostgreSQL 16: <code>localhost:5432</code> (User: <code>neriah</code>, DB: <code>{{ $slugVal }}</code>)</div>
+                        <div>&bull; PostgreSQL 16: <code>localhost:5432</code> (User: <code>neriah</code>, DB: <code x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_db`">{{ $shortSlugVal }}_db</code>)</div>
                         <div>&bull; Redis 7: <code>localhost:6379</code></div>
                         <div>&bull; Living API Docs: <code>http://localhost:8000/api/docs</code></div>
                     </div>

@@ -1,6 +1,7 @@
 @php
     $bizTitle = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Aplikasi Proyek');
     $slugVal = $blueprint->slug ?: 'app';
+    $shortSlugVal = \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? 'app');
     $firstModule = 'Modul Utama';
     $firstTables = 'Tabel Database';
     if (!empty($prd['features']['mvp_phase1'][0]['title'])) {
@@ -272,8 +273,8 @@
                             <span x-show="locale !== 'en'">Buka di Antigravity IDE</span>
                         </div>
                         <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans">
-                            <span x-show="locale === 'en'">Extract the ZIP into a new workspace (e.g. <code>c:\projects\{{ $slugVal }}</code>). In Antigravity IDE, click <strong>File &rarr; Open Folder</strong>.</span>
-                            <span x-show="locale !== 'en'">Ekstrak ZIP ke folder kerja baru (misal <code>c:\projects\{{ $slugVal }}</code>). Di Antigravity IDE, klik <strong>File &rarr; Open Folder</strong>.</span>
+                            <span x-show="locale === 'en'">Extract the ZIP into a new workspace (e.g. <code x-text="`c:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">c:\projects\{{ $shortSlugVal }}</code>). In Antigravity IDE, click <strong>File &rarr; Open Folder</strong>.</span>
+                            <span x-show="locale !== 'en'">Ekstrak ZIP ke folder kerja baru (misal <code x-text="`c:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">c:\projects\{{ $shortSlugVal }}</code>). Di Antigravity IDE, klik <strong>File &rarr; Open Folder</strong>.</span>
                         </p>
                     </div>
 

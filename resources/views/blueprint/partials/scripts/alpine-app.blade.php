@@ -573,6 +573,15 @@
                 scaffoldModalOpen: false,
                 showExecutionGuideModal: false,
                 executionGuideTab: 'choice-a',
+                workspaceDir: (function() {
+                    var saved = localStorage.getItem('neriah_workspace_{{ $blueprint->slug }}');
+                    return saved ? saved : '{{ \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? "app") }}';
+                })(),
+                setWorkspaceDir(val) {
+                    var sanitized = (val || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+                    this.workspaceDir = sanitized ? sanitized : '{{ \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? "app") }}';
+                    localStorage.setItem('neriah_workspace_{{ $blueprint->slug }}', this.workspaceDir);
+                },
                 scaffoldJobStatus: '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? 'completed' : 'idle' }}',
                 scaffoldJobProgress: {{ !empty($blueprint->user_metadata['scaffold_ready']) ? 100 : 0 }},
                 scaffoldJobMessage: '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? 'Arsip Starter Kit ZIP siap diunduh' : '' }}',

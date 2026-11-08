@@ -140,7 +140,7 @@ class BlueprintArtifactController extends Controller
             ],
             BlueprintDownloadArtifact::TYPE_SCAFFOLD => [
                 $isEn ? 'Scaffold Starter Kit Boilerplate (.ZIP)' : 'Paket Starter Kit Boilerplate Scaffold (.ZIP)',
-                ($blueprint->slug ?: 'project') . '-starter-kit.zip',
+                \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?: 'project') . '-starter-kit.zip',
             ],
         };
 

@@ -289,6 +289,14 @@ class VisionBlueprint extends Model
     }
 
     /**
+     * Get clean short slug for scaffold directories, Docker containers, and ZIP packages.
+     */
+    public function getShortSlugAttribute(): string
+    {
+        return \App\Services\ScaffoldGeneratorService::deriveShortSlug($this->slug ?? 'app', $this);
+    }
+
+    /**
      * Compute SHA-256 cryptographic hash of the PRD specifications.
      */
     public function calculatePrdHash(): string

@@ -20,7 +20,7 @@
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 bg-emerald-500 rounded-none inline-block"></span>
                     <h3 class="text-sm sm:text-base font-mono font-black uppercase text-white tracking-wider">
-                        {{ $isEn ? 'SCAFFOLD & BOILERPLATE CODE EXPORTER // 10 PILLARS SOFTWARE FACTORY OS' : 'EKSPOR KODE SCAFFOLD & BOILERPLATE // 10 PILAR SOFTWARE FACTORY OS' }}
+                        <span x-show="locale === 'en'">SCAFFOLD &amp; BOILERPLATE CODE EXPORTER // 10 PILLARS SOFTWARE FACTORY OS</span><span x-show="locale !== 'en'">EKSPOR KODE SCAFFOLD &amp; BOILERPLATE // 10 PILAR SOFTWARE FACTORY OS</span>
                     </h3>
                 </div>
                 <button @click="scaffoldModalOpen = false" class="text-zinc-400 hover:text-white text-xl font-bold p-1 cursor-pointer">
@@ -32,14 +32,14 @@
             <div class="mb-3 p-3 bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                 <div class="space-y-1">
                     <div>
-                        <span class="text-emerald-400 font-bold">{{ $isEn ? 'Target Stack:' : 'Target Framework:' }}</span> Laravel 13 (PHP 8.5+) &bull; PostgreSQL 16 Strict ULID &bull; Redis 7 &bull; Next.js App Router
+                        <span class="text-emerald-400 font-bold"><span x-show="locale === 'en'">Target Stack:</span><span x-show="locale !== 'en'">Target Framework:</span></span> Laravel 13 (PHP 8.5+) &bull; PostgreSQL 16 Strict ULID &bull; Redis 7 &bull; Next.js App Router
                     </div>
                     <div class="flex items-center gap-2 text-[11px]">
                         <button type="button" @click="showExecutionGuideModal = true" class="text-emerald-400 hover:text-emerald-300 underline font-bold cursor-pointer">
-                            🚀 {{ $isEn ? 'How to start & Docker guide (3 options)' : 'Panduan 3 Cara Mulai & Setup Docker' }} &rarr;
+                            🚀 <span x-show="locale === 'en'">How to start &amp; Docker guide (3 options)</span><span x-show="locale !== 'en'">Panduan 3 Cara Mulai &amp; Setup Docker</span> &rarr;
                         </button>
                         <span class="text-zinc-600">&bull;</span>
-                        <span class="text-zinc-400" x-text="scaffoldJobMessage || '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? 'Starter kit .ZIP siap diunduh' : 'Generasi efisien via background queue' }}'"></span>
+                        <span class="text-zinc-400" x-text="scaffoldJobMessage || '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? (locale === 'en' ? 'Starter kit .ZIP ready to download' : 'Starter kit .ZIP siap diunduh') : (locale === 'en' ? 'Efficient generation via background queue' : 'Generasi efisien via background queue') }}'"></span>
                     </div>
                 </div>
 
@@ -50,16 +50,16 @@
                         @click="startBackgroundScaffoldGeneration()"
                         :disabled="scaffoldJobStatus === 'processing' || scaffoldJobStatus === 'queued'"
                         class="px-3 py-1.5 bg-zinc-950 hover:bg-zinc-800 disabled:opacity-50 text-emerald-400 font-bold uppercase text-[11px] border border-emerald-500/60 flex items-center gap-1.5 transition cursor-pointer"
-                        title="Proses generasi file dan kompilasi ZIP di background queue server"
+                        :title="locale === 'en' ? 'Generate files and compile ZIP in server background queue' : 'Proses generasi file dan kompilasi ZIP di background queue server'"
                     >
                         <span class="w-2 h-2 rounded-none" :class="(scaffoldJobStatus === 'processing' || scaffoldJobStatus === 'queued') ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'"></span>
-                        <span x-text="(scaffoldJobStatus === 'processing' || scaffoldJobStatus === 'queued') ? (scaffoldJobProgress + '% MEMPROSES...') : '⚡ PROSES BACKGROUND JOB'"></span>
+                        <span x-text="(scaffoldJobStatus === 'processing' || scaffoldJobStatus === 'queued') ? (scaffoldJobProgress + (locale === 'en' ? '% PROCESSING...' : '% MEMPROSES...')) : (locale === 'en' ? '⚡ PROCESS BACKGROUND JOB' : '⚡ PROSES BACKGROUND JOB')"></span>
                     </button>
 
                     <!-- Instant Download Button -->
                     <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[11px] flex items-center gap-1.5 transition cursor-pointer w-fit shadow-xs">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        <span>{{ $isEn ? 'DOWNLOAD FULL ZIP (.ZIP)' : 'UNDUH ZIP LENGKAP (.ZIP)' }}</span>
+                        <span><span x-show="locale === 'en'">DOWNLOAD FULL ZIP (.ZIP)</span><span x-show="locale !== 'en'">UNDUH ZIP LENGKAP (.ZIP)</span></span>
                     </a>
                 </div>
             </div>
@@ -215,7 +215,7 @@
 
                         <button type="button" @click="copyActiveScaffold()" class="text-emerald-400 hover:text-emerald-300 font-bold uppercase transition flex items-center gap-1 cursor-pointer">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                            <span>Salin</span>
+                            <span><span x-show="locale === 'en'">Copy</span><span x-show="locale !== 'en'">Salin</span></span>
                         </button>
                     </div>
                 </div>
@@ -326,16 +326,16 @@
             <!-- Modal Footer -->
             <div class="flex items-center justify-between pt-3 mt-3 border-t border-zinc-800 shrink-0 font-mono text-xs">
                 <button type="button" @click="scaffoldModalOpen = false" class="px-4 py-2 border border-zinc-700 hover:bg-zinc-800 text-zinc-300 uppercase font-bold transition cursor-pointer">
-                    {{ $isEn ? 'CLOSE' : 'TUTUP' }}
+                    <span x-show="locale === 'en'">CLOSE</span><span x-show="locale !== 'en'">TUTUP</span>
                 </button>
                 <div class="flex items-center gap-2">
                     <button type="button" @click="copyActiveScaffold()" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-emerald-400 border border-emerald-500/50 uppercase font-bold transition flex items-center gap-1.5 cursor-pointer">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                        <span>{{ $isEn ? 'COPY TAB CODE' : 'SALIN KODE TAB' }}</span>
+                        <span><span x-show="locale === 'en'">COPY TAB CODE</span><span x-show="locale !== 'en'">SALIN KODE TAB</span></span>
                     </button>
                     <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-black uppercase font-black transition flex items-center gap-1.5 cursor-pointer shadow-lg">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        <span>{{ $isEn ? 'DOWNLOAD .ZIP' : 'UNDUH .ZIP' }}</span>
+                        <span><span x-show="locale === 'en'">DOWNLOAD .ZIP</span><span x-show="locale !== 'en'">UNDUH .ZIP</span></span>
                     </a>
                 </div>
             </div>

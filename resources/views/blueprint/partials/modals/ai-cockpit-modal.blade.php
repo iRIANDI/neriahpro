@@ -21,7 +21,8 @@
                             <span class="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">ORCHESTRATOR</span>
                         </h3>
                         <p class="text-xs text-zinc-400 font-mono mt-0.5">
-                            Pilih AI Coding Agent &amp; Tahapan Sprint untuk mengumpankan PRD secara bertahap tanpa context-rot.
+                            <span x-show="locale === 'en'">Select AI Coding Agent &amp; Sprint Stages to feed PRD iteratively without context-rot.</span>
+                            <span x-show="locale !== 'en'">Pilih AI Coding Agent &amp; Tahapan Sprint untuk mengumpankan PRD secara bertahap tanpa context-rot.</span>
                         </p>
                     </div>
                 </div>
@@ -34,7 +35,10 @@
             <div class="overflow-y-auto flex-1 pr-1.5 space-y-4">
                 <!-- Agent Selector Tabs -->
                 <div>
-                    <label class="text-[11px] text-zinc-400 uppercase font-bold block mb-2">1. PILIH AI CODING AGENT TARGET:</label>
+                    <label class="text-[11px] text-zinc-400 uppercase font-bold block mb-2">
+                        <span x-show="locale === 'en'">1. SELECT TARGET AI CODING AGENT:</span>
+                        <span x-show="locale !== 'en'">1. PILIH AI CODING AGENT TARGET:</span>
+                    </label>
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
                     <button 
                         type="button" 
@@ -86,7 +90,10 @@
 
             <!-- Sprint / Scope Selector -->
             <div class="mb-5">
-                <label class="text-[11px] text-zinc-400 uppercase font-bold block mb-2">2. PILIH TAHAPAN INGESTION (BERTAHAP VS MASTER):</label>
+                <label class="text-[11px] text-zinc-400 uppercase font-bold block mb-2">
+                    <span x-show="locale === 'en'">2. SELECT INGESTION STAGE (VERTICAL SLICE VS MASTER):</span>
+                    <span x-show="locale !== 'en'">2. PILIH TAHAPAN INGESTION (BERTAHAP VS MASTER):</span>
+                </label>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-[11px]">
                     <button 
                         type="button" 
@@ -94,7 +101,8 @@
                         :class="selectedPromptSprint === 'all' ? 'bg-zinc-100 text-black font-bold' : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800'"
                         class="p-2 border transition text-center cursor-pointer"
                     >
-                        Master Kickoff
+                        <span x-show="locale === 'en'">Master Kickoff</span>
+                        <span x-show="locale !== 'en'">Master Kickoff</span>
                     </button>
                     <button 
                         type="button" 
@@ -144,28 +152,51 @@
                 <div class="flex items-center justify-between text-[11px] text-zinc-400 border-b border-zinc-800/80 pb-2">
                     <span class="font-bold uppercase text-emerald-400 flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span x-text="selectedPromptAgent === 'antigravity' ? 'Panduan Khusus Antigravity IDE (Google DeepMind)' : (selectedPromptAgent === 'cursor' ? 'Panduan Khusus Cursor Composer' : (selectedPromptAgent === 'claude' ? 'Panduan Khusus Claude Code CLI' : 'Panduan Agen'))"></span>
+                        <span x-text="locale === 'en' ? (selectedPromptAgent === 'antigravity' ? 'Antigravity IDE Guide (Google DeepMind)' : (selectedPromptAgent === 'cursor' ? 'Cursor Composer Guide' : (selectedPromptAgent === 'claude' ? 'Claude Code CLI Guide' : 'Agent Protocol Guide'))) : (selectedPromptAgent === 'antigravity' ? 'Panduan Khusus Antigravity IDE (Google DeepMind)' : (selectedPromptAgent === 'cursor' ? 'Panduan Khusus Cursor Composer' : (selectedPromptAgent === 'claude' ? 'Panduan Khusus Claude Code CLI' : 'Panduan Agen')))"></span>
                     </span>
                     <span class="font-mono text-zinc-400 text-[10px]">Anti Context-Rot Protocol</span>
                 </div>
-                <p class="text-zinc-300 text-[11px] leading-relaxed" x-show="selectedPromptAgent === 'antigravity'">
-                    <strong>Antigravity IDE Protocol:</strong> Antigravity bekerja secara otonom mengacu pada <code>.agents/AGENTS.md</code> dan <code>Ponytail Decision Ladder</code>. Prompt di bawah secara otomatis menginstruksikan Antigravity untuk menjalankan vertical slice dengan primary key ULID PostgreSQL (<code>HasUlids</code>), Keyset cursor pagination O(1), UI bebas capsule/pill shapes (subtle corners), zero native dialogs (wajib <code>window.showToast</code>), dan automated PHPUnit test verification sebelum menutup task.
-                </p>
-                <p class="text-zinc-300 text-[11px] leading-relaxed" x-show="selectedPromptAgent === 'cursor'">
-                    <strong>Cursor Composer Protocol:</strong> Buka Composer (<code>Cmd+I</code> atau <code>Ctrl+I</code>). Buat file <code>PRD.md</code> atau lampirkan dokumen via <code>@PRD.md</code>. Berikan prompt per modul vertikal agar model tidak kehabisan output tokens atau merusak file global.
-                </p>
-                <p class="text-zinc-300 text-[11px] leading-relaxed" x-show="selectedPromptAgent === 'claude'">
-                    <strong>Claude Code CLI Protocol:</strong> Buka terminal di folder root proyek dan jalankan perintah <code>claude</code>. Masukkan prompt di bawah langsung ke dalam command prompt Claude CLI. Claude Code akan mengaudit git diff secara mandiri.
-                </p>
-                <p class="text-zinc-300 text-[11px] leading-relaxed" x-show="selectedPromptAgent === 'windsurf' || selectedPromptAgent === 'devin'">
-                    <strong>Agentic Task Flow:</strong> Masukkan prompt ke agent chat window. Pastikan agen tidak membuat file di luar modul yang sedang dikerjakan.
-                </p>
+                <div x-show="selectedPromptAgent === 'antigravity'" class="text-zinc-300 text-[11px] leading-relaxed">
+                    <div x-show="locale === 'en'">
+                        <strong>Antigravity IDE Protocol:</strong> Antigravity operates autonomously following <code>.agents/AGENTS.md</code> and <code>Ponytail Decision Ladder</code>. The prompt below instructs Antigravity to execute a vertical slice with PostgreSQL ULID primary keys (<code>HasUlids</code>), Keyset cursor pagination O(1), subtle corners UI with strict ban on pill/capsule shapes, zero native dialogs (mandatory <code>window.showToast</code>), and automated PHPUnit test verification before task completion.
+                    </div>
+                    <div x-show="locale !== 'en'">
+                        <strong>Antigravity IDE Protocol:</strong> Antigravity bekerja secara otonom mengacu pada <code>.agents/AGENTS.md</code> dan <code>Ponytail Decision Ladder</code>. Prompt di bawah secara otomatis menginstruksikan Antigravity untuk menjalankan vertical slice dengan primary key ULID PostgreSQL (<code>HasUlids</code>), Keyset cursor pagination O(1), UI bebas capsule/pill shapes (subtle corners), zero native dialogs (wajib <code>window.showToast</code>), dan automated PHPUnit test verification sebelum menutup task.
+                    </div>
+                </div>
+                <div x-show="selectedPromptAgent === 'cursor'" class="text-zinc-300 text-[11px] leading-relaxed">
+                    <div x-show="locale === 'en'">
+                        <strong>Cursor Composer Protocol:</strong> Open Composer (<code>Cmd+I</code> or <code>Ctrl+I</code>). Create a <code>PRD.md</code> file or attach documents via <code>@PRD.md</code>. Provide prompts per vertical module to prevent output token exhaustion or global file degradation.
+                    </div>
+                    <div x-show="locale !== 'en'">
+                        <strong>Cursor Composer Protocol:</strong> Buka Composer (<code>Cmd+I</code> atau <code>Ctrl+I</code>). Buat file <code>PRD.md</code> atau lampirkan dokumen via <code>@PRD.md</code>. Berikan prompt per modul vertikal agar model tidak kehabisan output tokens atau merusak file global.
+                    </div>
+                </div>
+                <div x-show="selectedPromptAgent === 'claude'" class="text-zinc-300 text-[11px] leading-relaxed">
+                    <div x-show="locale === 'en'">
+                        <strong>Claude Code CLI Protocol:</strong> Open terminal in project root directory and run <code>claude</code>. Paste the prompt below directly into the Claude CLI command prompt. Claude Code will autonomously audit git diffs.
+                    </div>
+                    <div x-show="locale !== 'en'">
+                        <strong>Claude Code CLI Protocol:</strong> Buka terminal di folder root proyek dan jalankan perintah <code>claude</code>. Masukkan prompt di bawah langsung ke dalam command prompt Claude CLI. Claude Code akan mengaudit git diff secara mandiri.
+                    </div>
+                </div>
+                <div x-show="selectedPromptAgent === 'windsurf' || selectedPromptAgent === 'devin'" class="text-zinc-300 text-[11px] leading-relaxed">
+                    <div x-show="locale === 'en'">
+                        <strong>Agentic Task Flow:</strong> Input prompt into the agent chat window. Ensure the agent does not generate files outside the current module scope.
+                    </div>
+                    <div x-show="locale !== 'en'">
+                        <strong>Agentic Task Flow:</strong> Masukkan prompt ke agent chat window. Pastikan agen tidak membuat file di luar modul yang sedang dikerjakan.
+                    </div>
+                </div>
             </div>
 
             <!-- Dynamic Prompt Textarea / Preview -->
             <div class="mb-5 relative">
                 <div class="flex items-center justify-between mb-1.5 text-xs">
-                    <span class="text-zinc-400 text-[10px] uppercase font-bold">HASIL GENERATE PROMPT SIAP COPY:</span>
+                    <span class="text-zinc-400 text-[10px] uppercase font-bold">
+                        <span x-show="locale === 'en'">GENERATED READY-TO-COPY PROMPT:</span>
+                        <span x-show="locale !== 'en'">HASIL GENERATE PROMPT SIAP COPY:</span>
+                    </span>
                     <span class="text-[10px] text-emerald-400 font-mono">100% Parameterized &amp; Dispute-Proof</span>
                 </div>
                 <div class="bg-black border border-zinc-800 p-4 max-h-56 overflow-y-auto font-mono text-[11px] text-emerald-400 leading-relaxed whitespace-pre-wrap select-all" id="ai-agent-cockpit-prompt-text" x-text="generateAgentPrompt(selectedPromptAgent, selectedPromptSprint)"></div>
@@ -179,16 +210,20 @@
                     @click="showAiPromptModal = false"
                     class="w-full sm:w-auto px-4 py-2 border border-zinc-700 hover:bg-zinc-800 text-zinc-300 text-xs uppercase font-bold transition cursor-pointer"
                 >
-                    Tutup
+                    <span x-show="locale === 'en'">Close</span>
+                    <span x-show="locale !== 'en'">Tutup</span>
                 </button>
                 <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     <a 
                         href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}"
                         class="w-full sm:w-auto px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-emerald-400 border border-emerald-500/30 text-xs font-mono uppercase font-bold transition flex items-center justify-center gap-1.5"
-                        title="Unduh file .cursorrules langsung ke project"
+                        :title="locale === 'en' ? 'Download .cursorrules file directly into project' : 'Unduh file .cursorrules langsung ke project'"
                     >
                         <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        <span>UNDUH .CURSORRULES</span>
+                        <span>
+                            <span x-show="locale === 'en'">DOWNLOAD .CURSORRULES</span>
+                            <span x-show="locale !== 'en'">UNDUH .CURSORRULES</span>
+                        </span>
                     </a>
                     <button 
                         type="button" 
@@ -196,7 +231,10 @@
                         class="w-full sm:w-auto px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-bold transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                        <span>SALIN PROMPT UNTUK <span x-text="selectedPromptAgent.toUpperCase()">AGENT</span></span>
+                        <span>
+                            <span x-show="locale === 'en'">COPY PROMPT FOR <span x-text="selectedPromptAgent.toUpperCase()">AGENT</span></span>
+                            <span x-show="locale !== 'en'">SALIN PROMPT UNTUK <span x-text="selectedPromptAgent.toUpperCase()">AGENT</span></span>
+                        </span>
                     </button>
                 </div>
             </div>

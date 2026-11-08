@@ -27,16 +27,20 @@
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
                         <div class="text-[10px] font-bold text-emerald-400 bg-zinc-800 px-2 py-0.5 border border-zinc-700 whitespace-nowrap">
-                            12 BAB // 13 BLOK
+                            <span x-show="locale === 'en'">12 CH // 13 BLOCKS</span>
+                            <span x-show="locale !== 'en'">12 BAB // 13 BLOK</span>
                         </div>
                         <button 
                             type="button" 
                             @click="toggleNavMode()" 
                             class="text-[10px] font-bold text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-2 py-0.5 border border-zinc-700 transition flex items-center gap-1 cursor-pointer"
-                            title="Alihkan ke Mode 2: Layar Penuh (Sembunyikan sidebar, navigasi via dock kanan bawah)"
+                            :title="locale === 'en' ? 'Switch to Mode 2: Full Width (Hide sidebar, dock navigation)' : 'Alihkan ke Mode 2: Layar Penuh (Sembunyikan sidebar, navigasi via dock kanan bawah)'"
                         >
                             <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                            <span class="hidden 2xl:inline">LEBAR</span>
+                            <span class="hidden 2xl:inline">
+                                <span x-show="locale === 'en'">WIDE</span>
+                                <span x-show="locale !== 'en'">LEBAR</span>
+                            </span>
                         </button>
                     </div>
                 </div>

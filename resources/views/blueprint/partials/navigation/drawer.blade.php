@@ -239,10 +239,13 @@
                         x-show="navMode === 'focus'"
                         @click="setNavMode('sidebar')" 
                         class="px-3 py-2 text-xs font-bold uppercase tracking-wider transition border-r border-zinc-800 flex items-center gap-1.5 text-zinc-300 hover:text-emerald-400 hover:bg-zinc-800/80 cursor-pointer"
-                        title="Beralih kembali ke Mode 1: Tampilkan index di sebelah kiri layar"
+                        :title="locale === 'en' ? 'Switch back to Mode 1: Show sidebar index on the left' : 'Beralih kembali ke Mode 1: Tampilkan index di sebelah kiri layar'"
                     >
                         <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h6v12H4zM12 6h8v12h-8z"/></svg>
-                        <span class="hidden sm:inline">MODE SIDEBAR</span>
+                        <span class="hidden sm:inline">
+                            <span x-show="locale === 'en'">SIDEBAR MODE</span>
+                            <span x-show="locale !== 'en'">MODE SIDEBAR</span>
+                        </span>
                     </button>
 
                     <!-- Scroll to Top Button -->

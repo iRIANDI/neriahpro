@@ -95,3 +95,4 @@ class ReportingExportDomainStrategy extends AbstractDomainStrategy
         ];
     }
 }
+

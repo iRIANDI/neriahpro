@@ -104,3 +104,4 @@ class DashboardGovernanceDomainStrategy extends AbstractDomainStrategy
         ];
     }
 }
+

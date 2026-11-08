@@ -29,3 +29,4 @@ interface FeatureDomainStrategyInterface
         bool $isEn = false
     ): array;
 }
+

@@ -106,3 +106,4 @@ class CatalogListingDomainStrategy extends AbstractDomainStrategy
         ];
     }
 }
+

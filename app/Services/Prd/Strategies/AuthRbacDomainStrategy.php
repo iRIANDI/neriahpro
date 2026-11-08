@@ -106,3 +106,4 @@ class AuthRbacDomainStrategy extends AbstractDomainStrategy
         ];
     }
 }
+

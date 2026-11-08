@@ -215,7 +215,7 @@ class BlueprintArtifactController extends Controller
         $query = BlueprintDownloadArtifact::where('vision_blueprint_id', $blueprint->id);
 
         if (! $isSuperAdmin) {
-            $query->scopeForClientOrAdmin($user, $clientIdentifier);
+            $query->forClientOrAdmin($user, $clientIdentifier);
         }
 
         $artifacts = $query->orderBy('created_at', 'desc')->limit(40)->get();

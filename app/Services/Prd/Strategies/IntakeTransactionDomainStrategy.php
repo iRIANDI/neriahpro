@@ -107,3 +107,4 @@ class IntakeTransactionDomainStrategy extends AbstractDomainStrategy
         ];
     }
 }
+

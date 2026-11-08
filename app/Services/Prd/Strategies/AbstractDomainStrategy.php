@@ -61,3 +61,4 @@ abstract class AbstractDomainStrategy implements FeatureDomainStrategyInterface
         );
     }
 }
+

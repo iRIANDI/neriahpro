@@ -95,3 +95,4 @@ class NotificationGatewayDomainStrategy extends AbstractDomainStrategy
         ];
     }
 }
+

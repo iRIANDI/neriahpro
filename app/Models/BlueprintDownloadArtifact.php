@@ -104,7 +104,9 @@ class BlueprintDownloadArtifact extends Model
             return 0;
         }
 
-        return max(0, Carbon::now()->diffInSeconds($this->expires_at, false));
+        $diff = Carbon::now()->diffInSeconds($this->expires_at, false);
+
+        return (int) max(0, (int) $diff);
     }
 
     /**

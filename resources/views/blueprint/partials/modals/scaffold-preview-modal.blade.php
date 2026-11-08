@@ -39,7 +39,7 @@
                             🚀 <span x-show="locale === 'en'">How to start &amp; Docker guide (3 options)</span><span x-show="locale !== 'en'">Panduan 3 Cara Mulai &amp; Setup Docker</span> &rarr;
                         </button>
                         <span class="text-zinc-600">&bull;</span>
-                        <span class="text-zinc-400" x-text="scaffoldJobMessage || '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? (locale === 'en' ? 'Starter kit .ZIP ready to download' : 'Starter kit .ZIP siap diunduh') : (locale === 'en' ? 'Efficient generation via background queue' : 'Generasi efisien via background queue') }}'"></span>
+                        <span class="text-zinc-400" x-text="scaffoldJobMessage || (locale === 'en' ? '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? 'Starter kit .ZIP ready to download' : 'Efficient generation via background queue' }}' : '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? 'Starter kit .ZIP siap diunduh' : 'Generasi efisien via background queue' }}')"></span>
                     </div>
                 </div>
 

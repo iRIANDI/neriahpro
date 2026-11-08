@@ -127,3 +127,4 @@ class GenerateBlueprintScaffoldJob implements ShouldQueue
         }
     }
 }
+

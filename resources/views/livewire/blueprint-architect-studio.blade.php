@@ -2537,8 +2537,8 @@
                             <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border-2 border-emerald-500/80 rounded-none space-y-2 flex flex-col justify-between">
                                 <div class="space-y-1.5">
                                     <div class="flex items-center justify-between">
-                                        <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[9px] uppercase">PILIHAN A</span>
-                                        <span class="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">Paling Cepat</span>
+                                        <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[9px] uppercase">{{ $isEnLoc ? 'OPTION A' : 'PILIHAN A' }}</span>
+                                        <span class="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">{{ $isEnLoc ? 'Fastest' : 'Paling Cepat' }}</span>
                                     </div>
                                     <div class="font-black text-xs text-zinc-950 dark:text-zinc-100 uppercase">
                                         {{ $isEnLoc ? 'Direct Antigravity Chat Execution' : 'Eksekusi Langsung di Chat Antigravity' }}
@@ -2550,9 +2550,9 @@
                                     </p>
                                 </div>
                                 <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                                    <div class="text-[10px] font-bold text-zinc-500 uppercase">Perintah Mulai Sprint 1:</div>
+                                    <div class="text-[10px] font-bold text-zinc-500 uppercase">{{ $isEnLoc ? 'Sprint 1 Start Command:' : 'Perintah Mulai Sprint 1:' }}</div>
                                     <div class="p-2 bg-black border border-zinc-800 text-[10px] text-emerald-400 select-all leading-tight">
-                                        "Antigravity, tolong baca Blueprint '{{ $projectName }}'. Mulai eksekusi Sprint 1: Buat migration PostgreSQL Strict ULID dan Model Eloquent untuk modul utama sesuai spesifikasi Section 05."
+                                        "{{ $isEnLoc ? "Antigravity, please read Blueprint '{$projectName}'. Start executing Sprint 1: Create PostgreSQL Strict ULID migrations and Eloquent Models for the core module according to Section 05 specifications." : "Antigravity, tolong baca Blueprint '{$projectName}'. Mulai eksekusi Sprint 1: Buat migration PostgreSQL Strict ULID dan Model Eloquent untuk modul utama sesuai spesifikasi Section 05." }}"
                                     </div>
                                 </div>
                             </div>
@@ -2561,7 +2561,7 @@
                             <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2 flex flex-col justify-between">
                                 <div class="space-y-1.5">
                                     <div class="flex items-center justify-between">
-                                        <span class="px-2 py-0.5 bg-blue-600 text-white font-black text-[9px] uppercase">PILIHAN B</span>
+                                        <span class="px-2 py-0.5 bg-blue-600 text-white font-black text-[9px] uppercase">{{ $isEnLoc ? 'OPTION B' : 'PILIHAN B' }}</span>
                                         <span class="text-[9px] text-blue-500 font-bold">Standalone App</span>
                                     </div>
                                     <div class="font-black text-xs text-zinc-950 dark:text-zinc-100 uppercase">
@@ -2575,9 +2575,9 @@
                                 </div>
                                 <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                                     <a href="/blueprint/{{ $slug ?: $blueprintId }}/export/scaffold" class="block w-full text-center py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[10px] transition">
-                                        UNDUH STARTER KIT .ZIP &darr;
+                                        {{ $isEnLoc ? 'DOWNLOAD STARTER KIT .ZIP ↓' : 'UNDUH STARTER KIT .ZIP ↓' }}
                                     </a>
-                                    <div class="text-[9px] text-zinc-500 text-center font-sans">Ekstrak &rarr; Buka di Antigravity IDE (File &gt; Open Folder)</div>
+                                    <div class="text-[9px] text-zinc-500 text-center font-sans">{{ $isEnLoc ? 'Extract &rarr; Open in Antigravity IDE (File &gt; Open Folder)' : 'Ekstrak &rarr; Buka di Antigravity IDE (File &gt; Open Folder)' }}</div>
                                 </div>
                             </div>
 
@@ -2585,7 +2585,7 @@
                             <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2 flex flex-col justify-between">
                                 <div class="space-y-1.5">
                                     <div class="flex items-center justify-between">
-                                        <span class="px-2 py-0.5 bg-purple-600 text-white font-black text-[9px] uppercase">PILIHAN C</span>
+                                        <span class="px-2 py-0.5 bg-purple-600 text-white font-black text-[9px] uppercase">{{ $isEnLoc ? 'OPTION C' : 'PILIHAN C' }}</span>
                                         <span class="text-[9px] text-purple-400 font-bold">Anti Context-Rot</span>
                                     </div>
                                     <div class="font-black text-xs text-zinc-950 dark:text-zinc-100 uppercase">
@@ -2599,9 +2599,9 @@
                                 </div>
                                 <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800">
                                     <button type="button" wire:click="$set('rightDockMode', 'phases')" class="w-full text-center py-1.5 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-[10px] transition cursor-pointer">
-                                        BUKA DOCK PROMPT FASE 1–7 &rarr;
+                                        {{ $isEnLoc ? 'OPEN PHASES 1–7 PROMPT DOCK &rarr;' : 'BUKA DOCK PROMPT FASE 1–7 &rarr;' }}
                                     </button>
-                                    <div class="text-[9px] text-zinc-500 text-center font-sans">Tersedia untuk Antigravity, Cursor &amp; Claude</div>
+                                    <div class="text-[9px] text-zinc-500 text-center font-sans">{{ $isEnLoc ? 'Available for Antigravity, Cursor & Claude' : 'Tersedia untuk Antigravity, Cursor & Claude' }}</div>
                                 </div>
                             </div>
                         </div>
@@ -2617,10 +2617,10 @@
                                     </div>
                                     <span class="text-[9px] text-sky-500 font-bold">PHP 8.5 + PG 16</span>
                                 </div>
-                                <pre class="p-2.5 bg-black border border-zinc-800 text-[10px] text-sky-300 overflow-x-auto select-all leading-tight whitespace-pre font-mono"># 1. Jalankan container
+                                <pre class="p-2.5 bg-black border border-zinc-800 text-[10px] text-sky-300 overflow-x-auto select-all leading-tight whitespace-pre font-mono"># 1. Start containers in background
 docker compose up -d
 
-# 2. Pasang dependensi & migrasi database
+# 2. Install dependencies & run migrations
 docker compose exec app composer install
 docker compose exec app php artisan migrate
 docker compose exec app php artisan db:seed --class=SyntheticDataSeeder
@@ -2636,12 +2636,12 @@ docker compose exec app npm install && docker compose exec app npm run build</pr
                                         <span>🧠</span>
                                         <span>ECC HARNESS (.agents/)</span>
                                     </div>
-                                    <span class="text-[9px] text-emerald-500 font-bold">GUARDRAILS AKTIF</span>
+                                    <span class="text-[9px] text-emerald-500 font-bold">{{ $isEnLoc ? 'GUARDRAILS ACTIVE' : 'GUARDRAILS AKTIF' }}</span>
                                 </div>
                                 <ul class="space-y-1 text-[10px] text-zinc-700 dark:text-zinc-300 font-sans">
-                                    <li>&bull; <strong class="font-mono">AGENTS.md:</strong> SOP arsitektur, Strict ULID, Keyset Cursor O(1), no native alert.</li>
-                                    <li>&bull; <strong class="font-mono">PONYTAIL.md:</strong> 4 anak tangga keputusan (Native &rarr; Reuse &rarr; Config &rarr; Minimal Diff).</li>
-                                    <li>&bull; <strong class="font-mono">GRAPH_REPORT.md:</strong> Knowledge graph 19 model &amp; controller tanpa scan berulang.</li>
+                                    <li>&bull; <strong class="font-mono">AGENTS.md:</strong> {{ $isEnLoc ? 'Strict architectural SOP, ULID, Keyset O(1), no native alert.' : 'SOP arsitektur, Strict ULID, Keyset Cursor O(1), no native alert.' }}</li>
+                                    <li>&bull; <strong class="font-mono">PONYTAIL.md:</strong> {{ $isEnLoc ? '4 decision rungs (Native &rarr; Reuse &rarr; Config &rarr; Minimal Diff).' : '4 anak tangga keputusan (Native &rarr; Reuse &rarr; Config &rarr; Minimal Diff).' }}</li>
+                                    <li>&bull; <strong class="font-mono">GRAPH_REPORT.md:</strong> {{ $isEnLoc ? 'Architectural knowledge graph of 19 models & controllers.' : 'Knowledge graph 19 model & controller tanpa scan berulang.' }}</li>
                                     <li>&bull; <strong class="font-mono">Skills Library:</strong> code-reviewer, security-reviewer, verification-loop, tdd-workflow.</li>
                                 </ul>
                             </div>
@@ -2651,48 +2651,48 @@ docker compose exec app npm install && docker compose exec app npm run build</pr
                         <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
                             <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-1.5">
                                 <div class="font-black text-xs text-zinc-950 dark:text-zinc-100 uppercase">
-                                    📊 URUTAN 5 SPRINT STANDAR // BEST PRACTICE VERTICAL SLICE
+                                    📊 {{ $isEnLoc ? 'STANDARD 5 SPRINT ROADMAP // BEST PRACTICE VERTICAL SLICE' : 'URUTAN 5 SPRINT STANDAR // BEST PRACTICE VERTICAL SLICE' }}
                                 </div>
-                                <span class="text-[9px] text-zinc-500 font-mono">5 Tahap Eksekusi</span>
+                                <span class="text-[9px] text-zinc-500 font-mono">{{ $isEnLoc ? '5 Sprints Roadmap' : '5 Tahap Eksekusi' }}</span>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-[10px] border-collapse font-mono">
                                     <thead class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 border-b border-zinc-200 dark:border-zinc-800 font-black">
                                         <tr>
                                             <th class="p-1.5 w-20 border-r border-zinc-200 dark:border-zinc-800">SPRINT</th>
-                                            <th class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">FOKUS PEKERJAAN</th>
-                                            <th class="p-1.5 w-44 border-r border-zinc-200 dark:border-zinc-800">VERIFIKASI KUALITAS</th>
+                                            <th class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">{{ $isEnLoc ? 'WORK FOCUS' : 'FOKUS PEKERJAAN' }}</th>
+                                            <th class="p-1.5 w-44 border-r border-zinc-200 dark:border-zinc-800">{{ $isEnLoc ? 'QUALITY VERIFICATION' : 'VERIFIKASI KUALITAS' }}</th>
                                             <th class="p-1.5 w-28">GUARDRAIL</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800 font-sans">
                                         <tr>
                                             <td class="p-1.5 font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-zinc-200 dark:border-zinc-800">Sprint 1</td>
-                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">Migration PostgreSQL Strict ULID <code>->ulid('id')->primary()</code> &amp; Model HasUlids.</td>
+                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">{{ $isEnLoc ? 'PostgreSQL Strict ULID migrations ->ulid(\'id\')->primary() & Eloquent Model with HasUlids.' : 'Migration PostgreSQL Strict ULID ->ulid(\'id\')->primary() & Model HasUlids.' }}</td>
                                             <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800"><code>php artisan migrate</code></td>
                                             <td class="p-1.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">Strict ULID</td>
                                         </tr>
                                         <tr>
                                             <td class="p-1.5 font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-zinc-200 dark:border-zinc-800">Sprint 2</td>
-                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">Backend Service, FormRequest validasi ketat, endpoint REST API dengan Keyset Cursor O(1).</td>
+                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">{{ $isEnLoc ? 'Backend Service, strict FormRequest validation, REST API endpoints with Keyset Cursor O(1).' : 'Backend Service, FormRequest validasi ketat, endpoint REST API dengan Keyset Cursor O(1).' }}</td>
                                             <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800"><code>php artisan test</code></td>
                                             <td class="p-1.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">Keyset O(1)</td>
                                         </tr>
                                         <tr>
                                             <td class="p-1.5 font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-zinc-200 dark:border-zinc-800">Sprint 3</td>
-                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">Frontend UI Clean Solid Brutalist, subtle rounded corner, dark/light mode, toast central.</td>
-                                            <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800">Browser Interaction</td>
+                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">{{ $isEnLoc ? 'Frontend UI Clean Solid Brutalist, subtle rounded corners, dark/light mode, centralized toast.' : 'Frontend UI Clean Solid Brutalist, subtle rounded corner, dark/light mode, toast central.' }}</td>
+                                            <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800">{{ $isEnLoc ? 'Browser Interaction' : 'Uji Interaksi Browser' }}</td>
                                             <td class="p-1.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">Anti-Slop</td>
                                         </tr>
                                         <tr>
                                             <td class="p-1.5 font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-zinc-200 dark:border-zinc-800">Sprint 4</td>
-                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">Security: Honeypot anti-bot, rate limiting, error RFC 9457 Problem Details, audit logging.</td>
-                                            <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800">Security Test</td>
+                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">{{ $isEnLoc ? 'Security: Anti-bot honeypots, rate limiting, RFC 9457 Problem Details, audit logging.' : 'Security: Honeypot anti-bot, rate limiting, error RFC 9457 Problem Details, audit logging.' }}</td>
+                                            <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800">{{ $isEnLoc ? 'Security Test' : 'Uji Security' }}</td>
                                             <td class="p-1.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">UU PDP</td>
                                         </tr>
                                         <tr>
                                             <td class="p-1.5 font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-zinc-200 dark:border-zinc-800">Sprint 5</td>
-                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">Build &amp; Deploy: <code>npm run build</code>, health check probe <code>/api/health</code>, deploy script.</td>
+                                            <td class="p-1.5 border-r border-zinc-200 dark:border-zinc-800">{{ $isEnLoc ? 'Build & Deploy: npm run build, /api/health probe check, deployment scripts.' : 'Build & Deploy: npm run build, health check probe /api/health, deploy script.' }}</td>
                                             <td class="p-1.5 font-mono border-r border-zinc-200 dark:border-zinc-800"><code>./deploy.sh 1|2</code></td>
                                             <td class="p-1.5 font-mono font-bold text-emerald-600 dark:text-emerald-400">Zero-Downtime</td>
                                         </tr>

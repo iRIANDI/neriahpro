@@ -20,7 +20,10 @@
                         </div>
 
                         <div class="flex flex-col items-start md:items-end gap-1 font-mono text-xs">
-                            <span class="text-zinc-400 uppercase tracking-widest">STATUS KONTRAK</span>
+                            <span class="text-zinc-400 uppercase tracking-widest">
+                                <span x-show="locale === 'en'">CONTRACT STATUS</span>
+                                <span x-show="locale !== 'en'">STATUS KONTRAK</span>
+                            </span>
                             <span class="px-3 py-1 font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 rounded-none">
                                 {{ strtoupper($blueprint->project_status) }}
                             </span>
@@ -30,20 +33,48 @@
                     <!-- Meta Grid -->
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
                         <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                            <span class="text-zinc-400 block mb-0.5">PIC KLIEN</span>
+                            <span class="text-zinc-400 block mb-0.5">
+                                <span x-show="locale === 'en'">CLIENT PIC</span>
+                                <span x-show="locale !== 'en'">PIC KLIEN</span>
+                            </span>
                             <span class="font-bold text-zinc-900 dark:text-zinc-100 truncate block">{{ $blueprint->client_name }}</span>
                         </div>
                         <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                            <span class="text-zinc-400 block mb-0.5">EMAIL RESMI</span>
+                            <span class="text-zinc-400 block mb-0.5">
+                                <span x-show="locale === 'en'">OFFICIAL EMAIL</span>
+                                <span x-show="locale !== 'en'">EMAIL RESMI</span>
+                            </span>
                             <span class="font-bold text-zinc-900 dark:text-zinc-100 truncate block">{{ $blueprint->email }}</span>
                         </div>
                         <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                            <span class="text-zinc-400 block mb-0.5">DURASI PROYEK</span>
-                            <span class="font-bold text-emerald-600 dark:text-emerald-400">{{ $blueprint->target_waktu ?? '30 Hari Kerja' }}</span>
+                            <span class="text-zinc-400 block mb-0.5">
+                                <span x-show="locale === 'en'">PROJECT DURATION</span>
+                                <span x-show="locale !== 'en'">DURASI PROYEK</span>
+                            </span>
+                            <span class="font-bold text-emerald-600 dark:text-emerald-400">
+                                <span x-show="locale === 'en'">{{ str_replace(['Hari Kerja', 'hari kerja', 'Hari', 'hari'], ['Business Days', 'business days', 'Days', 'days'], $blueprint->target_waktu ?? '30 Business Days') }}</span>
+                                <span x-show="locale !== 'en'">{{ $blueprint->target_waktu ?? '30 Hari Kerja' }}</span>
+                            </span>
                         </div>
                         <div class="bg-zinc-50 dark:bg-zinc-950 p-3 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                            <span class="text-zinc-400 block mb-0.5">KESIAPAN ASET</span>
-                            <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $blueprint->kesiapan_aset ?? 'Sedang Disiapkan' }}</span>
+                            <span class="text-zinc-400 block mb-0.5">
+                                <span x-show="locale === 'en'">ASSET READINESS</span>
+                                <span x-show="locale !== 'en'">KESIAPAN ASET</span>
+                            </span>
+                            @php
+                                $rawAset = $blueprint->kesiapan_aset ?? 'Sedang Disiapkan';
+                                $asetEn = match(strtolower(trim($rawAset))) {
+                                    'lengkap', 'lengkap (logo, copy, brand)' => 'Complete (Logo, Copy, Brand)',
+                                    'sebagian', 'sebagian (logo / wireframe dasar)' => 'Partial (Logo / Basic Wireframe)',
+                                    'sedang disiapkan', 'sedang disiapkan tim internal' => 'In Preparation by Internal Team',
+                                    'belum ada', 'belum ada (mulai dari nol)' => 'None Yet (Start from Scratch)',
+                                    default => str_replace(['Sedang Disiapkan', 'Tim Internal', 'Lengkap', 'Sebagian', 'Belum Ada'], ['In Preparation', 'Internal Team', 'Complete', 'Partial', 'None Yet'], $rawAset)
+                                };
+                            @endphp
+                            <span class="font-bold text-zinc-900 dark:text-zinc-100">
+                                <span x-show="locale === 'en'">{{ $asetEn }}</span>
+                                <span x-show="locale !== 'en'">{{ $rawAset }}</span>
+                            </span>
                         </div>
                     </div>
 
@@ -161,15 +192,26 @@
                         <div class="mt-3 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="w-2 h-2 bg-emerald-500 rounded-none animate-pulse"></span>
-                                <span class="text-zinc-500 dark:text-zinc-400">ENGINE ARSITEKTUR:</span>
+                                <span class="text-zinc-500 dark:text-zinc-400">
+                                    <span x-show="locale === 'en'">ARCHITECTURE ENGINE:</span>
+                                    <span x-show="locale !== 'en'">ENGINE ARSITEKTUR:</span>
+                                </span>
                                 <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ $aiTel['provider_name'] ?? 'Multi-AI Orchestrator' }}</span>
                                 <span class="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-[10px] text-zinc-700 dark:text-zinc-300 font-bold border border-zinc-300 dark:border-zinc-700">{{ $aiTel['model'] ?? 'Flagship Reasoning' }}</span>
                                 @if($hasRealFailover)
-                                    <span class="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold border border-amber-500/30">FAILOVER AKTIF</span>
+                                    <span class="px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-bold border border-amber-500/30">
+                                        <span x-show="locale === 'en'">FAILOVER ACTIVE</span>
+                                        <span x-show="locale !== 'en'">FAILOVER AKTIF</span>
+                                    </span>
                                 @elseif($isDeterministic)
-                                    <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/30">STANDAR DETERMINISTIK AKTIF</span>
+                                    <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
+                                        <span x-show="locale === 'en'">DETERMINISTIC STANDARD ACTIVE</span>
+                                        <span x-show="locale !== 'en'">STANDAR DETERMINISTIK AKTIF</span>
+                                    </span>
                                 @else
-                                    <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/30">🟢 KUOTA SEHAT</span>
+                                    <span class="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
+                                        🟢 <span x-show="locale === 'en'">HEALTHY QUOTA</span><span x-show="locale !== 'en'">KUOTA SEHAT</span>
+                                    </span>
                                 @endif
                             </div>
                             @if($hasRealFailover && !empty($aiTel['notification']))
@@ -178,7 +220,8 @@
                                 </span>
                             @elseif($isDeterministic)
                                 <span class="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans">
-                                    Sistem beroperasi optimal menggunakan Deterministic Architecture Engine berstandar industri.
+                                    <span x-show="locale === 'en'">System operates optimally using industry-standard Deterministic Architecture Engine.</span>
+                                    <span x-show="locale !== 'en'">Sistem beroperasi optimal menggunakan Deterministic Architecture Engine berstandar industri.</span>
                                 </span>
                             @endif
                         </div>
@@ -213,7 +256,8 @@
                             <input 
                                 type="text" 
                                 x-model="indexSearchQuery" 
-                                placeholder="Cari blok/fitur/ERD..." 
+                                :placeholder="locale === 'en' ? 'Search blocks/features/ERD...' : 'Cari blok/fitur/ERD...'"
+                                placeholder="{{ $isEn ? 'Search blocks/features/ERD...' : 'Cari blok/fitur/ERD...' }}"
                                 class="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 rounded-none focus:outline-none focus:border-emerald-500"
                             />
                             <button 
@@ -396,17 +440,20 @@
                         </span>
                         <div>
                             <h2 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-zinc-100 tracking-tight">
-                                Timeline Pengerjaan & Status Sprint Proyek
+                                <span x-show="locale === 'en'">Project Sprint Timeline &amp; Status Tracker</span>
+                                <span x-show="locale !== 'en'">Timeline Pengerjaan &amp; Status Sprint Proyek</span>
                             </h2>
                             <p class="text-zinc-500 dark:text-zinc-400 text-xs font-mono">
-                                Sinkronisasi Real-Time Kontrak: {{ $targetDays }} Hari Kerja // Estimasi Serah Terima: {{ $estimatedFinishDate->format('d M Y') }}
+                                <span x-show="locale === 'en'">Real-Time Contract Sync: {{ $targetDays }} Business Days // Estimated Handover: {{ $estimatedFinishDate->format('d M Y') }}</span>
+                                <span x-show="locale !== 'en'">Sinkronisasi Real-Time Kontrak: {{ $targetDays }} Hari Kerja // Estimasi Serah Terima: {{ $estimatedFinishDate->format('d M Y') }}</span>
                             </p>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2 font-mono text-xs">
                         <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 font-bold">
-                            Hari Ke-{{ $elapsedDays }} Dari {{ $targetDays }}
+                            <span x-show="locale === 'en'">Day {{ $elapsedDays }} Of {{ $targetDays }}</span>
+                            <span x-show="locale !== 'en'">Hari Ke-{{ $elapsedDays }} Dari {{ $targetDays }}</span>
                         </span>
                         <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold">
                             {{ $progressPercent }}% PROGRESS
@@ -425,13 +472,20 @@
                     @php $s1Done = $elapsedDays >= $m1End; @endphp
                     <div class="p-3.5 border {{ $s1Done ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500/40 text-emerald-900 dark:text-emerald-300' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400' }} rounded-none">
                         <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-[10px] text-zinc-400 uppercase font-bold">Tahap 1 (Hari 1-{{ $m1End }})</span>
+                            <span class="text-[10px] text-zinc-400 uppercase font-bold">
+                                <span x-show="locale === 'en'">Stage 1 (Days 1-{{ $m1End }})</span>
+                                <span x-show="locale !== 'en'">Tahap 1 (Hari 1-{{ $m1End }})</span>
+                            </span>
                             <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase {{ $s1Done ? 'bg-emerald-500 text-black' : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300' }}">
-                                {{ $s1Done ? 'SELESAI' : 'AKTIF' }}
+                                <span x-show="locale === 'en'">{{ $s1Done ? 'COMPLETED' : 'ACTIVE' }}</span>
+                                <span x-show="locale !== 'en'">{{ $s1Done ? 'SELESAI' : 'AKTIF' }}</span>
                             </span>
                         </div>
-                        <div class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Discovery & Scope Lock</div>
-                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">Kuesioner ide bisnis, sintesis PRD spec, dan persetujuan kontrak digital.</p>
+                        <div class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Discovery &amp; Scope Lock</div>
+                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                            <span x-show="locale === 'en'">Business idea questionnaire, PRD spec synthesis, and digital contract sign-off.</span>
+                            <span x-show="locale !== 'en'">Kuesioner ide bisnis, sintesis PRD spec, dan persetujuan kontrak digital.</span>
+                        </p>
                     </div>
 
                     <!-- Stage 2 -->
@@ -441,13 +495,20 @@
                     @endphp
                     <div class="p-3.5 border {{ $s2Done ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500/40' : ($s2Active ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-500/50 text-amber-900 dark:text-amber-200' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500') }} rounded-none">
                         <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-[10px] text-zinc-400 uppercase font-bold">Tahap 2 (Hari {{ $m1End + 1 }}-{{ $m2End }})</span>
+                            <span class="text-[10px] text-zinc-400 uppercase font-bold">
+                                <span x-show="locale === 'en'">Stage 2 (Days {{ $m1End + 1 }}-{{ $m2End }})</span>
+                                <span x-show="locale !== 'en'">Tahap 2 (Hari {{ $m1End + 1 }}-{{ $m2End }})</span>
+                            </span>
                             <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase {{ $s2Done ? 'bg-emerald-500 text-black' : ($s2Active ? 'bg-amber-500 text-black animate-pulse' : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400') }}">
-                                {{ $s2Done ? 'SELESAI' : ($s2Active ? 'SEDANG JALAN' : 'TERJADWAL') }}
+                                <span x-show="locale === 'en'">{{ $s2Done ? 'COMPLETED' : ($s2Active ? 'IN PROGRESS' : 'SCHEDULED') }}</span>
+                                <span x-show="locale !== 'en'">{{ $s2Done ? 'SELESAI' : ($s2Active ? 'SEDANG JALAN' : 'TERJADWAL') }}</span>
                             </span>
                         </div>
-                        <div class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Database & Core Engine</div>
-                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">Migrasi PostgreSQL ULID, Eloquent Model, RBAC Shield & Action Handlers.</p>
+                        <div class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Database &amp; Core Engine</div>
+                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                            <span x-show="locale === 'en'">PostgreSQL ULID migrations, Eloquent Models, RBAC Shield &amp; Action Handlers.</span>
+                            <span x-show="locale !== 'en'">Migrasi PostgreSQL ULID, Eloquent Model, RBAC Shield &amp; Action Handlers.</span>
+                        </p>
                     </div>
 
                     <!-- Stage 3 -->
@@ -457,13 +518,20 @@
                     @endphp
                     <div class="p-3.5 border {{ $s3Done ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500/40' : ($s3Active ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-500/50 text-amber-900 dark:text-amber-200' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500') }} rounded-none">
                         <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-[10px] text-zinc-400 uppercase font-bold">Tahap 3 (Hari {{ $m2End + 1 }}-{{ $m3End }})</span>
+                            <span class="text-[10px] text-zinc-400 uppercase font-bold">
+                                <span x-show="locale === 'en'">Stage 3 (Days {{ $m2End + 1 }}-{{ $m3End }})</span>
+                                <span x-show="locale !== 'en'">Tahap 3 (Hari {{ $m2End + 1 }}-{{ $m3End }})</span>
+                            </span>
                             <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase {{ $s3Done ? 'bg-emerald-500 text-black' : ($s3Active ? 'bg-amber-500 text-black animate-pulse' : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400') }}">
-                                {{ $s3Done ? 'SELESAI' : ($s3Active ? 'SEDANG JALAN' : 'TERJADWAL') }}
+                                <span x-show="locale === 'en'">{{ $s3Done ? 'COMPLETED' : ($s3Active ? 'IN PROGRESS' : 'SCHEDULED') }}</span>
+                                <span x-show="locale !== 'en'">{{ $s3Done ? 'SELESAI' : ($s3Active ? 'SEDANG JALAN' : 'TERJADWAL') }}</span>
                             </span>
                         </div>
                         <div class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Frontend React Islands</div>
-                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">Desain interaktif 60fps, 2-tier multi bahasa, format ribuan & fontawesome lokal.</p>
+                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                            <span x-show="locale === 'en'">60fps interactive design, 2-tier multi-language, thousands separator &amp; local fontawesome.</span>
+                            <span x-show="locale !== 'en'">Desain interaktif 60fps, 2-tier multi bahasa, format ribuan &amp; fontawesome lokal.</span>
+                        </p>
                     </div>
 
                     <!-- Stage 4 -->
@@ -473,13 +541,20 @@
                     @endphp
                     <div class="p-3.5 border {{ $s4Done ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500/40' : ($s4Active ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-500/50 text-amber-900 dark:text-amber-200' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500') }} rounded-none">
                         <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-[10px] text-zinc-400 uppercase font-bold">Tahap 4 (Hari {{ $m3End + 1 }}-{{ $m4End }})</span>
+                            <span class="text-[10px] text-zinc-400 uppercase font-bold">
+                                <span x-show="locale === 'en'">Stage 4 (Days {{ $m3End + 1 }}-{{ $m4End }})</span>
+                                <span x-show="locale !== 'en'">Tahap 4 (Hari {{ $m3End + 1 }}-{{ $m4End }})</span>
+                            </span>
                             <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase {{ $s4Done ? 'bg-emerald-500 text-black' : ($s4Active ? 'bg-amber-500 text-black animate-pulse' : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400') }}">
-                                {{ $s4Done ? 'SELESAI' : ($s4Active ? 'SEDANG JALAN' : 'TERJADWAL') }}
+                                <span x-show="locale === 'en'">{{ $s4Done ? 'COMPLETED' : ($s4Active ? 'IN PROGRESS' : 'SCHEDULED') }}</span>
+                                <span x-show="locale !== 'en'">{{ $s4Done ? 'SELESAI' : ($s4Active ? 'SEDANG JALAN' : 'TERJADWAL') }}</span>
                             </span>
                         </div>
-                        <div class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Security & QA Gate</div>
-                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">Anti-AI malware defense, honeypot traps, automated PHPUnit tests 100% lulus.</p>
+                        <div class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Security &amp; QA Gate</div>
+                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                            <span x-show="locale === 'en'">Anti-AI malware defense, honeypot traps, automated PHPUnit tests 100% passed.</span>
+                            <span x-show="locale !== 'en'">Anti-AI malware defense, honeypot traps, automated PHPUnit tests 100% lulus.</span>
+                        </p>
                     </div>
 
                     <!-- Stage 5 -->
@@ -489,14 +564,22 @@
                     @endphp
                     <div class="p-3.5 border {{ $s5Done ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500/40' : ($s5Active ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-500/50 text-amber-900 dark:text-amber-200' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500') }} rounded-none">
                         <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-[10px] text-zinc-400 uppercase font-bold">Tahap 5 (Hari {{ $m4End + 1 }}-{{ $m5End }})</span>
+                            <span class="text-[10px] text-zinc-400 uppercase font-bold">
+                                <span x-show="locale === 'en'">Stage 5 (Days {{ $m4End + 1 }}-{{ $m5End }})</span>
+                                <span x-show="locale !== 'en'">Tahap 5 (Hari {{ $m4End + 1 }}-{{ $m5End }})</span>
+                            </span>
                             <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase {{ $s5Done ? 'bg-emerald-500 text-black' : ($s5Active ? 'bg-amber-500 text-black animate-pulse' : 'bg-zinc-300 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400') }}">
-                                {{ $s5Done ? 'SELESAI' : ($s5Active ? 'SEDANG JALAN' : 'TERJADWAL') }}
+                                <span x-show="locale === 'en'">{{ $s5Done ? 'COMPLETED' : ($s5Active ? 'IN PROGRESS' : 'SCHEDULED') }}</span>
+                                <span x-show="locale !== 'en'">{{ $s5Done ? 'SELESAI' : ($s5Active ? 'SEDANG JALAN' : 'TERJADWAL') }}</span>
                             </span>
                         </div>
-                        <div class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Staging & Delivery</div>
-                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">UAT klien di Staging, deploy production via deploy.sh, serah terima kredensial.</p>
+                        <div class="font-bold text-zinc-900 dark:text-zinc-100 text-xs mb-1">Staging &amp; Delivery</div>
+                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                            <span x-show="locale === 'en'">Client UAT on Staging, production deploy via deploy.sh, credential handover.</span>
+                            <span x-show="locale !== 'en'">UAT klien di Staging, deploy production via deploy.sh, serah terima kredensial.</span>
+                        </p>
                     </div>
+                </div>
                 </div>
             </div>
 
@@ -510,22 +593,29 @@
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-mono font-bold tracking-widest uppercase border border-emerald-500/40">
-                                    DEV PLAYBOOK // KHUSUS DEVELOPER
+                                    <span x-show="locale === 'en'">DEV PLAYBOOK // DEVELOPER EXCLUSIVE</span>
+                                    <span x-show="locale !== 'en'">DEV PLAYBOOK // KHUSUS DEVELOPER</span>
                                 </span>
-                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono hidden sm:inline">HIGH-RETENTION GUIDE</span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono hidden sm:inline">
+                                    <span x-show="locale === 'en'">HIGH-RETENTION GUIDE</span>
+                                    <span x-show="locale !== 'en'">PANDUAN RETENSI TINGGI</span>
+                                </span>
                             </div>
                             <h2 class="text-lg sm:text-xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mt-1">
-                                Panduan Eksekusi AI Coding Agent Dalam IDE (Start to Finish)
+                                <span x-show="locale === 'en'">AI Coding Agent In-IDE Execution Guide (Start to Finish)</span>
+                                <span x-show="locale !== 'en'">Panduan Eksekusi AI Coding Agent Dalam IDE (Start to Finish)</span>
                             </h2>
                             <p class="text-zinc-600 dark:text-zinc-400 text-xs font-mono mt-0.5">
-                                Prosedur baku mengumpankan PRD ke Cursor / Claude Code / Antigravity agar tepat sasaran tanpa halusinasi.
+                                <span x-show="locale === 'en'">Standard operating procedures for feeding PRD into Cursor / Claude Code / Antigravity with zero hallucination.</span>
+                                <span x-show="locale !== 'en'">Prosedur baku mengumpankan PRD ke Cursor / Claude Code / Antigravity agar tepat sasaran tanpa halusinasi.</span>
                             </p>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2">
                         <button type="button" @click="devPlaybookOpen = !devPlaybookOpen" class="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-mono uppercase font-bold border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5">
-                            <span x-text="devPlaybookOpen ? 'SEMBUNYIKAN DETAIL' : 'TAMPILKAN PANDUAN'"></span>
+                            <span x-show="locale === 'en'" x-text="devPlaybookOpen ? 'HIDE DETAILS' : 'SHOW GUIDE'"></span>
+                            <span x-show="locale !== 'en'" x-text="devPlaybookOpen ? 'SEMBUNYIKAN DETAIL' : 'TAMPILKAN PANDUAN'"></span>
                             <svg class="w-3.5 h-3.5 transition-transform" :class="devPlaybookOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                     </div>
@@ -535,55 +625,70 @@
                     <!-- Phase Navigation Buttons -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-xs">
                         <button type="button" @click="activeDevPhase = 1" :class="activeDevPhase === 1 ? 'bg-emerald-500 text-black font-bold border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-750 border-zinc-300 dark:border-zinc-700'" class="p-3 text-left border transition flex items-center justify-between">
-                            <span>1. PRODUKSI APLIKASI</span>
+                            <span><span x-show="locale === 'en'">1. APP PRODUCTION</span><span x-show="locale !== 'en'">1. PRODUKSI APLIKASI</span></span>
                             <span class="text-[10px] opacity-75">Vertical Slice</span>
                         </button>
                         <button type="button" @click="activeDevPhase = 2" :class="activeDevPhase === 2 ? 'bg-emerald-500 text-black font-bold border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-750 border-zinc-300 dark:border-zinc-700'" class="p-3 text-left border transition flex items-center justify-between">
-                            <span>2. QUALITY TESTING GATE</span>
-                            <span class="text-[10px] opacity-75">Audit & Test</span>
+                            <span><span x-show="locale === 'en'">2. QUALITY TESTING GATE</span><span x-show="locale !== 'en'">2. QUALITY TESTING GATE</span></span>
+                            <span class="text-[10px] opacity-75">Audit &amp; Test</span>
                         </button>
                         <button type="button" @click="activeDevPhase = 3" :class="activeDevPhase === 3 ? 'bg-emerald-500 text-black font-bold border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-750 border-zinc-300 dark:border-zinc-700'" class="p-3 text-left border transition flex items-center justify-between">
-                            <span>3. DELIVERY & HANDOFF</span>
-                            <span class="text-[10px] opacity-75">Deploy & Scope Lock</span>
+                            <span><span x-show="locale === 'en'">3. DELIVERY &amp; HANDOFF</span><span x-show="locale !== 'en'">3. DELIVERY &amp; HANDOFF</span></span>
+                            <span class="text-[10px] opacity-75">Deploy &amp; Scope Lock</span>
                         </button>
                     </div>
 
                     <!-- Phase 1 Content -->
                     <div x-show="activeDevPhase === 1" class="bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 font-mono text-xs leading-relaxed">
                         <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-xs border-b border-zinc-200 dark:border-zinc-800 pb-2">
-                            <span>Langkah Fase 1: Rekayasa Vertikal (Vertical Slice Prompting)</span>
+                            <span>
+                                <span x-show="locale === 'en'">Phase 1: Vertical Slice Engineering (Vertical Slice Prompting)</span>
+                                <span x-show="locale !== 'en'">Langkah Fase 1: Rekayasa Vertikal (Vertical Slice Prompting)</span>
+                            </span>
                         </div>
                         <div class="grid md:grid-cols-2 gap-4">
                             <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
                                 <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-emerald-600 dark:text-emerald-400">1.1</span> Ekstraksi Directive Fitur dari PRD
+                                    <span class="text-emerald-600 dark:text-emerald-400">1.1</span>
+                                    <span x-show="locale === 'en'">Feature Directive Extraction from PRD</span>
+                                    <span x-show="locale !== 'en'">Ekstraksi Directive Fitur dari PRD</span>
                                 </div>
                                 <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                    Scroll ke <strong>Area 03 (Spesifikasi Rinci Fitur)</strong> di bawah. Klik tombol <strong>"SALIN PROMPT AGENT"</strong> pada salah satu kartu fitur. Jangan pernah memberikan seluruh dokumen PRD dalam satu prompt raksasa (cegah <em>context-rot</em>).
+                                    <span x-show="locale === 'en'">Scroll down to <strong>Section 03 (Detailed Feature Specs)</strong> below. Click <strong>"COPY AGENT PROMPT"</strong> on any feature card. Never feed the entire PRD document in a single giant prompt (prevent <em>context-rot</em>).</span>
+                                    <span x-show="locale !== 'en'">Scroll ke <strong>Area 03 (Spesifikasi Rinci Fitur)</strong> di bawah. Klik tombol <strong>"SALIN PROMPT AGENT"</strong> pada salah satu kartu fitur. Jangan pernah memberikan seluruh dokumen PRD dalam satu prompt raksasa (cegah <em>context-rot</em>).</span>
                                 </p>
                             </div>
                             <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
                                 <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-emerald-600 dark:text-emerald-400">1.2</span> Standar Primary Key ULID & JSON
+                                    <span class="text-emerald-600 dark:text-emerald-400">1.2</span>
+                                    <span x-show="locale === 'en'">Strict ULID &amp; JSON Primary Key Standard</span>
+                                    <span x-show="locale !== 'en'">Standar Primary Key ULID &amp; JSON</span>
                                 </div>
                                 <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                    Instruksikan AI membuat tabel dengan <code class="text-amber-600 dark:text-amber-300">->ulid('id')->primary()</code> (VARCHAR 26) dan trait <code class="text-amber-600 dark:text-amber-300">HasUlids</code>. Gunakan casting <code class="text-amber-600 dark:text-amber-300">'array'</code> untuk field multi-bahasa (<code class="text-zinc-700 dark:text-zinc-300">title->id</code>, <code class="text-zinc-700 dark:text-zinc-300">title->en</code>).
+                                    <span x-show="locale === 'en'">Instruct the AI to create tables with <code class="text-amber-600 dark:text-amber-300">->ulid('id')->primary()</code> (VARCHAR 26) and trait <code class="text-amber-600 dark:text-amber-300">HasUlids</code>. Use <code class="text-amber-600 dark:text-amber-300">'array'</code> casting for multi-language fields (<code class="text-zinc-700 dark:text-zinc-300">title->id</code>, <code class="text-zinc-700 dark:text-zinc-300">title->en</code>).</span>
+                                    <span x-show="locale !== 'en'">Instruksikan AI membuat tabel dengan <code class="text-amber-600 dark:text-amber-300">->ulid('id')->primary()</code> (VARCHAR 26) dan trait <code class="text-amber-600 dark:text-amber-300">HasUlids</code>. Gunakan casting <code class="text-amber-600 dark:text-amber-300">'array'</code> untuk field multi-bahasa (<code class="text-zinc-700 dark:text-zinc-300">title->id</code>, <code class="text-zinc-700 dark:text-zinc-300">title->en</code>).</span>
                                 </p>
                             </div>
                             <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
                                 <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-emerald-600 dark:text-emerald-400">1.3</span> Country Zone & Pemisah Ribuan
+                                    <span class="text-emerald-600 dark:text-emerald-400">1.3</span>
+                                    <span x-show="locale === 'en'">Country Zones &amp; Thousands Separator</span>
+                                    <span x-show="locale !== 'en'">Country Zone &amp; Pemisah Ribuan</span>
                                 </div>
                                 <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                    Untuk form intake nomor telepon, wajib gunakan selector <code class="text-emerald-600 dark:text-emerald-300">config('country_zones')</code>. Untuk display angka/uang di atas 1.000, wajib ada pemisah ribuan otomatis (titik format ID / koma format EN).
+                                    <span x-show="locale === 'en'">For phone intake forms, always use <code class="text-emerald-600 dark:text-emerald-300">config('country_zones')</code> selector. For number/currency display >= 1,000, enforce automatic thousands separator (period for ID / comma for EN).</span>
+                                    <span x-show="locale !== 'en'">Untuk form intake nomor telepon, wajib gunakan selector <code class="text-emerald-600 dark:text-emerald-300">config('country_zones')</code>. Untuk display angka/uang di atas 1.000, wajib ada pemisah ribuan otomatis (titik format ID / koma format EN).</span>
                                 </p>
                             </div>
                             <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
                                 <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-emerald-600 dark:text-emerald-400">1.4</span> UI/UX Anti-AI-Slop & Icon Lokal
+                                    <span class="text-emerald-600 dark:text-emerald-400">1.4</span>
+                                    <span x-show="locale === 'en'">Anti-AI-Slop UI/UX &amp; Local Icons</span>
+                                    <span x-show="locale !== 'en'">UI/UX Anti-AI-Slop &amp; Icon Lokal</span>
                                 </div>
                                 <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                    Sudut border wajib tipis (<code class="text-emerald-600 dark:text-emerald-300">rounded-sm/md</code>, dilarang pill <code class="text-rose-600 dark:text-rose-400">rounded-full</code>). Gunakan icon SVG FontAwesome lokal via <code class="text-emerald-600 dark:text-emerald-300">\App\Support\FontAwesome::svg('name')</code> tanpa CDN luar.
+                                    <span x-show="locale === 'en'">Border radius must be subtle (<code class="text-emerald-600 dark:text-emerald-300">rounded-none/rounded-sm</code>, strictly no pill <code class="text-rose-600 dark:text-rose-400">rounded-full</code>). Use local FontAwesome SVG via <code class="text-emerald-600 dark:text-emerald-300">\App\Support\FontAwesome::svg('name')</code> with zero CDN latency.</span>
+                                    <span x-show="locale !== 'en'">Sudut border wajib tipis (<code class="text-emerald-600 dark:text-emerald-300">rounded-sm/md</code>, dilarang pill <code class="text-rose-600 dark:text-rose-400">rounded-full</code>). Gunakan icon SVG FontAwesome lokal via <code class="text-emerald-600 dark:text-emerald-300">\App\Support\FontAwesome::svg('name')</code> tanpa CDN luar.</span>
                                 </p>
                             </div>
                         </div>
@@ -592,43 +697,60 @@
                     <!-- Phase 2 Content -->
                     <div x-show="activeDevPhase === 2" class="bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 font-mono text-xs leading-relaxed">
                         <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider text-xs border-b border-zinc-200 dark:border-zinc-800 pb-2">
-                            <span>Langkah Fase 2: Quality Testing Gate & Otomasi Verifikasi</span>
+                            <span>
+                                <span x-show="locale === 'en'">Phase 2: Quality Testing Gate &amp; Automated Verification</span>
+                                <span x-show="locale !== 'en'">Langkah Fase 2: Quality Testing Gate &amp; Otomasi Verifikasi</span>
+                            </span>
                         </div>
                         <div class="grid md:grid-cols-2 gap-4">
                             <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
                                 <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-amber-600 dark:text-amber-400">2.1</span> Eksekusi Unit & Feature Tests
+                                    <span class="text-amber-600 dark:text-amber-400">2.1</span>
+                                    <span x-show="locale === 'en'">Unit &amp; Feature Test Execution</span>
+                                    <span x-show="locale !== 'en'">Eksekusi Unit &amp; Feature Tests</span>
                                 </div>
                                 <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                    Wajibkan AI menjalankan pengujian terminal lokal:
+                                    <span x-show="locale === 'en'">Mandate the AI to execute local terminal tests:</span>
+                                    <span x-show="locale !== 'en'">Wajibkan AI menjalankan pengujian terminal lokal:</span>
                                     <pre class="bg-zinc-900 dark:bg-black p-2 text-emerald-400 text-[10px] mt-1 select-all border border-zinc-800">php artisan test --filter=[Model]Test</pre>
-                                    Seluruh assertion wajib passed 100% sebelum beralih ke tugas berikutnya.
+                                    <span x-show="locale === 'en'">All assertions must pass 100% before moving to the next task.</span>
+                                    <span x-show="locale !== 'en'">Seluruh assertion wajib passed 100% sebelum beralih ke tugas berikutnya.</span>
                                 </p>
                             </div>
                             <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
                                 <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-amber-600 dark:text-amber-400">2.2</span> Frontend Vite Compilation Gate
+                                    <span class="text-amber-600 dark:text-amber-400">2.2</span>
+                                    <span x-show="locale === 'en'">Frontend Vite Compilation Gate</span>
+                                    <span x-show="locale !== 'en'">Frontend Vite Compilation Gate</span>
                                 </div>
                                 <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                    Validasi kompilasi bundle frontend React Islands & Tailwind:
+                                    <span x-show="locale === 'en'">Validate React Islands &amp; Tailwind bundle compilation:</span>
+                                    <span x-show="locale !== 'en'">Validasi kompilasi bundle frontend React Islands &amp; Tailwind:</span>
                                     <pre class="bg-zinc-900 dark:bg-black p-2 text-emerald-400 text-[10px] mt-1 select-all border border-zinc-800">npm run build</pre>
-                                    Memastikan tidak ada syntax error TypeScript/JSX dan manifest.json tersinkronisasi.
+                                    <span x-show="locale === 'en'">Ensures zero TypeScript/JSX syntax errors and manifest.json synchronization.</span>
+                                    <span x-show="locale !== 'en'">Memastikan tidak ada syntax error TypeScript/JSX dan manifest.json tersinkronisasi.</span>
                                 </p>
                             </div>
                             <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
                                 <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-amber-600 dark:text-amber-400">2.3</span> Audit Anti-AI Malware & CSP
+                                    <span class="text-amber-600 dark:text-amber-400">2.3</span>
+                                    <span x-show="locale === 'en'">Anti-AI Malware &amp; CSP Audit</span>
+                                    <span x-show="locale !== 'en'">Audit Anti-AI Malware &amp; CSP</span>
                                 </div>
                                 <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                    Pastikan middleware security memeriksa bot malicious, honeypot fields di form publik aktif, dan Content-Security-Policy tidak memblokir script internal.
+                                    <span x-show="locale === 'en'">Ensure security middleware inspects malicious bots, public form honeypots are active, and CSP allows required internal assets.</span>
+                                    <span x-show="locale !== 'en'">Pastikan middleware security memeriksa bot malicious, honeypot fields di form publik aktif, dan Content-Security-Policy tidak memblokir script internal.</span>
                                 </p>
                             </div>
                             <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
                                 <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-amber-600 dark:text-amber-400">2.4</span> Larangan Dialog JS Native
+                                    <span class="text-amber-600 dark:text-amber-400">2.4</span>
+                                    <span x-show="locale === 'en'">Strict Ban on Native JS Dialogs</span>
+                                    <span x-show="locale !== 'en'">Larangan Dialog JS Native</span>
                                 </div>
                                 <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                    Grep codebase untuk memastikan <code class="text-rose-600 dark:text-rose-400">window.alert</code> atau <code class="text-rose-600 dark:text-rose-400">window.confirm</code> bernilai 0. Seluruh feedback aksi wajib menggunakan <code class="text-emerald-600 dark:text-emerald-300">window.showToast</code>.
+                                    <span x-show="locale === 'en'">Grep codebase to verify zero <code class="text-rose-600 dark:text-rose-400">window.alert</code> or <code class="text-rose-600 dark:text-rose-400">window.confirm</code>. All action feedback must use <code class="text-emerald-600 dark:text-emerald-300">window.showToast</code>.</span>
+                                    <span x-show="locale !== 'en'">Grep codebase untuk memastikan <code class="text-rose-600 dark:text-rose-400">window.alert</code> atau <code class="text-rose-600 dark:text-rose-400">window.confirm</code> bernilai 0. Seluruh feedback aksi wajib menggunakan <code class="text-emerald-600 dark:text-emerald-300">window.showToast</code>.</span>
                                 </p>
                             </div>
                         </div>
@@ -637,41 +759,56 @@
                     <!-- Phase 3 Content -->
                     <div x-show="activeDevPhase === 3" class="bg-zinc-50 dark:bg-black/40 border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 font-mono text-xs leading-relaxed">
                         <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-wider text-xs border-b border-zinc-200 dark:border-zinc-800 pb-2">
-                            <span>Langkah Fase 3: Deployment, Scope Lock & Serah Terima Klien</span>
+                            <span>
+                                <span x-show="locale === 'en'">Phase 3: Deployment, Scope Lock &amp; Client Handover</span>
+                                <span x-show="locale !== 'en'">Langkah Fase 3: Deployment, Scope Lock &amp; Serah Terima Klien</span>
+                            </span>
                         </div>
                         <div class="grid md:grid-cols-2 gap-4">
                             <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
                                 <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-cyan-600 dark:text-cyan-400">3.1</span> Git Sync ke Repositori Resmi
+                                    <span class="text-cyan-600 dark:text-cyan-400">3.1</span>
+                                    <span x-show="locale === 'en'">Git Sync to Official Repository</span>
+                                    <span x-show="locale !== 'en'">Git Sync ke Repositori Resmi</span>
                                 </div>
                                 <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                    Commit perubahan bersih dan push ke origin main:
+                                    <span x-show="locale === 'en'">Clean commit and push to origin main:</span>
+                                    <span x-show="locale !== 'en'">Commit perubahan bersih dan push ke origin main:</span>
                                     <pre class="bg-zinc-900 dark:bg-black p-2 text-cyan-400 text-[10px] mt-1 select-all border border-zinc-800">git add . ; git commit -m "feat(modul): deskripsi" ; git push origin main</pre>
                                 </p>
                             </div>
                             <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
                                 <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-cyan-600 dark:text-cyan-400">3.2</span> Eksekusi Deployment Script Server
+                                    <span class="text-cyan-600 dark:text-cyan-400">3.2</span>
+                                    <span x-show="locale === 'en'">Server Deployment Script Execution</span>
+                                    <span x-show="locale !== 'en'">Eksekusi Deployment Script Server</span>
                                 </div>
                                 <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                    Di terminal SSH server (Coolify / VPS), jalankan nomor skenario yang sesuai:
+                                    <span x-show="locale === 'en'">In server SSH terminal (Coolify / VPS), execute the appropriate scenario:</span>
+                                    <span x-show="locale !== 'en'">Di terminal SSH server (Coolify / VPS), jalankan nomor skenario yang sesuai:</span>
                                     <pre class="bg-zinc-900 dark:bg-black p-2 text-amber-400 text-[10px] mt-1 select-all border border-zinc-800">./deploy.sh 2   # Skenario 2: Migrasi Aman</pre>
                                 </p>
                             </div>
                             <div class="space-y-2 text-zinc-700 dark:text-zinc-300">
                                 <div class="text-zinc-900 dark:text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-cyan-600 dark:text-cyan-400">3.3</span> Kunci Scope Kontrak Digital
+                                    <span class="text-cyan-600 dark:text-cyan-400">3.3</span>
+                                    <span x-show="locale === 'en'">Digital Contract Scope Lock</span>
+                                    <span x-show="locale !== 'en'">Kunci Scope Kontrak Digital</span>
                                 </div>
                                 <p class="text-zinc-600 dark:text-zinc-400 text-[11px]">
-                                    Ubah status dokumen kontrak digital menjadi <code class="text-emerald-600 dark:text-emerald-400">LOCKED_SIGNED</code> di admin panel untuk mengunci scope fitur agar terhindar dari scope creep yang tidak terbayar.
+                                    <span x-show="locale === 'en'">Switch contract status to <code class="text-emerald-600 dark:text-emerald-400">LOCKED_SIGNED</code> in admin to lock scope and prevent unpaid scope creep.</span>
+                                    <span x-show="locale !== 'en'">Ubah status dokumen kontrak digital menjadi <code class="text-emerald-600 dark:text-emerald-400">LOCKED_SIGNED</code> di admin panel untuk mengunci scope fitur agar terhindar dari scope creep yang tidak terbayar.</span>
                                 </p>
                             </div>
                             <div class="space-y-2 text-zinc-300">
                                 <div class="text-white font-bold flex items-center gap-1.5">
-                                    <span class="text-cyan-400">3.4</span> Update Timeline Sprint Proyek
+                                    <span class="text-cyan-400">3.4</span>
+                                    <span x-show="locale === 'en'">Update Project Sprint Timeline</span>
+                                    <span x-show="locale !== 'en'">Update Timeline Sprint Proyek</span>
                                 </div>
                                 <p class="text-zinc-400 text-[11px]">
-                                    Perbarui progress milestone pada dashboard klien sehingga klien dapat memantau secara transparan pencapaian fitur harian secara mandiri.
+                                    <span x-show="locale === 'en'">Update milestone progress on client dashboard so client can transparently monitor daily deliverables.</span>
+                                    <span x-show="locale !== 'en'">Perbarui progress milestone pada dashboard klien sehingga klien dapat memantau secara transparan pencapaian fitur harian secara mandiri.</span>
                                 </p>
                             </div>
                         </div>
@@ -680,11 +817,13 @@
                     <!-- Master Orchestration Prompt Box -->
                     <div class="pt-2 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-3">
                         <div class="text-zinc-400 text-[11px] font-mono">
-                            ⚡ <strong>Master Agentic Prompt</strong>: Ingin memulai sprint dari awal? Salin seluruh ringkasan arsitektur sistem proyek ini ke AI Coding Agent Anda.
+                            <span x-show="locale === 'en'">⚡ <strong>Master Agentic Prompt</strong>: Want to start sprint from scratch? Copy the full architectural summary into your AI Coding Agent.</span>
+                            <span x-show="locale !== 'en'">⚡ <strong>Master Agentic Prompt</strong>: Ingin memulai sprint dari awal? Salin seluruh ringkasan arsitektur sistem proyek ini ke AI Coding Agent Anda.</span>
                         </div>
                         <button type="button" onclick="copyMasterOrchestrationPrompt(this)" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold uppercase tracking-wider text-xs font-mono transition shrink-0 flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
-                            <span>SALIN MASTER PROMPT AI IDE</span>
+                            <span x-show="locale === 'en'">COPY MASTER AI IDE PROMPT</span>
+                            <span x-show="locale !== 'en'">SALIN MASTER PROMPT AI IDE</span>
                         </button>
                     </div>
                 </div>
@@ -696,45 +835,68 @@
                     <div class="flex items-center gap-2.5">
                         <span class="w-3 h-3 bg-emerald-500 animate-pulse"></span>
                         <div>
-                            <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">AI AGENT EXECUTION WIZARD // ROADMAP &amp; CHECKPOINT ENGINE</span>
-                            <h3 class="text-sm sm:text-base font-black uppercase text-white">Panduan Terpandu Eksekusi AI Coding Agent (Cursor / Claude Code / Antigravity IDE)</h3>
+                            <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">
+                                <span x-show="locale === 'en'">AI AGENT EXECUTION WIZARD // ROADMAP &amp; CHECKPOINT ENGINE</span>
+                                <span x-show="locale !== 'en'">AI AGENT EXECUTION WIZARD // ROADMAP &amp; CHECKPOINT ENGINE</span>
+                            </span>
+                            <h3 class="text-sm sm:text-base font-black uppercase text-white">
+                                <span x-show="locale === 'en'">Guided AI Coding Agent Execution Playbook (Cursor / Claude Code / Antigravity IDE)</span>
+                                <span x-show="locale !== 'en'">Panduan Terpandu Eksekusi AI Coding Agent (Cursor / Claude Code / Antigravity IDE)</span>
+                            </h3>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-xs text-zinc-400">Progres Sprint:</span>
+                        <span class="text-xs text-zinc-400">
+                            <span x-show="locale === 'en'">Sprint Progress:</span>
+                            <span x-show="locale !== 'en'">Progres Sprint:</span>
+                        </span>
                         <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-xs">
-                            <span x-text="getDevProgressPercentage()"></span>% Selesai
+                            <span x-text="getDevProgressPercentage()"></span>% <span x-show="locale === 'en'">Completed</span><span x-show="locale !== 'en'">Selesai</span>
                         </span>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                     <div class="p-3 bg-zinc-900/90 border border-zinc-800 space-y-1">
-                        <span class="text-emerald-400 font-bold block text-[11px]">1. JANGAN PROMPT DUMPING:</span>
+                        <span class="text-emerald-400 font-bold block text-[11px]">
+                            <span x-show="locale === 'en'">1. NO PROMPT DUMPING:</span>
+                            <span x-show="locale !== 'en'">1. JANGAN PROMPT DUMPING:</span>
+                        </span>
                         <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                            Jangan salin ribuan baris PRD sekaligus ke AI chat. Eksekusi per fitur vertikal (Vertical Slice) agar AI tidak amnesia kode atau memotong logika.
+                            <span x-show="locale === 'en'">Never copy thousands of PRD lines at once into AI chat. Execute per vertical slice so AI doesn't forget context or cut business logic.</span>
+                            <span x-show="locale !== 'en'">Jangan salin ribuan baris PRD sekaligus ke AI chat. Eksekusi per fitur vertikal (Vertical Slice) agar AI tidak amnesia kode atau memotong logika.</span>
                         </p>
                     </div>
                     <div class="p-3 bg-zinc-900/90 border border-zinc-800 space-y-1">
-                        <span class="text-cyan-400 font-bold block text-[11px]">2. TOLAK UKUR MUTU (DoD):</span>
+                        <span class="text-cyan-400 font-bold block text-[11px]">
+                            <span x-show="locale === 'en'">2. DEFINITION OF DONE (DoD):</span>
+                            <span x-show="locale !== 'en'">2. TOLAK UKUR MUTU (DoD):</span>
+                        </span>
                         <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                            Jalankan perintah verifikasi terminal (misal: <code>php artisan migrate:status</code> &amp; <code>php artisan test</code>) sebelum menandai checkpoint selesai.
+                            <span x-show="locale === 'en'">Execute terminal verification commands (e.g. <code>php artisan migrate:status</code> &amp; <code>php artisan test</code>) before marking checkpoints complete.</span>
+                            <span x-show="locale !== 'en'">Jalankan perintah verifikasi terminal (misal: <code>php artisan migrate:status</code> &amp; <code>php artisan test</code>) sebelum menandai checkpoint selesai.</span>
                         </p>
                     </div>
                     <div class="p-3 bg-zinc-900/90 border border-zinc-800 space-y-1">
-                        <span class="text-amber-400 font-bold block text-[11px]">3. SINKRONISASI DASHBOARD:</span>
+                        <span class="text-amber-400 font-bold block text-[11px]">
+                            <span x-show="locale === 'en'">3. DASHBOARD SYNC:</span>
+                            <span x-show="locale !== 'en'">3. SINKRONISASI DASHBOARD:</span>
+                        </span>
                         <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                            Tiap tahap yang dicentang otomatis tersimpan ke server database dan mengupdate timeline progres pengerjaan di dashboard pelanggan secara live.
+                            <span x-show="locale === 'en'">Each checked step automatically persists to server database and updates sprint progress on customer dashboard live.</span>
+                            <span x-show="locale !== 'en'">Tiap tahap yang dicentang otomatis tersimpan ke server database dan mengupdate timeline progres pengerjaan di dashboard pelanggan secara live.</span>
                         </p>
                     </div>
                 </div>
 
                 <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-800">
                     <div class="text-[11px] text-zinc-400">
-                        ⚡ Urutan eksekusi teruji: <strong>Fondasi Global (DB ULID) &rarr; Fitur MVP 01..N &rarr; Quality Gate &amp; Deploy</strong>
+                        <span x-show="locale === 'en'">⚡ Battle-tested execution order: <strong>Global Foundation (DB ULID) &rarr; MVP Features 01..N &rarr; Quality Gate &amp; Deploy</strong></span>
+                        <span x-show="locale !== 'en'">⚡ Urutan eksekusi teruji: <strong>Fondasi Global (DB ULID) &rarr; Fitur MVP 01..N &rarr; Quality Gate &amp; Deploy</strong></span>
                     </div>
                     <a href="#section-3-5" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold uppercase text-xs flex items-center gap-1.5 transition">
-                        <span>BUKA WIZARD COCKPIT &amp; CHECKPOINT SPRINT &rarr;</span>
+                        <span x-show="locale === 'en'">OPEN WIZARD COCKPIT &amp; CHECKPOINT SPRINT &rarr;</span>
+                        <span x-show="locale !== 'en'">BUKA WIZARD COCKPIT &amp; CHECKPOINT SPRINT &rarr;</span>
                     </a>
                 </div>
             </div>
@@ -745,11 +907,18 @@
                     <span class="w-3 h-3 bg-emerald-500 rounded-none animate-pulse"></span>
                     <div>
                         <div class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                            <span>DOKUMEN SPESIFIKASI ARSITEKTUR &amp; PRD SISTEM</span>
-                            <span class="text-[10px] font-mono px-2 py-0.5 bg-emerald-100 text-emerald-950 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-black">13 SEKSI</span>
+                            <span>
+                                <span x-show="locale === 'en'">SYSTEM ARCHITECTURE &amp; PRD SPECIFICATION</span>
+                                <span x-show="locale !== 'en'">DOKUMEN SPESIFIKASI ARSITEKTUR &amp; PRD SISTEM</span>
+                            </span>
+                            <span class="text-[10px] font-mono px-2 py-0.5 bg-emerald-100 text-emerald-950 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-black">
+                                <span x-show="locale === 'en'">13 SECTIONS</span>
+                                <span x-show="locale !== 'en'">13 SEKSI</span>
+                            </span>
                         </div>
                         <div class="text-xs text-zinc-600 dark:text-zinc-400 font-sans mt-0.5">
-                            Setiap seksi di bawah dilengkapi fitur <strong>Accordion</strong> untuk dibuka-tutup secara mandiri agar nyaman dibaca dan tidak overwhelming.
+                            <span x-show="locale === 'en'">Each section below includes an independent <strong>Accordion</strong> to toggle open/closed for comfortable reading without being overwhelming.</span>
+                            <span x-show="locale !== 'en'">Setiap seksi di bawah dilengkapi fitur <strong>Accordion</strong> untuk dibuka-tutup secara mandiri agar nyaman dibaca dan tidak overwhelming.</span>
                         </div>
                     </div>
                 </div>
@@ -759,19 +928,25 @@
                         type="button" 
                         @click="expandAllSections()" 
                         class="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold transition flex items-center gap-1.5 cursor-pointer"
-                        title="Buka seluruh 13 seksi arsitektur"
+                        :title="locale === 'en' ? 'Expand all 13 architecture sections' : 'Buka seluruh 13 seksi arsitektur'"
                     >
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        <span>BUKA SEMUA (EXPAND)</span>
+                        <span>
+                            <span x-show="locale === 'en'">EXPAND ALL</span>
+                            <span x-show="locale !== 'en'">BUKA SEMUA (EXPAND)</span>
+                        </span>
                     </button>
                     <button 
                         type="button" 
                         @click="collapseAllSections()" 
                         class="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold transition flex items-center gap-1.5 cursor-pointer"
-                        title="Ciutkan seluruh seksi menjadi ringkasan judul & badge"
+                        :title="locale === 'en' ? 'Collapse all sections into titles & badges' : 'Ciutkan seluruh seksi menjadi ringkasan judul & badge'"
                     >
                         <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
-                        <span>TUTUP SEMUA (COLLAPSE)</span>
+                        <span>
+                            <span x-show="locale === 'en'">COLLAPSE ALL</span>
+                            <span x-show="locale !== 'en'">TUTUP SEMUA (COLLAPSE)</span>
+                        </span>
                     </button>
                     @if(!($isLocked ?? false))
                     <button 
@@ -779,10 +954,11 @@
                         @click="regenerateFullBlueprint()" 
                         :disabled="fullRegenerating"
                         class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-                        title="Crafting ulang ide casual menjadi spesifikasi blueprint profesional dan generate ulang diagram visual"
+                        :title="locale === 'en' ? 'Re-synthesize casual business ideas into world-class architecture spec and diagrams' : 'Crafting ulang ide casual menjadi spesifikasi blueprint profesional dan generate ulang diagram visual'"
                     >
                         <svg class="w-3.5 h-3.5" :class="fullRegenerating ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                        <span x-text="fullRegenerating ? 'MENSINTESIS...' : '🔄 REGENERATE PRD & ARSITEKTUR'">🔄 REGENERATE PRD &amp; ARSITEKTUR</span>
+                        <span x-show="locale === 'en'" x-text="fullRegenerating ? 'SYNTHESIZING...' : '🔄 REGENERATE PRD &amp; ARCHITECTURE'">🔄 REGENERATE PRD &amp; ARCHITECTURE</span>
+                        <span x-show="locale !== 'en'" x-text="fullRegenerating ? 'MENSINTESIS...' : '🔄 REGENERATE PRD &amp; ARSITEKTUR'">🔄 REGENERATE PRD &amp; ARSITEKTUR</span>
                     </button>
                     @endif
                 </div>

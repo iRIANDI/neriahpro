@@ -3,9 +3,10 @@
             style="top: var(--global-nav-h, 88px);">
         <div class="w-full max-w-[1700px] mx-auto flex items-center justify-center flex-wrap gap-2 sm:gap-2.5">
             <!-- Back to Client Portal Button -->
-            <a href="/customer/dashboard" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Kembali ke Portal Klien">
+            <a href="/customer/dashboard" class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" :title="locale === 'en' ? 'Back to Client Portal' : 'Kembali ke Portal Klien'">
                 <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                <span>PORTAL KLIEN</span>
+                <span x-show="locale === 'en'">CLIENT PORTAL</span>
+                <span x-show="locale !== 'en'">PORTAL KLIEN</span>
             </a>
 
             @if(!$blueprint->is_published)
@@ -17,20 +18,22 @@
                 <!-- Real-time Live Collaborative Presence Indicator -->
                 <div x-show="collaborators.length > 1" x-cloak class="flex items-center gap-2 px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-xs font-mono shrink-0 whitespace-nowrap">
                     <span class="w-2 h-2 bg-emerald-500 rounded-none animate-pulse"></span>
-                    <span class="text-zinc-700 dark:text-zinc-300 font-bold" x-text="collaborators.length + ' Kolaborator Live'"></span>
+                    <span class="text-zinc-700 dark:text-zinc-300 font-bold" x-text="locale === 'en' ? (collaborators.length + ' Live Collaborators') : (collaborators.length + ' Kolaborator Live')"></span>
                 </div>
 
                 <!-- Launch World-Class Developer Execution Guide (3 Cara Mulai & Docker Guide) -->
-                <button type="button" @click="showExecutionGuideModal = true" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none border border-emerald-400 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer shadow-xs" title="Panduan Eksekusi Developer: 3 Pilihan Cara Mulai (Antigravity Chat, Standalone App, AI Cockpit) + Docker Stack">
-                    <span>🚀 3 CARA MULAI</span>
+                <button type="button" @click="showExecutionGuideModal = true" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none border border-emerald-400 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer shadow-xs" :title="locale === 'en' ? 'Developer Execution Guide: 3 Ways to Start + Docker Dev Stack' : 'Panduan Eksekusi Developer: 3 Pilihan Cara Mulai (Antigravity Chat, Standalone App, AI Cockpit) + Docker Stack'">
+                    <span x-show="locale === 'en'">🚀 3 WAYS TO START</span>
+                    <span x-show="locale !== 'en'">🚀 3 CARA MULAI</span>
                 </button>
 
                 <!-- Launch Full-Screen 100vh 3-Pane Architect Studio v5.0 (Dual-Mode Retail & Mitra) -->
-                <a href="{{ route('blueprint.studio', ['slug' => $blueprint->slug]) }}" class="px-2.5 sm:px-3 py-1 bg-zinc-950 hover:bg-zinc-800 text-emerald-400 dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:text-zinc-950 text-xs font-mono uppercase font-black rounded-none border border-emerald-500 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap" title="Buka Meja Kerja 3-Pane Architect Studio v5.0 (Dual-Mode Retail & Mitra, Decision Matrix, Delta v1.1 & Live MCP)">
+                <a href="{{ route('blueprint.studio', ['slug' => $blueprint->slug]) }}" class="px-2.5 sm:px-3 py-1 bg-zinc-950 hover:bg-zinc-800 text-emerald-400 dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:text-zinc-950 text-xs font-mono uppercase font-black rounded-none border border-emerald-500 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap" :title="locale === 'en' ? 'Open Fullscreen 3-Pane Architect Studio v5.0' : 'Buka Meja Kerja 3-Pane Architect Studio v5.0 (Dual-Mode Retail & Mitra, Decision Matrix, Delta v1.1 & Live MCP)'">
                     <span>🖥️ 3-PANE STUDIO</span>
                 </a>
-                <a href="{{ route('blueprint.studio', ['slug' => $blueprint->slug, 'mode' => 'mitra']) }}" class="px-2.5 sm:px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 text-xs font-mono uppercase font-black rounded-none border border-amber-400 dark:border-amber-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap" title="Buka Mode Mitra Proyek: RAB Algoritmik, Kunci SPK SHA-256, Checklist UAT & BAST Digital">
-                    <span>🤝 MODE MITRA</span>
+                <a href="{{ route('blueprint.studio', ['slug' => $blueprint->slug, 'mode' => 'mitra']) }}" class="px-2.5 sm:px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 text-xs font-mono uppercase font-black rounded-none border border-amber-400 dark:border-amber-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap" :title="locale === 'en' ? 'Open Partner Mode: Algorithmic BoQ, SHA-256 Scope Lock, UAT Checklist' : 'Buka Mode Mitra Proyek: RAB Algoritmik, Kunci SPK SHA-256, Checklist UAT & BAST Digital'">
+                    <span x-show="locale === 'en'">🤝 PARTNER MODE</span>
+                    <span x-show="locale !== 'en'">🤝 MODE MITRA</span>
                 </a>
 
                 <!-- Official A4 Mitra Commercial Pack (RAB, SPK Appendix SHA-256, Digital BAST) -->
@@ -92,19 +95,19 @@
                 >
                     <span x-show="navMode === 'sidebar'" class="flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h6v12H4zM12 6h8v12h-8z"/></svg>
-                        <span class="hidden md:inline">MODE 1: SIDEBAR</span>
+                        <span class="hidden md:inline"><span x-show="locale === 'en'">MODE 1: SIDEBAR</span><span x-show="locale !== 'en'">MODE 1: SIDEBAR</span></span>
                         <span class="md:hidden">SIDEBAR</span>
                     </span>
                     <span x-show="navMode !== 'sidebar'" x-cloak class="flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                        <span class="hidden md:inline">MODE 2: LEBAR PENUH</span>
-                        <span class="md:hidden">LEBAR</span>
+                        <span class="hidden md:inline"><span x-show="locale === 'en'">MODE 2: FULL WIDTH</span><span x-show="locale !== 'en'">MODE 2: LEBAR PENUH</span></span>
+                        <span class="md:hidden"><span x-show="locale === 'en'">FULL</span><span x-show="locale !== 'en'">LEBAR</span></span>
                     </span>
                 </button>
 
                 <!-- Unified Document Actions: Print, PDF, MD, .cursorrules -->
                 <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
-                    <button type="button" onclick="window.printPrdDocument()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Cetak PRD (Print)">
+                    <button type="button" onclick="window.printPrdDocument()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" :title="locale === 'en' ? 'Print PRD Document' : 'Cetak PRD (Print)'">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                         <span class="hidden md:inline">PRINT</span>
                     </button>
@@ -159,19 +162,19 @@
                         <span class="xl:hidden">A4</span>
                     </a>
                     <a href="{{ url('/blueprint?tier=retail_spark&new=1') }}" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black transition flex items-center gap-1" :title="locale === 'en' ? 'Start Clean New Project' : 'Mulai Proyek Baru Bersih (100% Terisolasi Tanpa Sisa Proyek Ini)'">
-                        <span class="hidden xl:inline">+ PROYEK BARU</span>
-                        <span class="xl:hidden">+BARU</span>
+                        <span class="hidden xl:inline"><span x-show="locale === 'en'">+ NEW PROJECT</span><span x-show="locale !== 'en'">+ PROYEK BARU</span></span>
+                        <span class="xl:hidden"><span x-show="locale === 'en'">+NEW</span><span x-show="locale !== 'en'">+BARU</span></span>
                     </a>
                 </div>
 
                 <!-- Dedicated AI AGENT HELPER Trigger -->
-                <button type="button" @click="showAiPromptModal = true" class="px-2.5 sm:px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Buka Pusat Helper Prompt AI Agent (Antigravity, Cursor, Claude Code, Windsurf)">
+                <button type="button" @click="showAiPromptModal = true" class="px-2.5 sm:px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" :title="locale === 'en' ? 'Open AI Agent Prompt Helper (Antigravity, Cursor, Claude Code, Windsurf)' : 'Buka Pusat Helper Prompt AI Agent (Antigravity, Cursor, Claude Code, Windsurf)'">
                     <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                     <span class="hidden md:inline">PROMPT AGENT</span>
                 </button>
 
                 <!-- AI Orchestration Sprint Cockpit Button in Header -->
-                <button type="button" @click="jumpTo('section-3-5')" class="px-2.5 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none border border-zinc-700 dark:border-emerald-400 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" title="Buka AI Agent Sprint Execution Cockpit">
+                <button type="button" @click="jumpTo('section-3-5')" class="px-2.5 py-1 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-mono uppercase font-bold rounded-none border border-zinc-700 dark:border-emerald-400 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer" :title="locale === 'en' ? 'Open AI Agent Sprint Execution Cockpit' : 'Buka AI Agent Sprint Execution Cockpit'">
                     <span class="w-1.5 h-1.5 rounded-none" :class="getDevCompletedCount() > 0 ? 'bg-emerald-400 dark:bg-black animate-pulse' : 'bg-amber-400 dark:bg-black'"></span>
                     <span class="hidden lg:inline">COCKPIT:</span>
                     <span x-text="getDevCompletedCount() + '/' + {{ $totalDevSteps }}"></span>
@@ -188,22 +191,25 @@
                 @endphp
 
                 @if(!$isLocked)
-                    <a href="{{ route('blueprint.create', ['slug' => $blueprint->slug]) }}" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 transition flex items-center gap-1 shrink-0 whitespace-nowrap" title="Lengkapi / Tambah Kebutuhan di Studio">
+                    <a href="{{ route('blueprint.create', ['slug' => $blueprint->slug]) }}" class="px-2.5 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-mono uppercase font-bold rounded-none border border-emerald-500/30 transition flex items-center gap-1 shrink-0 whitespace-nowrap" :title="locale === 'en' ? 'Complete / Add Requirements in Studio' : 'Lengkapi / Tambah Kebutuhan di Studio'">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         <span class="hidden xl:inline" x-text="locale === 'en' ? 'EDIT SPEC' : 'LENGKAPI'">LENGKAPI</span>
                     </a>
                 @elseif($canUnlock)
                     <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0 shrink-0">
                         @csrf
-                        <button type="submit" class="px-2.5 py-1 {{ $isSuperAdmin ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-700' : 'bg-amber-500 hover:bg-amber-400 text-black border-amber-600' }} text-xs font-mono uppercase font-black rounded-none border transition flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer shadow-none" title="{{ $isSuperAdmin ? 'Super Admin: Buka kunci scope secara instan' : 'Buka kunci scope untuk melanjutkan elaborasi spesifikasi' }}">
+                        <button type="submit" class="px-2.5 py-1 {{ $isSuperAdmin ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-700' : 'bg-amber-500 hover:bg-amber-400 text-black border-amber-600' }} text-xs font-mono uppercase font-black rounded-none border transition flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer shadow-none" :title="locale === 'en' ? ($isSuperAdmin ? 'Super Admin: Instantly unlock scope' : 'Unlock scope to continue specification elaboration') : ($isSuperAdmin ? 'Super Admin: Buka kunci scope secara instan' : 'Buka kunci scope untuk melanjutkan elaborasi spesifikasi')">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
-                            <span class="hidden md:inline">{{ $isSuperAdmin ? 'UNLOCK (ADMIN)' : 'BUKA KUNCI' }}</span>
+                            <span class="hidden md:inline">
+                                <span x-show="locale === 'en'">{{ $isSuperAdmin ? 'UNLOCK (ADMIN)' : 'UNLOCK SCOPE' }}</span>
+                                <span x-show="locale !== 'en'">{{ $isSuperAdmin ? 'UNLOCK (ADMIN)' : 'BUKA KUNCI' }}</span>
+                            </span>
                             <span class="md:hidden">UNLOCK</span>
                         </button>
                     </form>
                 @else
                     <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-xs font-mono uppercase font-bold border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 cursor-not-allowed select-none shrink-0 whitespace-nowrap" 
-                          title="Scope Terkunci: Proyek Mitra aktif dengan DP terverifikasi. Untuk revisi fitur, silakan ajukan Addendum / Change Request.">
+                          :title="locale === 'en' ? 'Scope Locked: Active Partner project with confirmed DP. For feature revisions, submit an Addendum.' : 'Scope Terkunci: Proyek Mitra aktif dengan DP terverifikasi. Untuk revisi fitur, silakan ajukan Addendum / Change Request.'">
                         <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                         <span class="hidden md:inline">SCOPE LOCKED</span>
                     </span>
@@ -216,7 +222,7 @@
                             <button 
                                 type="submit" 
                                 class="px-2.5 sm:px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap border border-amber-600"
-                                title="Aktifkan Blueprint ini secara instan sebagai VIP Founder tanpa melalui pembayaran Midtrans"
+                                :title="locale === 'en' ? 'Instantly activate this Blueprint as VIP Founder without Midtrans payment' : 'Aktifkan Blueprint ini secara instan sebagai VIP Founder tanpa melalui pembayaran Midtrans'"
                             >
                                 <span>👑</span>
                                 <span class="hidden md:inline">VIP OWNER BYPASS</span>
@@ -224,7 +230,7 @@
                             </button>
                         </form>
                     @else
-                        <span class="px-2.5 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/40 text-xs font-mono font-black uppercase flex items-center gap-1 shrink-0 whitespace-nowrap select-none" title="Proyek Aktif di Bawah Lisensi VIP Founder">
+                        <span class="px-2.5 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/40 text-xs font-mono font-black uppercase flex items-center gap-1 shrink-0 whitespace-nowrap select-none" :title="locale === 'en' ? 'Active Project under VIP Founder License' : 'Proyek Aktif di Bawah Lisensi VIP Founder'">
                             <span>👑</span>
                             <span class="hidden md:inline">VIP FOUNDER ACTIVE</span>
                             <span class="md:hidden">VIP</span>
@@ -234,15 +240,15 @@
 
                 <!-- Relocated Accordion View Controls (Beside Cockpit & Edit Spec) -->
                 <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
-                    <button type="button" @click="expandAllSections()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Buka Seluruh 13 Seksi PRD">
+                    <button type="button" @click="expandAllSections()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" :title="locale === 'en' ? 'Expand all 13 PRD sections' : 'Buka Seluruh 13 Seksi PRD'">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        <span class="hidden xl:inline">BUKA SEMUA</span>
-                        <span class="xl:hidden">BUKA</span>
+                        <span class="hidden xl:inline"><span x-show="locale === 'en'">EXPAND ALL</span><span x-show="locale !== 'en'">BUKA SEMUA</span></span>
+                        <span class="xl:hidden"><span x-show="locale === 'en'">EXPAND</span><span x-show="locale !== 'en'">BUKA</span></span>
                     </button>
-                    <button type="button" @click="collapseAllSections()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" title="Ciutkan Seluruh Seksi PRD">
+                    <button type="button" @click="collapseAllSections()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" :title="locale === 'en' ? 'Collapse all PRD sections' : 'Ciutkan Seluruh Seksi PRD'">
                         <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
-                        <span class="hidden xl:inline">TUTUP SEMUA</span>
-                        <span class="xl:hidden">TUTUP</span>
+                        <span class="hidden xl:inline"><span x-show="locale === 'en'">COLLAPSE ALL</span><span x-show="locale !== 'en'">TUTUP SEMUA</span></span>
+                        <span class="xl:hidden"><span x-show="locale === 'en'">COLLAPSE</span><span x-show="locale !== 'en'">TUTUP</span></span>
                     </button>
                 </div>
             @endif

@@ -178,7 +178,13 @@ class ScaffoldGeneratorService
             'design/wireframes/screens.md' => self::generateWireframeBlueprints($blueprint, $erdTables),
 
             // Pillar 3: Infrastructure, Containerization, Health Probes & Routing
+            'Dockerfile' => self::generateDockerfile($blueprint, $slug),
             'docker-compose.yml' => self::generateDockerCompose($blueprint, $slug),
+            'docker-compose.coolify.yml' => self::generateDockerComposeCoolify($blueprint, $slug),
+            'nixpacks.toml' => self::generateNixpacksToml(),
+            'coolify.yaml' => self::generateCoolifyYaml($blueprint, $slug),
+            'docs/deployment/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug),
+            'docs/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug),
             '.env.example' => self::generateEnvExample($blueprint, $slug),
             'README.md' => self::generateReadme($blueprint, $projectName, $slug),
             'docker/nginx/default.conf' => self::generateNginxConf($slug),
@@ -372,15 +378,109 @@ class ScaffoldGeneratorService
     }
 
     /**
+     * Derive a concise, meaningful short slug for container names, databases, and Docker projects.
+     */
+    public static function deriveShortSlug(string $slug): string
+    {
+        // 1. Strip random hash suffixes like '-wxe8k', '-8x9k', or numeric suffixes
+        $clean = preg_replace('/-[a-z0-9]{4,8}$/i', '', strtolower($slug));
+
+        // 2. Strip redundant marketing tier strings
+        $clean = preg_replace('/-(?:retail|studio|mvp|ultimate|standard|basic|pro|enterprise|advisory|spark|turnkey|umkm|growth)+/i', '', $clean);
+
+        $clean = preg_replace('/[^a-z0-9_-]/', '', $clean);
+        $clean = trim($clean, '-_');
+
+        // 3. Keep concise (max 18 chars, 2-3 words)
+        if (strlen($clean) > 18) {
+            $parts = explode('-', $clean);
+            if (count($parts) >= 2) {
+                $clean = implode('-', array_slice($parts, 0, 3));
+            }
+            $clean = substr($clean, 0, 18);
+            $clean = rtrim($clean, '-_');
+        }
+
+        return !empty($clean) ? $clean : 'app';
+    }
+
+    /**
+     * Generate production & development Dockerfile.
+     */
+    public static function generateDockerfile(VisionBlueprint $blueprint, string $slug): string
+    {
+        $shortSlug = self::deriveShortSlug($slug);
+
+        return StubLoader::load('scaffold/Dockerfile.stub', [
+            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ SLUG }}' => $slug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
+        ]);
+    }
+
+    /**
      * Generate production & development docker-compose.yml.
      */
     public static function generateDockerCompose(VisionBlueprint $blueprint, string $slug): string
     {
         $cleanSlug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
+        $shortSlug = self::deriveShortSlug($slug);
 
         return StubLoader::load('scaffold/docker-compose.yml.stub', [
             '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
             '{{ SLUG }}' => $cleanSlug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
+        ]);
+    }
+
+    /**
+     * Generate Coolify production docker-compose.coolify.yml.
+     */
+    public static function generateDockerComposeCoolify(VisionBlueprint $blueprint, string $slug): string
+    {
+        $cleanSlug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
+        $shortSlug = self::deriveShortSlug($slug);
+
+        return StubLoader::load('scaffold/docker-compose.coolify.yml.stub', [
+            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ SLUG }}' => $cleanSlug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
+        ]);
+    }
+
+    /**
+     * Generate Coolify Nixpacks configuration.
+     */
+    public static function generateNixpacksToml(): string
+    {
+        return StubLoader::load('scaffold/nixpacks.toml.stub', []);
+    }
+
+    /**
+     * Generate Coolify service descriptor yaml.
+     */
+    public static function generateCoolifyYaml(VisionBlueprint $blueprint, string $slug): string
+    {
+        $shortSlug = self::deriveShortSlug($slug);
+
+        return StubLoader::load('scaffold/coolify.yaml.stub', [
+            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ SLUG }}' => $slug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
+        ]);
+    }
+
+    /**
+     * Generate Coolify step-by-step deployment guide markdown.
+     */
+    public static function generateCoolifyGuide(VisionBlueprint $blueprint, string $slug): string
+    {
+        $shortSlug = self::deriveShortSlug($slug);
+
+        return StubLoader::load('scaffold/COOLIFY.md.stub', [
+            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ SLUG }}' => $slug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
         ]);
     }
 
@@ -390,10 +490,12 @@ class ScaffoldGeneratorService
     public static function generateEnvExample(VisionBlueprint $blueprint, string $slug): string
     {
         $cleanSlug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
+        $shortSlug = self::deriveShortSlug($slug);
 
         return StubLoader::load('scaffold/env.example.stub', [
             '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
             '{{ SLUG }}' => $cleanSlug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
         ]);
     }
 
@@ -835,7 +937,13 @@ class ScaffoldGeneratorService
 
         return [
             'README.md' => "# {$projectName} (Project OS Starter Kit)\n\nArsitektur: Laravel 13, Filament v5, PostgreSQL 16 Strict ULID, Keyset Cursor Pagination O(1).\n",
+            'Dockerfile' => self::generateDockerfile($blueprint, $slug),
             'docker-compose.yml' => self::generateDockerCompose($blueprint, $slug),
+            'docker-compose.coolify.yml' => self::generateDockerComposeCoolify($blueprint, $slug),
+            'nixpacks.toml' => self::generateNixpacksToml(),
+            'coolify.yaml' => self::generateCoolifyYaml($blueprint, $slug),
+            'docs/deployment/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug),
+            'docs/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug),
             '.env.example' => self::generateEnvExample($blueprint, $slug),
             'schema_complete.sql' => $schemaSql,
             'database/migrations/schema_complete.sql' => $schemaSql,

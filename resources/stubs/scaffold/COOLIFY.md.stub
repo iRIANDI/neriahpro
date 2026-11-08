@@ -1,0 +1,73 @@
+# 🚀 Panduan Deployment Coolify — {{ APP_NAME }}
+
+Repositori ini telah dilengkapi dengan arsitektur container produksi siap pakai untuk **Coolify** (Self-Hosted PaaS alternatif Heroku/Vercel).
+
+---
+
+## ⚡ 2 Menit Setup di Dashboard Coolify
+
+### Opsi A: Deployment via Docker Compose (Rekomendasi Utama)
+Arsitektur ini otomatis mengemas **PHP 8.4/8.5 FPM**, **Nginx**, **PostgreSQL 16 (Strict ULID)**, dan **Redis 7** dalam satu jaringan terisolasi.
+
+1. **Masuk ke Dashboard Coolify** Anda.
+2. Klik **+ Create New Resource** $\rightarrow$ **Docker Compose**.
+3. Hubungkan ke repositori Git ini (GitHub / GitLab / Private Git).
+4. Di bagian **Docker Compose File**, arahkan ke:
+   ```
+   docker-compose.coolify.yml
+   ```
+5. **Konfigurasi Environment Variables** di tab *Environment Variables*:
+   ```env
+   APP_NAME="{{ APP_NAME }}"
+   APP_ENV=production
+   APP_KEY=base64:GENERATE_KEY_DENGAN_PHP_ARTISAN_KEY_GENERATE
+   APP_DEBUG=false
+   COOLIFY_URL=https://app.domainanda.com
+   DB_DATABASE={{ SHORT_SLUG }}_db
+   DB_USERNAME={{ SHORT_SLUG }}_user
+   DB_PASSWORD=buat_password_rahasia_anda_disini
+   ```
+6. Klik **Deploy**!
+   Coolify akan otomatis:
+   * Mem-build `Dockerfile` (PHP FPM)
+   * Mengunduh image Nginx, PostgreSQL 16, dan Redis 7
+   * Menjalankan inisialisasi skema database awal (`schema_complete.sql`)
+   * Mengatur reverse proxy Traefik & sertifikat SSL Let's Encrypt gratis secara otomatis.
+
+---
+
+### Opsi B: Deployment via Nixpacks (Single Application Service)
+Jika Anda menggunakan database PostgreSQL dan Redis eksternal (Managed Database di Coolify):
+
+1. Pilih resource **Application** $\rightarrow$ **Nixpacks**.
+2. File `nixpacks.toml` yang disertakan di repositori ini akan otomatis mendeteksi dependensi PHP 8.4, Composer 2, ekstensi `pdo_pgsql`, dan `redis`.
+3. Set environment variable database eksternal Anda.
+4. Klik **Deploy**.
+
+---
+
+## 🛠️ Perintah Berguna Pasca-Deployment (Via Coolify Terminal)
+
+Buka tab **Terminal** pada service `app` di dashboard Coolify untuk menjalankan tugas pemeliharaan:
+
+```bash
+# 1. Jalankan Migrasi Database
+php artisan migrate --force
+
+# 2. Jalankan Seeder Data Awal (Opsional)
+php artisan db:seed --force
+
+# 3. Optimasi Cache Produksi
+php artisan optimize
+
+# 4. Cek Health Check Probe
+curl http://localhost:80/api/health
+```
+
+---
+
+## 🔒 Kebijakan Keamanan & Port Forwarding
+
+* **Port HTTP/HTTPS Publik**: Ditangani sepenuhnya oleh Nginx di port `80` dan diproxy oleh Traefik Coolify.
+* **PostgreSQL & Redis**: Berada di dalam private docker network internal (`coolify.managed`), tidak terekspos ke internet publik demi mencegah serangan *brute force*.
+* **Skema DDL**: Skema database PostgreSQL otomatis diinjeksikan saat container pertama kali dinyalakan via `schema_complete.sql`.

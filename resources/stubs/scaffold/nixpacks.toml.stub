@@ -1,0 +1,32 @@
+# ==============================================================================
+# PROJECT OS // COOLIFY NIXPACKS RUNTIME CONFIGURATION
+# ==============================================================================
+
+[phases.setup]
+nixPkgs = [
+  "php84",
+  "php84Packages.composer",
+  "php84Extensions.pdo_pgsql",
+  "php84Extensions.pgsql",
+  "php84Extensions.redis",
+  "php84Extensions.bcmath",
+  "php84Extensions.intl",
+  "php84Extensions.opcache",
+  "php84Extensions.zip",
+  "php84Extensions.gd"
+]
+
+[phases.install]
+cmds = [
+  "composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader"
+]
+
+[phases.build]
+cmds = [
+  "php artisan config:cache || true",
+  "php artisan route:cache || true",
+  "php artisan view:cache || true"
+]
+
+[start]
+cmd = "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"

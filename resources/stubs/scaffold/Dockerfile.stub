@@ -1,0 +1,66 @@
+# ==============================================================================
+# PROJECT OS // PRODUCTION-READY DOCKERFILE (PHP 8.4/8.5 FPM ALPINES)
+# Architecture: High-Concurrency, PostgreSQL Strict ULID, Redis, Opcache
+# Project: {{ APP_NAME }}
+# ==============================================================================
+
+FROM php:8.4-fpm-alpine AS base
+
+# Install system dependencies & PostgreSQL / Redis build libraries
+RUN apk add --no-cache \
+    postgresql-dev \
+    libzip-dev \
+    icu-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    linux-headers \
+    curl \
+    git \
+    unzip \
+    bash \
+    su-exec \
+    $PHPIZE_DEPS
+
+# Install PHP extensions required for Laravel 13, PostgreSQL Strict ULID, and Redis
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        pdo_pgsql \
+        pgsql \
+        bcmath \
+        intl \
+        opcache \
+        pcntl \
+        zip \
+        gd \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del --no-cache $PHPIZE_DEPS
+
+# Install Composer 2 (official binary)
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Configure PHP runtime for high concurrency & memory stability
+RUN cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini \
+    && echo "memory_limit = 512M" >> /usr/local/etc/php/conf.d/custom.ini \
+    && echo "upload_max_filesize = 64M" >> /usr/local/etc/php/conf.d/custom.ini \
+    && echo "post_max_size = 64M" >> /usr/local/etc/php/conf.d/custom.ini \
+    && echo "max_execution_time = 300" >> /usr/local/etc/php/conf.d/custom.ini \
+    && echo "opcache.enable = 1" >> /usr/local/etc/php/conf.d/custom.ini \
+    && echo "opcache.enable_cli = 1" >> /usr/local/etc/php/conf.d/custom.ini \
+    && echo "opcache.memory_consumption = 128" >> /usr/local/etc/php/conf.d/custom.ini \
+    && echo "opcache.max_accelerated_files = 10000" >> /usr/local/etc/php/conf.d/custom.ini
+
+WORKDIR /var/www/html
+
+# Create application user and set directory permissions
+RUN addgroup -g 1000 www \
+    && adduser -u 1000 -G www -s /bin/sh -D www \
+    && mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chown -R www:www /var/www/html
+
+USER www
+
+EXPOSE 9000
+
+CMD ["php-fpm"]

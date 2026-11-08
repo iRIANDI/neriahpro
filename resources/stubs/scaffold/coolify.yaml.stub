@@ -1,0 +1,19 @@
+# ==============================================================================
+# PROJECT OS // COOLIFY SERVICE SPECIFICATION
+# Project: {{ APP_NAME }}
+# ==============================================================================
+version: "1"
+name: "{{ SHORT_SLUG }}"
+type: "docker-compose"
+compose_file: "docker-compose.coolify.yml"
+description: "High-performance Laravel 13 + PostgreSQL 16 Strict ULID + Redis stack for {{ APP_NAME }}"
+domains:
+  - "${COOLIFY_URL}"
+env:
+  APP_ENV: "production"
+  APP_DEBUG: "false"
+  DB_CONNECTION: "pgsql"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  CACHE_STORE: "redis"
+  QUEUE_CONNECTION: "redis"

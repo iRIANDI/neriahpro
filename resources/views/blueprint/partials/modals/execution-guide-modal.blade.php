@@ -303,61 +303,260 @@
                 </div>
             </div>
 
-            <!-- TAB 4: DOCKER QUICKSTART -->
-            <div x-show="executionGuideTab === 'docker'" class="space-y-4">
-                <div class="p-3 bg-zinc-900 border border-zinc-800 text-zinc-300">
-                    <div class="font-bold text-sky-400 mb-1">
-                        <span x-show="locale === 'en'">🐳 Docker Compose Development Environment:</span>
-                        <span x-show="locale !== 'en'">🐳 Docker Compose Development Environment:</span>
-                    </div>
-                    <p class="font-sans leading-relaxed text-xs">
-                        <span x-show="locale === 'en'">The project scaffold archive includes an enterprise <code>docker-compose.yml</code> with PHP 8.5+, PostgreSQL 16 (Strict Mode), Redis 7, and Nginx Web Server.</span>
-                        <span x-show="locale !== 'en'">Arsip scaffold proyek menyertakan <code>docker-compose.yml</code> enterprise dengan PHP 8.5+, PostgreSQL 16 (Strict Mode), Redis 7, dan Nginx Web Server.</span>
-                    </p>
+            <!-- TAB 4: DOCKER QUICKSTART (WINDOWS DOCKER DESKTOP + LINUX/VPS) -->
+            <div x-show="executionGuideTab === 'docker'" x-data="{ dockerOsTab: 'windows' }" class="space-y-4">
+                <!-- OS Selector Switcher -->
+                <div class="flex items-center gap-2 border-b border-zinc-800 pb-2 font-mono text-xs">
+                    <span class="text-zinc-400 font-bold uppercase text-[10px]">
+                        <span x-show="locale === 'en'">SELECT ENVIRONMENT:</span>
+                        <span x-show="locale !== 'en'">PILIH LINGKUNGAN:</span>
+                    </span>
+                    <button 
+                        type="button" 
+                        @click="dockerOsTab = 'windows'"
+                        :class="dockerOsTab === 'windows' ? 'bg-sky-500 text-black font-black' : 'bg-zinc-800 text-zinc-300 hover:text-white'"
+                        class="px-2.5 py-1 text-xs uppercase font-bold rounded-none transition cursor-pointer flex items-center gap-1.5"
+                    >
+                        <span>🪟 Windows (Docker Desktop + WSL 2)</span>
+                    </button>
+                    <button 
+                        type="button" 
+                        @click="dockerOsTab = 'linux'"
+                        :class="dockerOsTab === 'linux' ? 'bg-sky-500 text-black font-black' : 'bg-zinc-800 text-zinc-300 hover:text-white'"
+                        class="px-2.5 py-1 text-xs uppercase font-bold rounded-none transition cursor-pointer flex items-center gap-1.5"
+                    >
+                        <span>🐧 Linux / macOS / Cloud VPS</span>
+                    </button>
                 </div>
 
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-zinc-300 font-bold uppercase text-[11px]">
-                            <span x-show="locale === 'en'">Terminal Setup Commands:</span>
-                            <span x-show="locale !== 'en'">Perintah Setup Terminal:</span>
-                        </span>
-                        <button 
-                            type="button" 
-                            @click="copyExecutionPrompt(`docker compose up -d\ndocker compose exec app composer install\ndocker compose exec app php artisan migrate\ndocker compose exec app php artisan db:seed --class=SyntheticDataSeeder\ndocker compose exec app npm install\ndocker compose exec app npm run build`, locale === 'en' ? 'DOCKER COMMANDS COPIED' : 'PERINTAH DOCKER DISALIN')"
-                            class="px-2.5 py-1 bg-sky-500 hover:bg-sky-400 text-black font-black uppercase text-[10px] rounded-none cursor-pointer"
-                        >
-                            <span x-show="locale === 'en'">COPY DOCKER COMMANDS</span>
-                            <span x-show="locale !== 'en'">SALIN PERINTAH DOCKER</span>
-                        </button>
+                <!-- SUB-TAB A: WINDOWS (DOCKER DESKTOP + WSL 2) -->
+                <div x-show="dockerOsTab === 'windows'" class="space-y-4 font-mono text-xs">
+                    <div class="p-3 bg-zinc-900 border border-zinc-800 text-zinc-300">
+                        <div class="font-bold text-sky-400 mb-1 flex items-center gap-2">
+                            <span>🪟 Panduan Lengkap Docker Desktop di Windows (WSL 2 Backend)</span>
+                            <span class="px-1.5 py-0.2 bg-sky-500/20 text-sky-300 text-[10px] uppercase font-bold">100% REPRODUCIBLE</span>
+                        </div>
+                        <p class="font-sans leading-relaxed text-xs text-zinc-400">
+                            <span x-show="locale === 'en'">Step-by-step guide to setting up Docker Desktop, spinning up PHP 8.5+, PostgreSQL 16 Strict ULID, and Redis 7, extracting scaffold files, and executing the project in Antigravity / Cursor IDE.</span>
+                            <span x-show="locale !== 'en'">Panduan langkah demi langkah menyiapkan Docker Desktop Windows, menyalakan tech stack enterprise (PHP 8.5+, PostgreSQL 16 Strict ULID, Redis 7, Nginx), memuat file scaffold, dan mengeksekusi proyek di Antigravity / Cursor IDE.</span>
+                        </p>
                     </div>
-                    <pre class="p-3.5 bg-black border border-zinc-800 text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre text-xs"># 1. Start container services in background
+
+                    <!-- Step 1: Install & Setup Docker Desktop Windows -->
+                    <div class="p-3.5 bg-black border border-zinc-800 space-y-2">
+                        <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+                            <span class="text-sky-400 font-bold uppercase text-xs flex items-center gap-2">
+                                <span class="w-5 h-5 bg-sky-500 text-black flex items-center justify-center font-black text-[10px]">1</span>
+                                <span x-show="locale === 'en'">Setup Docker Desktop &amp; WSL 2 Backend</span>
+                                <span x-show="locale !== 'en'">Langkah 1: Setup Docker Desktop &amp; WSL 2 di Windows</span>
+                            </span>
+                            <span class="text-[10px] text-zinc-500 font-mono">POWERSHELL ADMIN</span>
+                        </div>
+                        <ol class="space-y-1.5 text-zinc-300 font-sans text-xs leading-relaxed list-decimal list-inside">
+                            <li><strong>Virtualisasi BIOS:</strong> Buka Task Manager (<kbd class="px-1 bg-zinc-800 text-zinc-300">Ctrl+Shift+Esc</kbd>) &rarr; Tab <em>Performance</em> &rarr; <em>CPU</em> &rarr; Pastikan <code class="text-emerald-400">Virtualization: Enabled</code>.</li>
+                            <li><strong>Aktifkan WSL 2:</strong> Buka PowerShell sebagai Administrator, jalankan perintah di bawah:</li>
+                        </ol>
+                        <div class="relative">
+                            <pre class="p-2.5 bg-zinc-950 border border-zinc-800 text-sky-300 select-all overflow-x-auto text-[11px] leading-relaxed">wsl --install
+wsl --update</pre>
+                            <button 
+                                type="button" 
+                                @click="copyExecutionPrompt(`wsl --install\nwsl --update`, locale === 'en' ? 'WSL COMMANDS COPIED' : 'PERINTAH WSL DISALIN')"
+                                class="absolute right-2 top-2 px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[10px] rounded-none cursor-pointer"
+                            >
+                                <span x-show="locale === 'en'">COPY</span>
+                                <span x-show="locale !== 'en'">SALIN</span>
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-zinc-400 font-sans">
+                            3. Unduh &amp; install Docker Desktop dari <a href="https://www.docker.com/products/docker-desktop/" target="_blank" class="text-sky-400 underline font-bold">docker.com</a>. Saat wizard instalasi, pastikan centang <strong>"Use the WSL 2 based engine"</strong>. Setelah restart, buka Docker Desktop &rarr; <em>Settings</em> &rarr; <em>General</em> &rarr; pastikan opsi WSL 2 aktif.
+                        </p>
+                    </div>
+
+                    <!-- Step 2: Download & Extract Scaffold -->
+                    <div class="p-3.5 bg-black border border-zinc-800 space-y-2">
+                        <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+                            <span class="text-sky-400 font-bold uppercase text-xs flex items-center gap-2">
+                                <span class="w-5 h-5 bg-sky-500 text-black flex items-center justify-center font-black text-[10px]">2</span>
+                                <span x-show="locale === 'en'">Download &amp; Extract Scaffold Package</span>
+                                <span x-show="locale !== 'en'">Langkah 2: Unduh &amp; Ekstrak Paket Scaffold Proyek</span>
+                            </span>
+                            <span class="text-[10px] text-emerald-400 font-mono font-bold">STARTER KIT .ZIP</span>
+                        </div>
+                        <p class="text-zinc-300 font-sans text-xs leading-relaxed">
+                            Unduh arsip scaffold melalui tombol <strong>DOWNLOAD FULL ZIP (.ZIP)</strong>. Ekstrak isi ZIP tersebut ke folder kerja di Windows (disarankan path tanpa spasi, misal: <code class="text-amber-400">C:\projects\{{ $slugVal }}</code> atau <code class="text-amber-400">C:\xampp\htdocs\{{ $slugVal }}</code>).
+                        </p>
+                        <div class="p-2 bg-zinc-950 border border-zinc-800 text-[11px] text-zinc-400 font-mono space-y-1">
+                            <div class="text-zinc-200 font-bold">&bull; Berkas Kunci yang Siap Digunakan di Dalam Folder:</div>
+                            <div class="pl-2">&rarr; <code>docker-compose.yml</code> (PHP 8.5+, PostgreSQL 16 Strict, Redis 7, Nginx)</div>
+                            <div class="pl-2">&rarr; <code>.env.blueprint</code> (Konfigurasi environment siap pakai)</div>
+                            <div class="pl-2">&rarr; <code>.agents/AGENTS.md</code> &amp; <code>.cursorrules</code> (SOP &amp; Guardrails ECC)</div>
+                            <div class="pl-2">&rarr; <code>schema_complete.sql</code> (Skema DDL PostgreSQL Strict ULID)</div>
+                            <div class="pl-2">&rarr; <code>SyntheticDataSeeder.php</code> &amp; <code>ApiContractTest.php</code></div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: PowerShell Navigation & Environment File -->
+                    <div class="p-3.5 bg-black border border-zinc-800 space-y-2">
+                        <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+                            <span class="text-sky-400 font-bold uppercase text-xs flex items-center gap-2">
+                                <span class="w-5 h-5 bg-sky-500 text-black flex items-center justify-center font-black text-[10px]">3</span>
+                                <span x-show="locale === 'en'">Open PowerShell &amp; Copy Environment File</span>
+                                <span x-show="locale !== 'en'">Langkah 3: Buka PowerShell &amp; Siapkan File .env</span>
+                            </span>
+                            <span class="text-[10px] text-zinc-500 font-mono">TERMINAL WINDOWS</span>
+                        </div>
+                        <p class="text-zinc-300 font-sans text-xs leading-relaxed">
+                            Buka File Explorer Windows di folder hasil ekstrak. Tahan tombol <kbd class="px-1 bg-zinc-800 text-zinc-300">Shift</kbd> lalu <strong>Klik Kanan</strong> di area kosong &rarr; pilih <strong>"Open in Terminal"</strong> (atau buka PowerShell biasa lalu <code class="text-sky-300">cd C:\projects\{{ $slugVal }}</code>). Salin environment template:
+                        </p>
+                        <div class="relative">
+                            <pre class="p-2.5 bg-zinc-950 border border-zinc-800 text-sky-300 select-all overflow-x-auto text-[11px] leading-relaxed">Copy-Item .env.blueprint .env</pre>
+                            <button 
+                                type="button" 
+                                @click="copyExecutionPrompt(`Copy-Item .env.blueprint .env`, locale === 'en' ? 'ENV COMMAND COPIED' : 'PERINTAH ENV DISALIN')"
+                                class="absolute right-2 top-2 px-2 py-0.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[10px] rounded-none cursor-pointer"
+                            >
+                                <span x-show="locale === 'en'">COPY</span>
+                                <span x-show="locale !== 'en'">SALIN</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Run Tech Stack via Docker Compose -->
+                    <div class="p-3.5 bg-black border border-zinc-800 space-y-2">
+                        <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+                            <span class="text-sky-400 font-bold uppercase text-xs flex items-center gap-2">
+                                <span class="w-5 h-5 bg-sky-500 text-black flex items-center justify-center font-black text-[10px]">4</span>
+                                <span x-show="locale === 'en'">Spin Up Tech Stack &amp; Run Initial Setup</span>
+                                <span x-show="locale !== 'en'">Langkah 4: Nyalakan Stack &amp; Eksekusi Perintah (1-Klik Salin)</span>
+                            </span>
+                            <button 
+                                type="button" 
+                                @click="copyExecutionPrompt(`docker compose up -d\ndocker compose exec app composer install\ndocker compose exec app php artisan key:generate\ndocker compose exec app php artisan migrate\ndocker compose exec app php artisan db:seed --class=SyntheticDataSeeder\ndocker compose exec app npm install\ndocker compose exec app npm run build\ncurl http://localhost:8000/api/health`, locale === 'en' ? 'POWERSHELL DOCKER SCRIPT COPIED' : 'SKRIP DOCKER POWERSHELL DISALIN')"
+                                class="px-2.5 py-1 bg-sky-500 hover:bg-sky-400 text-black font-black uppercase text-[10px] rounded-none cursor-pointer"
+                            >
+                                <span x-show="locale === 'en'">COPY ALL POWERSHELL COMMANDS</span>
+                                <span x-show="locale !== 'en'">SALIN SEMUA PERINTAH POWERSHELL</span>
+                            </button>
+                        </div>
+                        <p class="text-zinc-300 font-sans text-xs leading-relaxed">
+                            Jalankan perintah-perintah berikut di PowerShell untuk menyalakan container, menginstall dependencies, menjalankan migrasi database PostgreSQL Strict ULID, dan mengisi data sintetis:
+                        </p>
+                        <pre class="p-3.5 bg-zinc-950 border border-zinc-800 text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre text-xs"># 1. Nyalakan seluruh container service di latar belakang
 docker compose up -d
 
-# 2. Enter container and install backend dependencies
+# 2. Install dependency backend PHP 8.5+ via Composer
 docker compose exec app composer install
 
-# 3. Run PostgreSQL Strict ULID database migrations
+# 3. Generate Application Key Laravel
+docker compose exec app php artisan key:generate
+
+# 4. Jalankan migrasi database PostgreSQL 16 Strict ULID
 docker compose exec app php artisan migrate
 
-# 4. Generate synthetic realistic seed data
+# 5. Isi data sintetis realistis 100+ baris
 docker compose exec app php artisan db:seed --class=SyntheticDataSeeder
 
-# 5. Install frontend dependencies and build assets
-docker compose exec app npm install && docker compose exec app npm run build
+# 6. Install frontend packages & compile bundle
+docker compose exec app npm install
+docker compose exec app npm run build
 
-# 6. Verify server health check probe
+# 7. Verifikasi health check probe
 curl http://localhost:8000/api/health</pre>
+
+                        <div class="p-2.5 bg-zinc-900 border border-zinc-800 text-zinc-300 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                            <div>&bull; <strong>Aplikasi Web:</strong> <a href="http://localhost:8000" target="_blank" class="text-sky-400 underline">http://localhost:8000</a></div>
+                            <div>&bull; <strong>PostgreSQL 16:</strong> <code>localhost:5432</code> (DB: <code>{{ $slugVal }}</code>)</div>
+                            <div>&bull; <strong>Redis Cache:</strong> <code>localhost:6379</code></div>
+                            <div>&bull; <strong>Living API Docs:</strong> <a href="http://localhost:8000/api/docs" target="_blank" class="text-emerald-400 underline">http://localhost:8000/api/docs</a></div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Open in IDE with ECC -->
+                    <div class="p-3.5 bg-black border border-emerald-500/60 space-y-2">
+                        <div class="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+                            <span class="text-emerald-400 font-bold uppercase text-xs flex items-center gap-2">
+                                <span class="w-5 h-5 bg-emerald-500 text-black flex items-center justify-center font-black text-[10px]">5</span>
+                                <span x-show="locale === 'en'">Open in Antigravity / Cursor IDE with ECC Harness</span>
+                                <span x-show="locale !== 'en'">Langkah 5: Buka di Antigravity / Cursor IDE dengan ECC (.agents/)</span>
+                            </span>
+                            <button 
+                                type="button" 
+                                @click="copyExecutionPrompt(locale === 'en' ? `Antigravity, inspect AGENTS.md, PRODUCT-BRIEF.md, and schema_complete.sql in this new workspace. Spin up containers with docker compose up -d, run PostgreSQL Strict ULID database migrations, and begin MVP Phase 1 implementation.` : `Antigravity, pelajari AGENTS.md, PRODUCT-BRIEF.md, dan schema_complete.sql di workspace baru ini. Setup database menggunakan Docker Compose dan mulai implementasi MVP Fase 1.`, locale === 'en' ? 'AI PROMPT COPIED' : 'PROMPT AI DISALIN')"
+                                class="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[10px] rounded-none cursor-pointer"
+                            >
+                                <span x-show="locale === 'en'">COPY AI STARTER PROMPT</span>
+                                <span x-show="locale !== 'en'">SALIN PROMPT PERDANA AI</span>
+                            </button>
+                        </div>
+                        <p class="text-zinc-300 font-sans text-xs leading-relaxed">
+                            Buka Antigravity IDE atau Cursor di Windows &rarr; <strong>File &rarr; Open Folder</strong> &rarr; pilih folder hasil ekstrak. Buka jendela chat AI dan tempelkan prompt berikut:
+                        </p>
+                        <pre class="p-3 bg-zinc-950 border border-zinc-800 text-emerald-400 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap text-xs"><span x-show="locale === 'en'">Antigravity, inspect AGENTS.md, PRODUCT-BRIEF.md, and schema_complete.sql in this new workspace. Spin up containers with docker compose up -d, run PostgreSQL Strict ULID database migrations, and begin MVP Phase 1 implementation.</span><span x-show="locale !== 'en'">Antigravity, pelajari AGENTS.md, PRODUCT-BRIEF.md, dan schema_complete.sql di workspace baru ini. Setup database menggunakan Docker Compose dan mulai implementasi MVP Fase 1.</span></pre>
+                    </div>
                 </div>
 
-                <div class="p-3 bg-zinc-900 border border-zinc-800 text-zinc-400 space-y-1 text-xs font-sans">
-                    <div class="text-white font-bold font-mono uppercase text-[11px]">
-                        <span x-show="locale === 'en'">Docker Port Configuration:</span>
-                        <span x-show="locale !== 'en'">Port Konfigurasi Docker:</span>
+                <!-- SUB-TAB B: LINUX / MACOS / CLOUD VPS -->
+                <div x-show="dockerOsTab === 'linux'" class="space-y-4 font-mono text-xs">
+                    <div class="p-3 bg-zinc-900 border border-zinc-800 text-zinc-300">
+                        <div class="font-bold text-sky-400 mb-1">
+                            <span x-show="locale === 'en'">🐳 Linux / macOS / Cloud VPS Terminal Quickstart:</span>
+                            <span x-show="locale !== 'en'">🐳 Terminal Quickstart Linux / macOS / Cloud VPS:</span>
+                        </div>
+                        <p class="font-sans leading-relaxed text-xs text-zinc-400">
+                            <span x-show="locale === 'en'">The project scaffold archive includes an enterprise <code>docker-compose.yml</code> with PHP 8.5+, PostgreSQL 16 (Strict Mode), Redis 7, and Nginx Web Server.</span>
+                            <span x-show="locale !== 'en'">Arsip scaffold proyek menyertakan <code>docker-compose.yml</code> enterprise dengan PHP 8.5+, PostgreSQL 16 (Strict Mode), Redis 7, dan Nginx Web Server.</span>
+                        </p>
                     </div>
-                    <div>&bull; Nginx Web Server: <code>http://localhost:8000</code></div>
-                    <div>&bull; PostgreSQL 16: <code>localhost:5432</code> (User: <code>neriah</code>, DB: <code>{{ $slugVal }}</code>)</div>
-                    <div>&bull; Redis 7: <code>localhost:6379</code></div>
+
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-zinc-300 font-bold uppercase text-[11px]">
+                                <span x-show="locale === 'en'">Bash Terminal Commands:</span>
+                                <span x-show="locale !== 'en'">Perintah Terminal Bash:</span>
+                            </span>
+                            <button 
+                                type="button" 
+                                @click="copyExecutionPrompt(`cp .env.blueprint .env\ndocker compose up -d\ndocker compose exec app composer install\ndocker compose exec app php artisan key:generate\ndocker compose exec app php artisan migrate\ndocker compose exec app php artisan db:seed --class=SyntheticDataSeeder\ndocker compose exec app npm install && docker compose exec app npm run build\ncurl http://localhost:8000/api/health`, locale === 'en' ? 'BASH COMMANDS COPIED' : 'PERINTAH BASH DISALIN')"
+                                class="px-2.5 py-1 bg-sky-500 hover:bg-sky-400 text-black font-black uppercase text-[10px] rounded-none cursor-pointer"
+                            >
+                                <span x-show="locale === 'en'">COPY BASH COMMANDS</span>
+                                <span x-show="locale !== 'en'">SALIN PERINTAH BASH</span>
+                            </button>
+                        </div>
+                        <pre class="p-3.5 bg-black border border-zinc-800 text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre text-xs"># 1. Setup environment file
+cp .env.blueprint .env
+
+# 2. Start container services in background
+docker compose up -d
+
+# 3. Enter container and install backend dependencies
+docker compose exec app composer install
+docker compose exec app php artisan key:generate
+
+# 4. Run PostgreSQL Strict ULID database migrations
+docker compose exec app php artisan migrate
+
+# 5. Generate synthetic realistic seed data
+docker compose exec app php artisan db:seed --class=SyntheticDataSeeder
+
+# 6. Install frontend dependencies and build assets
+docker compose exec app npm install && docker compose exec app npm run build
+
+# 7. Verify server health check probe
+curl http://localhost:8000/api/health</pre>
+                    </div>
+
+                    <div class="p-3 bg-zinc-900 border border-zinc-800 text-zinc-400 space-y-1 text-xs font-sans">
+                        <div class="text-white font-bold font-mono uppercase text-[11px]">
+                            <span x-show="locale === 'en'">Docker Port Configuration:</span>
+                            <span x-show="locale !== 'en'">Port Konfigurasi Docker:</span>
+                        </div>
+                        <div>&bull; Nginx Web Server: <code>http://localhost:8000</code></div>
+                        <div>&bull; PostgreSQL 16: <code>localhost:5432</code> (User: <code>neriah</code>, DB: <code>{{ $slugVal }}</code>)</div>
+                        <div>&bull; Redis 7: <code>localhost:6379</code></div>
+                        <div>&bull; Living API Docs: <code>http://localhost:8000/api/docs</code></div>
+                    </div>
                 </div>
             </div>
 
@@ -483,13 +682,36 @@ curl http://localhost:8000/api/health</pre>
                     <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-zinc-900">
                         <button 
                             type="button" 
-                            @click="startBackgroundScaffoldGeneration()"
-                            :disabled="scaffoldJobStatus === 'processing' || scaffoldJobStatus === 'queued'"
+                            @click="startBackgroundScaffoldGeneration(false)"
+                            :disabled="scaffoldJobStatus === 'processing'"
                             class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-black font-black uppercase text-xs rounded-none cursor-pointer transition flex items-center gap-1.5"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            <span x-show="locale === 'en'">RUN BACKGROUND JOB GENERATOR</span>
-                            <span x-show="locale !== 'en'">JALANKAN BACKGROUND JOB GENERATOR</span>
+                            <span x-show="locale === 'en'">RUN QUEUED JOB</span>
+                            <span x-show="locale !== 'en'">JALANKAN QUEUE JOB</span>
+                        </button>
+
+                        <button 
+                            type="button" 
+                            @click="startBackgroundScaffoldGeneration(true)"
+                            :disabled="scaffoldJobStatus === 'processing'"
+                            class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-xs rounded-none cursor-pointer transition flex items-center gap-1.5 shadow-sm"
+                            :title="locale === 'en' ? 'Execute synchronously inline without waiting for background worker daemon' : 'Eksekusi langsung secara instan tanpa menunggu worker antrean server'"
+                        >
+                            <span>⚡</span>
+                            <span x-show="locale === 'en'">PROCEED INSTANT (SYNC RUN)</span>
+                            <span x-show="locale !== 'en'">PROSES INSTAN SEKARANG</span>
+                        </button>
+
+                        <button 
+                            type="button" 
+                            @click="pollScaffoldJobStatus()"
+                            class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold uppercase text-xs rounded-none border border-zinc-700 cursor-pointer transition flex items-center gap-1.5"
+                            :title="locale === 'en' ? 'Check latest job status from server' : 'Periksa status terbaru dari server'"
+                        >
+                            <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            <span x-show="locale === 'en'">REFRESH STATUS</span>
+                            <span x-show="locale !== 'en'">CEK STATUS</span>
                         </button>
 
                         <a 

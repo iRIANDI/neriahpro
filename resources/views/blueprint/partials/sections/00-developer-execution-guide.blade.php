@@ -504,38 +504,104 @@
         <!-- DOCKER QUICKSTART & MULTI-AGENT SETUP                                                     -->
         <!-- ========================================================================================= -->
         <div class="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-1 lg:grid-cols-2 gap-4 font-mono text-xs">
-            <!-- Left: Docker Stack Commands -->
-            <div class="p-4 bg-zinc-900 dark:bg-zinc-950 border border-zinc-800 text-zinc-200 space-y-3">
-                <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+            <!-- Left: Docker Stack Commands (with Windows & Linux switcher) -->
+            <div x-data="{ secDockerOs: 'windows' }" class="p-4 bg-zinc-900 dark:bg-zinc-950 border border-zinc-800 text-zinc-200 space-y-3">
+                <div class="flex flex-wrap items-center justify-between border-b border-zinc-800 pb-2 gap-2">
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 bg-sky-400 rounded-none"></span>
                         <span class="font-black text-white uppercase text-xs">🐳 DOCKER STACK QUICKSTART</span>
                     </div>
-                    <button 
-                        type="button" 
-                        @click="copyExecutionPrompt(`docker compose up -d\ndocker compose exec app composer install\ndocker compose exec app php artisan migrate\ndocker compose exec app php artisan db:seed --class=SyntheticDataSeeder\ndocker compose exec app npm install\ndocker compose exec app npm run build`, locale === 'en' ? 'DOCKER COMMANDS COPIED' : 'PERINTAH DOCKER DISALIN')"
-                        class="px-2 py-0.5 bg-sky-500 hover:bg-sky-400 text-black font-black text-[10px] rounded-none cursor-pointer"
-                    >
-                        <span x-show="locale === 'en'">COPY ALL</span>
-                        <span x-show="locale !== 'en'">SALIN SEMUA</span>
-                    </button>
+                    <div class="flex items-center gap-1 text-[10px]">
+                        <button 
+                            type="button" 
+                            @click="secDockerOs = 'windows'"
+                            :class="secDockerOs === 'windows' ? 'bg-sky-500 text-black font-black' : 'bg-zinc-800 text-zinc-300 hover:text-white'"
+                            class="px-2 py-0.5 uppercase transition cursor-pointer"
+                        >
+                            🪟 Windows
+                        </button>
+                        <button 
+                            type="button" 
+                            @click="secDockerOs = 'linux'"
+                            :class="secDockerOs === 'linux' ? 'bg-sky-500 text-black font-black' : 'bg-zinc-800 text-zinc-300 hover:text-white'"
+                            class="px-2 py-0.5 uppercase transition cursor-pointer"
+                        >
+                            🐧 Linux/VPS
+                        </button>
+                    </div>
                 </div>
-                <p class="text-[11px] text-zinc-400 font-sans">
-                    <span x-show="locale === 'en'">The scaffold archive includes a pre-configured <code>docker-compose.yml</code> (PHP 8.5+, PostgreSQL 16 Strict, Redis 7, Nginx):</span>
-                    <span x-show="locale !== 'en'">Arsip scaffold sudah memuat <code>docker-compose.yml</code> terkonfigurasi (PHP 8.5+, PostgreSQL 16 Strict, Redis 7, Nginx):</span>
-                </p>
-                <pre class="p-3 bg-black border border-zinc-800 text-[11px] text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre font-mono"># 1. Start containers in background
+
+                <!-- Windows View -->
+                <div x-show="secDockerOs === 'windows'" class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-zinc-400 font-sans">
+                            <span x-show="locale === 'en'">Docker Desktop Windows (WSL 2) commands for PowerShell:</span>
+                            <span x-show="locale !== 'en'">Perintah PowerShell untuk Docker Desktop Windows (WSL 2):</span>
+                        </p>
+                        <button 
+                            type="button" 
+                            @click="copyExecutionPrompt(`docker compose up -d\ndocker compose exec app composer install\ndocker compose exec app php artisan key:generate\ndocker compose exec app php artisan migrate\ndocker compose exec app php artisan db:seed --class=SyntheticDataSeeder\ndocker compose exec app npm install && docker compose exec app npm run build\ncurl http://localhost:8000/api/health`, locale === 'en' ? 'POWERSHELL COMMANDS COPIED' : 'PERINTAH POWERSHELL DISALIN')"
+                            class="px-2 py-0.5 bg-sky-500 hover:bg-sky-400 text-black font-black text-[10px] rounded-none cursor-pointer"
+                        >
+                            <span x-show="locale === 'en'">COPY POWERSHELL</span>
+                            <span x-show="locale !== 'en'">SALIN POWERSHELL</span>
+                        </button>
+                    </div>
+                    <pre class="p-3 bg-black border border-zinc-800 text-[11px] text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre font-mono"># 1. Jalankan container di latar belakang
 docker compose up -d
 
-# 2. Install dependencies & run migrations
+# 2. Install dependencies & migrate PostgreSQL Strict ULID
 docker compose exec app composer install
+docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate
 docker compose exec app php artisan db:seed --class=SyntheticDataSeeder
 
-# 3. Build frontend assets
+# 3. Build frontend assets & tes health probe
 docker compose exec app npm install && docker compose exec app npm run build
+curl http://localhost:8000/api/health</pre>
+                    <div class="flex items-center justify-between pt-1">
+                        <span class="text-[10px] text-zinc-400">&bull; Local: <code class="text-sky-300">http://localhost:8000</code></span>
+                        <button 
+                            type="button" 
+                            @click="executionGuideTab = 'docker'; showExecutionGuideModal = true"
+                            class="text-[10px] text-sky-400 hover:underline font-bold uppercase cursor-pointer"
+                        >
+                            <span x-show="locale === 'en'">FULL WINDOWS SETUP GUIDE &rarr;</span>
+                            <span x-show="locale !== 'en'">PANDUAN LENGKAP WINDOWS &rarr;</span>
+                        </button>
+                    </div>
+                </div>
 
-# 4. Access application: http://localhost:8000</pre>
+                <!-- Linux/VPS View -->
+                <div x-show="secDockerOs === 'linux'" class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-zinc-400 font-sans">
+                            <span x-show="locale === 'en'">Bash terminal commands for Linux, macOS &amp; Cloud VPS:</span>
+                            <span x-show="locale !== 'en'">Perintah terminal Bash untuk Linux, macOS &amp; Cloud VPS:</span>
+                        </p>
+                        <button 
+                            type="button" 
+                            @click="copyExecutionPrompt(`cp .env.blueprint .env\ndocker compose up -d\ndocker compose exec app composer install\ndocker compose exec app php artisan key:generate\ndocker compose exec app php artisan migrate\ndocker compose exec app php artisan db:seed --class=SyntheticDataSeeder\ndocker compose exec app npm install && docker compose exec app npm run build\ncurl http://localhost:8000/api/health`, locale === 'en' ? 'BASH COMMANDS COPIED' : 'PERINTAH BASH DISALIN')"
+                            class="px-2 py-0.5 bg-sky-500 hover:bg-sky-400 text-black font-black text-[10px] rounded-none cursor-pointer"
+                        >
+                            <span x-show="locale === 'en'">COPY BASH</span>
+                            <span x-show="locale !== 'en'">SALIN BASH</span>
+                        </button>
+                    </div>
+                    <pre class="p-3 bg-black border border-zinc-800 text-[11px] text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre font-mono"># 1. Setup env & start containers
+cp .env.blueprint .env
+docker compose up -d
+
+# 2. Dependencies, key & migrations
+docker compose exec app composer install
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate
+docker compose exec app php artisan db:seed --class=SyntheticDataSeeder
+
+# 3. Build frontend & health probe
+docker compose exec app npm install && docker compose exec app npm run build
+curl http://localhost:8000/api/health</pre>
+                </div>
             </div>
 
             <!-- Right: ECC Harness (.agents/) & Multi-AI IDE Guide -->

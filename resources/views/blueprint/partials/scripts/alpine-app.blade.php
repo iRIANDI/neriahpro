@@ -620,23 +620,28 @@
                     document.body.removeChild(ta);
                 },
 
-                async startBackgroundScaffoldGeneration() {
-                    if (this.scaffoldJobStatus === 'processing' || this.scaffoldJobStatus === 'queued') return;
-                    this.scaffoldJobStatus = 'queued';
-                    this.scaffoldJobProgress = 5;
-                    this.scaffoldJobMessage = 'Menjadwalkan job ke antrean server...';
+                async startBackgroundScaffoldGeneration(instant = false) {
+                    if (!instant && (this.scaffoldJobStatus === 'processing' || this.scaffoldJobStatus === 'queued')) return;
+                    this.scaffoldJobStatus = instant ? 'processing' : 'queued';
+                    this.scaffoldJobProgress = instant ? 25 : 5;
+                    this.scaffoldJobMessage = instant 
+                        ? (this.locale === 'en' ? 'Processing scaffold generation synchronously...' : 'Memproses generasi scaffold secara instan...')
+                        : (this.locale === 'en' ? 'Scheduling job to server queue...' : 'Menjadwalkan job ke antrean server...');
 
                     if (window.showToast) {
                         window.showToast({
                             type: 'info',
-                            title: 'BACKGROUND JOB DIJADWALKAN',
-                            message: 'Pembuatan 22+ file & Docker compose sedang diproses di antrean server.'
+                            title: instant ? (this.locale === 'en' ? 'PROCESSING SCAFFOLD' : 'MEMPROSES SCAFFOLD') : (this.locale === 'en' ? 'BACKGROUND JOB QUEUED' : 'BACKGROUND JOB DIJADWALKAN'),
+                            message: instant 
+                                ? (this.locale === 'en' ? 'Generating 22+ files and packaging ZIP starter kit now.' : 'Membuat 22+ file dan mengemas ZIP starter kit sekarang.')
+                                : (this.locale === 'en' ? 'Scaffold generation queued in server background.' : 'Pembuatan 22+ file & Docker compose sedang diproses di antrean server.')
                         });
                     }
 
                     try {
                         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                        const res = await fetch('{{ route('blueprint.scaffold.generate-async', $blueprint->slug) }}', {
+                        const url = '{{ route('blueprint.scaffold.generate-async', $blueprint->slug) }}' + (instant ? '?instant=1' : '');
+                        const res = await fetch(url, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -646,18 +651,31 @@
                         });
                         const data = await res.json();
                         if (data && data.success) {
-                            this.pollScaffoldJobStatus();
+                            if (data.status === 'completed') {
+                                this.scaffoldJobStatus = 'completed';
+                                this.scaffoldJobProgress = 100;
+                                this.scaffoldJobMessage = data.message || (this.locale === 'en' ? 'Scaffold starter kit ready to download.' : 'Scaffold starter kit siap diunduh.');
+                                if (window.showToast) {
+                                    window.showToast({
+                                        type: 'success',
+                                        title: this.locale === 'en' ? 'SCAFFOLD READY' : 'SCAFFOLD SELESAI DIGENERATE',
+                                        message: this.locale === 'en' ? 'Starter kit ZIP archive is ready to download!' : 'Arsip ZIP Starter Kit siap diunduh!'
+                                    });
+                                }
+                            } else {
+                                this.pollScaffoldJobStatus();
+                            }
                         } else {
                             throw new Error(data.message || 'Gagal menjadwalkan job');
                         }
                     } catch (err) {
                         this.scaffoldJobStatus = 'failed';
-                        this.scaffoldJobMessage = err.message || 'Gagal memulai background job.';
+                        this.scaffoldJobMessage = err.message || (this.locale === 'en' ? 'Failed to start background job.' : 'Gagal memulai background job.');
                         if (window.showToast) {
                             window.showToast({
                                 type: 'error',
-                                title: 'GAGAL MEMULAI JOB',
-                                message: err.message || 'Terjadi kesalahan sistem.'
+                                title: this.locale === 'en' ? 'FAILED TO START JOB' : 'GAGAL MEMULAI JOB',
+                                message: err.message || (this.locale === 'en' ? 'System error occurred.' : 'Terjadi kesalahan sistem.')
                             });
                         }
                     }

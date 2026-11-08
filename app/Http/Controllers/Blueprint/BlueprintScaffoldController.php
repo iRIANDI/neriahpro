@@ -122,6 +122,20 @@ class BlueprintScaffoldController extends Controller
         }
 
         $cacheKey = "scaffold_job_status:{$blueprint->slug}";
+
+        // If instant mode requested, execute synchronously immediately
+        if ($request->boolean('instant') || $request->has('sync')) {
+            \App\Jobs\GenerateBlueprintScaffoldJob::dispatchSync($blueprint->id);
+            $cached = Cache::get($cacheKey);
+            return response()->json(array_merge([
+                'success' => true,
+                'status' => 'completed',
+                'progress' => 100,
+                'message' => 'Paket scaffold 22+ file & Docker compose berhasil dibuat secara instan.',
+                'download_url' => route('blueprint.export-scaffold', $blueprint->slug),
+            ], is_array($cached) ? $cached : []));
+        }
+
         Cache::put($cacheKey, [
             'status' => 'queued',
             'progress' => 5,
@@ -129,7 +143,12 @@ class BlueprintScaffoldController extends Controller
             'updated_at' => now()->toIso8601String(),
         ], now()->addDay());
 
-        \App\Jobs\GenerateBlueprintScaffoldJob::dispatch($blueprint->id);
+        // Dispatch after response so the HTTP process finishes it even if no queue daemon is active
+        try {
+            \App\Jobs\GenerateBlueprintScaffoldJob::dispatchAfterResponse($blueprint->id);
+        } catch (\Throwable $e) {
+            \App\Jobs\GenerateBlueprintScaffoldJob::dispatch($blueprint->id);
+        }
 
         return response()->json([
             'success' => true,
@@ -151,7 +170,21 @@ class BlueprintScaffoldController extends Controller
         $cached = Cache::get($cacheKey);
 
         if ($cached && is_array($cached)) {
-            return response()->json(array_merge(['success' => true], $cached));
+            // Auto-rescue stalled jobs if queued on server with no queue worker daemon running
+            if (($cached['status'] ?? '') === 'queued') {
+                $updatedAt = isset($cached['updated_at']) ? \Carbon\Carbon::parse($cached['updated_at']) : null;
+                // If queued for >= 2 seconds without pickup, execute inline to prevent hanging
+                if (! $updatedAt || now()->diffInSeconds($updatedAt) >= 2) {
+                    try {
+                        \App\Jobs\GenerateBlueprintScaffoldJob::dispatchSync($blueprint->id);
+                        $cached = Cache::get($cacheKey);
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::error('Inline scaffold job execution failed: ' . $e->getMessage());
+                    }
+                }
+            }
+
+            return response()->json(array_merge(['success' => true], is_array($cached) ? $cached : []));
         }
 
         // If not in cache, inspect blueprint metadata

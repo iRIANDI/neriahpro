@@ -7,11 +7,13 @@
 name: ${COMPOSE_PROJECT_NAME:-{{ SHORT_SLUG }}}
 
 services:
-  # 1. Main Application Container (PHP 8.4/8.5 FPM with High-Concurrency Extensions)
+  # 1. Main Application Container (PHP 8.5 FPM with High-Concurrency Extensions)
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - PHP_VERSION=8.5
     container_name: ${COMPOSE_PROJECT_NAME:-{{ SHORT_SLUG }}}_app
     restart: unless-stopped
     working_dir: /var/www/html

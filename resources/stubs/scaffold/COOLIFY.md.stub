@@ -7,7 +7,7 @@ Repositori ini telah dilengkapi dengan arsitektur container produksi siap pakai 
 ## ⚡ 2 Menit Setup di Dashboard Coolify
 
 ### Opsi A: Deployment via Docker Compose (Rekomendasi Utama)
-Arsitektur ini otomatis mengemas **PHP 8.4/8.5 FPM**, **Nginx**, **PostgreSQL 16 (Strict ULID)**, dan **Redis 7** dalam satu jaringan terisolasi.
+Arsitektur ini otomatis mengemas **PHP 8.5 FPM**, **Nginx**, **PostgreSQL 16 (Strict ULID)**, dan **Redis 7** dalam satu jaringan terisolasi.
 
 1. **Masuk ke Dashboard Coolify** Anda.
 2. Klik **+ Create New Resource** $\rightarrow$ **Docker Compose**.
@@ -40,7 +40,7 @@ Arsitektur ini otomatis mengemas **PHP 8.4/8.5 FPM**, **Nginx**, **PostgreSQL 16
 Jika Anda menggunakan database PostgreSQL dan Redis eksternal (Managed Database di Coolify):
 
 1. Pilih resource **Application** $\rightarrow$ **Nixpacks**.
-2. File `nixpacks.toml` yang disertakan di repositori ini akan otomatis mendeteksi dependensi PHP 8.4, Composer 2, ekstensi `pdo_pgsql`, dan `redis`.
+2. File `nixpacks.toml` yang disertakan di repositori ini akan otomatis mendeteksi dependensi PHP 8.5, Composer 2, ekstensi `pdo_pgsql`, dan `redis`.
 3. Set environment variable database eksternal Anda.
 4. Klik **Deploy**.
 
@@ -71,3 +71,4 @@ curl http://localhost:80/api/health
 * **Port HTTP/HTTPS Publik**: Ditangani sepenuhnya oleh Nginx di port `80` dan diproxy oleh Traefik Coolify.
 * **PostgreSQL & Redis**: Berada di dalam private docker network internal (`coolify.managed`), tidak terekspos ke internet publik demi mencegah serangan *brute force*.
 * **Skema DDL**: Skema database PostgreSQL otomatis diinjeksikan saat container pertama kali dinyalakan via `schema_complete.sql`.
+

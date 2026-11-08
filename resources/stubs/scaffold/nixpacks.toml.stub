@@ -4,16 +4,16 @@
 
 [phases.setup]
 nixPkgs = [
-  "php84",
-  "php84Packages.composer",
-  "php84Extensions.pdo_pgsql",
-  "php84Extensions.pgsql",
-  "php84Extensions.redis",
-  "php84Extensions.bcmath",
-  "php84Extensions.intl",
-  "php84Extensions.opcache",
-  "php84Extensions.zip",
-  "php84Extensions.gd"
+  "php85",
+  "php85Packages.composer",
+  "php85Extensions.pdo_pgsql",
+  "php85Extensions.pgsql",
+  "php85Extensions.redis",
+  "php85Extensions.bcmath",
+  "php85Extensions.intl",
+  "php85Extensions.opcache",
+  "php85Extensions.zip",
+  "php85Extensions.gd"
 ]
 
 [phases.install]
@@ -30,3 +30,4 @@ cmds = [
 
 [start]
 cmd = "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+

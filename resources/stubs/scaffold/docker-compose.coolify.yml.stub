@@ -5,11 +5,13 @@
 # ==============================================================================
 
 services:
-  # 1. Main PHP 8.4/8.5 FPM Backend Service
+  # 1. Main PHP 8.5 FPM Backend Service
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - PHP_VERSION=8.5
     restart: always
     working_dir: /var/www/html
     volumes:
@@ -87,3 +89,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+

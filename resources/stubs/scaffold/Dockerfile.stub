@@ -1,10 +1,11 @@
 # ==============================================================================
-# PROJECT OS // PRODUCTION-READY DOCKERFILE (PHP 8.4/8.5 FPM ALPINES)
+# PROJECT OS // PRODUCTION-READY DOCKERFILE (PHP 8.5 FPM ALPINE)
 # Architecture: High-Concurrency, PostgreSQL Strict ULID, Redis, Opcache
 # Project: {{ APP_NAME }}
 # ==============================================================================
 
-FROM php:8.4-fpm-alpine AS base
+ARG PHP_VERSION=8.5
+FROM php:${PHP_VERSION}-fpm-alpine AS base
 
 # Install system dependencies & PostgreSQL / Redis build libraries
 RUN apk add --no-cache \
@@ -64,3 +65,4 @@ USER www
 EXPOSE 9000
 
 CMD ["php-fpm"]
+

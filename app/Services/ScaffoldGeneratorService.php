@@ -183,6 +183,8 @@ class ScaffoldGeneratorService
             'docker-compose.coolify.yml' => self::generateDockerComposeCoolify($blueprint, $slug),
             'nixpacks.toml' => self::generateNixpacksToml(),
             'coolify.yaml' => self::generateCoolifyYaml($blueprint, $slug),
+            'docs/deployment/DOCKER.md' => self::generateDockerGuide($blueprint, $slug),
+            'docs/DOCKER.md' => self::generateDockerGuide($blueprint, $slug),
             'docs/deployment/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug),
             'docs/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug),
             '.env.example' => self::generateEnvExample($blueprint, $slug),
@@ -478,6 +480,20 @@ class ScaffoldGeneratorService
         $shortSlug = self::deriveShortSlug($slug);
 
         return StubLoader::load('scaffold/COOLIFY.md.stub', [
+            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ SLUG }}' => $slug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
+        ]);
+    }
+
+    /**
+     * Generate Docker & Docker Compose setup guide markdown.
+     */
+    public static function generateDockerGuide(VisionBlueprint $blueprint, string $slug): string
+    {
+        $shortSlug = self::deriveShortSlug($slug);
+
+        return StubLoader::load('scaffold/DOCKER.md.stub', [
             '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
             '{{ SLUG }}' => $slug,
             '{{ SHORT_SLUG }}' => $shortSlug,
@@ -863,9 +879,12 @@ class ScaffoldGeneratorService
      */
     public static function generateReadme(VisionBlueprint $blueprint, string $projectName, string $slug): string
     {
+        $shortSlug = self::deriveShortSlug($slug);
+
         return StubLoader::load('scaffold/README.md.stub', [
             '{{ APP_NAME }}' => $projectName,
             '{{ SLUG }}' => $slug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
         ]);
     }
 
@@ -942,6 +961,8 @@ class ScaffoldGeneratorService
             'docker-compose.coolify.yml' => self::generateDockerComposeCoolify($blueprint, $slug),
             'nixpacks.toml' => self::generateNixpacksToml(),
             'coolify.yaml' => self::generateCoolifyYaml($blueprint, $slug),
+            'docs/deployment/DOCKER.md' => self::generateDockerGuide($blueprint, $slug),
+            'docs/DOCKER.md' => self::generateDockerGuide($blueprint, $slug),
             'docs/deployment/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug),
             'docs/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug),
             '.env.example' => self::generateEnvExample($blueprint, $slug),

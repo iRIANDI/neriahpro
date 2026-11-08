@@ -1,48 +1,79 @@
-# {{ APP_NAME }} - Production Starter Kit
+# {{ APP_NAME }} — Production Starter Kit
 
 > **Project OS Architecture Boilerplate**  
 > Dihasilkan secara otomatis dari Blueprint Spesifikasi Sistem & Dokumen PRD Resmi.  
-> Target Waktu Pengerjaan: **{$targetWaktu} (5 Sprint Kerja)**
+> Stack: **Laravel 13**, **PHP 8.5 FPM**, **Nginx Alpine**, **PostgreSQL 16 (Strict ULID)**, **Redis 7**, dan **Coolify Cloud Support**.
 
 ---
 
-## 🚀 Panduan Memulai Cepat (Quickstart via Docker)
+## 📚 Panduan Lengkap Dokumentasi Deployment
 
-Pastikan sistem Anda telah memiliki **Docker** dan **Docker Compose** terpasang.
+* 🐳 **[Panduan Lengkap Setup Docker Lokal](docs/deployment/DOCKER.md)**: Arsitektur kontainer lokal, penamaan `Dockerfile` tanpa ekstensi, konfigurasi multi-port, dan perintah harian.
+* 🚀 **[Panduan Deployment Coolify Cloud](docs/deployment/COOLIFY.md)**: Instalasi Coolify di VPS Ubuntu/Debian, setup reverse proxy Traefik, SSL Let's Encrypt otomatis, webhook CI/CD, dan backup database otomatis.
+* 📋 **[Spesifikasi PRD Lengkap](prd.md)**: Rincian parameter bisnis, arsitektur data dictionary, dan WBS Sprint.
+
+---
+
+## ⚡ Panduan Memulai Cepat Lokal (Quickstart via Docker)
+
+Pastikan **Docker Desktop** (Windows / macOS) atau **Docker Engine** (Linux) sudah aktif.
 
 ### 1. Salin Lingkungan Konfigurasi (.env)
 ```bash
 cp .env.example .env
 ```
 
-### 2. Jalankan Seluruh Container Service
+### 2. Bangun & Jalankan Seluruh Kontainer
 ```bash
-docker compose up -d
+docker compose up --build -d
 ```
-Container yang akan aktif:
-- **Web Server (Nginx)**: `http://localhost:8080`
-- **Database (PostgreSQL 16)**: `localhost:5432` (`user: {{ SLUG }}_user`, `pass: secret_production_change_me`)
-- **Cache & Queue (Redis 7)**: `localhost:6379`
-- **Mail Testing Sandbox (Mailpit)**: `http://localhost:8025`
 
-### 3. Eksekusi Migrasi Database Skema Lengkap
-Skema SQL telah diinjeksi secara otomatis pada booting pertama Docker melalui `database/migrations/schema_complete.sql`. Jika Anda menggunakan Laravel CLI:
+> ⚠️ **Catatan Penting**: Berkas `Dockerfile` **TIDAK MENGGUNAKAN EKSTENSI APAPUN** (bukan `Dockerfile.txt`). Jangan gunakan parameter `--pull always` saat pertama kali build agar tidak terjadi `pull access denied`.
+
+### 3. Layanan yang Siap Diakses:
+- **Aplikasi Web (Nginx)**: [http://localhost:8000](http://localhost:8000)
+- **Health Check Probe**: [http://localhost:8000/api/health](http://localhost:8000/api/health)
+- **Database (PostgreSQL 16)**: `localhost:5432` (`user: {{ SHORT_SLUG }}_user`, `pass: secret_production_change_me`)
+- **In-Memory Cache & Queue (Redis 7)**: `localhost:6379`
+- **Mail Testing Sandbox (Mailpit)**: [http://localhost:8025](http://localhost:8025)
+
+### 4. Eksekusi Migrasi & Kunci Aplikasi
+Skema tabel awal (`schema_complete.sql`) diinjeksi secara otomatis pada saat inisialisasi PostgreSQL. Jalankan perintah artisan berikut melalui container `app`:
 ```bash
+docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate
+docker compose exec app php artisan db:seed
+docker compose exec app php artisan storage:link
 ```
 
-### 4. Menjalankan Queue Worker & AI-Shield
+### 5. Menjalankan Queue Worker di Latar Belakang
 ```bash
 docker compose exec -d app php artisan queue:work --tries=3
 ```
 
 ---
 
-## 🛡️ Kebijakan Keamanan: AI-Shield & Sandboxed Ingestion
-Aplikasi ini telah diproteksi terhadap eksploitasi otonom AI (terinspirasi dari insiden Hugging Face dataset loader RCE pada benchmark Exploit Gym):
+## ☁️ Deployment Produksi ke Server VPS (Coolify)
+
+Untuk deployment produksi ke server VPS mandiri (Ubuntu/Debian) dengan SSL Let's Encrypt otomatis:
+1. Pasang Coolify di VPS dengan 1 perintah:
+   ```bash
+   curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+   ```
+2. Buka dashboard `http://<IP-VPS>:8000` $\rightarrow$ Tambahkan Resource **Docker Compose**.
+3. Arahkan ke file `docker-compose.coolify.yml`.
+4. Masukkan domain `https://app.domainanda.com` dan klik **Deploy**.
+
+Baca panduan lengkapnya di **[docs/deployment/COOLIFY.md](docs/deployment/COOLIFY.md)**.
+
+---
+
+## 🛡️ Kebijakan Keamanan & Ketahanan Sistem
+
 1. **AiThreatShield Middleware**: Mencegat seluruh injeksi perintah OS (`exec`, `eval`, `system`, `__construct`).
-2. **ProcessSecureDataset Job**: Memvalidasi MIME type berkas impor secara absolut melalui `finfo` dan menonaktifkan parsing entity eksternal XML (XXE defense).
-3. **Database ULID O(1)**: Menggunakan primary key ULID 26 karakter untuk performa terdistribusi dan kompatibilitas PostgreSQL 100%.
+2. **Database ULID O(1)**: Menggunakan primary key ULID 26 karakter untuk performa terdistribusi dan kompatibilitas PostgreSQL 100%.
+3. **Strict Validation FormRequests**: Validasi input ketat di level boundary HTTP API.
+4. **Sandboxed File Ingestion**: Verifikasi MIME type biner secara absolut melalui `finfo` dan pencegahan XML External Entity (XXE).
 
 ---
 Hak Cipta & Hak Milik: **{{ APP_NAME }}** & **Neriah Pro Hub**

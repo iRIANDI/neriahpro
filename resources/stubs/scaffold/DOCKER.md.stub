@@ -1,0 +1,185 @@
+# 🐳 Panduan Lengkap Instalasi & Setup Docker (PHP 8.5 FPM Stack) — {{ APP_NAME }}
+
+Repositori ini telah dilengkapi arsitektur kontainerisasi produksi berkinerja tinggi (**PHP 8.5 FPM**, **Nginx Alpine**, **PostgreSQL 16 Strict ULID**, **Redis 7**, dan **Mailpit Sandbox**) yang siap dijalankan secara lokal maupun server mandiri.
+
+---
+
+## 🏗️ Arsitektur Kontainer Stack
+
+```text
+       [ Browser / Klien HTTP ]
+                  │ (Port 8000 / 80)
+                  ▼
+       ┌────────────────────────┐
+       │   Nginx Alpine (web)   │ ── FastCGI Buffering & Static Caching
+       └────────────────────────┘
+                  │ (Port 9000 Internal)
+                  ▼
+       ┌────────────────────────┐
+       │  PHP 8.5 FPM (app)     │ ── Laravel 13 Core, Opcache, BCMath, GD, Redis Ext
+       └────────────────────────┘
+            │              │
+            │ (Port 5432)  │ (Port 6379)
+            ▼              ▼
+ ┌─────────────────┐ ┌───────────────┐
+ │ PostgreSQL 16   │ │ Redis 7       │
+ │ (Strict ULID)   │ │ (Cache/Queue) │
+ └─────────────────┘ └───────────────┘
+```
+
+| Layanan | Nama Container | Port Host | Fungsi |
+| :--- | :--- | :--- | :--- |
+| **App** | `{{ SHORT_SLUG }}_app` | *Internal (9000)* | PHP 8.5 FPM Alpine + Laravel 13 + Composer 2 |
+| **Web** | `{{ SHORT_SLUG }}_web` | `8000:80` | Nginx Alpine Reverse Proxy & Static Asset Caching |
+| **PostgreSQL** | `{{ SHORT_SLUG }}_postgres` | `5432:5432` | Relational Database Engine (Strict ULID 26 Char DDL) |
+| **Redis** | `{{ SHORT_SLUG }}_redis` | `6379:6379` | In-Memory Cache, Rate Limiter & Queue Worker Broker |
+| **Mailpit** | `{{ SHORT_SLUG }}_mailpit` | `8025:8025` | Local Email Testing Web Sandbox (`1025` SMTP) |
+
+---
+
+## ⚠️ Aturan Kritis Penamaan File Docker (Anti-Error Windows)
+
+1. **`Dockerfile` WAJIB TANPA EKSTENSI**:
+   * Nama file wajib persis: `Dockerfile` (huruf **D** kapital, tanpa `.txt`, tanpa `.docker`).
+   * **Jebakan Windows Explorer**: Windows sering menyembunyikan ekstensi file, sehingga file baru sering tak sengaja bernama `Dockerfile.txt`. Ini menyebabkan error `open Dockerfile: no such file or directory`.
+   * **Solusi**: Di Windows Explorer, buka tab **View** $\rightarrow$ centang **File name extensions**. Atau verifikasi lewat PowerShell:
+     ```powershell
+     Get-ChildItem Dockerfile*
+     ```
+     Jika muncul `Dockerfile.txt`, ubah namanya:
+     ```powershell
+     Rename-Item Dockerfile.txt Dockerfile
+     ```
+2. **`docker-compose.yml` Modern (V2 Standard)**:
+   * Jangan gunakan tag usang `version: '3.8'`.
+   * Jangan menyertakan tag `image:` pada service `app` lokal agar Docker tidak mencari image ke Docker Hub publik (`pull access denied`).
+
+---
+
+## 💻 Persiapan Sistem (Prerequisites)
+
+* **Windows**: Pasang **Docker Desktop for Windows** dengan backend WSL 2 (Windows Subsystem for Linux 2) aktif.
+* **macOS**: Pasang **Docker Desktop for Mac** (kompatibel Apple Silicon M1/M2/M3 & Intel).
+* **Linux (Ubuntu / Debian)**:
+  ```bash
+  curl -fsSL https://get.docker.com | sh
+  sudo usermod -aG docker $USER
+  sudo apt-get install -y docker-compose-plugin
+  ```
+
+---
+
+## 🚀 Langkah Instalasi & Setup Cepat (Step-by-Step)
+
+### 1. Salin Berkas Konfigurasi Lingkungan
+Buka terminal / PowerShell di direktori proyek ini, lalu salin `.env.example` menjadi `.env`:
+
+* **Windows PowerShell**:
+  ```powershell
+  Copy-Item .env.example .env
+  ```
+* **Linux / macOS**:
+  ```bash
+  cp .env.example .env
+  ```
+
+### 2. Bangun & Jalankan Kontainer (First Run)
+Jalankan perintah berikut untuk meng-compile image lokal PHP 8.5 dan menyalakan semua container di latar belakang (*detached mode*):
+
+```bash
+docker compose up --build -d
+```
+
+> **Catatan Penting**: Jangan gunakan opsi `--pull always` saat pertama kali build, agar Docker tidak mencoba menarik image aplikasi lokal dari registry cloud.
+
+### 3. Verifikasi Status Seluruh Kontainer
+Pastikan semua kontainer berstatus `Up` (dan database berstatus `healthy`):
+
+```bash
+docker compose ps
+```
+
+Hasil normal akan menampilkan:
+* `{{ SHORT_SLUG }}_app` — Up
+* `{{ SHORT_SLUG }}_web` — Up (0.0.0.0:8000->80/tcp)
+* `{{ SHORT_SLUG }}_postgres` — Up (healthy) (0.0.0.0:5432->5432/tcp)
+* `{{ SHORT_SLUG }}_redis` — Up (healthy) (0.0.0.0:6379->6379/tcp)
+* `{{ SHORT_SLUG }}_mailpit` — Up (0.0.0.0:8025->8025/tcp)
+
+### 4. Inisialisasi Kunci Aplikasi & Database
+Skema tabel PostgreSQL awal (`schema_complete.sql`) otomatis dieksekusi saat container postgres pertama kali dinyalakan. Jalankan perintah artisan berikut melalui container `app`:
+
+```bash
+# 1. Generate Application Key (jika belum ada di .env)
+docker compose exec app php artisan key:generate
+
+# 2. Jalankan Migrasi Database Tambahan
+docker compose exec app php artisan migrate
+
+# 3. Jalankan Seeder Mock Data Realistis (Opsional)
+docker compose exec app php artisan db:seed
+
+# 4. Buat Symlink Storage Publik
+docker compose exec app php artisan storage:link
+```
+
+---
+
+## 🌐 Akses Layanan Lokal
+
+Buka browser Anda dan akses endpoint berikut:
+* **Aplikasi Web Utama**: [http://localhost:8000](http://localhost:8000)
+* **Health Check Probe**: [http://localhost:8000/api/health](http://localhost:8000/api/health)
+* **Webmail Mailpit Sandbox**: [http://localhost:8025](http://localhost:8025)
+
+---
+
+## 🛠️ Perintah Harian Pengembang (Cheat Sheet)
+
+```bash
+# Masuk ke dalam terminal container app (PHP FPM)
+docker compose exec app sh
+
+# Menjalankan seluruh rangkaian tes otomatis (Pest / PHPUnit)
+docker compose exec app php artisan test
+
+# Menjalankan queue worker di latar belakang
+docker compose exec -d app php artisan queue:work --tries=3
+
+# Bersihkan dan optimasi seluruh cache Laravel
+docker compose exec app php artisan optimize:clear
+
+# Melihat log aplikasi secara realtime
+docker compose logs -f app
+docker compose logs -f web
+
+# Mematikan seluruh stack kontainer
+docker compose down
+
+# Mematikan kontainer dan menghapus volume database (Reset total)
+docker compose down -v
+```
+
+---
+
+## 🚑 Pemecahan Masalah Umum (Troubleshooting)
+
+### 1. Error: `port is already allocated` (Port 5432 / 8000 / 6379 bentrok)
+Jika Anda sudah memiliki PostgreSQL lokal atau XAMPP/Apache yang aktif di komputer:
+* Ubah port mapping di file `.env` atau `docker-compose.yml`:
+  ```env
+  APP_PORT=8088
+  DB_FORWARD_PORT=5433
+  REDIS_FORWARD_PORT=6380
+  ```
+* Restart container: `docker compose up -d`.
+
+### 2. Error: `The stream or file ".../laravel.log" could not be opened in append mode: Permission denied`
+Ubah kepemilikan direktori `storage` dan `bootstrap/cache` ke user `www`:
+```bash
+docker compose exec -u root app chown -R www:www /var/www/html/storage /var/www/html/bootstrap/cache
+docker compose exec -u root app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+```
+
+### 3. Error: `Connection refused` pada Database
+PostgreSQL memerlukan beberapa detik untuk inisialisasi skema saat pertama kali dijalankan. Tunggu 5-10 detik hingga status health check `docker compose ps` berubah menjadi `(healthy)` sebelum menjalankan `php artisan migrate`.

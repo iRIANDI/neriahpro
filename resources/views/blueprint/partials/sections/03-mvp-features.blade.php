@@ -26,6 +26,29 @@
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                 <span>{{ ($isEn ?? false) ? 'ELABORATE TASKS' : 'ELABORASI TASK' }}</span>
                             </button>
+
+                            <!-- AI Architecture Advisory Trigger -->
+                            @if($blueprint->isPurchasedPackage())
+                                <button 
+                                    type="button" 
+                                    @click="openAdvisoryModal()" 
+                                    class="px-3 py-1.5 bg-zinc-950 hover:bg-zinc-800 text-amber-400 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-300 text-xs font-mono font-black border border-amber-400 dark:border-amber-600 flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                                    title="{{ ($isEn ?? false) ? 'Discover missing essential architecture features & modern 2026 tech stack upgrades' : 'Temukan saran fitur esensial yang belum ada & modernisasi tech stack 2026' }}"
+                                >
+                                    <span class="w-1.5 h-1.5 bg-amber-400 rounded-none animate-pulse"></span>
+                                    <span>{{ ($isEn ?? false) ? '✨ TECH RADAR & ADVISORY' : '✨ SARAN FITUR & TECH RADAR' }}</span>
+                                </button>
+                            @else
+                                <button 
+                                    type="button" 
+                                    @click="openAdvisoryModal()" 
+                                    class="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 text-xs font-mono font-bold border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition cursor-pointer"
+                                    title="{{ ($isEn ?? false) ? 'Exclusive to purchased licenses: Discover missing features & tech upgrades' : 'Eksklusif lisensi berbayar: Temukan saran fitur penting & modernisasi stack' }}"
+                                >
+                                    <span>🔒</span>
+                                    <span>{{ ($isEn ?? false) ? 'TECH RADAR [PREMIUM]' : 'SARAN FITUR [PREMIUM]' }}</span>
+                                </button>
+                            @endif
                         @else
                             <div class="px-3 py-1.5 bg-zinc-800 text-zinc-400 text-xs font-mono font-bold border border-zinc-700 flex items-center gap-1.5 cursor-not-allowed" title="{{ ($isEn ?? false) ? 'This document is digitally signed with SHA-256 seal (Scope Freeze). Any task changes must go through an Addendum.' : 'Dokumen ini telah ditandatangani secara digital dengan integritas SHA-256 (Scope Freeze). Setiap perubahan task harus melalui Addendum.' }}">
                                 <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>

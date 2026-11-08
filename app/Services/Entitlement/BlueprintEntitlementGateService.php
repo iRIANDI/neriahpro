@@ -120,6 +120,64 @@ final class BlueprintEntitlementGateService
     }
 
     /**
+     * Check whether a blueprint belongs to an active, officially purchased license
+     * (Paid Retail Pro/Ultimate or Paid Mitra Turnkey) or VIP Superadmin bypass.
+     * Guaranteed zero-leak server-side gate against free demo sandbox leaks.
+     */
+    public function isPurchasedPackage(VisionBlueprint $blueprint, ?object $user = null): bool
+    {
+        // 1. VIP Super Admin / Principal Architect Bypass
+        if ($user !== null && isset($user->id)) {
+            if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+                return true;
+            }
+            if (method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['super_admin', 'admin', 'principal_architect'])) {
+                return true;
+            }
+        }
+
+        // 2. Mitra Turnkey: Confirmed DP 50% or Active Sprint status
+        if ($blueprint->isDpConfirmed() || in_array($blueprint->project_status, ['Active Sprint', 'In Development (DP Paid)', 'Completed'], true)) {
+            return true;
+        }
+
+        // 3. Retail License with paid flag or settled transaction
+        if ($blueprint->isRetailLicense()) {
+            if (! empty($blueprint->user_metadata['paid'])) {
+                return true;
+            }
+            $orderId = $blueprint->user_metadata['order_id'] ?? null;
+            $hasSettledTx = Transaction::query()
+                ->where('status', 'settlement')
+                ->where(function ($q) use ($blueprint, $orderId) {
+                    $q->where(function ($sq) use ($blueprint) {
+                        $sq->where('related_type', VisionBlueprint::class)
+                            ->where('related_id', $blueprint->id);
+                    });
+                    if ($orderId) {
+                        $q->orWhere('midtrans_order_id', $orderId);
+                    }
+                })
+                ->exists();
+
+            if ($hasSettledTx) {
+                return true;
+            }
+        }
+
+        // 4. Free demo/spark sandbox is explicitly blocked
+        $metaTier = $blueprint->user_metadata['retail_tier'] ?? $blueprint->user_metadata['package_tier'] ?? null;
+        if ($metaTier && in_array(strtolower($metaTier), ['retail_spark', 'spark', 'free_sandbox'], true)) {
+            return false;
+        }
+
+        // 5. Fallback check resolved user tier
+        $tier = $this->resolveUserTier($user, $blueprint->slug);
+
+        return $tier !== 'FREE_SANDBOX';
+    }
+
+    /**
      * Normalize a package/tier slug into one of the 5 canonical entitlement tiers.
      */
     public function normalizeRequestedTierSlug(?string $slug): string

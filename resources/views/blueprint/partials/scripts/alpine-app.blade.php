@@ -139,6 +139,191 @@
                 taskEditorTab: 'mvp',
                 analyzingTaskGaps: false,
                 taskGapResult: null,
+
+                // AI Architecture Advisory & Tech Stack Evolution State
+                advisoryModalOpen: false,
+                advisoryScanning: false,
+                advisoryIntegrating: false,
+                advisoryTab: 'missing_features',
+                advisoryResult: null,
+                advisorySelectedFeatures: [],
+                advisorySelectedTech: [],
+                isPurchasedPackage: {{ ($blueprint->isPurchasedPackage() ?? false) ? 'true' : 'false' }},
+
+                openAdvisoryModal() {
+                    this.advisoryModalOpen = true;
+                    if (this.isPurchasedPackage && !this.advisoryResult && !this.advisoryScanning) {
+                        this.scanArchitectureAdvisory();
+                    }
+                },
+
+                async scanArchitectureAdvisory() {
+                    if (this.advisoryScanning) return;
+                    if (!this.isPurchasedPackage) {
+                        this.advisoryModalOpen = true;
+                        return;
+                    }
+                    this.advisoryScanning = true;
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: this.isEn ? 'SCANNING ARCHITECTURE GAPS' : 'MEMINDAI CELAH ARSITEKTUR',
+                            message: this.isEn 
+                                ? 'AI is inspecting project corpus and world-class 2026 engineering standards...' 
+                                : 'AI sedang menganalisis dokumen acuan dan standar rekayasa dunia 2026...'
+                        });
+                    }
+                    try {
+                        const res = await fetch('{{ route('blueprint.architecture-advisory.scan', $blueprint->slug) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'X-Locale': this.isEn ? 'en' : 'id'
+                            },
+                            body: JSON.stringify({
+                                locale: this.isEn ? 'en' : 'id'
+                            })
+                        });
+                        const data = await res.json();
+                        if (res.status === 403 || data.code === 'PREMIUM_LICENSE_REQUIRED') {
+                            this.isPurchasedPackage = false;
+                            this.advisoryResult = null;
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'warning',
+                                    title: this.isEn ? 'PREMIUM LICENSE REQUIRED' : 'LISENSI RESMI DIPERLUKAN',
+                                    message: data.message || 'Fitur ini eksklusif untuk lisensi berbayar.'
+                                });
+                            }
+                            return;
+                        }
+                        if (data && data.success) {
+                            this.advisoryResult = data;
+                            this.advisorySelectedFeatures = (data.missing_features || []).map(f => f.id);
+                            this.advisorySelectedTech = (data.tech_upgrades || []).map(t => t.id);
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: this.isEn ? 'ADVISORY SCAN COMPLETE' : 'PEMINDAIAN ARSITEKTUR SELESAI',
+                                    message: this.isEn 
+                                        ? `Discovered ${data.missing_features?.length || 0} missing features & ${data.tech_upgrades?.length || 0} tech upgrades.`
+                                        : `Ditemukan ${data.missing_features?.length || 0} fitur esensial belum ada & ${data.tech_upgrades?.length || 0} modernisasi teknologi.`
+                                });
+                            }
+                        } else {
+                            throw new Error(data.message || 'Gagal memindai saran arsitektur.');
+                        }
+                    } catch (err) {
+                        console.error('Advisory scan failed:', err);
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: this.isEn ? 'SCAN FAILED' : 'GAGAL MEMINDAI',
+                                message: err.message
+                            });
+                        }
+                    } finally {
+                        this.advisoryScanning = false;
+                    }
+                },
+
+                toggleAdvisoryFeature(id) {
+                    const idx = this.advisorySelectedFeatures.indexOf(id);
+                    if (idx > -1) {
+                        this.advisorySelectedFeatures.splice(idx, 1);
+                    } else {
+                        this.advisorySelectedFeatures.push(id);
+                    }
+                },
+
+                toggleAdvisoryTech(id) {
+                    const idx = this.advisorySelectedTech.indexOf(id);
+                    if (idx > -1) {
+                        this.advisorySelectedTech.splice(idx, 1);
+                    } else {
+                        this.advisorySelectedTech.push(id);
+                    }
+                },
+
+                selectAllAdvisoryFeatures(select) {
+                    if (!this.advisoryResult?.missing_features) return;
+                    if (select) {
+                        this.advisorySelectedFeatures = this.advisoryResult.missing_features.map(f => f.id);
+                    } else {
+                        this.advisorySelectedFeatures = [];
+                    }
+                },
+
+                async submitAdvisoryIntegration() {
+                    if (this.advisoryIntegrating) return;
+                    if (this.advisorySelectedFeatures.length === 0 && this.advisorySelectedTech.length === 0) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'warning',
+                                title: this.isEn ? 'NO ITEMS SELECTED' : 'BELUM ADA YANG DIPILIH',
+                                message: this.isEn ? 'Please select at least 1 feature or tech upgrade to integrate.' : 'Silakan pilih minimal 1 fitur atau pembaruan teknologi untuk diintegrasikan.'
+                            });
+                        }
+                        return;
+                    }
+
+                    this.advisoryIntegrating = true;
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: this.isEn ? 'INTEGRATING INTO BLUEPRINT' : 'MENGINTEGRASIKAN KE BLUEPRINT',
+                            message: this.isEn 
+                                ? 'Generating 6-dimensional feature specs and sealing SHA-256 hash...' 
+                                : 'Menyusun spesifikasi 6 dimensi dan memperbarui segel kriptografis SHA-256...'
+                        });
+                    }
+
+                    try {
+                        const res = await fetch('{{ route('blueprint.architecture-advisory.integrate', $blueprint->slug) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'X-Locale': this.isEn ? 'en' : 'id'
+                            },
+                            body: JSON.stringify({
+                                selected_features: this.advisorySelectedFeatures,
+                                selected_tech_upgrades: this.advisorySelectedTech,
+                                cached_recommendations: this.advisoryResult?.missing_features || [],
+                                locale: this.isEn ? 'en' : 'id'
+                            })
+                        });
+
+                        const data = await res.json();
+                        if (data && data.success) {
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'success',
+                                    title: this.isEn ? 'ARCHITECTURE INTEGRATED' : 'ARSITEKTUR TERINTEGRASI',
+                                    message: data.message || 'Blueprint berhasil diperbarui dengan fitur baru.'
+                                });
+                            }
+                            this.advisoryModalOpen = false;
+                            setTimeout(() => window.location.reload(), 1200);
+                        } else {
+                            throw new Error(data.message || 'Gagal mengintegrasikan rekomendasi arsitektur.');
+                        }
+                    } catch (err) {
+                        console.error('Integration failed:', err);
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: this.isEn ? 'INTEGRATION FAILED' : 'GAGAL INTEGRASI',
+                                message: err.message
+                            });
+                        }
+                    } finally {
+                        this.advisoryIntegrating = false;
+                    }
+                },
                 mvpTasks: @json($prd['features']['mvp_phase1'] ?? []),
                 phase2Tasks: @json($prd['features']['phase2_roadmap'] ?? []),
                 newTaskTitle: '',

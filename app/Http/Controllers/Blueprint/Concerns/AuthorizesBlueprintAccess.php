@@ -22,7 +22,7 @@ trait AuthorizesBlueprintAccess
 
         // Guest access allowed for Free Grant / Spark Tier or public blueprints without paid retail tier
         $tier = $blueprint->user_metadata['retail_tier'] ?? $blueprint->user_metadata['package_tier'] ?? null;
-        if ($tier === 'retail_spark' || $blueprint->is_free_grant || empty($blueprint->user_metadata) || ! $tier) {
+        if (in_array(strtolower((string) $tier), ['retail_spark', 'spark', 'free_sandbox'], true) || $blueprint->is_free_grant || empty($blueprint->user_metadata) || ! $tier) {
             return;
         }
 

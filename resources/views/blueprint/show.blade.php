@@ -433,6 +433,7 @@
     @include('blueprint.partials.modals.google-translate-modal')
     @include('blueprint.partials.modals.tweak-segment-modal')
     @include('blueprint.partials.modals.fullscreen-diagram-modal')
+    @include('blueprint.partials.modals.architecture-advisory-modal')
 
     <!-- FOOTER -->
     @include('blueprint.partials.footer')

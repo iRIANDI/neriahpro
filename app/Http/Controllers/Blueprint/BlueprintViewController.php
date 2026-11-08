@@ -259,6 +259,7 @@ class BlueprintViewController extends Controller
             'isDpConfirmed' => $isDpConfirmed,
             'isContractSigned' => $isContractSigned,
             'contractDocument' => $contractDocument,
+            'isPurchased' => $blueprint->isPurchasedPackage(Auth::user()),
             'locale' => $isEn ? 'en' : 'id',
             'isEn' => $isEn,
         ]);

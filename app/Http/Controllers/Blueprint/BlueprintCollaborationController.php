@@ -240,6 +240,128 @@ class BlueprintCollaborationController extends Controller
     }
 
     /**
+     * Scan current blueprint for missing essential features and modern 2026 tech stack recommendations.
+     * Guaranteed zero-leak server-side gate: Only accessible by officially purchased licenses.
+     */
+    public function scanArchitectureAdvisory(
+        Request $request,
+        string $slug,
+        \App\Services\Blueprint\BlueprintArchitectureAdvisorService $advisorService,
+        \App\Services\Entitlement\BlueprintEntitlementGateService $gateService
+    ): JsonResponse {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $locale = $request->input('locale') 
+            ?: ($request->header('X-Locale') 
+            ?: ($request->cookie('neriah_locale') ?: app()->getLocale()));
+        $locale = $locale === 'en' ? 'en' : 'id';
+        $isEn = ($locale === 'en');
+
+        // STRICT ZERO-LEAK GATE
+        if (! $gateService->isPurchasedPackage($blueprint, auth()->user())) {
+            return response()->json([
+                'success' => false,
+                'code' => 'PREMIUM_LICENSE_REQUIRED',
+                'is_purchased' => false,
+                'message' => $isEn
+                    ? 'AI Architecture Advisory & Tech Radar is an exclusive premium feature for officially purchased licenses (Retail Pro/Ultimate or Mitra Turnkey). Free demo sandboxes cannot access proprietary advisory intelligence.'
+                    : 'Fitur AI Architecture Advisory & Tech Radar eksklusif untuk proyek berlisensi resmi (Retail Pro/Ultimate atau Mitra Turnkey). Versi demo gratis tidak dapat mengakses inteligensi arsitektur ini.',
+                'upgrade_url' => url('/blueprint/' . $blueprint->slug . '#section-10'),
+            ], 403);
+        }
+
+        try {
+            $aiProvider = $request->input('ai_provider');
+            $result = $advisorService->scan($blueprint, $locale, $aiProvider);
+
+            return response()->json($result);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'code' => 'PREMIUM_LICENSE_REQUIRED',
+                'is_purchased' => false,
+                'message' => $e->getMessage(),
+                'upgrade_url' => url('/blueprint/' . $blueprint->slug . '#section-10'),
+            ], 403);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Architecture advisory scan failed: ' . $e->getMessage(), ['exception' => $e]);
+
+            return response()->json([
+                'success' => false,
+                'message' => ($isEn ? 'Failed to scan architecture advisory: ' : 'Gagal memindai saran arsitektur: ') . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Integrate approved missing features & modern tech upgrades into the blueprint.
+     */
+    public function integrateArchitectureAdvisory(
+        Request $request,
+        string $slug,
+        \App\Services\Blueprint\BlueprintArchitectureAdvisorService $advisorService,
+        \App\Services\Entitlement\BlueprintEntitlementGateService $gateService
+    ): JsonResponse {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $locale = $request->input('locale') 
+            ?: ($request->header('X-Locale') 
+            ?: ($request->cookie('neriah_locale') ?: app()->getLocale()));
+        $locale = $locale === 'en' ? 'en' : 'id';
+        $isEn = ($locale === 'en');
+
+        // STRICT ZERO-LEAK GATE
+        if (! $gateService->isPurchasedPackage($blueprint, auth()->user())) {
+            return response()->json([
+                'success' => false,
+                'code' => 'PREMIUM_LICENSE_REQUIRED',
+                'is_purchased' => false,
+                'message' => $isEn
+                    ? 'AI Architecture Advisory integration is an exclusive premium feature for officially purchased licenses.'
+                    : 'Integrasi AI Architecture Advisory eksklusif untuk proyek berlisensi resmi.',
+                'upgrade_url' => url('/blueprint/' . $blueprint->slug . '#section-10'),
+            ], 403);
+        }
+
+        $request->validate([
+            'selected_features' => 'nullable|array',
+            'selected_tech_upgrades' => 'nullable|array',
+            'cached_recommendations' => 'nullable|array',
+        ]);
+
+        $selectedFeatures = $request->input('selected_features', []);
+        $selectedTechUpgrades = $request->input('selected_tech_upgrades', []);
+        $cachedRecommendations = $request->input('cached_recommendations', []);
+
+        try {
+            $result = $advisorService->integrate(
+                $blueprint,
+                $selectedFeatures,
+                $selectedTechUpgrades,
+                $cachedRecommendations,
+                $locale
+            );
+
+            return response()->json($result);
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            return response()->json([
+                'success' => false,
+                'code' => 'PREMIUM_LICENSE_REQUIRED',
+                'message' => $e->getMessage(),
+            ], 403);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Architecture advisory integration failed: ' . $e->getMessage(), ['exception' => $e]);
+
+            return response()->json([
+                'success' => false,
+                'message' => ($isEn ? 'Failed to integrate architecture advisory: ' : 'Gagal mengintegrasikan saran arsitektur: ') . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Real-time Live Presence & Collaborative Cursor Heartbeat.
      * Records collaborator coordinates, active section, and role into cache.
      */

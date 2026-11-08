@@ -123,6 +123,8 @@ Route::post('/api/blueprint/{slug}/presence', [BlueprintCollaborationController:
 Route::get('/api/blueprint/{slug}/presence', [BlueprintCollaborationController::class, 'getPresence'])->name('api.blueprint.presence.get');
 Route::post('/blueprint/{slug}/tasks/update', [BlueprintCollaborationController::class, 'updateTasks'])->name('blueprint.tasks.update');
 Route::post('/blueprint/{slug}/tasks/analyze-gap', [BlueprintCollaborationController::class, 'analyzeTaskGap'])->name('blueprint.tasks.analyze-gap');
+Route::post('/blueprint/{slug}/architecture-advisory/scan', [BlueprintCollaborationController::class, 'scanArchitectureAdvisory'])->name('blueprint.architecture-advisory.scan')->middleware('throttle:30,1');
+Route::post('/blueprint/{slug}/architecture-advisory/integrate', [BlueprintCollaborationController::class, 'integrateArchitectureAdvisory'])->name('blueprint.architecture-advisory.integrate')->middleware('throttle:30,1');
 Route::post('/api/blueprint/{slug}/checkpoint', [BlueprintCollaborationController::class, 'updateCheckpoint'])->name('api.blueprint.checkpoint');
 Route::post('/api/pricing/inquiry', [BlueprintCommercialController::class, 'pricingInquiry'])->name('api.pricing.inquiry')->middleware('throttle:30,1');
 

@@ -48,6 +48,31 @@
                     <span class="sm:hidden">SCAFFOLD</span>
                 </button>
 
+                <!-- AI Architecture Advisory & Tech Radar Trigger (Zero-Leak Gated for Paid Packages) -->
+                @if($blueprint->isPurchasedPackage())
+                    <button 
+                        type="button" 
+                        @click="openAdvisoryModal()" 
+                        class="px-2.5 sm:px-3 py-1 bg-zinc-950 hover:bg-zinc-800 text-amber-400 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-300 text-xs font-mono uppercase font-black rounded-none border border-amber-400 dark:border-amber-600 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer"
+                        :title="locale === 'en' ? 'Open AI Architecture Advisory & Tech Stack Evolution Radar' : 'Buka Penasihat Arsitektur AI & Radar Modernisasi Teknologi 2026'"
+                    >
+                        <span class="w-2 h-2 bg-amber-400 rounded-none animate-pulse"></span>
+                        <span class="hidden md:inline" x-text="locale === 'en' ? '✨ TECH RADAR & ADVISORY' : '✨ SARAN FITUR & TECH RADAR'">✨ SARAN FITUR & TECH RADAR</span>
+                        <span class="md:hidden">✨ ADVISORY</span>
+                    </button>
+                @else
+                    <button 
+                        type="button" 
+                        @click="openAdvisoryModal()" 
+                        class="px-2.5 sm:px-3 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 text-xs font-mono uppercase font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer"
+                        :title="locale === 'en' ? 'Locked: AI Architecture Advisory (Exclusive to Paid Packages)' : 'Terkunci: Penasihat Arsitektur AI & Tech Radar (Eksklusif Lisensi Berbayar)'"
+                    >
+                        <span>🔒</span>
+                        <span class="hidden md:inline" x-text="locale === 'en' ? 'TECH RADAR [PRO]' : 'SARAN FITUR [PRO]'">SARAN FITUR [PRO]</span>
+                        <span class="md:hidden">🔒 PRO</span>
+                    </button>
+                @endif
+
                 <!-- Navigation Layout Mode Switcher (Mode 1: Sidebar Index vs Mode 2: Full Width & Floating Dock) -->
                 <button 
                     type="button" 

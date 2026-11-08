@@ -433,6 +433,15 @@ class VisionBlueprint extends Model
     }
 
     /**
+     * Check whether blueprint is an active paid/purchased package (Retail Paid / Mitra DP Confirmed)
+     * with zero-leak server-side gate against free demo/spark sandboxes.
+     */
+    public function isPurchasedPackage(?object $user = null): bool
+    {
+        return app(\App\Services\Entitlement\BlueprintEntitlementGateService::class)->isPurchasedPackage($this, $user ?? auth()->user());
+    }
+
+    /**
      * Check if project scope is locked/frozen (anti-dispute).
      */
     public function isScopeFrozen(): bool

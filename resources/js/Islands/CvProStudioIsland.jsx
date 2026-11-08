@@ -486,7 +486,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       <section className="px-6 py-10 sm:py-16 max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 justify-between">
         <div className="flex-1 space-y-4 text-center md:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-none text-xs font-mono border" style={{ borderColor: `${wpSpyColor}60`, color: wpSpyColor }}>
-            <span className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: wpSpyColor }} />
+            <span className="w-2 h-2 rounded-xs animate-ping" style={{ backgroundColor: wpSpyColor }} />
             <span>TERSEDIA UNTUK PELUANG KARIR & KONSULTASI</span>
           </div>
 
@@ -549,13 +549,12 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
         {avatarConfig.showPhoto && photoUrl && (
           <div className="relative shrink-0">
             <div
-              className="absolute -inset-1.5 rounded-full opacity-60 blur-lg transition duration-500"
-              style={{ background: `linear-gradient(45deg, ${wpSpyColor}, #ec4899)` }}
+              className="absolute -inset-1 rounded-none opacity-20 blur-xs transition duration-500 bg-zinc-900 dark:bg-zinc-100"
             />
             <img
               src={photoUrl}
               alt={p.name || 'Profile'}
-              className={`relative w-40 h-40 sm:w-52 sm:h-52 object-cover border-4 border-white dark:border-zinc-900 shadow-2xl ${shapeClass}`}
+              className={`relative w-40 h-40 sm:w-52 sm:h-52 object-cover border-2 border-zinc-900 dark:border-zinc-100 shadow-sm ${shapeClass}`}
             />
           </div>
         )}
@@ -2227,7 +2226,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 onClick={() => fileInputRef.current?.click()}
                 className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:border-indigo-500 dark:hover:border-indigo-400 rounded-lg p-8 text-center cursor-pointer transition bg-zinc-50 dark:bg-zinc-950/50 flex flex-col items-center justify-center gap-3"
               >
-                <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-inner">
+                <div className="w-12 h-12 rounded-xs bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shadow-inner">
                   {uploading ? (
                     <div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
                   ) : (
@@ -2707,7 +2706,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                           key={c}
                           type="button"
                           onClick={() => setPrimaryColor(c)}
-                          className={`w-5 h-5 rounded-full border-2 transition ${primaryColor === c ? 'scale-125 border-zinc-950 dark:border-white shadow-sm' : 'border-transparent'}`}
+                          className={`w-5 h-5 rounded-xs border-2 transition ${primaryColor === c ? 'scale-125 border-zinc-950 dark:border-white shadow-sm' : 'border-transparent'}`}
                           style={{ backgroundColor: c }}
                         />
                       ))}
@@ -2806,7 +2805,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                                   key={c}
                                   type="button"
                                   onClick={() => setWpNavBg(c)}
-                                  className={`w-4 h-4 rounded-full border ${wpNavBg === c ? 'scale-125 border-indigo-500 shadow-xs' : 'border-zinc-400'}`}
+                                  className={`w-4 h-4 rounded-xs border ${wpNavBg === c ? 'scale-125 border-indigo-500 shadow-xs' : 'border-zinc-400'}`}
                                   style={{ backgroundColor: c }}
                                 />
                               ))}
@@ -2841,7 +2840,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                                 key={c}
                                 type="button"
                                 onClick={() => setWpFooterBg(c)}
-                                className={`w-4 h-4 rounded-full border ${wpFooterBg === c ? 'scale-125 border-indigo-500 shadow-xs' : 'border-zinc-400'}`}
+                                className={`w-4 h-4 rounded-xs border ${wpFooterBg === c ? 'scale-125 border-indigo-500 shadow-xs' : 'border-zinc-400'}`}
                                 style={{ backgroundColor: c }}
                               />
                             ))}
@@ -2923,7 +2922,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                                 key={c}
                                 type="button"
                                 onClick={() => setWpBulletColor(c)}
-                                className={`w-4 h-4 rounded-full border ${wpBulletColor === c ? 'scale-125 border-zinc-950 dark:border-white shadow-xs' : 'border-transparent'}`}
+                                className={`w-4 h-4 rounded-xs border ${wpBulletColor === c ? 'scale-125 border-zinc-950 dark:border-white shadow-xs' : 'border-transparent'}`}
                                 style={{ backgroundColor: c }}
                               />
                             ))}
@@ -2991,7 +2990,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                                 key={c}
                                 type="button"
                                 onClick={() => setWpSpyColor(c)}
-                                className={`w-4 h-4 rounded-full border ${wpSpyColor === c ? 'scale-125 border-zinc-950 dark:border-white shadow-xs' : 'border-transparent'}`}
+                                className={`w-4 h-4 rounded-xs border ${wpSpyColor === c ? 'scale-125 border-zinc-950 dark:border-white shadow-xs' : 'border-transparent'}`}
                                 style={{ backgroundColor: c }}
                               />
                             ))}
@@ -4410,9 +4409,9 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     <div className="bg-zinc-800 dark:bg-zinc-900 text-zinc-300 px-4 py-2.5 rounded-t-xl border border-zinc-700 flex items-center justify-between shadow-md">
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1.5">
-                          <span className="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
-                          <span className="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>
-                          <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span>
+                          <span className="w-2.5 h-2.5 rounded-xs bg-rose-500 inline-block"></span>
+                          <span className="w-2.5 h-2.5 rounded-xs bg-amber-500 inline-block"></span>
+                          <span className="w-2.5 h-2.5 rounded-xs bg-emerald-500 inline-block"></span>
                         </div>
                         <span className="text-[10px] font-mono text-zinc-400 pl-2">NERIAH // WEB PORTFOLIO LIVE RUNTIME</span>
                       </div>
@@ -4464,12 +4463,12 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                       {/* 1. Website Navigation Island */}
                       {renderWebPortfolioNavbar()}
 
-                      {/* Scroll Spy Indicator Bar (if gradient_bar) */}
+                      {/* Scroll Spy Indicator Bar (Solid Brutalist Accent) */}
                       {wpSpyStyle === 'gradient_bar' && (
                         <div
                           className="w-full h-1 sticky top-0 z-30 transition-all"
                           style={{
-                            background: `linear-gradient(90deg, ${wpSpyColor} 0%, #ec4899 50%, #f59e0b 100%)`,
+                            backgroundColor: wpSpyColor || '#10b981',
                           }}
                         />
                       )}
@@ -4603,7 +4602,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                   id="promo-card-wrapper"
                 >
                   {/* Background Accents */}
-                  <div className="absolute -top-16 -right-16 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                  <div className="absolute top-0 right-0 w-32 h-32 border-b-2 border-l-2 border-zinc-800 pointer-events-none" />
                   
                   {/* Top Bar */}
                   <div className="flex items-center justify-between relative z-10">
@@ -5647,7 +5646,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 <div className="p-4 bg-zinc-950 border border-zinc-800 rounded-lg space-y-3">
                   <div className="flex items-center justify-between text-xs font-mono">
                     <span className="text-zinc-400 flex items-center gap-2">
-                      <span className={`w-2.5 h-2.5 rounded-full ${isListeningLive ? 'bg-emerald-400 animate-ping' : 'bg-zinc-600'}`}></span>
+                      <span className={`w-2 h-2 rounded-xs ${isListeningLive ? 'bg-emerald-400 animate-ping' : 'bg-zinc-600'}`}></span>
                       {isListeningLive ? 'STATUS: Mendengarkan Suara Pewawancara...' : 'STATUS: Standby (Klik tombol Mulai Mendengarkan)'}
                     </span>
                     {liveTranscript && (
@@ -5695,7 +5694,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 <div className="space-y-4 pt-2">
                   <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
                     <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                      <span className="w-2 h-2 rounded-xs bg-emerald-400"></span>
                       <span className="text-xs font-mono font-bold text-emerald-400 uppercase">
                         {liveCheatSheet.category}
                       </span>

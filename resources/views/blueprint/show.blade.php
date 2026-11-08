@@ -442,6 +442,7 @@
     @include('blueprint.partials.modals.ai-cockpit-modal')
     @include('blueprint.partials.modals.legal-compliance-modal')
     @include('blueprint.partials.modals.scaffold-preview-modal')
+    @include('blueprint.partials.modals.download-center-modal')
     @include('blueprint.partials.modals.context-rot-modal')
     @include('blueprint.partials.modals.change-request-modal')
     @include('blueprint.partials.modals.google-translate-modal')

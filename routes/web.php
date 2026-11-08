@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\CvProApiController;
 use App\Http\Controllers\Api\OnboardingController;
 use App\Http\Controllers\Api\VisionBlueprintController;
+use App\Http\Controllers\Blueprint\BlueprintArtifactController;
 use App\Http\Controllers\Blueprint\BlueprintAuditController;
 use App\Http\Controllers\Blueprint\BlueprintCollaborationController;
 use App\Http\Controllers\Blueprint\BlueprintCommercialController;
@@ -121,6 +122,14 @@ Route::get('/blueprint/{slug}/scaffold-preview', [BlueprintScaffoldController::c
 Route::post('/blueprint/{slug}/scaffold/save-file', [BlueprintScaffoldController::class, 'saveScaffoldFile'])->name('blueprint.scaffold.save-file');
 Route::post('/blueprint/{slug}/scaffold/reset-file', [BlueprintScaffoldController::class, 'resetScaffoldFile'])->name('blueprint.scaffold.reset-file');
 Route::post('/blueprint/{slug}/scaffold/refine-file', [BlueprintScaffoldController::class, 'refineScaffoldFile'])->name('blueprint.scaffold.refine-file')->middleware('throttle:60,1');
+
+// Asynchronous Blueprint Download Artifacts & 24h Lifecycle Download Center
+Route::post('/blueprint/{slug}/artifacts/request', [BlueprintArtifactController::class, 'requestArtifact'])->name('blueprint.artifacts.request');
+Route::get('/blueprint/{slug}/artifacts', [BlueprintArtifactController::class, 'listArtifacts'])->name('blueprint.artifacts.list');
+Route::get('/blueprint/{slug}/artifacts/{id}/status', [BlueprintArtifactController::class, 'getArtifactStatus'])->name('blueprint.artifacts.status');
+Route::get('/blueprint/{slug}/artifacts/{id}/download/{token}', [BlueprintArtifactController::class, 'downloadArtifact'])->name('blueprint.artifacts.download');
+Route::delete('/blueprint/{slug}/artifacts/{id}', [BlueprintArtifactController::class, 'deleteArtifact'])->name('blueprint.artifacts.delete');
+Route::post('/blueprint/{slug}/artifacts/cleanup-expired', [BlueprintArtifactController::class, 'cleanupExpired'])->name('blueprint.artifacts.cleanup');
 Route::post('/api/blueprint/{slug}/presence', [BlueprintCollaborationController::class, 'updatePresence'])->name('api.blueprint.presence.update');
 Route::get('/api/blueprint/{slug}/presence', [BlueprintCollaborationController::class, 'getPresence'])->name('api.blueprint.presence.get');
 Route::post('/blueprint/{slug}/tasks/update', [BlueprintCollaborationController::class, 'updateTasks'])->name('blueprint.tasks.update');

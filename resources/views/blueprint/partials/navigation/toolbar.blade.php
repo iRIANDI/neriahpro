@@ -56,6 +56,19 @@
                     <span class="sm:hidden">SCAFFOLD</span>
                 </button>
 
+                <!-- Download Center & 24h Lifecycle Modal Button -->
+                <button 
+                    type="button" 
+                    @click="openDownloadCenterModal()" 
+                    class="px-2.5 sm:px-3 py-1 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-emerald-400 text-xs font-mono uppercase font-black rounded-none border border-emerald-500/60 flex items-center gap-1.5 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap" 
+                    :title="locale === 'en' ? 'Open Download Center: View generated files, 24h countdown, & background jobs' : 'Buka Pusat Unduhan: Lihat file unduhan, countdown 24 jam, & background job'"
+                >
+                    <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span class="hidden sm:inline" x-text="locale === 'en' ? 'DOWNLOAD CENTER' : 'DAFTAR UNDUHAN'">DAFTAR UNDUHAN</span>
+                    <span class="sm:hidden" x-text="locale === 'en' ? 'DOWNLOADS' : 'UNDUHAN'">UNDUHAN</span>
+                    <span x-show="activeDownloadsCount > 0" x-cloak class="px-1.5 py-0.2 bg-emerald-500 text-black text-[10px] font-black rounded-none" x-text="activeDownloadsCount"></span>
+                </button>
+
                 <!-- AI Architecture Advisory & Tech Radar Trigger (Zero-Leak Gated for Paid Packages) -->
                 @if($blueprint->isPurchasedPackage())
                     <button 
@@ -111,10 +124,10 @@
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                         <span class="hidden md:inline">PRINT</span>
                     </button>
-                    <a href="{{ route('blueprint.download-pdf', ['slug' => $blueprint->slug, 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-pdf', $blueprint->slug) }}?locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1" :title="locale === 'en' ? 'Download Official PDF Document' : 'Unduh Dokumen PDF Resmi'">
+                    <button type="button" @click="triggerPdfDownload()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" :title="locale === 'en' ? 'Download Official PDF Document (Background Job)' : 'Unduh Dokumen PDF Resmi (Background Job Tanpa Timeout)'">
                         <span>PDF</span>
-                    </a>
-                    <button type="button" @click.prevent="$dispatch('open-raw-md-warning', { action: 'download' })" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" :title="locale === 'en' ? 'Download Raw Markdown (.MD)' : 'Unduh Markdown Asli (.MD) - Disarankan Per-Fitur di Cockpit'">
+                    </button>
+                    <button type="button" @click="triggerMdDownload()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" :title="locale === 'en' ? 'Download Raw Markdown (.MD) (Background Job)' : 'Unduh Markdown Asli (.MD) (Background Job Tanpa Timeout)'">
                         <span class="hidden sm:inline">MD</span>
                     </button>
                     <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', $blueprint->slug) }}?locale=' + (locale || 'id')" class="px-2.5 py-1 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 transition flex items-center gap-1" :title="locale === 'en' ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE'">

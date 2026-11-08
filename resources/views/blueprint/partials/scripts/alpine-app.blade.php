@@ -578,6 +578,225 @@
                 scaffoldJobMessage: '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? 'Arsip Starter Kit ZIP siap diunduh' : '' }}',
                 scaffoldJobPolling: false,
 
+                downloadCenterModalOpen: false,
+                artifactsList: [],
+                artifactsLoading: false,
+                requestingType: null,
+                activeDownloadsCount: 0,
+                countdownTickerInterval: null,
+                artifactsPolling: false,
+
+                openDownloadCenterModal() {
+                    this.downloadCenterModalOpen = true;
+                    this.fetchDownloadArtifacts();
+                    this.ensureCountdownTicker();
+                },
+
+                triggerPdfDownload() {
+                    this.openDownloadCenterModal();
+                    this.requestDownloadArtifact('pdf');
+                },
+
+                triggerMdDownload() {
+                    this.openDownloadCenterModal();
+                    this.requestDownloadArtifact('markdown');
+                },
+
+                ensureCountdownTicker() {
+                    if (this.countdownTickerInterval) return;
+                    this.countdownTickerInterval = setInterval(() => {
+                        if (!this.artifactsList || !this.artifactsList.length) return;
+                        this.artifactsList.forEach(item => {
+                            if (item.remaining_seconds && item.remaining_seconds > 0) {
+                                item.remaining_seconds -= 1;
+                                item.percentage_remaining = Math.max(0, Math.round((item.remaining_seconds / (24 * 3600)) * 100));
+                            } else if (item.status === 'completed' && !item.is_expired) {
+                                item.is_expired = true;
+                                item.status = 'expired';
+                            }
+                        });
+                        this.updateActiveDownloadsCount();
+                    }, 1000);
+                },
+
+                formatSecondsCountdown(secs) {
+                    if (!secs || secs <= 0) return this.locale === 'en' ? '00h 00m 00s' : '00j 00m 00d';
+                    const h = Math.floor(secs / 3600);
+                    const m = Math.floor((secs % 3600) / 60);
+                    const s = secs % 60;
+                    const pad = (n) => String(n).padStart(2, '0');
+                    if (this.locale === 'en') {
+                        return `${pad(h)}h ${pad(m)}m ${pad(s)}s`;
+                    }
+                    return `${pad(h)}j ${pad(m)}m ${pad(s)}d`;
+                },
+
+                updateActiveDownloadsCount() {
+                    this.activeDownloadsCount = this.artifactsList.filter(a => a.status === 'completed' && !a.is_expired).length;
+                },
+
+                async fetchDownloadArtifacts() {
+                    this.artifactsLoading = true;
+                    try {
+                        const url = '{{ route('blueprint.artifacts.list', $blueprint->slug) }}?locale=' + (this.locale || 'id');
+                        const res = await fetch(url, {
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        const data = await res.json();
+                        if (data && data.success) {
+                            this.artifactsList = data.artifacts || [];
+                            this.updateActiveDownloadsCount();
+
+                            // If any artifact is queued or processing, start polling
+                            const hasRunning = this.artifactsList.some(a => a.status === 'queued' || a.status === 'processing');
+                            if (hasRunning) {
+                                this.pollArtifactsStatus();
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Failed to fetch download artifacts:', e);
+                    } finally {
+                        this.artifactsLoading = false;
+                    }
+                },
+
+                async requestDownloadArtifact(type, force = false) {
+                    this.requestingType = type;
+                    const typeLabel = type === 'pdf' ? 'PDF' : (type === 'markdown' ? 'Markdown' : 'Starter Kit');
+                    
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'info',
+                            title: this.locale === 'en' ? 'GENERATION QUEUED' : 'GENERASI DIJADWALKAN',
+                            message: this.locale === 'en' 
+                                ? `Rendering ${typeLabel} in background queue...` 
+                                : `Memproses berkas ${typeLabel} di antrean server...`
+                        });
+                    }
+
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const res = await fetch('{{ route('blueprint.artifacts.request', $blueprint->slug) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token || ''
+                            },
+                            body: JSON.stringify({
+                                artifact_type: type,
+                                locale: this.locale,
+                                force: force ? 1 : 0
+                            })
+                        });
+                        const data = await res.json();
+                        if (data && data.success) {
+                            await this.fetchDownloadArtifacts();
+                            this.ensureCountdownTicker();
+
+                            if (data.artifact && data.artifact.status === 'completed') {
+                                if (window.showToast) {
+                                    window.showToast({
+                                        type: 'success',
+                                        title: this.locale === 'en' ? 'FILE READY' : 'BERKAS SIAP DIUNDUH',
+                                        message: this.locale === 'en' ? 'Artifact is ready to download.' : 'Berkas unduhan siap diunduh!'
+                                    });
+                                }
+                            } else {
+                                this.pollArtifactsStatus();
+                            }
+                        } else {
+                            throw new Error(data.message || 'Gagal menjadwalkan pembuatan berkas.');
+                        }
+                    } catch (err) {
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: this.locale === 'en' ? 'REQUEST FAILED' : 'PERMINTAAN GAGAL',
+                                message: err.message || (this.locale === 'en' ? 'Error generating artifact' : 'Terjadi kesalahan sistem.')
+                            });
+                        }
+                    } finally {
+                        this.requestingType = null;
+                    }
+                },
+
+                async pollArtifactsStatus() {
+                    if (this.artifactsPolling) return;
+                    this.artifactsPolling = true;
+
+                    const checkRunning = async () => {
+                        const runningItems = this.artifactsList.filter(a => a.status === 'queued' || a.status === 'processing');
+                        if (!runningItems.length) {
+                            this.artifactsPolling = false;
+                            return;
+                        }
+
+                        for (const item of runningItems) {
+                            try {
+                                const pollUrl = item.poll_url + '?locale=' + (this.locale || 'id');
+                                const res = await fetch(pollUrl, { headers: { 'Accept': 'application/json' } });
+                                const data = await res.json();
+                                if (data && data.success && data.artifact) {
+                                    const idx = this.artifactsList.findIndex(a => a.id === item.id);
+                                    if (idx !== -1) {
+                                        this.artifactsList[idx] = data.artifact;
+                                        if (data.artifact.status === 'completed') {
+                                            this.updateActiveDownloadsCount();
+                                            if (window.showToast) {
+                                                window.showToast({
+                                                    type: 'success',
+                                                    title: this.locale === 'en' ? 'FILE READY' : 'BERKAS SIAP DIUNDUH',
+                                                    message: (this.locale === 'en' ? 'Download ready: ' : 'Berkas siap diunduh: ') + data.artifact.filename
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('Poll artifact failed:', e);
+                            }
+                        }
+
+                        const stillRunning = this.artifactsList.some(a => a.status === 'queued' || a.status === 'processing');
+                        if (stillRunning) {
+                            setTimeout(checkRunning, 2500);
+                        } else {
+                            this.artifactsPolling = false;
+                        }
+                    };
+
+                    checkRunning();
+                },
+
+                async deleteDownloadArtifact(id) {
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const url = '{{ route('blueprint.artifacts.delete', ['slug' => $blueprint->slug, 'id' => 'ARTIFACT_ID']) }}'.replace('ARTIFACT_ID', id);
+                        const res = await fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token || ''
+                            }
+                        });
+                        const data = await res.json();
+                        if (data && data.success) {
+                            this.artifactsList = this.artifactsList.filter(a => a.id !== id);
+                            this.updateActiveDownloadsCount();
+                            if (window.showToast) {
+                                window.showToast({
+                                    type: 'info',
+                                    title: this.locale === 'en' ? 'PURGED' : 'DIHAPUS',
+                                    message: this.locale === 'en' ? 'Artifact purged from server.' : 'Berkas berhasil dihapus dari server.'
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Failed to delete artifact:', e);
+                    }
+                },
+
                 copyExecutionPrompt(text, title = 'PROMPT DISALIN') {
                     if (!text) return;
                     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -2124,6 +2343,10 @@
                     return idx >= 0 ? (idx + 1) : 1;
                 },
                 init() {
+                    // Initialize Download Center Artifacts list & countdown ticker
+                    this.fetchDownloadArtifacts();
+                    this.ensureCountdownTicker();
+
                     window.openDiagramFullscreen = (title, sourceId) => this.openDiagramFullscreen(title, sourceId);
                     window.closeDiagramFullscreen = () => this.closeDiagramFullscreen();
                     window.addEventListener('theme-changed', () => {

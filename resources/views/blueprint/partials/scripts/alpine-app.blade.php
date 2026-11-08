@@ -1357,8 +1357,16 @@
                     if (Object.keys(this.scaffoldFiles).length === 0) {
                         this.scaffoldLoading = true;
                         try {
-                            const res = await fetch('{{ route('blueprint.scaffold.preview', $blueprint->slug) }}');
+                            const res = await fetch('{{ route('blueprint.scaffold.preview', $blueprint->slug) }}', {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                            });
                             const data = await res.json();
+                            if (!res.ok) {
+                                throw new Error(data.message || ('Server returned HTTP ' + res.status));
+                            }
                             if (data && data.files) {
                                 for (const [k, v] of Object.entries(data.files)) {
                                     if (v === 'Memuat berkas...' || !v) {
@@ -1376,7 +1384,7 @@
                                 }
                             }
                         } catch(e) {
-                            if (window.showToast) window.showToast({ type: 'error', title: 'GAGAL MEMUAT', message: 'Gagal memuat pratinjau scaffold.' });
+                            if (window.showToast) window.showToast({ type: 'error', title: 'GAGAL MEMUAT', message: e.message || 'Gagal memuat pratinjau scaffold.' });
                         } finally {
                             this.scaffoldLoading = false;
                         }

@@ -30,36 +30,34 @@ final class BlueprintEntitlementGateService
      */
     public function resolveUserTier(?object $user = null, ?string $projectId = null, ?string $requestedTier = null): string
     {
-        // 1. Check concrete PosProject record by exact ULID primary key or slug
+        // 1. Check concrete VisionBlueprint record & settled Transaction by concrete foreign key / metadata
         if ($projectId !== null && $projectId !== '') {
-            $posProject = PosProject::query()->where('id', $projectId)->orWhere('slug', $projectId)->first();
-            if ($posProject !== null) {
-                if ($posProject->track === 'MITRA') {
-                    return 'MITRA_TURNKEY';
-                }
-                if ($posProject->scope_locked === true) {
-                    return 'SINGLE_APP_PASS';
-                }
-            }
-
-            // 2. Check concrete VisionBlueprint record & settled Transaction by concrete foreign key / metadata
             $blueprint = VisionBlueprint::query()->where('id', $projectId)->orWhere('slug', $projectId)->first();
             if ($blueprint !== null) {
+                // Check if linked to PosProject
+                $posProject = PosProject::query()->where('vision_blueprint_id', $blueprint->id)->first();
+                if ($posProject !== null) {
+                    if ($posProject->track === 'MITRA') {
+                        return 'MITRA_TURNKEY';
+                    }
+                    if ($posProject->scope_locked === true) {
+                        return 'SINGLE_APP_PASS';
+                    }
+                }
+
                 $metaTier = $blueprint->user_metadata['retail_tier'] ?? $blueprint->user_metadata['package_tier'] ?? null;
                 $orderId = $blueprint->user_metadata['order_id'] ?? null;
 
-                $hasSettledTx = Transaction::query()
-                    ->where('status', 'settlement')
-                    ->where(function ($q) use ($blueprint, $orderId) {
-                        $q->where(function ($sq) use ($blueprint) {
-                            $sq->where('related_type', VisionBlueprint::class)
-                                ->where('related_id', $blueprint->id);
-                        });
-                        if ($orderId) {
-                            $q->orWhere('midtrans_order_id', $orderId);
-                        }
-                    })
-                    ->exists();
+                $hasSettledTx = false;
+                if ($orderId) {
+                    $hasSettledTx = Transaction::query()
+                        ->whereIn('status', ['settlement', 'capture', 'success'])
+                        ->where('midtrans_order_id', $orderId)
+                        ->exists();
+                }
+                if (! $hasSettledTx) {
+                    $hasSettledTx = $blueprint->isDpConfirmed();
+                }
 
                 if ($hasSettledTx || $blueprint->project_status === 'Active Sprint') {
                     if ($blueprint->isRetailLicense() || ($blueprint->user_metadata['track'] ?? '') === 'retail') {
@@ -82,6 +80,19 @@ final class BlueprintEntitlementGateService
                 // Explicit free spark
                 if ($metaTier && in_array(strtolower($metaTier), ['retail_spark', 'spark', 'free_sandbox'], true)) {
                     return 'FREE_SANDBOX';
+                }
+            } else {
+                // Check standalone PosProject by exact ULID primary key
+                if (strlen($projectId) === 26) {
+                    $posProject = PosProject::query()->find($projectId);
+                    if ($posProject !== null) {
+                        if ($posProject->track === 'MITRA') {
+                            return 'MITRA_TURNKEY';
+                        }
+                        if ($posProject->scope_locked === true) {
+                            return 'SINGLE_APP_PASS';
+                        }
+                    }
                 }
             }
         }
@@ -147,18 +158,16 @@ final class BlueprintEntitlementGateService
                 return true;
             }
             $orderId = $blueprint->user_metadata['order_id'] ?? null;
-            $hasSettledTx = Transaction::query()
-                ->where('status', 'settlement')
-                ->where(function ($q) use ($blueprint, $orderId) {
-                    $q->where(function ($sq) use ($blueprint) {
-                        $sq->where('related_type', VisionBlueprint::class)
-                            ->where('related_id', $blueprint->id);
-                    });
-                    if ($orderId) {
-                        $q->orWhere('midtrans_order_id', $orderId);
-                    }
-                })
-                ->exists();
+            $hasSettledTx = false;
+            if ($orderId) {
+                $hasSettledTx = Transaction::query()
+                    ->whereIn('status', ['settlement', 'capture', 'success'])
+                    ->where('midtrans_order_id', $orderId)
+                    ->exists();
+            }
+            if (! $hasSettledTx) {
+                $hasSettledTx = $blueprint->isDpConfirmed();
+            }
 
             if ($hasSettledTx) {
                 return true;

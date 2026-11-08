@@ -163,7 +163,7 @@
                     <div class="flex items-center justify-between border-b border-amber-500/30 pb-2">
                         <div class="text-xs font-mono font-black text-amber-950 dark:text-amber-300 uppercase flex items-center gap-2">
                             <span class="w-2 h-2 bg-amber-500 inline-block animate-ping"></span>
-                            <span x-text="isEn ? ('FOUND ' + taskGapResult.recommendations.length + ' ESSENTIAL ARCHITECTURE TASKS NOT YET COVERED:') : ('DITEMUKAN ' + taskGapResult.recommendations.length + ' TASK KRUSIAL BELUM TERCOVER (TANPA ASUMSI):')"></span>
+                            <span x-text="isEn ? ('FOUND ' + ((taskGapResult && taskGapResult.recommendations) ? taskGapResult.recommendations.length : 0) + ' ESSENTIAL ARCHITECTURE TASKS NOT YET COVERED:') : ('DITEMUKAN ' + ((taskGapResult && taskGapResult.recommendations) ? taskGapResult.recommendations.length : 0) + ' TASK KRUSIAL BELUM TERCOVER (TANPA ASUMSI):')"></span>
                         </div>
                         <button type="button" @click="taskGapResult = null" class="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 text-xs font-bold cursor-pointer" x-text="isEn ? '× CLOSE' : '× TUTUP'"></button>
                     </div>
@@ -171,7 +171,7 @@
                     
                     <!-- Recommendations List (Internal Scroll to keep clean) -->
                     <div class="space-y-2 max-h-60 overflow-y-auto custom-prd-scrollbar pr-1">
-                        <template x-for="(rec, rIdx) in taskGapResult.recommendations" :key="'rec-' + rIdx">
+                        <template x-for="(rec, rIdx) in ((taskGapResult && taskGapResult.recommendations) ? taskGapResult.recommendations : [])" :key="'rec-' + rIdx">
                             <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 flex items-start gap-2.5 rounded-none hover:border-amber-500 transition">
                                 <input type="checkbox" x-model="rec.selected" class="mt-1 accent-amber-500 cursor-pointer" />
                                 <div class="flex-1 text-xs">

@@ -268,27 +268,32 @@
                                     <!-- Columns Attributes List -->
                                     <div class="divide-y divide-zinc-200 dark:divide-zinc-800/80">
                                         @foreach($table['columns'] ?? [] as $col)
+                                             @php
+                                                 $colName = $col['name'] ?? '';
+                                                 $colType = $col['type'] ?? 'VARCHAR';
+                                                 $colIdx = strtoupper((string) ($col['index'] ?? ''));
+                                             @endphp
                                              <div class="px-3.5 py-2 flex items-center justify-between gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition">
                                                 <div class="flex items-center gap-2 min-w-0">
-                                                    @if($col['index'] === 'PRIMARY')
+                                                    @if($colIdx === 'PRIMARY' || $colName === 'id')
                                                         <span class="px-1.5 py-0.2 bg-emerald-500 text-black font-black text-[9px]">PK</span>
-                                                    @elseif(str_contains(strtolower($col['type']), 'foreign') || str_contains($col['name'], '_id'))
+                                                    @elseif(str_contains(strtolower($colType), 'foreign') || str_contains($colName, '_id'))
                                                         <span class="px-1.5 py-0.2 bg-sky-500 text-white font-black text-[9px]">FK</span>
-                                                        <span class="text-[9px] text-sky-600 dark:text-sky-400 font-mono font-bold">&rarr; {{ preg_replace('/_id$/', '', $col['name']) }}</span>
-                                                    @elseif($col['index'] === 'UNIQUE')
+                                                        <span class="text-[9px] text-sky-600 dark:text-sky-400 font-mono font-bold">&rarr; {{ preg_replace('/_id$/', '', $colName) }}</span>
+                                                    @elseif($colIdx === 'UNIQUE')
                                                         <span class="px-1.5 py-0.2 bg-purple-500 text-white font-black text-[9px]">UK</span>
-                                                    @elseif($col['index'] === 'INDEX')
+                                                    @elseif($colIdx === 'INDEX')
                                                         <span class="px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold text-[9px]">IDX</span>
                                                     @else
                                                         <span class="w-4 inline-block text-zinc-400 dark:text-zinc-600 text-center">&bull;</span>
                                                     @endif
 
-                                                    <span class="font-bold text-zinc-900 dark:text-zinc-100 truncate">{{ $col['name'] }}</span>
+                                                    <span class="font-bold text-zinc-900 dark:text-zinc-100 truncate">{{ $colName }}</span>
                                                 </div>
 
                                                 <div class="flex items-center gap-2 text-right">
-                                                    <span class="text-zinc-500 dark:text-zinc-400 text-[11px] font-sans truncate max-w-[130px]" x-text="erdLang === 'id' ? '{{ $col['label']['id'] ?? ($col['notes'] ?? '-') }}' : '{{ $col['label']['en'] ?? ($col['name'] ?? '-') }}'"></span>
-                                                    <span class="text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">{{ $col['type'] }}</span>
+                                                    <span class="text-zinc-500 dark:text-zinc-400 text-[11px] font-sans truncate max-w-[130px]" x-text="erdLang === 'id' ? '{{ $col['label']['id'] ?? ($col['notes'] ?? '-') }}' : '{{ $col['label']['en'] ?? ($colName ?: '-') }}'"></span>
+                                                    <span class="text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">{{ $colType }}</span>
                                                 </div>
                                              </div>
                                         @endforeach
@@ -382,24 +387,29 @@
                                     </thead>
                                     <tbody class="divide-y divide-zinc-200/70 dark:divide-zinc-800/70 font-mono">
                                         @foreach($table['columns'] ?? [] as $col)
+                                            @php
+                                                $colName = $col['name'] ?? '';
+                                                $colType = $col['type'] ?? 'VARCHAR';
+                                                $colIdx = strtoupper((string) ($col['index'] ?? ''));
+                                            @endphp
                                             <tr class="odd:bg-white dark:odd:bg-zinc-950 even:bg-zinc-50/60 dark:even:bg-zinc-900/40 hover:bg-zinc-100/90 dark:hover:bg-zinc-800/80 transition-colors group">
-                                                <td class="py-2 px-3 font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50 cursor-pointer">{{ $col['name'] }}</td>
-                                                <td class="py-2 px-3 text-zinc-700 dark:text-zinc-300 font-sans hover:ring-1 hover:ring-inset hover:ring-emerald-500/50" x-text="erdLang === 'id' ? '{{ $col['label']['id'] ?? ($col['notes'] ?? '-') }}' : '{{ $col['label']['en'] ?? ($col['name'] ?? '-') }}'"></td>
-                                                <td class="py-2 px-3 text-emerald-600 dark:text-emerald-400 font-bold hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $col['type'] }}</td>
+                                                <td class="py-2 px-3 font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50 cursor-pointer">{{ $colName }}</td>
+                                                <td class="py-2 px-3 text-zinc-700 dark:text-zinc-300 font-sans hover:ring-1 hover:ring-inset hover:ring-emerald-500/50" x-text="erdLang === 'id' ? '{{ $col['label']['id'] ?? ($col['notes'] ?? '-') }}' : '{{ $col['label']['en'] ?? ($colName ?: '-') }}'"></td>
+                                                <td class="py-2 px-3 text-emerald-600 dark:text-emerald-400 font-bold hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $colType }}</td>
                                                 <td class="py-2 px-3 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">
-                                                    @if($col['index'] === 'PRIMARY')
+                                                    @if($colIdx === 'PRIMARY' || $colName === 'id')
                                                         <span class="px-1.5 py-0.5 bg-emerald-500 text-black font-black text-[9px] rounded-none">PRIMARY</span>
-                                                    @elseif(str_contains(strtolower($col['type']), 'foreign') || str_contains($col['name'], '_id'))
+                                                    @elseif(str_contains(strtolower($colType), 'foreign') || str_contains($colName, '_id'))
                                                         <span class="px-1.5 py-0.5 bg-sky-500 text-white font-black text-[9px] rounded-none">FOREIGN</span>
-                                                    @elseif($col['index'] === 'UNIQUE')
+                                                    @elseif($colIdx === 'UNIQUE')
                                                         <span class="px-1.5 py-0.5 bg-purple-500 text-white font-black text-[9px] rounded-none">UNIQUE</span>
-                                                    @elseif($col['index'] === 'INDEX')
+                                                    @elseif($colIdx === 'INDEX')
                                                         <span class="px-1.5 py-0.5 bg-blue-500 text-white font-black text-[9px] rounded-none">INDEX</span>
                                                     @else
                                                         <span class="text-zinc-400 text-[10px]">-</span>
                                                     @endif
                                                 </td>
-                                                <td class="py-2 px-3 text-zinc-500 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $col['nullable'] ? 'YES' : 'NO' }}</td>
+                                                <td class="py-2 px-3 text-zinc-500 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ !empty($col['nullable']) ? 'YES' : 'NO' }}</td>
                                                 <td class="py-2 px-3 font-sans text-zinc-600 dark:text-zinc-400 hover:ring-1 hover:ring-inset hover:ring-emerald-500/50">{{ $col['notes'] ?? '-' }}</td>
                                             </tr>
                                         @endforeach

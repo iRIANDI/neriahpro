@@ -119,28 +119,54 @@
                         </button>
                     </div>
 
-                    <div x-show="guideOpen" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
-                        <!-- Jalur 1: 1-Click Fast Track -->
-                        <div class="p-3 bg-emerald-500/10 border-2 border-emerald-500/50 rounded-none flex items-start gap-2.5">
-                            <span class="px-1.5 py-0.5 bg-emerald-500 text-black font-mono font-black text-[10px] shrink-0 mt-0.5">JALUR 1</span>
-                            <div class="text-[11px] font-mono leading-relaxed">
-                                <strong class="text-emerald-950 dark:text-emerald-300 font-black block uppercase mb-1" x-text="isEn ? '⚡ FAST-TRACK (AUTO 100% COMPLETE)' : '⚡ JALUR CEPAT & TERIMA BERES (100% OTOMATIS)'"></strong>
-                                <p class="text-zinc-700 dark:text-zinc-300 font-sans text-xs" x-text="isEn 
-                                    ? 'Click the green ✨ 1-CLICK ELABORATE (100%) button below. AI immediately synthesizes all 6 dimensions (User Story, 4+ Bounded Files, 3 Gherkin scenarios, Frontend State, Backend O(1), and RFC 9457 API) to 100% production maturity without manual typing.' 
-                                    : 'Cukup klik tombol hijau ✨ 1-KLIK PERDALAM (100%) di bawah. AI langsung menyempurnakan 6 dimensi (User Story, 4+ File Bounded, 3 Skenario Gherkin, Frontend State, Backend O(1), dan API RFC 9457) hingga 100% matang tanpa perlu mengetik manual.'">
-                                </p>
+                    <div x-show="guideOpen" class="space-y-2.5 pt-0.5">
+                        <!-- Ringkasan Panduan Penggunaan Cepat (High-Contrast Callout) -->
+                        <div class="p-3 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-600 rounded-none shadow-[2px_2px_0px_#18181b] dark:shadow-[2px_2px_0px_#52525b]">
+                            <div class="font-mono text-xs font-black uppercase text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 mb-2 pb-1 border-b border-zinc-200 dark:border-zinc-800">
+                                <span class="px-1.5 py-0.2 bg-amber-400 text-black text-[9px] font-black">PANDUAN</span>
+                                <span x-text="isEn ? 'QUICK USAGE SUMMARY:' : 'RINGKASAN PANDUAN PENGGUNAAN CEPAT:'"></span>
+                            </div>
+                            <div class="space-y-1.5 font-sans text-xs">
+                                <div class="flex items-start gap-2">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-bold shrink-0">●</span>
+                                    <p class="text-zinc-800 dark:text-zinc-200">
+                                        <strong class="font-black text-emerald-950 dark:text-emerald-300" x-text="isEn ? 'If you want speed & zero hassle:' : 'Jika ingin cepat dan terima beres:'"></strong>
+                                        <span x-text="isEn ? ' Simply click the green ✨ 1-CLICK ELABORATE (100%) button.' : ' Cukup klik tombol hijau ✨ 1-CLICK ELABORATE (100%).'"></span>
+                                    </p>
+                                </div>
+                                <div class="flex items-start gap-2">
+                                    <span class="text-sky-600 dark:text-sky-400 font-bold shrink-0">●</span>
+                                    <p class="text-zinc-800 dark:text-zinc-200">
+                                        <strong class="font-black text-sky-950 dark:text-sky-300" x-text="isEn ? 'If you want to review first & add custom notes:' : 'Jika ingin tahu dulu apa yang akan disempurnakan & ingin menambahkan catatan pribadi:'"></strong>
+                                        <span x-text="isEn ? ' Click 📝 COMPILE DIRECTIVE, read/edit the draft in the text box, then click EXECUTE AI ELABORATION.' : ' Klik 📝 COMPILE DIRECTIVE, baca/edit draf di kotak teks, lalu klik EXECUTE AI ELABORATION.'"></span>
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Jalur 2: Custom Directive -->
-                        <div class="p-3 bg-sky-500/10 border-2 border-sky-500/50 rounded-none flex items-start gap-2.5">
-                            <span class="px-1.5 py-0.5 bg-sky-500 text-black font-mono font-black text-[10px] shrink-0 mt-0.5">JALUR 2</span>
-                            <div class="text-[11px] font-mono leading-relaxed">
-                                <strong class="text-sky-950 dark:text-sky-300 font-black block uppercase mb-1" x-text="isEn ? '📝 CUSTOM DIRECTIVE & FULL CONTROL' : '📝 JALUR KUSTOM & KENDALI PENUH'"></strong>
-                                <p class="text-zinc-700 dark:text-zinc-300 font-sans text-xs" x-text="isEn 
-                                    ? 'Click 📝 COMPILE DIRECTIVE to let AI extract recommendations from project documents into the prompt box. Review or add custom business rules, then click EXECUTE AI ELABORATION at the bottom.' 
-                                    : 'Klik 📝 SUSUN DRAF INSTRUKSI agar AI membedah dokumen acuan dan menyusun rekomendasi ke kotak teks. Tinjau atau tambahkan aturan bisnis sendiri, lalu klik EKSEKUSI PENDALAMAN AI di pojok bawah.'">
-                                </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <!-- Jalur 1: 1-Click Fast Track -->
+                            <div class="p-3 bg-emerald-500/10 border-2 border-emerald-500/50 rounded-none flex items-start gap-2.5">
+                                <span class="px-1.5 py-0.5 bg-emerald-500 text-black font-mono font-black text-[10px] shrink-0 mt-0.5">JALUR 1</span>
+                                <div class="text-[11px] font-mono leading-relaxed">
+                                    <strong class="text-emerald-950 dark:text-emerald-300 font-black block uppercase mb-1" x-text="isEn ? '⚡ FAST-TRACK (AUTO 100% COMPLETE)' : '⚡ JALUR CEPAT & TERIMA BERES (100% OTOMATIS)'"></strong>
+                                    <p class="text-zinc-700 dark:text-zinc-300 font-sans text-xs" x-text="isEn 
+                                        ? 'Click the green ✨ 1-CLICK ELABORATE (100%) button below. AI immediately synthesizes all 6 dimensions (User Story, 4+ Bounded Files, 3 Gherkin scenarios, Frontend State, Backend O(1), and RFC 9457 API) to 100% production maturity without manual typing.' 
+                                        : 'Cukup klik tombol hijau ✨ 1-KLIK PERDALAM (100%) di bawah. AI langsung menyempurnakan 6 dimensi (User Story, 4+ File Bounded, 3 Skenario Gherkin, Frontend State, Backend O(1), dan API RFC 9457) hingga 100% matang tanpa perlu mengetik manual.'">
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Jalur 2: Custom Directive -->
+                            <div class="p-3 bg-sky-500/10 border-2 border-sky-500/50 rounded-none flex items-start gap-2.5">
+                                <span class="px-1.5 py-0.5 bg-sky-500 text-black font-mono font-black text-[10px] shrink-0 mt-0.5">JALUR 2</span>
+                                <div class="text-[11px] font-mono leading-relaxed">
+                                    <strong class="text-sky-950 dark:text-sky-300 font-black block uppercase mb-1" x-text="isEn ? '📝 CUSTOM DIRECTIVE & FULL CONTROL' : '📝 JALUR KUSTOM & KENDALI PENUH'"></strong>
+                                    <p class="text-zinc-700 dark:text-zinc-300 font-sans text-xs" x-text="isEn 
+                                        ? 'Click 📝 COMPILE DIRECTIVE to let AI extract recommendations from project documents into the prompt box. Review or add custom business rules, then click EXECUTE AI ELABORATION at the bottom.' 
+                                        : 'Klik 📝 SUSUN DRAF INSTRUKSI agar AI membedah dokumen acuan dan menyusun rekomendasi ke kotak teks. Tinjau atau tambahkan aturan bisnis sendiri, lalu klik EKSEKUSI PENDALAMAN AI di pojok bawah.'">
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

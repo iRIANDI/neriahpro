@@ -832,6 +832,178 @@ PROMPT;
 
         $relatedTable = PrdGeneratorService::matchRelatedTable($title, $desc, $erdTables);
 
+        // Archetype C1: LIVE AUDIO STREAMING & LANGUAGE CHANNEL MANAGEMENT
+        if (preg_match('/(?:audio|language channel|kanal bahasa|channel management|penerjemah|interpreter|broadcast|webrtc|stream|translator|suara)/i', $title . ' ' . $desc)) {
+            $ac = [
+                [
+                    'scenario' => $isEn ? 'Ultra-Low Latency (<150ms) Opus Audio Streaming & Channel Handoff' : 'Streaming Audio Latensi Ultra Rendah (<150ms) & Alokasi Kanal Bahasa',
+                    'given' => $isEn ? "Assigned interpreter is authenticated on designated language channel with microphone input active." : "Penerjemah terautentikasi pada kanal bahasa yang ditentukan dengan mikrofon aktif.",
+                    'when' => $isEn ? "Interpreter toggles broadcast switch ON and speaks sermon translation." : "Penerjemah mengaktifkan tombol siaran ON dan menyampaikan terjemahan khotbah.",
+                    'then' => $isEn ? "System encodes audio in Opus 48kHz and streams via WebRTC SFU / WebSocket signaling to connected listeners with measured latency <150ms." : "Sistem mengkodekan audio dalam format Opus 48kHz dan menyiarkan via WebRTC SFU ke jemaat pendengar dengan latensi <150ms.",
+                ],
+                [
+                    'scenario' => $isEn ? 'Channel Concurrency Guard & Duplicate Broadcaster Rejection' : 'Batas Konkurensi Kanal & Penolakan Siaran Ganda Paralel',
+                    'given' => $isEn ? "Language channel is currently in active ON-AIR broadcast state by Interpreter A." : "Kanal bahasa sedang dalam status siaran aktif (ON-AIR) oleh Penerjemah A.",
+                    'when' => $isEn ? "Another interpreter attempts to publish audio to the same language channel simultaneously." : "Penerjemah lain mencoba mempublikasikan siaran audio ke kanal bahasa yang sama secara bersamaan.",
+                    'then' => $isEn ? "System rejects the secondary publish request with HTTP 409 Conflict, preserving existing live audio stream uninterrupted." : "Sistem menolak permintaan siaran kedua dengan respons HTTP 409 Conflict dan mempertahankan keutuhan siaran yang sedang berjalan.",
+                ],
+                [
+                    'scenario' => $isEn ? 'Adaptive Bitrate & Jitter Buffer Recovery on Wi-Fi Fluctuation' : 'Adaptive Bitrate & Pemulihan Jitter Buffer saat Fluktuasi Wi-Fi',
+                    'given' => $isEn ? "Mobile listener device is receiving real-time translation over church Wi-Fi." : "Perangkat ponsel jemaat menerima streaming terjemahan suara melalui Wi-Fi gereja.",
+                    'when' => $isEn ? "Local network telemetry detects packet loss exceeding 5%." : "Telemetri jaringan mendeteksi packet loss lokal melebihi 5%.",
+                    'then' => $isEn ? "Player automatically adjusts jitter buffer and requests downsampled stream bitrate without dropping live audio continuity." : "Pemutar audio otomatis menyesuaikan jitter buffer dan beralih ke bitrate lebih rendah tanpa memutus suara khotbah.",
+                ],
+            ];
+            $integration = [
+                'endpoint' => 'POST /api/v1/audio/channels & POST /api/v1/audio/stream/token',
+                'middleware' => ['api', 'auth:sanctum', 'throttle:60,1'],
+                'request_schema' => json_encode([
+                    'channel_id' => '01J7K9M0P1Q2R3S4T5U6V7W8AA',
+                    'language_code' => 'en',
+                    'language_name' => 'English',
+                    'bitrate_kbps' => 64,
+                ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+                'response_schema' => json_encode([
+                    'success' => true,
+                    'code' => 'STREAM_INITIALIZED',
+                    'data' => [
+                        'channel_id' => '01J7K9M0P1Q2R3S4T5U6V7W8AA',
+                        'status' => 'LIVE_STREAMING',
+                        'stream_token' => 'livekit_jwt_token_sample',
+                        'latency_sla_ms' => 150,
+                    ],
+                ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+                'tasks' => $isEn ? [
+                    'Register RESTful language channel and WebRTC SFU token issuance routes.',
+                    'Implement channel state machine (INACTIVE, STANDBY, LIVE_STREAMING, MUTED) with atomic locking.',
+                    'Configure Opus 48kHz audio ingest pipeline with fallback to WebSocket stream.',
+                ] : [
+                    'Daftarkan endpoint RESTful kanal bahasa dan penerbitan token WebRTC SFU.',
+                    'Terapkan state machine kanal bahasa dengan penguncian atomik anti-konflik.',
+                    'Konfigurasikan pipeline ingest audio Opus 48kHz dengan fallback ke WebSocket.',
+                ],
+            ];
+            $targetFiles = ['app/Models/LanguageChannel.php', 'app/Services/Media/AudioChannelService.php', 'app/Http/Controllers/LanguageChannelController.php', 'tests/Feature/LanguageChannelContractTest.php'];
+            $mission = "Bangun modul Manajemen Kanal Bahasa & Pipeline Audio Streaming Latensi Rendah WebRTC.";
+
+            return [
+                'category' => 'REALTIME_STREAMING',
+                'category_label' => $isEn ? 'Live Audio Streaming & Channel Management' : 'Manajemen Kanal Bahasa & Streaming Audio',
+                'related_table' => $relatedTable['name'] ?? 'language_channels',
+                'related_table_data' => $relatedTable,
+                'user_story' => $isEn
+                    ? "As a Multimedia Operator / Sound Engineer, I want to manage language channels and monitor live audio streams, so that church attendees can listen to real-time sermon translations seamlessly."
+                    : "Sebagai Operator Multimedia / Sound Engineer, saya ingin mengelola kanal bahasa dan memantau siaran audio langsung, sehingga jemaat dapat mendengarkan terjemahan khotbah secara real-time tanpa kendala.",
+                'acceptance_criteria' => $ac,
+                'frontend' => [
+                    'design_tokens' => 'High-contrast channel cards, live audio wave meter SVG indicator, solid status pill, dark/light mode fidelity.',
+                    'states' => 'Channel active (emerald), on-air pulsating dot, muted (rose), empty state with quick channel creation button.',
+                    'components' => ['LanguageChannelCard.blade.php', 'AudioWaveMeter.js', 'ChannelVolumeSlider.js'],
+                    'tasks' => [
+                        'Build responsive language channel switcher with instant audio playback trigger.',
+                        'Render live audio stream indicator with volume slider and channel mute control.',
+                    ],
+                ],
+                'backend' => [
+                    'architecture' => 'Laravel 13 Service Layer with WebRTC SFU / Reverb signaling and atomic state management.',
+                    'target_files' => $targetFiles,
+                    'tasks' => [
+                        'Implement AudioChannelService with atomic channel state transitions.',
+                        'Enforce single-broadcaster locking per channel using Redis atomic locks.',
+                    ],
+                    'ulid_migration_rules' => 'Must use ->ulid("id")->primary() (VARCHAR(26)) and foreignUlid. AUTO_INCREMENT is strictly prohibited.',
+                    'query_strategy' => 'Keyset Cursor Pagination cursorPaginate() with ->orderBy("id", "asc") for sub-10ms query latency.',
+                ],
+                'integration' => $integration,
+                'code_agent_directive' => self::buildAgentPrompt(sprintf('FEAT-%s-%02d-AUDIO', $prefix, $index), $title, $businessName, $mission, $targetFiles, 'php artisan test --filter=LanguageChannelContractTest', $relatedTable, $ac, $integration, $index),
+            ];
+        }
+
+        // Archetype C2: REAL-TIME CHAT MODERATION & OPEN/CLOSE CHAT TOGGLE
+        if (preg_match('/(?:chat|obrolan|moderat|pesan|message|toggle|mute)/i', $title . ' ' . $desc)) {
+            $ac = [
+                [
+                    'scenario' => $isEn ? 'Operator Toggles Chat Room State (Open <-> Closed)' : 'Operator Mengubah Status Ruang Chat (Buka <-> Tutup)',
+                    'given' => $isEn ? "Live sermon session is in progress with connected listener clients." : "Sesi ibadah langsung sedang berlangsung dengan jemaat terhubung.",
+                    'when' => $isEn ? "Multimedia Operator toggles chat switch to CLOSED on the operator desk." : "Operator Multimedia menggeser tombol chat ke posisi TUTUP pada dasbor operator.",
+                    'then' => $isEn ? "System broadcasts ChatRoomStateChanged event via Laravel Reverb locking all attendee chat input boxes within <100ms and updates chat_enabled=false." : "Sistem menyiarkan event ChatRoomStateChanged via Laravel Reverb mengunci kotak input chat jemaat dalam <100ms dan mencatat chat_enabled=false.",
+                ],
+                [
+                    'scenario' => $isEn ? 'Standardized RFC 9457 HTTP 423 Locked Rejection on Post' : 'Penolakan HTTP 423 Locked Terstandar RFC 9457 saat Chat Ditutup',
+                    'given' => $isEn ? "Chat room is currently toggled to CLOSED status." : "Ruang chat saat ini berada dalam status DITUTUP oleh operator.",
+                    'when' => $isEn ? "A client submits a message POST request to /api/v1/chat/messages." : "Klien mengirimkan request POST pesan ke /api/v1/chat/messages.",
+                    'then' => $isEn ? "System rejects mutation with HTTP 423 Locked and standardized Problem Details payload stating chat is closed." : "Sistem menolak mutasi dengan status HTTP 423 Locked dan respons Problem Details standar yang menyatakan chat ditutup.",
+                ],
+                [
+                    'scenario' => $isEn ? 'Real-Time Abusive Message Retract & Attendee Mute' : 'Penarikan Pesan Tidak Pantas Real-Time & Pembisuan Pengguna',
+                    'given' => $isEn ? "An attendee posts an inappropriate or disruptive message." : "Pengguna mengirim pesan yang tidak pantas atau bersifat spam.",
+                    'when' => $isEn ? "Operator clicks Retract Message on the moderation console." : "Operator mengklik tombol Tarik Pesan pada konsol moderasi.",
+                    'then' => $isEn ? "System soft-deletes message, broadcasts MessageRetracted event clearing it from all listener screens, and temporarily mutes client token in Redis." : "Sistem menghapus pesan secara soft-delete, menyiarkan event MessageRetracted ke seluruh layar jemaat, dan membisukan token klien di Redis.",
+                ],
+            ];
+            $integration = [
+                'endpoint' => 'POST /api/v1/chat/toggle & POST /api/v1/chat/messages',
+                'middleware' => ['api', 'auth:sanctum', 'throttle:60,1'],
+                'request_schema' => json_encode([
+                    'session_id' => '01J7K9M0P1Q2R3S4T5U6V7W8AA',
+                    'chat_enabled' => false,
+                    'reason' => 'Sermon prayer in progress',
+                ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+                'response_schema' => json_encode([
+                    'success' => true,
+                    'code' => 'CHAT_STATE_UPDATED',
+                    'data' => [
+                        'session_id' => '01J7K9M0P1Q2R3S4T5U6V7W8AA',
+                        'chat_enabled' => false,
+                        'updated_at' => '2026-11-08T10:30:00Z',
+                    ],
+                ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES),
+                'tasks' => $isEn ? [
+                    'Register RESTful chat toggle and message submission routes with Reverb broadcasting.',
+                    'Enforce RFC 9457 HTTP 423 Locked rejection check when chat room is closed.',
+                    'Implement Redis sliding-window rate limiting (1 message / 3 seconds per client).',
+                ] : [
+                    'Daftarkan endpoint RESTful toggle chat dan pengiriman pesan dengan siaran Reverb.',
+                    'Tegakkan validasi RFC 9457 HTTP 423 Locked saat ruang chat ditutup.',
+                    'Terapkan rate limiting Redis sliding-window (1 pesan / 3 detik per klien).',
+                ],
+            ];
+            $targetFiles = ['app/Models/ChatMessage.php', 'app/Services/Chat/ChatModerationService.php', 'app/Http/Controllers/ChatModerationController.php', 'tests/Feature/ChatModerationContractTest.php'];
+            $mission = "Bangun modul Moderasi Pesan & Kontrol Buka/Tutup Chat Real-Time dengan Laravel Reverb dan RFC 9457.";
+
+            return [
+                'category' => 'COLLABORATION_MODERATION',
+                'category_label' => $isEn ? 'Real-Time Chat & Operator Moderation' : 'Moderasi Chat & Kontrol Buka/Tutup Sesi',
+                'related_table' => $relatedTable['name'] ?? 'chat_messages',
+                'related_table_data' => $relatedTable,
+                'user_story' => $isEn
+                    ? "As a Multimedia Operator, I want to toggle chat access and retract disruptive messages in real time, so that live church sessions maintain a respectful and orderly environment."
+                    : "Sebagai Operator Multimedia, saya ingin mengontrol buka/tutup chat dan menarik pesan yang tidak pantas secara real-time, agar suasana ibadah langsung tetap tertib dan khidmat.",
+                'acceptance_criteria' => $ac,
+                'frontend' => [
+                    'design_tokens' => 'Clean brutalist chat interface, locked indicator banner, instant message bubble render, dark/light mode fidelity.',
+                    'states' => 'Chat open (emerald input box), chat closed (muted zinc box with lock icon), retracting message pulse.',
+                    'components' => ['ChatRoomWidget.blade.php', 'ChatToggleSwitch.js', 'ModerationActionMenu.js'],
+                    'tasks' => [
+                        'Implement real-time chat room interface with locked state overlay.',
+                        'Build operator moderation console with one-click message retraction and user mute.',
+                    ],
+                ],
+                'backend' => [
+                    'architecture' => 'Laravel 13 Service Layer with Laravel Reverb WebSockets, Redis rate limiter, and Keyset Cursor message ledger.',
+                    'target_files' => $targetFiles,
+                    'tasks' => [
+                        'Implement ChatModerationService with broadcast event ChatRoomStateChanged.',
+                        'Enforce HTTP 423 Locked gate and sliding-window anti-spam rate limiting in FormRequest.',
+                    ],
+                    'ulid_migration_rules' => 'Must use ->ulid("id")->primary() (VARCHAR(26)) and foreignUlid. AUTO_INCREMENT is strictly prohibited.',
+                    'query_strategy' => 'Keyset Cursor Pagination cursorPaginate() with ->orderBy("id", "asc") for sub-10ms query latency.',
+                ],
+                'integration' => $integration,
+                'code_agent_directive' => self::buildAgentPrompt(sprintf('FEAT-%s-%02d-CHAT', $prefix, $index), $title, $businessName, $mission, $targetFiles, 'php artisan test --filter=ChatModerationContractTest', $relatedTable, $ac, $integration, $index),
+            ];
+        }
+
         // Archetype T1: AIRPORT & HOTEL TRANSFER DISPATCH ENGINE (TRANSFER IN/OUT DPS)
         if (preg_match('/(?:bandara|airport|transfer in|transfer out|ngurah rai|\bdps\b|flight|penerbangan|antar jemput)/i', $title . ' ' . $desc)) {
             $ac = [

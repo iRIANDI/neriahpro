@@ -812,16 +812,29 @@
                 async autoElaborateFeatureTo100() {
                     if (this.tweakLoading) return;
                     this.tweakMode = 'ai';
-                    this.tweakPrompt = this.isEn
-                        ? 'Deepen all 6 dimensions of this feature to 100% production maturity: synthesize grounded English user story, guarantee 4+ bounded target files, provide 3 concrete Gherkin scenarios (Happy Path, 422 Validation Error, and Concurrency Locking), frontend anti-AI-slop states, backend PostgreSQL/MySQL Strict ULID & Keyset cursor O(1), and RFC 9457 API schemas.'
-                        : 'Perdalam seluruh 6 dimensi fitur ini ke kematangan produksi 100%: lengkapi user story persona aktor, pastikan 4+ bounded target files, sediakan 3 skenario Gherkin konkret (Happy Path, 422 Validasi Error, dan Konkurensi Database Locking), frontend anti-AI-slop states, backend PostgreSQL/MySQL Strict ULID & Keyset cursor O(1), dan skema API RFC 9457.';
+                    
+                    const featName = this.tweakSegmentTitle || this.tweakFeatureId || (this.isEn ? 'This Feature' : 'Fitur Ini');
+                    const featIdTag = this.tweakFeatureId ? ` [${this.tweakFeatureId}]` : '';
+                    
+                    const dynamicPrompt = this.isEn
+                        ? `Deepen all 6 dimensions of '${featName}'${featIdTag} to 100% production maturity: synthesize grounded English user story for relevant personas, guarantee 4+ bounded target files specifically for ${featName}, provide 3 concrete Gherkin scenarios (Happy Path, 422 Validation Error, and Concurrency Locking), frontend anti-AI-slop states, backend PostgreSQL/MySQL Strict ULID & Keyset cursor O(1), and RFC 9457 API schemas tailored to ${featName}.`
+                        : `Perdalam seluruh 6 dimensi fitur '${featName}'${featIdTag} ke kematangan produksi 100%: lengkapi user story persona aktor yang relevan, pastikan 4+ bounded target files khusus untuk ${featName}, sediakan 3 skenario Gherkin konkret (Happy Path, 422 Validasi Error, dan Konkurensi Database Locking), frontend anti-AI-slop states, backend PostgreSQL/MySQL Strict ULID & Keyset cursor O(1), dan skema API RFC 9457 khusus ${featName}.`;
+                    
+                    if (this.tweakPrompt && this.tweakPrompt.trim().length > 15) {
+                        if (!this.tweakPrompt.includes(featName)) {
+                            this.tweakPrompt = `${this.tweakPrompt.trim()}\n\n${dynamicPrompt}`;
+                        }
+                    } else {
+                        this.tweakPrompt = dynamicPrompt;
+                    }
+
                     if (window.showToast) {
                         window.showToast({
                             type: 'info',
-                            title: this.isEn ? 'AUTO-ELABORATING SPECIFICATION' : 'MEMPERDALAM SPESIFIKASI OTOMATIS',
+                            title: this.isEn ? `AUTO-ELABORATING: ${featName.toUpperCase()}` : `MEMPERDALAM: ${featName.toUpperCase()}`,
                             message: this.isEn 
-                                ? 'Synthesizing all 6 dimensions to achieve 100% maximal production maturity...' 
-                                : 'Membedah dokumen acuan dan menyempurnakan 6 dimensi menuju kematangan 100%...'
+                                ? `Synthesizing 6 dimensions of '${featName}' to achieve 100% maximal production maturity...` 
+                                : `Membedah dokumen acuan dan menyempurnakan 6 dimensi '${featName}' menuju kematangan 100%...`
                         });
                     }
                     await this.submitTweak();

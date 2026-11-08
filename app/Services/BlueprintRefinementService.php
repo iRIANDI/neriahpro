@@ -2233,8 +2233,80 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
         $titleCorpus = mb_strtolower($cleanLabel . ' ' . ($featureId ?? ''));
         $contentCorpus = mb_strtolower(is_string($featureContent) ? $featureContent : json_encode($featureContent ?? []));
 
+        // 0.1 Chat Moderation, Open/Close Toggle, and Attendee Interactions (e.g. Church Service / Live Events)
+        $isChatModeration = preg_match('/(?:chat|obrolan|moderat|pesan|message|toggle|mute|qna|tanya jawab|komentar)/i', $titleCorpus);
+        if ($isChatModeration) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Real-Time WebSocket Chat Toggle & State Broadcast: Architect Laravel Reverb broadcasting events (ChatRoomStateChanged) that instantly lock or unlock attendee chat input boxes across all connected listeners within <100ms without page reload.\n" .
+                       "2. Standardized HTTP 423 Locked & Anti-Spam Gate: Enforce standardized RFC 9457 HTTP 423 Locked responses when incoming chat messages are submitted while the chat toggle is closed, accompanied by Redis sliding-window rate limiting (1 msg / 3s per client).\n" .
+                       "3. Multimedia Operator Master Retract & Purge Controls: Equip administrators with master controls to force-mute abusive client IPs/session tokens, retract profane messages in real time via WebSocket broadcast, and auto-archive session message logs post-service.\n" .
+                       "4. Sub-10ms Keyset Cursor Chat Persistence: Store messages in a high-performance chat ledger partitioned by session ULID with O(1) Keyset Cursor Pagination for smooth infinite-scroll loading without database lag.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Toggle Status Chat Real-Time & Broadcast WebSocket: Rancang event siaran Laravel Reverb (ChatRoomStateChanged) yang secara instan mengunci atau membuka kotak input chat seluruh jemaat/pendengar dalam latensi <100ms tanpa reload halaman.\n" .
+                   "2. Respons Standar HTTP 423 Locked & Anti-Spam: Tegakkan respons error standar RFC 9457 HTTP 423 Locked jika ada pengiriman pesan saat chat sedang ditutup oleh operator, dilengkapi pembatasan laju Redis sliding-window (1 pesan / 3 detik per klien).\n" .
+                   "3. Kendali Master Operator (Retract Pesan & Mute Klien): Sediakan tombol kendali master bagi operator untuk menarik pesan tidak pantas seketika dari layar seluruh jemaat, membisukan (mute) pengguna bermasalah, dan mengarsipkan transkrip chat pasca-ibadah.\n" .
+                   "4. Skalabilitas O(1) Keyset Cursor Pesan Chat: Simpan pesan dalam ledger percakapan terpartisi per ULID sesi dengan Keyset Cursor Pagination O(1) untuk menjamin pemuatan riwayat pesan kilat sub-10ms tanpa lonjakan beban database.";
+        }
+
+        // 0.2 Translator & Staff Account Provisioning
+        $isTranslatorMgmt = preg_match('/(?:translator account|manajemen penerjemah|staf penerjemah|akun translator|assign translator|volunteer account)/i', $titleCorpus);
+        if ($isTranslatorMgmt) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Granular Role Boundaries & Language Channel Assignment: Implement strict role-based provisioning assigning translators to designated language rooms with atomic session passcodes, preventing unauthorized broadcast access.\n" .
+                       "2. Active Broadcast Session Invalidation: Ensure that reassigning or revoking a translator account immediately revokes their WebRTC publish token and terminates active audio ingest within <200ms.\n" .
+                       "3. Telemetry & Performance Tracking: Record active broadcast duration, microphone audio health, and connection stability metrics in a tamper-proof operator audit log.\n" .
+                       "4. Quick Credential Provisioning & Magic Link Invite: Provide 1-click passwordless magic links or temporary PIN generation enabling guest volunteer translators to join the broadcast booth instantly from their devices.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Penetapan Hak Akses & Alokasi Kanal Bahasa: Rancang alur pembuatan akun penerjemah dengan penetapan ke kanal bahasa spesifik (Inggris, Mandarin, dll.) dan passcode sesi unik untuk mencegah akses siaran tanpa izin.\n" .
+                   "2. Pemutusan Sesi Siaran Seketika: Pastikan pencabutan akses atau pergantian penerjemah seketika membatalkan token publish WebRTC dan menghentikan siaran mikrofon yang sedang berjalan dalam <200ms.\n" .
+                   "3. Telemetri Kinerja & Durasi Siaran: Catat log audit durasi waktu siaran aktif penerjemah, indikator level audio mikrofon, dan stabilitas koneksi untuk evaluasi operasional multimedia.\n" .
+                   "4. Undangan Kredensial Cepat & Link Akses: Sediakan pembuatan magic link atau PIN sementara sekali pakai untuk memudahkan penerjemah tamu/relawan langsung terhubung ke ruang siaran tanpa proses registrasi rumit.";
+        }
+
+        // 0.3 Local Network, LAN Self-Contained & Caddy HTTPS/TLS
+        $isLanCaddy = preg_match('/(?:caddy|dns-01|lan|wi-fi|offline|pwa|wakelock|local network|local https)/i', $titleCorpus);
+        if ($isLanCaddy) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Local Network Ingress via Caddy & DNS-01 Let's Encrypt: Formulate the zero-external-bandwidth local HTTPS reverse proxy setup satisfying mobile browser WebRTC getUserMedia / AudioContext security requirements without routing church audio to the public internet.\n" .
+                       "2. PWA Screen WakeLock & Background Audio Playback: Integrate the HTML5 Screen WakeLock API and MediaSession API into the zero-install listener player, preventing smartphones from auto-locking and interrupting live sermon audio.\n" .
+                       "3. Self-Contained LAN Reconnect & Multicast Discovery: Architect resilient client reconnect state machines handling local Wi-Fi roaming, AP handoffs, and instant fallback to local HTTP audio streams when packet loss occurs.\n" .
+                       "4. Zero-Install QR Code Instant Join: Generate high-contrast dynamic QR codes mapping local Wi-Fi SSID / captive portal triggers directly to the active language channel URL.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Ingress Jaringan Lokal Caddy & DNS-01 Challenge: Rancang konfigurasi reverse proxy Caddy HTTPS lokal yang memenuhi syarat keamanan browser modern (WebRTC AudioContext) pada jaringan Wi-Fi gereja tanpa memakan kuota bandwidth internet eksternal.\n" .
+                   "2. PWA Screen WakeLock & Background Audio: Pasang API Screen WakeLock dan MediaSession pada web pemutar jemaat agar layar ponsel tidak otomatis mati/tidur yang dapat memutus audio terjemahan khotbah selama ibadah berlangsung.\n" .
+                   "3. Pemulihan Koneksi Mandiri (Self-Contained Reconnect): Bangun alur rekoneksi otomatis saat perangkat jemaat berpindah antar Access Point Wi-Fi di dalam gedung ibadah dengan jeda buffering minimal.\n" .
+                   "4. Akses Instan QR Code Tanpa Install: Hasilkan QR Code lokal yang langsung membuka web player kanal bahasa terkait saat dipindai kamera smartphone jemaat yang terhubung ke Wi-Fi gereja.";
+        }
+
+        // 0.4 System Broadcast & Announcements
+        $isBroadcast = preg_match('/(?:broadcast announcement|pengumuman|announcement|notifikasi darurat|flash alert)/i', $titleCorpus);
+        if ($isBroadcast) {
+            if ($isEn) {
+                return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
+                       "1. Cross-Channel Urgent Flash Announcements: Build real-time push broadcasts triggered by multimedia operators that appear as high-contrast floating toast banners across all listener and translator screens.\n" .
+                       "2. Multi-Language Announcement Translation: Automatically translate operator alert messages across all configured language channels in real time prior to broadcasting.\n" .
+                       "3. Expiration TTL & Client Acknowledgment: Assign dynamic TTL durations (e.g. 30 seconds for flash notices, persistent for duration of service) with optional attendee dismissal tracking.\n" .
+                       "4. Operator Master Override & Broadcast Audit Log: Maintain an immutable ledger recording operator identity, broadcast timestamp, target channels, and message content for church record compliance.";
+            }
+
+            return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
+                   "1. Siaran Pengumuman Kilat Lintas Kanal: Bangun fitur push pengumuman real-time dari operator multimedia yang langsung muncul sebagai floating banner mencolok di layar seluruh jemaat dan penerjemah.\n" .
+                   "2. Terjemahan Otomatis Teks Pengumuman: Terjemahkan pesan pengumuman operator secara otomatis ke masing-masing bahasa kanal aktif sebelum dipancarkan secara serentak.\n" .
+                   "3. Durasi Tampil (TTL) & Penutupan Pengumuman: Terapkan batas waktu tayang otomatis (misal 30 detik untuk pengumuman singkat, atau permanen selama sesi) dengan opsi penutupan oleh pengguna.\n" .
+                   "4. Log Audit Siaran Terpusat: Catat rekaman riwayat pengumuman mencakup nama operator pengirim, waktu tayang, kanal tujuan, dan isi pesan untuk dokumentasi resmi.";
+        }
+
         // 0. Audio Translation, Language Channels & Live Interpreter (e.g. Live Audio Interpreter / Church / Streaming)
-        $isAudioChannel = preg_match('/(?:audio|language|channel|bahasa|penerjemah|interpreter|broadcast|webrtc|stream|translator|suara)/i', $titleCorpus);
+        $isAudioChannel = preg_match('/(?:audio|language|channel|bahasa|penerjemah|interpreter|webrtc|stream|translator|suara)/i', $titleCorpus);
         if ($isAudioChannel) {
             if ($isEn) {
                 return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
@@ -2432,19 +2504,20 @@ Rumuskan 3-4 instruksi penajaman arsitektur yang konkret dan mendalam untuk segm
         }
 
         // 11. Adaptive Contextual Synthesis (Any Arbitrary Domain / Sektor)
+        $domainNoun = ucwords($cleanLabel);
         if ($isEn) {
             return "Deepen the technical architecture of '{$cleanLabel}'{$featCode} for {$businessName} ({$sector}):\n\n" .
-                   "1. Domain Business Logic & Input Parameters: Formulate explicit validation rules, computational formulas, and required request payloads for '{$cleanLabel}' grounded in the client's problem statement without fictional assumptions.\n" .
-                   "2. State Transitions & Anomaly Edge Cases: Specify the lifecycle status progression, network timeout retry strategies, concurrent access guards, and graceful fallback behaviors unique to this module.\n" .
-                   "3. Third-Party Integrations & Service Contracts: Detail external API integrations, idempotent webhook receivers, and standard RFC 9457 Problem Details error schemas.\n" .
-                   "4. Enterprise Standards & O(1) Scalability: Implement strict PostgreSQL 16 ULID primary keys, Keyset Cursor Pagination O(1) for sub-10ms response times, and tamper-proof audit trails compliant with UU PDP No. 27/2022.";
+                   "1. Core Domain Logic & Input Contracts for {$domainNoun}: Formulate strict validation rules, atomic data payloads, and computational formulas specifically governing {$cleanLabel} according to {$businessName}'s operational requirements without assumptions.\n" .
+                   "2. State Machine Transitions & Concurrency Boundaries: Define concrete lifecycle status transitions (e.g. DRAFT -> ACTIVE -> LOCKED/COMPLETED), timeout retry policies, and database lockForUpdate strategies to prevent race conditions during {$cleanLabel}.\n" .
+                   "3. Integration Contracts & RFC 9457 Error Schemas: Detail API payload schemas, event notifications, and standard RFC 9457 Problem Details error responses specifically tailored for {$cleanLabel}.\n" .
+                   "4. Enterprise Standards & Sub-10ms O(1) Scalability: Implement strict PostgreSQL 16 / MySQL ULID primary keys, Keyset Cursor Pagination O(1) for sub-10ms response times, and tamper-proof audit trails compliant with UU PDP No. 27/2022.";
         }
 
         return "Perdalam spesifikasi teknis modul '{$cleanLabel}'{$featCode} untuk {$businessName} ({$sector}):\n\n" .
-               "1. Logika Bisnis & Parameter Input Domain: Rumuskan aturan validasi tegas, formula perhitungan riil, dan parameter request yang dibutuhkan untuk '{$cleanLabel}' berpatokan pada kebutuhan bisnis tanpa asumsi fiktif.\n" .
-               "2. Transisi Status & Skenario Edge Cases: Rinci siklus status data (state machine), strategi penanganan timeout jaringan, mitigasi akses konkuren, dan fallback saat terjadi kegagalan operasional pada modul ini.\n" .
-               "3. Integrasi Layanan & Kontrak Data: Petakan integrasi API pihak ketiga spesifik, verifikasi webhook idempoten, dan skema respons standar RFC 9457 Problem Details.\n" .
-               "4. Standar Enterprise & Skalabilitas O(1): Tegakkan skema relasi PostgreSQL 16 Strict ULID, Keyset Cursor Pagination O(1) untuk menjamin latensi sub-10ms, serta pencatatan audit trail sesuai kepatuhan UU PDP No. 27/2022.";
+               "1. Logika Bisnis Inti & Kontrak Input untuk {$domainNoun}: Rumuskan aturan validasi tegas, struktur payload data atomik, dan formula kalkulasi yang secara spesifik mengatur operasional {$cleanLabel} pada {$businessName} tanpa asumsi.\n" .
+               "2. Transisi Status State Machine & Batas Konkurensi: Tentukan transisi siklus hidup data (DRAFT -> AKTIF -> TERKUNCI/SELESAI), kebijakan retry saat timeout, dan penguncian lockForUpdate database guna mencegah race condition pada {$cleanLabel}.\n" .
+               "3. Kontrak Integrasi & Skema Respons RFC 9457: Rinci skema request/response API, event listener, dan format error terstandar RFC 9457 Problem Details khusus untuk kebutuhan {$cleanLabel}.\n" .
+               "4. Standar Enterprise & Skalabilitas O(1): Tegakkan skema relasi Strict ULID, Keyset Cursor Pagination O(1) untuk menjamin latensi sub-10ms, serta pencatatan log audit trail sesuai kepatuhan UU PDP No. 27/2022.";
     }
 
     /**

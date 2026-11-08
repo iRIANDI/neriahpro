@@ -591,4 +591,106 @@ class RetailBlueprintEditAndSessionLeakTest extends TestCase
         $this->assertTrue($response->json('success'));
         $this->assertNotEmpty($response->json('summary'));
     }
+
+    /**
+     * Test that saving tasks on a paid retail license is exempt from scope freeze.
+     */
+    public function test_retail_license_task_update_is_exempt_from_scope_freeze(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'yoseph@example.com',
+            'name' => 'Yoseph Iriandi',
+        ]);
+
+        $blueprint = VisionBlueprint::create([
+            'nama_bisnis' => 'Hang Tuah Church Live Audio Translation',
+            'client_name' => 'Yoseph Iriandi',
+            'email' => 'yoseph@example.com',
+            'phone' => '+6281380448253',
+            'masalah_utama' => 'Need church real-time multilingual translator application.',
+            'tujuan_utama' => 'Provide real-time translation for international congregation.',
+            'target_audiens' => 'Church congregation and foreign visitors',
+            'aktor_sistem' => 'Admin, Translator, Listener',
+            'fitur_wajib' => 'Old Initial Tasks',
+            'alur_kerja' => 'Translator speaks -> Audio streamed to listener channel',
+            'project_status' => 'Retail License',
+            'signed_agreement' => true, // Auto-signed by retail checkout webhook
+            'is_published' => true,
+            'user_metadata' => [
+                'retail_tier' => 'retail_pro',
+                'user_id' => $user->id,
+            ],
+        ]);
+
+        $payload = [
+            'mvp_tasks' => [
+                ['title' => 'WebRTC SFU Audio Pipeline', 'desc' => 'Low-latency Opus audio streaming'],
+                ['title' => 'Interpreter Cockpit', 'desc' => 'Microphone capture & channel lock'],
+            ],
+            'phase2_tasks' => [
+                ['title' => 'AI Automated Subtitles', 'desc' => 'Whisper real-time transcription'],
+            ],
+            'locale' => 'en',
+        ];
+
+        $response = $this->actingAs($user)->postJson(route('blueprint.tasks.update', $blueprint->slug), $payload);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'mvp_count' => 2,
+            'phase2_count' => 1,
+        ]);
+
+        $blueprint->refresh();
+        $this->assertStringContainsString('WebRTC SFU Audio Pipeline', $blueprint->fitur_wajib);
+        $this->assertStringContainsString('AI Automated Subtitles', $blueprint->fitur_tambahan);
+    }
+
+    /**
+     * Test that studio turnkey projects are guarded by scope freeze once contract is signed.
+     */
+    public function test_studio_turnkey_task_update_is_guarded_by_scope_freeze_once_signed(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'turnkey_client@example.com',
+            'name' => 'Turnkey Client',
+        ]);
+
+        $blueprint = VisionBlueprint::create([
+            'nama_bisnis' => 'Enterprise Logistics Studio Platform',
+            'client_name' => 'Turnkey Client',
+            'email' => 'turnkey_client@example.com',
+            'phone' => '+6281380448253',
+            'masalah_utama' => 'Enterprise logistics requirements',
+            'tujuan_utama' => 'Automated dispatching and fleet tracking',
+            'target_audiens' => 'Fleet managers',
+            'aktor_sistem' => 'Admin, Driver, Dispatcher',
+            'fitur_wajib' => 'Fleet GPS, Order Dispatch',
+            'alur_kerja' => 'Workflow description',
+            'project_status' => 'In Development (DP Paid)',
+            'signed_agreement' => true, // Legally signed SPK contract
+            'is_published' => true,
+            'user_metadata' => [
+                'track' => 'studio',
+                'user_id' => $user->id,
+            ],
+        ]);
+
+        $payload = [
+            'mvp_tasks' => [
+                ['title' => 'Arbitrary Scope Addition', 'desc' => 'Trying to alter scope post-signing'],
+            ],
+            'phase2_tasks' => [],
+            'locale' => 'en',
+        ];
+
+        $response = $this->actingAs($user)->postJson(route('blueprint.tasks.update', $blueprint->slug), $payload);
+
+        $response->assertStatus(403);
+        $response->assertJson([
+            'success' => false,
+        ]);
+        $this->assertStringContainsString('Scope Freeze', $response->json('message'));
+    }
 }

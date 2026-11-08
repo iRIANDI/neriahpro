@@ -248,6 +248,7 @@
 
         window.saveBlueprintTasks = async function(slug, mvpTasks, phase2Tasks, onStart, onFinish) {
             if (onStart) onStart();
+            const currentLocale = (new URLSearchParams(window.location.search).get('locale')) || (document.documentElement.lang === 'en' ? 'en' : 'id');
             try {
                 const res = await fetch('/blueprint/' + encodeURIComponent(slug) + '/tasks/update', {
                     method: 'POST',
@@ -255,10 +256,12 @@
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json',
+                        'X-Locale': currentLocale,
                     },
                     body: JSON.stringify({
                         mvp_tasks: mvpTasks,
-                        phase2_tasks: phase2Tasks
+                        phase2_tasks: phase2Tasks,
+                        locale: currentLocale
                     })
                 });
                 const data = await res.json();

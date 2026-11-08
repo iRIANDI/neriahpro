@@ -65,13 +65,25 @@ class BlueprintCollaborationController extends Controller
     public function updateTasks(Request $request, string $slug): JsonResponse
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $locale = $request->input('locale') 
+            ?: ($request->header('X-Locale') 
+            ?: ($request->cookie('neriah_locale') ?: app()->getLocale()));
+        $isEn = $locale === 'en';
 
         // 1. Guard against Scope Freeze (locked document)
-        $isScopeLocked = (bool) $blueprint->signed_agreement || $blueprint->documents()->where('scope_locked', true)->exists();
+        // Retail licenses are self-service digital blueprints and are NEVER locked by turnkey studio scope freeze.
+        // Super admins can also bypass scope locks for maintenance.
+        $isRetail = $blueprint->isRetailLicense();
+        $isSuperAdmin = auth()->check() && auth()->user()->isSuperAdmin();
+        $isScopeLocked = ! $isRetail && ! $isSuperAdmin && ((bool) $blueprint->signed_agreement || $blueprint->documents()->where('scope_locked', true)->exists());
         if ($isScopeLocked) {
             return response()->json([
                 'success' => false,
-                'message' => 'Dokumen PRD telah ditandatangani dan terkunci secara digital (Scope Freeze). Setiap perubahan atau penambahan task baru harus diajukan melalui Addendum / Change Request (CR) resmi.',
+                'message' => $isEn 
+                    ? 'The PRD document has been officially signed and digitally locked (Scope Freeze). Any modifications or additions of new tasks must be submitted via an official Addendum / Change Request (CR).'
+                    : 'Dokumen PRD telah ditandatangani dan terkunci secara digital (Scope Freeze). Setiap perubahan atau penambahan task baru harus diajukan melalui Addendum / Change Request (CR) resmi.',
             ], 403);
         }
 
@@ -120,7 +132,7 @@ class BlueprintCollaborationController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Daftar task & spesifikasi fitur berhasil dielaborasi dan disimpan!',
+            'message' => $isEn ? 'Task list & feature specifications successfully elaborated and saved!' : 'Daftar task & spesifikasi fitur berhasil dielaborasi dan disimpan!',
             'document_sha256' => $blueprint->document_sha256,
             'mvp_count' => count($mvpTasks),
             'phase2_count' => count($phase2Tasks),

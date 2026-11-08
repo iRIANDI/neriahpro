@@ -87,84 +87,145 @@
     $litePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_lite_price', '190.000');
     $proPrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_pro_price', '490.000');
     $ultimatePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_ultimate_price', '1.490.000');
+
+    // Determine explicit track context
+    $isStudioExplicit = (! $isRetailLicense) && (($blueprint->user_metadata['track'] ?? '') === 'studio' || request('track') === 'studio' || request('mode') === 'mitra' || $blueprint->project_status !== 'Retail License');
+    $isRetailExplicit = $isRetailLicense || ($blueprint->user_metadata['track'] ?? '') === 'retail' || request('track') === 'retail';
 @endphp
 
-                <!-- DUAL-TRACK EXECUTION SWITCHER (RETAIL VS STUDIO) -->
-                <div class="mb-8 border-2 border-zinc-900 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 p-4 sm:p-6 rounded-none">
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                        <span class="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider">
-                            DUAL-TRACK EXECUTION BRIDGE // PILIH METODE PENGERJAAN
-                        </span>
-                        <span class="text-[11px] font-mono text-zinc-500">
-                            Transparan &bull; Bebas Lock-in &bull; Garansi Resmi
-                        </span>
-                    </div>
-
-                    <h3 class="text-lg sm:text-xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2">
-                        Bagaimana Anda Ingin Mengeksekusi Cetak Biru Ini?
-                    </h3>
-                    <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-6 max-w-3xl">
-                        Pilih jalur yang paling sesuai dengan kapasitas tim Anda: Beli lisensi arsitektur untuk koding mandiri dengan tim internal (Jalur Mandiri Retail), atau serahkan pengerjaan penuh dari nol sampai live di server VPS kepada tim engineer Neriah Pro (Jalur Turnkey Studio).
-                    </p>
-
-                    <!-- Track Switch Buttons (Brutalist Tab Switcher) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                        <button
-                            type="button"
-                            @click="executionTrack = 'retail'"
-                            :class="executionTrack === 'retail' ? 'border-emerald-500 bg-emerald-500/10 text-zinc-900 dark:text-white ring-1 ring-emerald-500' : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:border-zinc-500'"
-                            class="p-4 text-left border-2 rounded-none transition cursor-pointer flex flex-col justify-between"
-                        >
+                @if($isStudioExplicit)
+                    <!-- MITRA TURNKEY STUDIO TRACK HEADER BANNER -->
+                    <div class="mb-6 p-4 sm:p-5 bg-zinc-900 border-2 border-amber-500 text-white rounded-none">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div>
-                                <div class="flex items-center justify-between gap-2 mb-1">
-                                    <span class="font-mono text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">
-                                        JALUR 01 // LISENSI DIGITAL RETAIL
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="px-2 py-0.5 bg-amber-500 text-black text-[10px] font-mono font-black uppercase">
+                                        🤝 JALUR AKTIF: DEDICATED STUDIO TURNKEY (TIM NERIAH PRO)
                                     </span>
-                                    <span x-show="executionTrack === 'retail'" class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-mono font-bold uppercase">
-                                        TERPILIH
-                                    </span>
+                                    <span class="text-xs text-amber-400 font-mono font-bold">Pengerjaan Penuh 100% oleh Tim Senior Architect</span>
                                 </div>
-                                <div class="text-base font-black uppercase text-zinc-900 dark:text-white mb-1">
-                                    Koding Mandiri (Tim Internal)
-                                </div>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                                    Untuk Anda yang punya tim programmer sendiri &amp; hanya butuh PRD 26 parameter, DDL SQL Strict ULID, Docker container, dan aturan AI coding agent.
+                                <p class="text-xs text-zinc-300 font-sans mt-0.5">
+                                    Proyek dikerjakan secara turnkey oleh tim engineer Neriah Pro dengan kontrak SPK SHA-256, WBS 7 Milestone, dan garansi bug pasca-peluncuran.
                                 </p>
                             </div>
-                            <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-between">
-                                <span>Mulai Rp {{ $litePrice }} (Sekali Bayar)</span>
-                                <span>Pilih Jalur Mandiri &darr;</span>
+                            <div class="shrink-0 text-right">
+                                <button
+                                    type="button"
+                                    @click="executionTrack = (executionTrack === 'studio' ? 'retail' : 'studio')"
+                                    class="text-[11px] font-mono text-zinc-400 hover:text-white underline cursor-pointer"
+                                >
+                                    <span x-show="executionTrack === 'studio'">Perlu koding mandiri? Beralih ke Jalur Lisensi Retail &rarr;</span>
+                                    <span x-show="executionTrack === 'retail'">&larr; Kembali ke Mode Dedicated Studio Turnkey</span>
+                                </button>
                             </div>
-                        </button>
-
-                        <button
-                            type="button"
-                            @click="executionTrack = 'studio'"
-                            :class="executionTrack === 'studio' ? 'border-emerald-500 bg-emerald-500/10 text-zinc-900 dark:text-white ring-1 ring-emerald-500' : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:border-zinc-500'"
-                            class="p-4 text-left border-2 rounded-none transition cursor-pointer flex flex-col justify-between"
-                        >
+                        </div>
+                    </div>
+                @elseif($isRetailExplicit)
+                    <!-- RETAIL LICENSE TRACK HEADER BANNER -->
+                    <div class="mb-6 p-4 sm:p-5 bg-zinc-900 border-2 border-emerald-500 text-white rounded-none">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div>
-                                <div class="flex items-center justify-between gap-2 mb-1">
-                                    <span class="font-mono text-[10px] font-bold uppercase text-zinc-500 dark:text-zinc-400">
-                                        JALUR 02 // DEDICATED STUDIO TURNKEY
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="px-2 py-0.5 bg-emerald-500 text-black text-[10px] font-mono font-black uppercase">
+                                        📦 JALUR AKTIF: LISENSI DIGITAL RETAIL (KODING MANDIRI)
                                     </span>
-                                    <span x-show="executionTrack === 'studio'" class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-mono font-bold uppercase">
-                                        TERPILIH
-                                    </span>
+                                    <span class="text-xs text-emerald-400 font-mono font-bold">Cetak Biru PRD 26 Parameter &amp; Starter Kit AI</span>
                                 </div>
-                                <div class="text-base font-black uppercase text-zinc-900 dark:text-white mb-1">
-                                    Turnkey Penuh (Tim Neriah Pro)
-                                </div>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                                    Untuk Anda yang butuh tim Neriah Pro mengoding 100%, membangun, menguji (Pest ApiContractTest), hingga live deploy di VPS bergaransi SLA.
+                                <p class="text-xs text-zinc-300 font-sans mt-0.5">
+                                    Lisensi software architecture mandiri: PRD 26 parameter, DDL SQL Strict ULID, Docker container, dan instruksi AI agent (.cursorrules).
                                 </p>
                             </div>
-                            <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs text-blue-600 dark:text-blue-400 font-bold flex items-center justify-between">
-                                <span>DP 50% Kickoff Milestone</span>
-                                <span>Pilih Jalur Studio &darr;</span>
+                            <div class="shrink-0 text-right">
+                                <button
+                                    type="button"
+                                    @click="executionTrack = (executionTrack === 'retail' ? 'studio' : 'retail')"
+                                    class="text-[11px] font-mono text-emerald-400 font-bold hover:underline cursor-pointer"
+                                >
+                                    <span x-show="executionTrack === 'retail'">🚀 Upgrade ke Dedicated Studio Turnkey &rarr;</span>
+                                    <span x-show="executionTrack === 'studio'">&larr; Kembali ke Lisensi Retail</span>
+                                </button>
                             </div>
-                        </button>
+                        </div>
                     </div>
+                @else
+                    <!-- DUAL-TRACK EXECUTION SWITCHER (RETAIL VS STUDIO - ONLY FOR UNSELECTED DRAFT) -->
+                    <div class="mb-8 border-2 border-zinc-900 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-950 p-4 sm:p-6 rounded-none">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <span class="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                                DUAL-TRACK EXECUTION BRIDGE // PILIH METODE PENGERJAAN
+                            </span>
+                            <span class="text-[11px] font-mono text-zinc-500">
+                                Transparan &bull; Bebas Lock-in &bull; Garansi Resmi
+                            </span>
+                        </div>
+
+                        <h3 class="text-lg sm:text-xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2">
+                            Bagaimana Anda Ingin Mengeksekusi Cetak Biru Ini?
+                        </h3>
+                        <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-6 max-w-3xl">
+                            Pilih jalur yang paling sesuai dengan kapasitas tim Anda: Beli lisensi arsitektur untuk koding mandiri dengan tim internal (Jalur Mandiri Retail), atau serahkan pengerjaan penuh dari nol sampai live di server VPS kepada tim engineer Neriah Pro (Jalur Turnkey Studio).
+                        </p>
+
+                        <!-- Track Switch Buttons (Brutalist Tab Switcher) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                            <button
+                                type="button"
+                                @click="executionTrack = 'retail'"
+                                :class="executionTrack === 'retail' ? 'border-emerald-500 bg-emerald-500/10 text-zinc-900 dark:text-white ring-1 ring-emerald-500' : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:border-zinc-500'"
+                                class="p-4 text-left border-2 rounded-none transition cursor-pointer flex flex-col justify-between"
+                            >
+                                <div>
+                                    <div class="flex items-center justify-between gap-2 mb-1">
+                                        <span class="font-mono text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400">
+                                            JALUR 01 // LISENSI DIGITAL RETAIL
+                                        </span>
+                                        <span x-show="executionTrack === 'retail'" class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-mono font-bold uppercase">
+                                            TERPILIH
+                                        </span>
+                                    </div>
+                                    <div class="text-base font-black uppercase text-zinc-900 dark:text-white mb-1">
+                                        Koding Mandiri (Tim Internal)
+                                    </div>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                                        Untuk Anda yang punya tim programmer sendiri &amp; hanya butuh PRD 26 parameter, DDL SQL Strict ULID, Docker container, dan aturan AI coding agent.
+                                    </p>
+                                </div>
+                                <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-between">
+                                    <span>Mulai Rp {{ $litePrice }} (Sekali Bayar)</span>
+                                    <span>Pilih Jalur Mandiri &darr;</span>
+                                </div>
+                            </button>
+
+                            <button
+                                type="button"
+                                @click="executionTrack = 'studio'"
+                                :class="executionTrack === 'studio' ? 'border-emerald-500 bg-emerald-500/10 text-zinc-900 dark:text-white ring-1 ring-emerald-500' : 'border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:border-zinc-500'"
+                                class="p-4 text-left border-2 rounded-none transition cursor-pointer flex flex-col justify-between"
+                            >
+                                <div>
+                                    <div class="flex items-center justify-between gap-2 mb-1">
+                                        <span class="font-mono text-[10px] font-bold uppercase text-zinc-500 dark:text-zinc-400">
+                                            JALUR 02 // DEDICATED STUDIO TURNKEY
+                                        </span>
+                                        <span x-show="executionTrack === 'studio'" class="px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-mono font-bold uppercase">
+                                            TERPILIH
+                                        </span>
+                                    </div>
+                                    <div class="text-base font-black uppercase text-zinc-900 dark:text-white mb-1">
+                                        Turnkey Penuh (Tim Neriah Pro)
+                                    </div>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                                        Untuk Anda yang butuh tim Neriah Pro mengoding 100%, membangun, menguji (Pest ApiContractTest), hingga live deploy di VPS bergaransi SLA.
+                                    </p>
+                                </div>
+                                <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs text-blue-600 dark:text-blue-400 font-bold flex items-center justify-between">
+                                    <span>DP 50% Kickoff Milestone</span>
+                                    <span>Pilih Jalur Studio &darr;</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                @endif
 
                     <!-- TRACK CONTENT A: JALUR MANDIRI RETAIL CARDS & INSTANT SNAP CHECKOUT -->
                     <div x-show="executionTrack === 'retail'" x-cloak class="space-y-6 pt-2">
@@ -345,6 +406,33 @@
                         </div>
                             </div>
                         @endif
+
+                        <!-- UPGRADE TO DEDICATED STUDIO TURNKEY (UPSELL BANNER WITH 100% RETAIL DEDUCTION) -->
+                        <div class="p-4 sm:p-5 bg-gradient-to-r from-zinc-900 to-zinc-950 border-2 border-emerald-500 text-white rounded-none space-y-2 mt-6">
+                            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="px-2 py-0.5 bg-emerald-500 text-black text-[10px] font-mono font-black uppercase">
+                                            🚀 UPGRADE PATH // ZERO-LOSS GUARANTEE
+                                        </span>
+                                        <span class="text-xs text-emerald-400 font-mono font-bold">100% Biaya Lisensi Retail Dipotong dari DP Turnkey</span>
+                                    </div>
+                                    <h4 class="text-base font-black uppercase tracking-tight text-white">
+                                        Ingin Tim Senior Architect Neriah Pro yang Mengoding &amp; Meluncurkan 100%?
+                                    </h4>
+                                    <p class="text-xs text-zinc-300 font-sans mt-1 max-w-2xl leading-relaxed">
+                                        Jika tim internal Anda membutuhkan tim profesional untuk membangun dari nol hingga live di server VPS bergaransi SLA: <strong>100% biaya lisensi retail yang sudah Anda bayarkan akan diperhitungkan sebagai potongan langsung terhadap tagihan DP 50% Kickoff Proyek Turnkey</strong>.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    @click="executionTrack = 'studio'"
+                                    class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black font-mono text-xs uppercase tracking-wider rounded-none shrink-0 cursor-pointer shadow-lg transition"
+                                >
+                                    Lihat Jalur Turnkey Studio &rarr;
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                 <!-- TRACK CONTENT B: JALUR TURNKEY STUDIO (CONTRACT SIGNING & DP 50%) -->

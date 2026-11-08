@@ -1399,7 +1399,7 @@
                     return Math.round(finalContract * 0.50);
                 },
                 isPayingSnap: false,
-                executionTrack: '{{ ($blueprint->project_status === 'Retail License' || request('track') === 'retail') ? 'retail' : 'studio' }}',
+                executionTrack: '{{ ($isRetailLicense || ($blueprint->user_metadata['track'] ?? '') === 'retail' || request('track') === 'retail') ? 'retail' : 'studio' }}',
                 retailCheckingOut: false,
                 agreeRetailTerms: false,
                 async checkoutRetail(packageTier) {

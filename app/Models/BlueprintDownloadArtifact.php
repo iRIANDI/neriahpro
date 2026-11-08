@@ -238,3 +238,4 @@ class BlueprintDownloadArtifact extends Model
         return $count;
     }
 }
+

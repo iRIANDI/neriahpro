@@ -446,3 +446,4 @@ class BlueprintArtifactController extends Controller
         return $payload;
     }
 }
+

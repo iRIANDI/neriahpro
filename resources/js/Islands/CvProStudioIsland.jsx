@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   FileText,
   Sparkles,
@@ -61,6 +61,15 @@ import {
 } from 'lucide-react';
 
 export default function CvProStudioIsland({ initialData, featureFlags, currentUser }) {
+
+  // Centralized Enterprise Toast Dispatcher (Strict Ban on Native Alert / Modal Kampungan)
+  const showLocalToast = useCallback((type, message, title = '') => {
+    if (typeof window !== 'undefined' && window.showToast) {
+      window.showToast({ type, message, title });
+    } else {
+      console.log(`[Toast ${type.toUpperCase()}] ${title}: ${message}`);
+    }
+  }, []);
 
   // Preview Mode: 'cv' (Dokumen A4 Cetak) | 'portfolio' (Web Portfolio Live)
   const [previewMode, setPreviewMode] = useState('cv');
@@ -303,7 +312,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       case 'neo_brutalist':
         return `${customPadding} ${radius} bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.9)] transition-all`;
       case 'gradient_glow':
-        return `${customPadding} ${radius} bg-gradient-to-br from-indigo-950/20 via-zinc-900/80 to-purple-950/20 border border-indigo-500/40 shadow-[0_0_15px_rgba(99,102,241,0.2)] transition-all`;
+        return `${customPadding} ${radius} bg-zinc-900 border border-zinc-700 shadow-xs transition-all`;
       case 'subtle_border':
       default:
         return `${customPadding} ${radius} bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs transition-all`;
@@ -324,7 +333,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       if (!isFirst) return 'text-zinc-400 hover:text-zinc-200';
       switch (wpSpyStyle) {
         case 'glowing_pill':
-          return `px-2.5 py-1 rounded-full text-white font-bold shadow-xs`;
+          return `px-2.5 py-1 rounded-none text-white font-bold shadow-xs`;
         case 'underline_runner':
           return `border-b-2 font-bold text-white`;
         case 'active_dot':
@@ -338,11 +347,11 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       return (
         <header className="sticky top-3 z-30 px-4">
           <div
-            className="max-w-2xl mx-auto px-5 py-2.5 rounded-full shadow-xl border flex items-center justify-between backdrop-blur-md transition-all"
+            className="max-w-2xl mx-auto px-5 py-2.5 rounded-none shadow-xl border flex items-center justify-between backdrop-blur-md transition-all"
             style={{ backgroundColor: `${wpNavBg}e6`, borderColor: wpSpyColor, fontFamily: `'${wpNavFont}', sans-serif` }}
           >
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: wpSpyColor }} />
+              <span className="w-2.5 h-2.5 rounded-none animate-pulse" style={{ backgroundColor: wpSpyColor }} />
               <span className="font-bold text-xs tracking-wider" style={{ color: wpNavText }}>
                 {content?.personal_info?.name ? content.personal_info.name.split(' ')[0] : 'PORTFOLIO'}
               </span>
@@ -355,7 +364,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                   style={idx === 0 && wpSpyStyle === 'glowing_pill' ? { backgroundColor: wpSpyColor } : idx === 0 && wpSpyStyle === 'underline_runner' ? { borderColor: wpSpyColor } : {}}
                 >
                   {idx === 0 && wpSpyStyle === 'active_dot' && (
-                    <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: wpSpyColor }} />
+                    <span className="w-1.5 h-1.5 rounded-none inline-block" style={{ backgroundColor: wpSpyColor }} />
                   )}
                   {link.label}
                 </span>
@@ -366,7 +375,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 href={`https://wa.me/${wpPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(wpMessage)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-1 rounded-full text-[11px] font-bold text-white transition flex items-center gap-1 shadow-xs"
+                className="px-3 py-1 rounded-none text-[11px] font-bold text-white transition flex items-center gap-1 shadow-xs"
                 style={{ backgroundColor: '#10b981' }}
               >
                 <MessageSquare className="w-3 h-3" />
@@ -476,7 +485,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
     return (
       <section className="px-6 py-10 sm:py-16 max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-8 justify-between">
         <div className="flex-1 space-y-4 text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono border" style={{ borderColor: `${wpSpyColor}60`, color: wpSpyColor }}>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-none text-xs font-mono border" style={{ borderColor: `${wpSpyColor}60`, color: wpSpyColor }}>
             <span className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: wpSpyColor }} />
             <span>TERSEDIA UNTUK PELUANG KARIR & KONSULTASI</span>
           </div>
@@ -1066,7 +1075,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
   const startLiveCopilotListening = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert(lang === 'id' ? 'Browser ini belum mendukung Web Speech Recognition langsung. Silakan gunakan tab "Tempel Teks Pertanyaan".' : 'Browser does not support direct Web Speech Recognition. Please use the "Paste Question" tab.');
+      showLocalToast('warning', lang === 'id' ? 'Browser ini belum mendukung Web Speech Recognition langsung. Silakan gunakan tab "Tempel Teks Pertanyaan".' : 'Browser does not support direct Web Speech Recognition. Please use the "Paste Question" tab.', 'SPEECH RECOGNITION');
       return;
     }
 
@@ -1217,18 +1226,18 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       const data = await res.json();
       if (data.success) {
         setUserQuota(data.quota);
-        alert(lang === 'id' ? `✓ Paket '${planCode}' berhasil diaktifkan!` : `✓ Plan '${planCode}' successfully activated!`);
+        showLocalToast('success', lang === 'id' ? `Paket '${planCode}' berhasil diaktifkan!` : `Plan '${planCode}' successfully activated!`, 'AKTIVASI PAKET');
         setUpgradeModalOpen(false);
       } else {
         if (res.status === 401) {
           window.location.href = '/pricing';
         } else {
-          alert('Gagal aktivasi: ' + (data.message || 'Error'));
+          showLocalToast('error', 'Gagal aktivasi: ' + (data.message || 'Error'), 'AKTIVASI GAGAL');
         }
       }
     } catch (err) {
       console.error(err);
-      alert('Terjadi kesalahan koneksi.');
+      showLocalToast('error', lang === 'id' ? 'Terjadi kesalahan koneksi.' : 'Connection error occurred.', 'KONEKSI GAGAL');
     } finally {
       setActivatingPlan(false);
     }
@@ -1265,7 +1274,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
 
   const toggleRecording = () => {
     if (!recognitionRef.current) {
-      alert(lang === 'id' ? 'Fitur Speech Recognition tidak didukung di browser ini. Anda dapat mengetik jawaban langsung.' : 'Speech Recognition is not supported on this browser. You can type your answer directly.');
+      showLocalToast('warning', lang === 'id' ? 'Fitur Speech Recognition tidak didukung di browser ini. Anda dapat mengetik jawaban langsung.' : 'Speech Recognition is not supported on this browser. You can type your answer directly.', 'SPEECH RECOGNITION');
       return;
     }
 
@@ -1352,10 +1361,10 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
         setSaveSuccessMessage(data.message);
         setTimeout(() => setSaveSuccessMessage(''), 4000);
       } else {
-        alert('Gagal menyimpan: ' + JSON.stringify(data.errors || data.message));
+        showLocalToast('error', 'Gagal menyimpan: ' + (typeof data.message === 'string' ? data.message : JSON.stringify(data.errors || 'Error')), 'SIMPAN GAGAL');
       }
     } catch (err) {
-      alert('Terjadi kesalahan jaringan: ' + err.message);
+      showLocalToast('error', (lang === 'id' ? 'Terjadi kesalahan jaringan: ' : 'Network error: ') + err.message, 'JARINGAN ERROR');
     } finally {
       setSaving(false);
     }
@@ -1448,7 +1457,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       }
     } catch (e) {
       console.error(e);
-      alert('Gagal menyesuaikan CV: ' + e.message);
+      showLocalToast('error', (lang === 'id' ? 'Gagal menyesuaikan CV: ' : 'Failed to tailor CV: ') + e.message, 'TAILOR CV GAGAL');
     } finally {
       setTailoring(false);
     }
@@ -1461,7 +1470,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
     setDiffModalOpen(false);
     setActiveTab('editor');
     runAtsAudit(diffData.applied_content);
-    alert(lang === 'id' ? '✓ CV Anda telah disesuaikan dan diperbarui ke Master Editor!' : '✓ Your CV has been successfully updated to Master Editor!');
+    showLocalToast('success', lang === 'id' ? 'CV Anda telah disesuaikan dan diperbarui ke Master Editor!' : 'Your CV has been successfully updated to Master Editor!', 'TAILOR CV SUKSES');
   };
 
   // Generate LinkedIn Pack
@@ -1535,7 +1544,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
     if (!checkAiAccessOrShowUpgrade('Evaluasi Jawaban STAR AI')) return;
 
     if (!interviewQuestions[selectedQuestionIndex] || !userAnswer.trim()) {
-      alert(lang === 'id' ? 'Silakan isi atau rekam jawaban Anda terlebih dahulu!' : 'Please provide your answer first!');
+      showLocalToast('warning', lang === 'id' ? 'Silakan isi atau rekam jawaban Anda terlebih dahulu!' : 'Please provide your answer first!', 'PERINGATAN');
       return;
     }
     setEvaluatingAnswer(true);
@@ -1624,9 +1633,9 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
         const parsed = JSON.parse(event.target.result);
         setContent(parsed);
         runAtsAudit(parsed);
-        alert(lang === 'id' ? 'Data CV berhasil diimpor!' : 'CV data loaded successfully!');
+        showLocalToast('success', lang === 'id' ? 'Data CV berhasil diimpor!' : 'CV data loaded successfully!', 'IMPOR SUKSES');
       } catch (err) {
-        alert('File JSON tidak valid: ' + err.message);
+        showLocalToast('error', (lang === 'id' ? 'File JSON tidak valid: ' : 'Invalid JSON file: ') + err.message, 'FILE TIDAK VALID');
       }
     };
     reader.readAsText(file);
@@ -1674,9 +1683,8 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
   };
 
   const deleteJob = (jobId) => {
-    if (confirm(lang === 'id' ? 'Hapus lamaran ini dari pelacak?' : 'Delete this application?')) {
-      setJobs(prev => prev.filter(j => j.id !== jobId));
-    }
+    setJobs(prev => prev.filter(j => j.id !== jobId));
+    showLocalToast('info', lang === 'id' ? 'Lamaran berhasil dihapus dari pelacak.' : 'Application removed from tracker.', 'DIHAPUS');
   };
 
   // Microsoft MarkItDown Document & Scan Processor
@@ -1931,7 +1939,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       }
     } catch (e) {
       console.error(e);
-      alert('Gagal menghasilkan promo sosmed.');
+      showLocalToast('error', lang === 'id' ? 'Gagal menghasilkan promo sosmed.' : 'Failed to generate social media promo.', 'PROMO GAGAL');
     } finally {
       setGeneratingSosmed(false);
     }
@@ -1951,7 +1959,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
   const handleRunTranscriptAnalysis = async () => {
     if (!checkAiAccessOrShowUpgrade(lang === 'id' ? 'Analisis Transkrip Wawancara' : 'Interview Transcript Analysis')) return;
     if (!pastedTranscript.trim()) {
-      alert(lang === 'id' ? 'Silakan tempel teks transkrip wawancara terlebih dahulu.' : 'Please paste transcript text first.');
+      showLocalToast('warning', lang === 'id' ? 'Silakan tempel teks transkrip wawancara terlebih dahulu.' : 'Please paste transcript text first.', 'PERINGATAN');
       return;
     }
     setAnalyzingTranscript(true);
@@ -1973,11 +1981,11 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       if (data.success) {
         setTranscriptResult(data.data);
       } else {
-        alert(data.message || 'Gagal menganalisis transkrip.');
+        showLocalToast('error', data.message || (lang === 'id' ? 'Gagal menganalisis transkrip.' : 'Failed to analyze transcript.'), 'ANALISIS GAGAL');
       }
     } catch (e) {
       console.error(e);
-      alert('Terjadi kesalahan saat memproses transkrip.');
+      showLocalToast('error', lang === 'id' ? 'Terjadi kesalahan saat memproses transkrip.' : 'Error occurred while processing transcript.', 'ERROR SISTEM');
     } finally {
       setAnalyzingTranscript(false);
     }
@@ -2029,7 +2037,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
               >
                 <Briefcase className="w-3.5 h-3.5" />
                 <span>Job Hub & Pelacak</span>
-                <span className="px-1.5 py-0.2 text-[10px] font-mono bg-zinc-200 dark:bg-zinc-700 rounded-full">
+                <span className="px-1.5 py-0.2 text-[10px] font-mono bg-zinc-200 dark:bg-zinc-700 rounded-none">
                   {jobs.length}
                 </span>
               </button>
@@ -2101,8 +2109,8 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
               <span className="hidden md:inline">Evaluasi Transkrip</span>
             </button>
 
-            {/* Plan Tier & AI Quota Pill */}
-            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-indigo-500/10 border border-amber-500/30 rounded-full text-xs">
+            {/* Plan Tier & AI Quota Badge */}
+            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-none text-xs">
               <span className="font-mono text-[10px] font-bold text-amber-600 dark:text-amber-400">
                 {currentUser?.is_super_admin ? 'SUPERADMIN' : (userQuota?.tier_code ? userQuota.tier_code.toUpperCase() : 'STARTER FREE')}
               </span>
@@ -2116,7 +2124,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
             {/* Upgrade & Top-up Button */}
             <button
               onClick={() => setUpgradeModalOpen(true)}
-              className="px-2.5 py-1.5 bg-gradient-to-r from-amber-500 to-indigo-600 hover:from-amber-400 hover:to-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm rounded-sm"
+              className="px-2.5 py-1.5 bg-zinc-950 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-amber-400 dark:text-zinc-950 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-xs rounded-none cursor-pointer"
               title="Beli Kuota AI atau Upgrade Paket Pro"
             >
               <Crown className="w-3.5 h-3.5" />
@@ -2491,7 +2499,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 <button
                   onClick={() => {
                     if (!newJob.company || !newJob.role) {
-                      alert('Isi nama perusahaan dan posisi!');
+                      showLocalToast('warning', 'Silakan isi nama perusahaan dan posisi jabatan terlebih dahulu.', 'VALIDASI DIPERLUKAN');
                       return;
                     }
                     const created = {
@@ -2502,8 +2510,9 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     setJobs(prev => [created, ...prev]);
                     setShowAddJobModal(false);
                     setNewJob({ company: '', role: '', salary: '', status: 'wishlist', desc: '', notes: '' });
+                    showLocalToast('success', 'Lamaran pekerjaan berhasil ditambahkan ke pelacak.', 'LAMARAN DISIMPAN');
                   }}
-                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
+                  className="px-4 py-1.5 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-none"
                 >
                   Simpan Lamaran
                 </button>
@@ -2586,7 +2595,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 <button
                   onClick={() => {
                     if (!newTransaction.client_name) {
-                      alert('Isi nama klien!');
+                      showLocalToast('warning', 'Silakan isi nama klien terlebih dahulu.', 'VALIDASI DIPERLUKAN');
                       return;
                     }
                     const created = {
@@ -2597,8 +2606,9 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     setFinanceTransactions(prev => [created, ...prev]);
                     setShowAddTransactionModal(false);
                     setNewTransaction({ client_name: '', package: 'Standard (ATS Optimized)', price: 75000, payment_method: 'Midtrans QRIS', status: 'paid' });
+                    showLocalToast('success', 'Catatan transaksi berhasil disimpan.', 'TRANSAKSI DISIMPAN');
                   }}
-                  className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold"
+                  className="px-4 py-1.5 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-none"
                 >
                   Simpan Transaksi
                 </button>
@@ -2638,7 +2648,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={handleOpenWebPortfolio}
-                      className="px-2 py-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-[10px] font-mono text-white rounded font-bold flex items-center gap-1 shadow-sm"
+                      className="px-2 py-0.5 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-[10px] font-mono text-white dark:text-zinc-950 rounded-none font-bold flex items-center gap-1 shadow-xs border border-zinc-700 dark:border-zinc-300 cursor-pointer"
                       title="Konversi CV ini menjadi Portofolio Web Interaktif (AI)"
                     >
                       <Globe className="w-3 h-3" />
@@ -2720,13 +2730,13 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                   <div className="p-4 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 space-y-4 text-xs">
                     
                     {/* Control 10: Smart AI Job Category Matcher */}
-                    <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/40 dark:to-purple-950/40 border border-indigo-200 dark:border-indigo-800/80 rounded space-y-2">
+                    <div className="p-3 bg-zinc-100 dark:bg-zinc-800/70 border border-zinc-300 dark:border-zinc-700 rounded-none space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5 text-[11px] font-mono uppercase">
-                          <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        <span className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 text-[11px] font-mono uppercase">
+                          <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                           <span>10. Sistem Cerdas Penentu Variasi Loker (AI Matcher)</span>
                         </span>
-                        <span className="text-[9px] font-mono px-1.5 py-0.5 bg-indigo-200 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 font-bold rounded">
+                        <span className="text-[9px] font-mono px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold rounded-none">
                           SMART PRESET
                         </span>
                       </div>
@@ -2736,12 +2746,12 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                           value={targetJobRole}
                           onChange={(e) => setTargetJobRole(e.target.value)}
                           placeholder="Ketik posisi loker tujuan (e.g. Senior Backend Engineer, UI/UX Designer, CFO)..."
-                          className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 rounded"
+                          className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 rounded-none"
                         />
                         <button
                           type="button"
                           onClick={handleSmartJobMatch}
-                          className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded text-xs transition shadow-sm whitespace-nowrap"
+                          className="px-3 py-1.5 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 font-bold rounded-none text-xs transition shadow-xs whitespace-nowrap cursor-pointer"
                         >
                           Cari Preset Terbaik
                         </button>
@@ -3090,7 +3100,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                       <button
                         type="button"
                         onClick={() => setPreviewMode('portfolio')}
-                        className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded text-xs transition flex items-center gap-1.5 shadow-sm"
+                        className="px-3.5 py-1.5 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 font-bold rounded-none text-xs transition flex items-center gap-1.5 shadow-xs cursor-pointer border border-zinc-700 dark:border-zinc-300"
                       >
                         <Globe className="w-3.5 h-3.5" />
                         <span>Tampilkan Web Portfolio Sisi Kanan &rarr;</span>
@@ -3968,9 +3978,9 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     <button
                       type="button"
                       onClick={() => setPreviewMode('cv')}
-                      className={`px-3 py-1.5 rounded text-xs font-mono font-bold flex items-center gap-1.5 transition ${
+                      className={`px-3 py-1.5 rounded-none text-xs font-mono font-bold flex items-center gap-1.5 transition ${
                         previewMode === 'cv'
-                          ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                          ? 'bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
                           : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                       }`}
                     >
@@ -3980,9 +3990,9 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     <button
                       type="button"
                       onClick={() => setPreviewMode('portfolio')}
-                      className={`px-3 py-1.5 rounded text-xs font-mono font-bold flex items-center gap-1.5 transition ${
+                      className={`px-3 py-1.5 rounded-none text-xs font-mono font-bold flex items-center gap-1.5 transition ${
                         previewMode === 'portfolio'
-                          ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs'
+                          ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 shadow-xs'
                           : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
                       }`}
                     >
@@ -4547,7 +4557,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                       value={sosmedCustomPrompt}
                       onChange={(e) => setSosmedCustomPrompt(e.target.value)}
                       placeholder="Contoh: 'Saya baru saja lulus ujian sertifikasi AWS dan siap membantu perusahaan start-up mendesain cloud'..."
-                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 rounded"
+                      className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 rounded-none"
                     />
                   </div>
                 )}
@@ -4557,7 +4567,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                   onClick={handleGenerateSosmed}
                   disabled={generatingSosmed}
                   id="btn-gen-sosmed-image"
-                  className="w-full py-3 bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 hover:from-pink-500 hover:to-indigo-500 text-white text-xs font-black uppercase tracking-wider rounded-lg shadow-lg flex items-center justify-center gap-2 transition disabled:opacity-50"
+                  className="w-full py-3 bg-zinc-950 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-emerald-400 dark:text-zinc-950 border border-emerald-500/50 text-xs font-black uppercase tracking-wider rounded-none shadow-xs flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>{generatingSosmed ? 'AI Sedang Merancang Banner...' : 'Buat Gambar & Teks Promo Sosmed'}</span>
@@ -4589,15 +4599,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
               {/* Right: Graphic Canvas Preview */}
               <div className="lg:col-span-7 flex flex-col items-center">
                 <div
-                  className={`w-full max-w-[600px] aspect-[1200/630] rounded-xl shadow-2xl p-6 sm:p-8 flex flex-col justify-between text-white relative overflow-hidden transition-all ${
-                    sosmedGradient === 'emerald'
-                      ? 'bg-gradient-to-br from-emerald-900 via-zinc-900 to-black border border-emerald-500/30'
-                      : sosmedGradient === 'amber'
-                      ? 'bg-gradient-to-br from-amber-700 via-zinc-900 to-black border border-amber-500/30'
-                      : sosmedGradient === 'blue'
-                      ? 'bg-gradient-to-br from-blue-900 via-slate-900 to-black border border-blue-500/30'
-                      : 'bg-gradient-to-br from-purple-900 via-indigo-950 to-black border border-purple-500/30'
-                  }`}
+                  className="w-full max-w-[600px] aspect-[1200/630] rounded-none shadow-2xl p-6 sm:p-8 flex flex-col justify-between text-white relative overflow-hidden transition-all bg-zinc-950 border-2 border-zinc-800"
                   id="promo-card-wrapper"
                 >
                   {/* Background Accents */}
@@ -4614,7 +4616,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                       </span>
                     </div>
 
-                    <span className="px-2.5 py-0.5 bg-emerald-500 text-black font-mono font-black text-[10px] rounded-full shadow">
+                    <span className="px-2.5 py-0.5 bg-emerald-500 text-black font-mono font-black text-[10px] rounded-none shadow-xs">
                       ATS VERIFIED 98%
                     </span>
                   </div>
@@ -4649,9 +4651,9 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 <div className="mt-4 flex items-center gap-3">
                   <button
                     onClick={() => {
-                      alert('Grafik siap dibagikan! Silakan gunakan tombol screenshot atau salin caption untuk diposkan ke LinkedIn.');
+                      showLocalToast('info', 'Grafik siap dibagikan! Silakan gunakan tombol screenshot atau salin caption untuk diposkan ke LinkedIn.', 'PROMO LINKEDIN');
                     }}
-                    className="px-4 py-2 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded flex items-center gap-1.5 shadow"
+                    className="px-4 py-2 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-none flex items-center gap-1.5 shadow-xs"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download Gambar Promo</span>
@@ -4709,14 +4711,14 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                       <span className="text-xs font-mono font-bold uppercase text-zinc-700 dark:text-zinc-300">
                         {stage.label}
                       </span>
-                      <span className="w-5 h-5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-[10px] font-mono font-bold flex items-center justify-center">
+                      <span className="w-5 h-5 rounded-none bg-zinc-200 dark:bg-zinc-800 text-[10px] font-mono font-bold flex items-center justify-center">
                         {stageJobs.length}
                       </span>
                     </div>
 
                     <div className="space-y-3 flex-1">
                       {stageJobs.map((job) => (
-                        <div key={job.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3.5 rounded shadow-sm hover:shadow transition space-y-2">
+                        <div key={job.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-3.5 rounded-none shadow-xs hover:border-zinc-400 dark:hover:border-zinc-600 transition space-y-2">
                           <div className="flex justify-between items-start">
                             <div>
                               <h4 className="text-xs font-bold text-zinc-900 dark:text-white leading-tight">{job.role}</h4>
@@ -4956,7 +4958,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
             {/* Score Overview Card */}
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-5">
-                <div className={`w-24 h-24 rounded-full flex flex-col items-center justify-center font-black text-2xl shadow-inner border-4 ${atsScore >= 80 ? 'border-emerald-500 text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20' : (atsScore >= 60 ? 'border-amber-500 text-amber-500 bg-amber-50 dark:bg-amber-950/20' : 'border-rose-500 text-rose-500 bg-rose-50 dark:bg-rose-950/20')}`}>
+                <div className={`w-24 h-24 rounded-none flex flex-col items-center justify-center font-black text-2xl border-4 ${atsScore >= 80 ? 'border-emerald-500 text-emerald-500 bg-emerald-50 dark:bg-emerald-950/20' : (atsScore >= 60 ? 'border-amber-500 text-amber-500 bg-amber-50 dark:bg-amber-950/20' : 'border-rose-500 text-rose-500 bg-rose-50 dark:bg-rose-950/20')}`}>
                   <span>{atsScore}</span>
                   <span className="text-[10px] font-mono uppercase font-bold text-zinc-500">Skor ATS</span>
                 </div>
@@ -5035,14 +5037,14 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
           <div className="max-w-4xl mx-auto space-y-6">
             
             {/* Live Voice Copilot Promotion Card */}
-            <div className="bg-gradient-to-r from-purple-950/70 via-indigo-950/60 to-zinc-900 border border-purple-500/40 p-6 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-sm">
+            <div className="bg-zinc-900 border border-zinc-700 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 rounded-none">
               <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase tracking-wider">
-                  <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-none text-[10px] font-mono font-bold bg-zinc-800 text-emerald-400 border border-zinc-700 uppercase tracking-wider">
+                  <span className="w-2 h-2 rounded-none bg-emerald-400 animate-pulse"></span>
                   Fitur Eksklusif Pro / Executive
                 </div>
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Headphones className="w-5 h-5 text-purple-400" />
+                  <Headphones className="w-5 h-5 text-emerald-400" />
                   <span>Asisten Wawancara Real-Time (Voice Copilot)</span>
                 </h3>
                 <p className="text-xs text-zinc-300 max-w-xl leading-relaxed">
@@ -5051,7 +5053,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
               </div>
               <button
                 onClick={handleOpenRealtimeCopilot}
-                className="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-purple-600/30 shrink-0 rounded-sm"
+                className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase transition flex items-center gap-2 shadow-xs shrink-0 rounded-none cursor-pointer"
               >
                 <Mic className="w-4 h-4" />
                 <span>Buka Asisten Real-Time →</span>
@@ -5413,15 +5415,15 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       {upgradeModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-3xl max-h-[92vh] overflow-y-auto shadow-2xl flex flex-col">
-            <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-amber-500/10">
+            <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-100 dark:bg-zinc-800">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-lg bg-amber-500/20 text-amber-500 flex items-center justify-center font-bold">
+                <div className="w-9 h-9 rounded-none bg-amber-500/20 text-amber-500 border border-amber-500/30 flex items-center justify-center font-bold">
                   <Crown className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                     <span>Buka Akses Penuh AI & Fitur Eksklusif CV Pro</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full font-bold">PRO & TOP-UP</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-none font-bold">PRO & TOP-UP</span>
                   </h3>
                   <p className="text-xs text-zinc-500">
                     Pengunjung gratis bebas mengetik data manual dan unduh PDF sepuasnya tanpa biaya.
@@ -5482,27 +5484,27 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 </div>
 
                 {/* Ultimate Executive */}
-                <div className="p-4 bg-gradient-to-b from-purple-900/10 to-zinc-900/40 border-2 border-purple-500 rounded-lg flex flex-col justify-between relative shadow-lg">
-                  <span className="absolute -top-2.5 right-3 px-2 py-0.5 bg-purple-600 text-white text-[9px] font-mono font-bold rounded-full">
+                <div className="p-4 bg-white dark:bg-zinc-900 border-2 border-emerald-500 rounded-none flex flex-col justify-between relative shadow-xs">
+                  <span className="absolute -top-2.5 right-3 px-2 py-0.5 bg-emerald-500 text-black text-[9px] font-mono font-black uppercase rounded-none">
                     REKOMENDASI
                   </span>
                   <div>
-                    <span className="text-[10px] font-mono font-bold uppercase text-purple-400">All-Inclusive</span>
+                    <span className="text-[10px] font-mono font-bold uppercase text-emerald-600 dark:text-emerald-400">All-Inclusive</span>
                     <h4 className="text-sm font-bold text-zinc-900 dark:text-white mt-1">Ultimate Executive</h4>
-                    <div className="text-lg font-black text-purple-500 mt-2">
+                    <div className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-2">
                       Rp 199.000 <span className="text-xs font-normal text-zinc-400">/bln</span>
                     </div>
                     <ul className="text-[11px] text-zinc-600 dark:text-zinc-300 space-y-1.5 mt-3">
-                      <li className="flex items-center gap-1.5 font-bold text-purple-400"><Check className="w-3.5 h-3.5 text-purple-400" /> Voice Interview Copilot Real-Time</li>
-                      <li className="flex items-center gap-1.5 font-bold text-purple-400"><Check className="w-3.5 h-3.5 text-purple-400" /> AI Web Portfolio Generator</li>
+                      <li className="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400"><Check className="w-3.5 h-3.5 text-emerald-500" /> Voice Interview Copilot Real-Time</li>
+                      <li className="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400"><Check className="w-3.5 h-3.5 text-emerald-500" /> AI Web Portfolio Generator</li>
                       <li className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Unlimited Tailor CV & ATS</li>
                       <li className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> 150 AI Credits Bulanan</li>
                     </ul>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-purple-500/30 space-y-2">
+                  <div className="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
                     <a
                       href="/pricing"
-                      className="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold text-center block rounded transition shadow"
+                      className="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-black uppercase text-center block rounded-none transition shadow-xs"
                     >
                       Langganan Sekarang →
                     </a>
@@ -5570,7 +5572,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
             {/* Header */}
             <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/60">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-400 flex items-center justify-center border border-purple-500/30">
+                <div className="w-10 h-10 rounded-none bg-zinc-800 text-emerald-400 flex items-center justify-center border border-zinc-700">
                   <Headphones className="w-5 h-5" />
                 </div>
                 <div>
@@ -5578,7 +5580,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     <h3 className="text-sm font-bold text-white">
                       Asisten Wawancara Real-Time (Live Voice Copilot)
                     </h3>
-                    <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 text-[10px] font-mono rounded-full font-bold">
+                    <span className="px-2 py-0.5 bg-zinc-800 text-emerald-400 border border-zinc-700 text-[10px] font-mono rounded-none font-bold">
                       PRO COPILOT
                     </span>
                   </div>
@@ -5781,7 +5783,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     <h3 className="text-sm font-bold text-white">
                       AI Web Portfolio Generator
                     </h3>
-                    <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono rounded-full font-bold">
+                    <span className="px-2 py-0.5 bg-zinc-800 text-emerald-400 border border-zinc-700 text-[10px] font-mono rounded-none font-bold">
                       PRO FEATURE
                     </span>
                   </div>
@@ -5875,14 +5877,14 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       {/* ========================================================================= */}
       {tourModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-xl shadow-2xl flex flex-col rounded-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-xl shadow-2xl flex flex-col rounded-none overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="p-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-amber-600 text-white flex items-center justify-between">
+            <div className="p-4 bg-zinc-950 border-b border-zinc-800 text-white flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-sm">
-                <HelpCircle className="w-5 h-5 text-amber-300" />
+                <HelpCircle className="w-5 h-5 text-emerald-400" />
                 <span>Panduan Interaktif Fitur CV Pro Studio</span>
               </div>
-              <span className="font-mono text-xs px-2 py-0.5 bg-black/30 rounded-full">
+              <span className="font-mono text-xs px-2 py-0.5 bg-black/50 border border-zinc-700 rounded-none text-emerald-400 font-bold">
                 Langkah {tourStep + 1} dari 8
               </span>
             </div>

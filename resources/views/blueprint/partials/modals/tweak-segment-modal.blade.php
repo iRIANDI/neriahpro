@@ -97,10 +97,60 @@
                     </div>
                 </div>
 
-                <!-- 1-Click Auto-Elaborate Quick Action Banner for Single Feature -->
+                <!-- Quick Usage Guide: 2 Ways to Elaborate (Panduan Singkat 2 Jalur Penggunaan) -->
+                <div 
+                    x-show="tweakSegmentKey === 'feature_single' || tweakFeatureId" 
+                    x-data="{ guideOpen: true }"
+                    class="border-2 border-zinc-900 dark:border-zinc-700 bg-zinc-100/90 dark:bg-zinc-950 p-3 sm:p-4 rounded-none space-y-2.5 shadow-xs"
+                >
+                    <div class="flex items-center justify-between gap-2 border-b border-zinc-300 dark:border-zinc-800 pb-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono font-black text-xs inline-flex items-center justify-center rounded-none">?</span>
+                            <span class="font-mono text-xs font-black uppercase tracking-tight text-zinc-900 dark:text-zinc-100" x-text="isEn ? 'QUICK USAGE GUIDE // 2 WAYS TO ELABORATE' : 'PANDUAN CEPAT // 2 CARA MEMPERDALAM SPESIFIKASI'">
+                                PANDUAN CEPAT // 2 CARA MEMPERDALAM SPESIFIKASI
+                            </span>
+                        </div>
+                        <button 
+                            type="button" 
+                            @click="guideOpen = !guideOpen" 
+                            class="text-[10px] font-mono text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 underline cursor-pointer uppercase font-bold"
+                            x-text="guideOpen ? (isEn ? 'Hide Guide ▲' : 'Sembunyikan Panduan ▲') : (isEn ? 'Show Guide ▼' : 'Tampilkan Panduan ▼')"
+                        >
+                        </button>
+                    </div>
+
+                    <div x-show="guideOpen" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-0.5">
+                        <!-- Jalur 1: 1-Click Fast Track -->
+                        <div class="p-3 bg-emerald-500/10 border-2 border-emerald-500/50 rounded-none flex items-start gap-2.5">
+                            <span class="px-1.5 py-0.5 bg-emerald-500 text-black font-mono font-black text-[10px] shrink-0 mt-0.5">JALUR 1</span>
+                            <div class="text-[11px] font-mono leading-relaxed">
+                                <strong class="text-emerald-950 dark:text-emerald-300 font-black block uppercase mb-1" x-text="isEn ? '⚡ FAST-TRACK (AUTO 100% COMPLETE)' : '⚡ JALUR CEPAT & TERIMA BERES (100% OTOMATIS)'"></strong>
+                                <p class="text-zinc-700 dark:text-zinc-300 font-sans text-xs" x-text="isEn 
+                                    ? 'Click the green ✨ 1-CLICK ELABORATE (100%) button below. AI immediately synthesizes all 6 dimensions (User Story, 4+ Bounded Files, 3 Gherkin scenarios, Frontend State, Backend O(1), and RFC 9457 API) to 100% production maturity without manual typing.' 
+                                    : 'Cukup klik tombol hijau ✨ 1-KLIK PERDALAM (100%) di bawah. AI langsung menyempurnakan 6 dimensi (User Story, 4+ File Bounded, 3 Skenario Gherkin, Frontend State, Backend O(1), dan API RFC 9457) hingga 100% matang tanpa perlu mengetik manual.'">
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Jalur 2: Custom Directive -->
+                        <div class="p-3 bg-sky-500/10 border-2 border-sky-500/50 rounded-none flex items-start gap-2.5">
+                            <span class="px-1.5 py-0.5 bg-sky-500 text-black font-mono font-black text-[10px] shrink-0 mt-0.5">JALUR 2</span>
+                            <div class="text-[11px] font-mono leading-relaxed">
+                                <strong class="text-sky-950 dark:text-sky-300 font-black block uppercase mb-1" x-text="isEn ? '📝 CUSTOM DIRECTIVE & FULL CONTROL' : '📝 JALUR KUSTOM & KENDALI PENUH'"></strong>
+                                <p class="text-zinc-700 dark:text-zinc-300 font-sans text-xs" x-text="isEn 
+                                    ? 'Click 📝 COMPILE DIRECTIVE to let AI extract recommendations from project documents into the prompt box. Review or add custom business rules, then click EXECUTE AI ELABORATION at the bottom.' 
+                                    : 'Klik 📝 SUSUN DRAF INSTRUKSI agar AI membedah dokumen acuan dan menyusun rekomendasi ke kotak teks. Tinjau atau tambahkan aturan bisnis sendiri, lalu klik EKSEKUSI PENDALAMAN AI di pojok bawah.'">
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1-Click Auto-Elaborate Quick Action Banner for Single Feature (JALUR 1) -->
                 <div x-show="tweakSegmentKey === 'feature_single' || tweakFeatureId" class="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div class="space-y-0.5">
-                        <div class="flex items-center gap-1.5 font-mono text-xs font-black uppercase text-emerald-800 dark:text-emerald-300">
+                        <div class="flex items-center gap-2 font-mono text-xs font-black uppercase text-emerald-900 dark:text-emerald-300">
+                            <span class="px-1.5 py-0.2 bg-emerald-500 text-black text-[9px] font-mono font-black">JALUR 1</span>
                             <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             <span x-text="isEn ? 'INSTANT 1-CLICK ELABORATE SPEC (100% MAXIMUM)' : 'INSTAN 1-KLIK PERDALAM FITUR (100% MAKSIMAL)'"></span>
                         </div>
@@ -111,6 +161,7 @@
                         @click="autoElaborateFeatureTo100()" 
                         :disabled="tweakLoading"
                         class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-black font-mono font-black text-xs uppercase tracking-tight flex items-center gap-1.5 shadow-[2px_2px_0px_#065f46] disabled:opacity-50 shrink-0 cursor-pointer"
+                        :title="isEn ? 'Execute Jalur 1: Auto-elaborate to 100% immediately' : 'Jalankan Jalur 1: Perdalam otomatis ke 100% seketika'"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         <span x-text="tweakLoading ? (isEn ? 'ELABORATING...' : 'MEMPROSES...') : (isEn ? '✨ 1-CLICK ELABORATE (100%)' : '✨ 1-KLIK PERDALAM (100%)')"></span>
@@ -160,7 +211,8 @@
                     <div>
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2">
                             <div class="flex-1 min-w-0">
-                                <label class="block text-xs font-mono font-bold uppercase text-zinc-800 dark:text-zinc-200">
+                                <label class="block text-xs font-mono font-bold uppercase text-zinc-800 dark:text-zinc-200 flex items-center gap-2">
+                                    <span class="px-1.5 py-0.2 bg-sky-500 text-black text-[9px] font-mono font-black">JALUR 2</span>
                                     <span x-text="isEn ? 'SPECIAL REFINEMENT DIRECTIVE (OPTIONAL):' : 'INSTRUKSI PENAJAMAN KHUSUS (OPSIONAL):'">
                                         INSTRUKSI PENAJAMAN KHUSUS (OPSIONAL):
                                     </span>
@@ -176,7 +228,7 @@
                                 @click="elaborateDirectiveFromAi()" 
                                 :disabled="elaboratingDirective"
                                 class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 active:bg-emerald-500/30 text-emerald-800 dark:text-emerald-300 font-mono text-xs font-bold border border-emerald-500/50 hover:border-emerald-500 flex items-center gap-2 transition cursor-pointer disabled:opacity-50 shadow-xs self-start sm:self-auto shrink-0 max-w-full rounded-none"
-                                :title="isEn ? 'AI compiles automatic refinement directive based on project documents and global engineering standards into prompt box' : 'AI menyusun instruksi penajaman otomatis berdasarkan ide acuan proyek dan standar rekayasa dunia ke dalam kotak teks'"
+                                :title="isEn ? 'Jalur 2 (Step 1): AI compiles automatic refinement directive based on project documents into prompt box' : 'Jalur 2 (Langkah 1): AI menyusun instruksi penajaman otomatis berdasarkan ide acuan proyek ke kotak teks'"
                             >
                                 <template x-if="!elaboratingDirective">
                                     <span class="flex items-center gap-1.5 truncate">
@@ -256,6 +308,7 @@
                         @click="submitTweak()" 
                         :disabled="tweakLoading" 
                         class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black uppercase text-xs transition flex items-center justify-center gap-2 disabled:opacity-50 min-w-[170px] rounded-none shadow-[2px_2px_0px_#065f46]"
+                        :title="tweakMode === 'manual' ? (isEn ? 'Save direct manual modifications' : 'Simpan perubahan manual langsung') : (isEn ? 'Jalur 2 (Step 2): Execute AI elaboration with the directive above' : 'Jalur 2 (Langkah 2): Eksekusi pendalaman AI dengan instruksi di atas')"
                     >
                         <template x-if="!tweakLoading">
                             <span class="flex items-center gap-1.5">

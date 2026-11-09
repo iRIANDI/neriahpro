@@ -6,6 +6,30 @@
         .prd-scroll-target {
             scroll-margin-top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 46px) + 16px) !important;
         }
+
+        /* Virtual Architecture Studio Diagram Viewers: Strict Fit to Container */
+        [id*="mermaid-studio-"][id*="-target"],
+        #mermaid-flow-target,
+        #mermaid-erd-target {
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+        }
+
+        [id*="mermaid-studio-"][id*="-target"]:not([data-zoomed="true"]) svg,
+        #mermaid-flow-target:not([data-zoomed="true"]) svg,
+        #mermaid-erd-target:not([data-zoomed="true"]) svg {
+            max-width: 100% !important;
+            max-height: 100% !important;
+            width: auto !important;
+            height: 100% !important;
+            object-fit: contain !important;
+            margin: auto !important;
+            display: block !important;
+        }
         [x-cloak] { display: none !important; }
         .goog-te-banner-frame { display: none !important; }
         body { top: 0 !important; }

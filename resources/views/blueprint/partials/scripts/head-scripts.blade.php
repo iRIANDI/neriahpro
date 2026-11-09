@@ -485,11 +485,16 @@
                         renderedSvg.style.maxWidth = 'none';
                         renderedSvg.style.maxHeight = 'none';
                     } else {
-                        renderedSvg.style.maxWidth = '100%';
-                        renderedSvg.style.height = 'auto';
+                        renderedSvg.removeAttribute('width');
+                        renderedSvg.removeAttribute('height');
+                        renderedSvg.style.setProperty('max-width', '100%', 'important');
+                        renderedSvg.style.setProperty('max-height', '100%', 'important');
+                        renderedSvg.style.setProperty('width', 'auto', 'important');
+                        renderedSvg.style.setProperty('height', '100%', 'important');
+                        renderedSvg.style.setProperty('object-fit', 'contain', 'important');
                     }
                     renderedSvg.style.display = 'block';
-                    renderedSvg.style.margin = '0 auto';
+                    renderedSvg.style.margin = 'auto';
                 }
             } catch (err) {
                 console.warn('Mermaid rendering notice for ' + containerId + ':', err);

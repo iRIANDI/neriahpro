@@ -1066,11 +1066,19 @@
                         svg.style.transformOrigin = 'center center';
                         svg.style.transition = el.getAttribute('data-dragging') === 'true' ? 'none' : 'transform 0.15s ease-out';
                         if (zoom === 1 && px === 0 && py === 0) {
-                            svg.style.maxWidth = '100%';
-                            svg.style.maxHeight = '100%';
-                            svg.style.width = 'auto';
-                            svg.style.height = 'auto';
+                            svg.removeAttribute('width');
+                            svg.removeAttribute('height');
+                            svg.style.setProperty('max-width', '100%', 'important');
+                            svg.style.setProperty('max-height', '100%', 'important');
+                            svg.style.setProperty('width', 'auto', 'important');
+                            svg.style.setProperty('height', '100%', 'important');
+                            svg.style.setProperty('object-fit', 'contain', 'important');
                         } else {
+                            svg.style.removeProperty('max-width');
+                            svg.style.removeProperty('max-height');
+                            svg.style.removeProperty('width');
+                            svg.style.removeProperty('height');
+                            svg.style.removeProperty('object-fit');
                             svg.style.maxWidth = 'none';
                             svg.style.maxHeight = 'none';
                         }

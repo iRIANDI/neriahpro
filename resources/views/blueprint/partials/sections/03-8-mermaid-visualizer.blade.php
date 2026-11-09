@@ -91,7 +91,7 @@
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <button type="button" @click="zoomDiagram('mermaid-studio-flow-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-flow-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-flow-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
                                 <button type="button" @click="zoomDiagram('mermaid-studio-flow-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
                                 <button type="button" @click="openDiagramFullscreen('Diagram 1: Alur Kerja Sistem (Workflow)', 'mermaid-studio-flow-source')" class="px-2.5 py-0.5 bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
@@ -105,14 +105,14 @@
                         </div>
                         <script type="text/plain" id="mermaid-studio-flow-source">{!! \App\Services\PrdGeneratorService::resolveWorkflowMermaid($prd['virtual_charts']['workflow_mermaid'] ?? null, $prd['workflow'] ?? []) !!}</script>
                         <div 
-                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            class="overflow-hidden h-[460px] sm:h-[520px] lg:h-[560px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-flow-target', $event)"
                             @mousemove="onDiagramDrag('mermaid-studio-flow-target', $event)"
                             @mouseup="stopDiagramDrag('mermaid-studio-flow-target')"
                             @mouseleave="stopDiagramDrag('mermaid-studio-flow-target')"
                             @wheel.prevent="zoomDiagram('mermaid-studio-flow-target', $event.deltaY < 0 ? 0.2 : -0.2)"
                         >
-                            <div id="mermaid-studio-flow-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                            <div id="mermaid-studio-flow-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-sky-500 animate-ping"></span>
                                     <span>Memuat visualisasi alur kerja Mermaid...</span>
@@ -132,7 +132,7 @@
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <button type="button" @click="zoomDiagram('mermaid-studio-erd-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-erd-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-erd-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
                                 <button type="button" @click="zoomDiagram('mermaid-studio-erd-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
                                 <button type="button" @click="openDiagramFullscreen('Diagram 2: Skema Basis Data Relasional (ERD)', 'mermaid-studio-erd-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
@@ -146,14 +146,14 @@
                         </div>
                         <script type="text/plain" id="mermaid-studio-erd-source">{!! !empty($prd['virtual_charts']['erd_mermaid']) ? $prd['virtual_charts']['erd_mermaid'] : \App\Services\PrdGeneratorService::generateErdMermaid($prd['erd_schema']['tables'] ?? []) !!}</script>
                         <div 
-                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            class="overflow-hidden h-[460px] sm:h-[520px] lg:h-[560px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-erd-target', $event)"
                             @mousemove="onDiagramDrag('mermaid-studio-erd-target', $event)"
                             @mouseup="stopDiagramDrag('mermaid-studio-erd-target')"
                             @mouseleave="stopDiagramDrag('mermaid-studio-erd-target')"
                             @wheel.prevent="zoomDiagram('mermaid-studio-erd-target', $event.deltaY < 0 ? 0.2 : -0.2)"
                         >
-                            <div id="mermaid-studio-erd-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                            <div id="mermaid-studio-erd-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
                                     <span>Memuat topologi ERD Mermaid...</span>
@@ -173,7 +173,7 @@
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <button type="button" @click="zoomDiagram('mermaid-studio-featdep-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-featdep-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-featdep-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
                                 <button type="button" @click="zoomDiagram('mermaid-studio-featdep-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
                                 <button type="button" @click="openDiagramFullscreen('Diagram 3: Peta Ketergantungan Fitur', 'mermaid-studio-featdep-source')" class="px-2.5 py-0.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
@@ -187,14 +187,14 @@
                         </div>
                         <script type="text/plain" id="mermaid-studio-featdep-source">{!! !empty($prd['virtual_charts']['feature_dependency_mermaid']) ? $prd['virtual_charts']['feature_dependency_mermaid'] : (!empty($prd['virtual_charts']['feature_dep_mermaid']) ? $prd['virtual_charts']['feature_dep_mermaid'] : \App\Services\PrdGeneratorService::generateFeatureDependencyMermaid($prd['target_actors']['items'] ?? [], $prd['engineering_specs']['mvp_phase_1']['items'] ?? [], $prd['erd_schema']['tables'] ?? [])) !!}</script>
                         <div 
-                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            class="overflow-hidden h-[460px] sm:h-[520px] lg:h-[560px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-featdep-target', $event)"
                             @mousemove="onDiagramDrag('mermaid-studio-featdep-target', $event)"
                             @mouseup="stopDiagramDrag('mermaid-studio-featdep-target')"
                             @mouseleave="stopDiagramDrag('mermaid-studio-featdep-target')"
                             @wheel.prevent="zoomDiagram('mermaid-studio-featdep-target', $event.deltaY < 0 ? 0.2 : -0.2)"
                         >
-                            <div id="mermaid-studio-featdep-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                            <div id="mermaid-studio-featdep-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-amber-500 animate-ping"></span>
                                     <span>Memuat peta ketergantungan fitur Mermaid...</span>
@@ -214,7 +214,7 @@
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <button type="button" @click="zoomDiagram('mermaid-studio-gantt-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-gantt-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-gantt-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
                                 <button type="button" @click="zoomDiagram('mermaid-studio-gantt-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
                                 <button type="button" @click="openDiagramFullscreen('Diagram 4: Timeline Roadmap & Gantt Chart', 'mermaid-studio-gantt-source')" class="px-2.5 py-0.5 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
@@ -228,14 +228,14 @@
                         </div>
                         <script type="text/plain" id="mermaid-studio-gantt-source">{!! !empty($prd['virtual_charts']['sprint_gantt_mermaid']) ? $prd['virtual_charts']['sprint_gantt_mermaid'] : (!empty($prd['virtual_charts']['gantt_mermaid']) ? $prd['virtual_charts']['gantt_mermaid'] : \App\Services\PrdGeneratorService::generateSprintGanttMermaid($blueprint, $blueprint->target_waktu ?? '30 Hari Kerja')) !!}</script>
                         <div 
-                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            class="overflow-hidden h-[460px] sm:h-[520px] lg:h-[560px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-gantt-target', $event)"
                             @mousemove="onDiagramDrag('mermaid-studio-gantt-target', $event)"
                             @mouseup="stopDiagramDrag('mermaid-studio-gantt-target')"
                             @mouseleave="stopDiagramDrag('mermaid-studio-gantt-target')"
                             @wheel.prevent="zoomDiagram('mermaid-studio-gantt-target', $event.deltaY < 0 ? 0.2 : -0.2)"
                         >
-                            <div id="mermaid-studio-gantt-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                            <div id="mermaid-studio-gantt-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-rose-500 animate-ping"></span>
                                     <span>Memuat timeline roadmap Mermaid...</span>
@@ -255,7 +255,7 @@
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <button type="button" @click="zoomDiagram('mermaid-studio-infra-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-infra-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-infra-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
                                 <button type="button" @click="zoomDiagram('mermaid-studio-infra-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
                                 <button type="button" @click="openDiagramFullscreen('Diagram 5: Topologi Infrastruktur & Keamanan', 'mermaid-studio-infra-source')" class="px-2.5 py-0.5 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
@@ -269,14 +269,14 @@
                         </div>
                         <script type="text/plain" id="mermaid-studio-infra-source">{!! !empty($prd['virtual_charts']['infrastructure_mermaid']) ? $prd['virtual_charts']['infrastructure_mermaid'] : (!empty($prd['virtual_charts']['infra_mermaid']) ? $prd['virtual_charts']['infra_mermaid'] : \App\Services\PrdGeneratorService::generateInfrastructureMermaid($blueprint, $blueprint->user_metadata ?? [])) !!}</script>
                         <div 
-                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            class="overflow-hidden h-[460px] sm:h-[520px] lg:h-[560px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-infra-target', $event)"
                             @mousemove="onDiagramDrag('mermaid-studio-infra-target', $event)"
                             @mouseup="stopDiagramDrag('mermaid-studio-infra-target')"
                             @mouseleave="stopDiagramDrag('mermaid-studio-infra-target')"
                             @wheel.prevent="zoomDiagram('mermaid-studio-infra-target', $event.deltaY < 0 ? 0.2 : -0.2)"
                         >
-                            <div id="mermaid-studio-infra-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                            <div id="mermaid-studio-infra-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-violet-500 animate-ping"></span>
                                     <span>Memuat topologi infrastruktur Mermaid...</span>
@@ -296,7 +296,7 @@
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <button type="button" @click="zoomDiagram('mermaid-studio-mobilesync-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-mobilesync-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-mobilesync-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
                                 <button type="button" @click="zoomDiagram('mermaid-studio-mobilesync-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
                                 <button type="button" @click="openDiagramFullscreen('Diagram 6: Sinkronisasi Mobile & Local SQLite', 'mermaid-studio-mobilesync-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
@@ -310,14 +310,14 @@
                         </div>
                         <script type="text/plain" id="mermaid-studio-mobilesync-source">{!! !empty($prd['virtual_charts']['mobile_sync_mermaid']) ? $prd['virtual_charts']['mobile_sync_mermaid'] : \App\Services\PrdGeneratorService::generateMobileSyncMermaid($blueprint->nama_bisnis) !!}</script>
                         <div 
-                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            class="overflow-hidden h-[460px] sm:h-[520px] lg:h-[560px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-studio-mobilesync-target', $event)"
                             @mousemove="onDiagramDrag('mermaid-studio-mobilesync-target', $event)"
                             @mouseup="stopDiagramDrag('mermaid-studio-mobilesync-target')"
                             @mouseleave="stopDiagramDrag('mermaid-studio-mobilesync-target')"
                             @wheel.prevent="zoomDiagram('mermaid-studio-mobilesync-target', $event.deltaY < 0 ? 0.2 : -0.2)"
                         >
-                            <div id="mermaid-studio-mobilesync-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                            <div id="mermaid-studio-mobilesync-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
                                     <span>Memuat topologi sinkronisasi Mobile &amp; SQLite Mermaid...</span>

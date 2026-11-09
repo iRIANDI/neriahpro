@@ -161,7 +161,7 @@
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
                                 <button type="button" @click="zoomDiagram('mermaid-flow-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-flow-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Reset Zoom (1:1)">1:1</button>
+                                <button type="button" @click="resetDiagram('mermaid-flow-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
                                 <button type="button" @click="zoomDiagram('mermaid-flow-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
                                 <button type="button" @click="openDiagramFullscreen('Diagram Alur Kerja Sistem (Workflow Flowchart)', 'mermaid-flow-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
@@ -181,14 +181,14 @@
                         <script type="text/plain" id="mermaid-flow-source">{!! \App\Services\PrdGeneratorService::generateWorkflowMermaid($rawWorkflows) !!}</script>
 
                         <div 
-                            class="overflow-hidden min-h-[220px] max-h-[550px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
+                            class="overflow-hidden h-[460px] sm:h-[520px] lg:h-[560px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center justify-center p-3 relative cursor-grab active:cursor-grabbing select-none"
                             @mousedown="startDiagramDrag('mermaid-flow-target', $event)"
                             @mousemove="onDiagramDrag('mermaid-flow-target', $event)"
                             @mouseup="stopDiagramDrag('mermaid-flow-target')"
                             @mouseleave="stopDiagramDrag('mermaid-flow-target')"
                             @wheel.prevent="zoomDiagram('mermaid-flow-target', $event.deltaY < 0 ? 0.2 : -0.2)"
                         >
-                            <div id="mermaid-flow-target" class="w-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
+                            <div id="mermaid-flow-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
                                     <span>Memuat visualisasi alur kerja Mermaid...</span>

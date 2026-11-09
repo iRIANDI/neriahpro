@@ -570,12 +570,13 @@ class VisionBlueprint extends Model
             return true;
         }
 
-        try {
-            $tier = app(\App\Services\Entitlement\BlueprintEntitlementGateService::class)->resolveUserTier(auth()->user(), $this->slug);
-            return in_array($tier, ['SINGLE_APP_PASS', 'PRO_RETAIL', 'AGENCY_PARTNER'], true);
-        } catch (\Throwable $e) {
-            return false;
-        }
+        // Check direct transactions for retail license packages without calling EntitlementGate (avoids circular recursion)
+        return Transaction::where(function ($q) {
+            $q->where('midtrans_order_id', 'LIKE', 'NP-RET-'.$this->id.'-%')
+                ->orWhere('midtrans_order_id', 'LIKE', 'NP-CART-'.$this->id.'-%');
+        })
+        ->whereIn('status', ['settlement', 'capture', 'success'])
+        ->exists();
     }
 
     /**
@@ -609,7 +610,7 @@ class VisionBlueprint extends Model
      */
     public function isScopeFrozen(): bool
     {
-        if ($this->signed_agreement && ! empty($this->signed_at)) {
+        if ($this->signed_agreement || ! empty($this->signed_at)) {
             return true;
         }
 

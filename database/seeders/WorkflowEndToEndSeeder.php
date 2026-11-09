@@ -436,7 +436,7 @@ class WorkflowEndToEndSeeder extends Seeder
                 'referensi_desain' => 'Halodoc, Alodokter & Linear.app: Clean clinical interface, high contrast, accessibility compliant.',
                 'kesiapan_aset' => 'Sudah Siap Lengkap',
                 'target_waktu' => '14 Hari Kerja',
-                'service_options' => ['Web Architecture', 'Rapid Monolith System', 'PostgreSQL ULID', 'Midtrans DP Ready', 'Gemini Ultra Swarm'],
+                'service_options' => ['Web Architecture', 'Rapid Monolith System', 'PostgreSQL ULID', 'Midtrans DP Ready', 'Accelerated Dedicated Squad'],
                 'project_status' => 'Awaiting DP Payment',
                 'is_published' => true,
                 'ip_address' => '180.252.120.44',
@@ -460,8 +460,8 @@ class WorkflowEndToEndSeeder extends Seeder
                 'description' => 'Pihak Kedua (Neriah Pro) sepakat untuk merancang dan membangun arsitektur perangkat lunak Medika Prima Telehealth sesuai spesifikasi yang tertuang di dalam Dokumen Ultimate PRD ID: '.strtoupper(substr($blueprint->id, 0, 10)).'.',
             ],
             'pasal_2_timeline' => [
-                'title' => 'Pasal 2: Alokasi Waktu Pengerjaan (14 Hari Kerja - Gemini Ultra Swarm Parallel Sprint)',
-                'description' => 'Pekerjaan dilaksanakan selama 14 (empat belas) hari kerja aktif dengan akselerasi Gemini Ultra Swarm Parallel Sprint terstruktur.',
+                'title' => 'Pasal 2: Alokasi Waktu Pengerjaan (14 Hari Kerja - Accelerated Dedicated Squad)',
+                'description' => 'Pekerjaan dilaksanakan selama 14 (empat belas) hari kerja aktif dengan akselerasi Accelerated Dedicated Squad terstruktur.',
             ],
             'pasal_3_pembayaran_dp' => [
                 'title' => 'Pasal 3: Nilai Kontrak & Ketentuan Uang Muka (DP 50%)',

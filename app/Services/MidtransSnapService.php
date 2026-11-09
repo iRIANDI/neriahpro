@@ -50,6 +50,29 @@ class MidtransSnapService
                 Log::warning("Midtrans order_id exceeded 50 characters, auto-truncated from '{$originalOrderId}' to '{$params['transaction_details']['order_id']}'");
             }
 
+            // Large transaction optimization (Over QRIS & E-Wallet limits):
+            // Bank Indonesia limits QRIS to Rp 5M - Rp 10M per transaction. For contracts/DP >= Rp 5.000.000,
+            // strictly prioritize and route to Virtual Account Bank (BCA, Mandiri, BNI, BRI, Permata, CIMB)
+            // and 3D Secure Credit Card (Visa/Mastercard/JCB), excluding QRIS and E-Wallets to prevent failed checkouts.
+            if ($grossAmount >= 5000000 && !isset($params['enabled_payments'])) {
+                $params['enabled_payments'] = [
+                    'credit_card',
+                    'bca_va',
+                    'bni_va',
+                    'bri_va',
+                    'echannel',      // Mandiri Bill
+                    'permata_va',
+                    'cimb_va',
+                    'other_va',
+                ];
+
+                if (!isset($params['credit_card'])) {
+                    $params['credit_card'] = [
+                        'secure' => true,
+                    ];
+                }
+            }
+
             $authHeader = 'Basic '.base64_encode($serverKey.':');
 
             $response = Http::withHeaders([

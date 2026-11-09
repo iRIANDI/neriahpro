@@ -598,12 +598,12 @@ class BlueprintVoucherAndAuditTrailTest extends TestCase
 
         $blueprint->generateAndSavePrd();
 
-        // 1. Verify resolveVelocityTier returns Gemini Ultra Swarm with Rp 100M contract & Rp 50M DP
+        // 1. Verify resolveVelocityTier returns Accelerated Dedicated Squad with Rp 100M contract & Rp 50M DP
         $tier = \App\Services\PrdGeneratorService::resolveVelocityTier($blueprint, 'enterprise_fast');
         $this->assertEquals('enterprise_fast', $tier['id']);
         $this->assertEquals(100000000.00, (float) $tier['contract_amount']);
         $this->assertEquals(50000000.00, (float) $tier['dp_amount']);
-        $this->assertStringContainsString('Gemini Ultra Swarm', $tier['name']);
+        $this->assertStringContainsString('Accelerated Dedicated Squad', $tier['name']);
 
         // 2. Blueprint Snap Token request with enterprise_fast tier
         $response = $this->postJson(route('blueprint.snap-token', $blueprint->slug), [
@@ -626,13 +626,13 @@ class BlueprintVoucherAndAuditTrailTest extends TestCase
         $this->assertArrayHasKey($blueprint->slug, $cart);
         $this->assertEquals(100000000.00, (float) $cart[$blueprint->slug]['contract_amount']);
         $this->assertEquals(50000000.00, (float) $cart[$blueprint->slug]['dp_amount']);
-        $this->assertStringContainsString('Gemini Ultra Swarm', $cart[$blueprint->slug]['tier_name']);
+        $this->assertStringContainsString('Accelerated Dedicated Squad', $cart[$blueprint->slug]['tier_name']);
 
         // 4. Cart Page shows Rp 50.000.000 DP and correct tier name
         $cartPageRes = $this->get(route('cart.index'));
         $cartPageRes->assertStatus(200);
         $cartPageRes->assertSee('50.000.000');
-        $cartPageRes->assertSee('Gemini Ultra Swarm');
+        $cartPageRes->assertSee('Accelerated Dedicated Squad');
 
         // 5. Cart Snap Token generates 50M DP
         $cartSnapRes = $this->postJson(route('cart.snap-token'));

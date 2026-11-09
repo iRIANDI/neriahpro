@@ -108,14 +108,36 @@
                             <ol class="clause-list" style="{{ (str_contains(strtolower($sec['heading'] ?? ''), 'integrasi') || str_contains(strtolower($sec['heading'] ?? ''), 'integration')) ? 'list-style-type: square;' : 'list-style-type: decimal;' }}">
                                 @foreach($sec['items'] as $item)
                                     @php
-                                        $hasColon = str_contains($item, ':') && !str_contains($item, '://');
-                                        $parts = $hasColon ? explode(':', $item, 2) : [$item];
+                                        $itemTitle = is_array($item) ? ($item['title'] ?? ($item['text'] ?? '')) : (string) $item;
+                                        $hasColon = str_contains($itemTitle, ':') && !str_contains($itemTitle, '://');
+                                        $parts = $hasColon ? explode(':', $itemTitle, 2) : [$itemTitle];
+                                        $bullets = is_array($item) ? ($item['bullets'] ?? []) : [];
                                     @endphp
                                     <li class="clause-list-item">
                                         @if($hasColon)
                                             <strong style="color: #111827;">{{ trim($parts[0]) }}:</strong> {{ trim($parts[1]) }}
                                         @else
-                                            {{ $item }}
+                                            {{ $itemTitle }}
+                                        @endif
+                                        @if(!empty($bullets))
+                                            <ul style="margin: 3px 0 3px 14px; padding: 0; list-style-type: disc;">
+                                                @foreach($bullets as $b)
+                                                    @php
+                                                        $bText = is_array($b) ? ($b['text'] ?? '') : (string) $b;
+                                                        $subBullets = is_array($b) ? ($b['subbullets'] ?? []) : [];
+                                                    @endphp
+                                                    <li style="font-size: 8px; color: #4b5563; margin-bottom: 1.5px;">
+                                                        {{ $bText }}
+                                                        @if(!empty($subBullets))
+                                                            <ul style="margin: 2px 0 2px 12px; padding: 0; list-style-type: circle;">
+                                                                @foreach($subBullets as $sb)
+                                                                    <li style="font-size: 7.5px; color: #6b7280;">{{ $sb }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        @endif
+                                                    </li>
+                                                @endforeach
+                                            </ul>
                                         @endif
                                     </li>
                                 @endforeach

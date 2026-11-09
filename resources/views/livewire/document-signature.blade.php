@@ -457,7 +457,7 @@
 
                         @if($isSigned)
                             <div class="my-4 text-center">
-                                @if($document->digital_signature_image)
+                                @if($document->digital_signature_image && strlen($document->digital_signature_image) > 500)
                                     <div class="inline-block p-2 bg-white border border-zinc-200 rounded-none shadow-xs">
                                         <img src="{{ $document->digital_signature_image }}" alt="Tanda Tangan Digital Klien" class="max-h-20 max-w-full mx-auto" />
                                     </div>
@@ -485,6 +485,26 @@
                                 <div class="break-all text-[9px] text-zinc-400">
                                     HASH: {{ $docHash }}
                                 </div>
+                            </div>
+
+                            <!-- Post-Signing Actions (Only on Screen) -->
+                            <div class="no-print mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+                                @if($blueprint)
+                                    <a 
+                                        href="{{ route('blueprint.show', $blueprint->slug) }}#section-10" 
+                                        class="w-full py-2.5 px-3 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs uppercase tracking-wider text-center flex items-center justify-center gap-1.5 transition shadow-sm"
+                                    >
+                                        <span x-text="locale === 'en' ? 'Proceed to DP Settlement &amp; Kickoff &rarr;' : 'Lanjutkan ke Pelunasan DP &amp; Kickoff &rarr;'">Lanjutkan ke Pelunasan DP &amp; Kickoff &rarr;</span>
+                                    </a>
+                                @endif
+                                <button 
+                                    type="button" 
+                                    wire:click="unlockForResign" 
+                                    class="w-full py-2 px-3 border border-zinc-300 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-mono text-[11px] uppercase tracking-wider text-center flex items-center justify-center gap-1.5 cursor-pointer transition"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    <span x-text="locale === 'en' ? 'Reset / Re-sign Agreement' : '🔄 Ubah / Tanda Tangani Ulang'">🔄 Ubah / Tanda Tangani Ulang</span>
+                                </button>
                             </div>
                         @else
                             <!-- Signature Input Form -->
@@ -521,4 +541,22 @@
             </footer>
         </article>
     </div>
+
+    <!-- Client-Side Toast & UI Listeners -->
+    <script>
+        document.addEventListener('livewire:initialized', function () {
+            Livewire.on('signature-error', function (event) {
+                var msg = event.message || (Array.isArray(event) && event[0] ? event[0].message : 'Tanda tangan belum dibubuhkan!');
+                if (window.showToast) {
+                    window.showToast({ type: 'warning', title: 'Perhatian', message: msg });
+                }
+            });
+
+            Livewire.on('signature-unlocked', function () {
+                if (window.showToast) {
+                    window.showToast({ type: 'info', title: 'Siap', message: 'Kotak tanda tangan telah dibuka kembali. Silakan bubuhkan tanda tangan Anda.' });
+                }
+            });
+        });
+    </script>
 </div>

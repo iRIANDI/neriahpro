@@ -91,18 +91,15 @@ class ContractLegalHelper
             }
         }
 
-        // Try splitting by numbered patterns like "1. ", "2. ", or "(1) ", or newlines with numbers
-        $numberedMatches = preg_split('/(?:^|\r?\n|\s+)(?:\d+[\.\)]|\([0-9]+\))\s+/u', $trimmed, -1, PREG_SPLIT_NO_EMPTY);
-        if (count($numberedMatches) > 1) {
+        // If there are explicit newlines, split by line first so inline numbers (1) (2) aren't prematurely shredded
+        if (str_contains($trimmed, "\n")) {
+            $lines = preg_split('/\r?\n/', $trimmed);
             $results = [];
-            foreach ($numberedMatches as $m) {
-                $m = trim($m, " \t\n\r\0\x0B;,");
-                // Avoid leading intro phrase like "Ruang lingkup inti MVP mencakup:" if caught as match[0]
-                if (str_ends_with($m, ':') && count($results) === 0 && strlen($m) < 80) {
-                    continue;
-                }
-                if ($m !== '') {
-                    $results[] = $m;
+            foreach ($lines as $line) {
+                $cleaned = trim($line, " \t\n\r\0\x0B-–*•");
+                $cleaned = self::sanitizeLegalClauseText($cleaned);
+                if ($cleaned !== '') {
+                    $results[] = $cleaned;
                 }
             }
             if (!empty($results)) {
@@ -110,14 +107,19 @@ class ContractLegalHelper
             }
         }
 
-        // If there are explicit newlines, split by line
-        if (str_contains($trimmed, "\n")) {
-            $lines = preg_split('/\r?\n/', $trimmed);
+        // Try splitting by top-level numbered patterns like "1. ", "2. ", at start of lines or segments
+        $numberedMatches = preg_split('/(?:^|\r?\n|\s{2,})(?:\d+[\.\)])\s+/u', $trimmed, -1, PREG_SPLIT_NO_EMPTY);
+        if (count($numberedMatches) > 1) {
             $results = [];
-            foreach ($lines as $line) {
-                $cleaned = trim($line, " \t\n\r\0\x0B-–*•");
-                if ($cleaned !== '') {
-                    $results[] = $cleaned;
+            foreach ($numberedMatches as $m) {
+                $m = trim($m, " \t\n\r\0\x0B;,");
+                $m = self::sanitizeLegalClauseText($m);
+                // Avoid leading intro phrase like "Ruang lingkup inti MVP mencakup:" if caught as match[0]
+                if (str_ends_with($m, ':') && count($results) === 0 && strlen($m) < 80) {
+                    continue;
+                }
+                if ($m !== '') {
+                    $results[] = $m;
                 }
             }
             if (!empty($results)) {
@@ -141,6 +143,88 @@ class ContractLegalHelper
         }
 
         return [$trimmed];
+    }
+
+    /**
+     * Sanitize text for formal legal contract display.
+     * Strips developer-only technical artifacts (Target files, test filenames, internal debug comments).
+     */
+    public static function sanitizeLegalClauseText(string $text): string
+    {
+        // Strip developer code target files and test suites
+        $sanitized = preg_replace('/(?:\s*[-•*]?\s*)?(?:Target\s+files?|File\s+targets?|Lokasi\s+file|Target\s+direktori|Tests?|Pest\s+tests?|Automated\s+tests?)\s*:\s*[^\r\n;]+(?:[,\s]+[^\r\n;]+)*/iu', '', $text);
+        // Strip file paths like app/Services/... or tests/Feature/...
+        $sanitized = preg_replace('/(?:app|tests|routes|config|resources)\/[a-zA-Z0-9_\-\.\/]+\.(?:php|js|jsx|ts|tsx|json|yml|yaml|css|blade\.php)/iu', '', $sanitized);
+        // Clean up redundant trailing punctuation or commas left behind
+        $sanitized = preg_replace('/\s*,\s*$/u', '', trim($sanitized));
+        $sanitized = preg_replace('/\s*;\s*$/u', '.', $sanitized);
+        $sanitized = preg_replace('/\s{2,}/u', ' ', $sanitized);
+
+        return trim($sanitized, " \t\n\r\0\x0B-–");
+    }
+
+    /**
+     * Extract inline acceptance criteria and parenthetical numbered sub-items:
+     * e.g. "Core feature. Acceptance criteria: (1) First (2) Second"
+     * Returns ['main' => 'Core feature', 'subitems' => ['First', 'Second']]
+     */
+    public static function extractInlineSubItems(string $text): array
+    {
+        $cleaned = self::sanitizeLegalClauseText($text);
+        if ($cleaned === '') {
+            return ['main' => '', 'subitems' => []];
+        }
+
+        // Check if there is an explicit "Acceptance criteria:" or "Kriteria penerimaan:" delimiter
+        $delimPattern = '/(?:\.|\;|\:)?\s*(?:Acceptance\s+criteria|Kriteria\s+penerimaan|Kriteria\s+validasi|Definisi\s+selesai|DoD)\s*:\s*/iu';
+        if (preg_match($delimPattern, $cleaned, $matches, PREG_OFFSET_CAPTURE)) {
+            $offset = $matches[0][1];
+            $mainPart = trim(substr($cleaned, 0, $offset), " \t\n\r\0\x0B.,-:");
+            $criteriaPart = trim(substr($cleaned, $offset + strlen($matches[0][0])));
+
+            $subitems = self::splitInlineNumberedItems($criteriaPart);
+            return [
+                'main' => $mainPart !== '' ? $mainPart : 'Spesifikasi & Kriteria Penerimaan:',
+                'subitems' => $subitems,
+            ];
+        }
+
+        // Check if there are inline numbers like (1) ... (2) ...
+        if (preg_match('/\([1-9]\)\s+[^\(]+\([2-9]\)/u', $cleaned)) {
+            // Find where (1) starts
+            $firstParenPos = strpos($cleaned, '(1)');
+            if ($firstParenPos !== false && $firstParenPos > 0) {
+                $mainPart = trim(substr($cleaned, 0, $firstParenPos), " \t\n\r\0\x0B.,-:");
+                $criteriaPart = trim(substr($cleaned, $firstParenPos));
+                $subitems = self::splitInlineNumberedItems($criteriaPart);
+                return [
+                    'main' => $mainPart !== '' ? $mainPart : 'Kriteria Spesifikasi:',
+                    'subitems' => $subitems,
+                ];
+            }
+        }
+
+        return ['main' => $cleaned, 'subitems' => []];
+    }
+
+    /**
+     * Split a string containing (1) Item (2) Item into clean array without redundant prefixes.
+     */
+    public static function splitInlineNumberedItems(string $text): array
+    {
+        $text = self::sanitizeLegalClauseText($text);
+        $parts = preg_split('/(?:^|\s+)(?:\([0-9]+\)|\b[0-9]+[\.\)])\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY);
+        $cleanSub = [];
+        foreach ($parts as $p) {
+            $itemText = trim($p, " \t\n\r\0\x0B-–*•.,;");
+            // Strip any remaining leading (1), (2), 1. or •
+            $itemText = preg_replace('/^(?:\([0-9]+\)|\b[0-9]+[\.\)]|[-*•+–])\s*/u', '', $itemText);
+            $itemText = trim($itemText);
+            if ($itemText !== '') {
+                $cleanSub[] = $itemText;
+            }
+        }
+        return $cleanSub;
     }
 
     /**
@@ -225,22 +309,27 @@ class ContractLegalHelper
             }
 
             if ($isLevel3) {
-                if ($currentLevel1Idx !== null && $currentLevel2Idx !== null && isset($structured[$currentLevel1Idx]['bullets'][$currentLevel2Idx])) {
-                    $structured[$currentLevel1Idx]['bullets'][$currentLevel2Idx]['subbullets'][] = $subBulletText;
-                } elseif ($currentLevel1Idx !== null) {
-                    $structured[$currentLevel1Idx]['bullets'][] = [
-                        'text' => $subBulletText,
-                        'subbullets' => [],
-                    ];
-                    $currentLevel2Idx = count($structured[$currentLevel1Idx]['bullets']) - 1;
-                } else {
-                    $structured[] = [
-                        'number' => null,
-                        'title' => $subBulletText,
-                        'bullets' => [],
-                    ];
-                    $currentLevel1Idx = count($structured) - 1;
-                    $currentLevel2Idx = null;
+                $cleanSubBullet = self::sanitizeLegalClauseText($subBulletText);
+                // Strip redundant leading (1), (2), etc.
+                $cleanSubBullet = preg_replace('/^(?:\([0-9]+\)|\b[0-9]+[\.\)])\s*/u', '', $cleanSubBullet);
+                if ($cleanSubBullet !== '') {
+                    if ($currentLevel1Idx !== null && $currentLevel2Idx !== null && isset($structured[$currentLevel1Idx]['bullets'][$currentLevel2Idx])) {
+                        $structured[$currentLevel1Idx]['bullets'][$currentLevel2Idx]['subbullets'][] = $cleanSubBullet;
+                    } elseif ($currentLevel1Idx !== null) {
+                        $structured[$currentLevel1Idx]['bullets'][] = [
+                            'text' => $cleanSubBullet,
+                            'subbullets' => [],
+                        ];
+                        $currentLevel2Idx = count($structured[$currentLevel1Idx]['bullets']) - 1;
+                    } else {
+                        $structured[] = [
+                            'number' => null,
+                            'title' => $cleanSubBullet,
+                            'bullets' => [],
+                        ];
+                        $currentLevel1Idx = count($structured) - 1;
+                        $currentLevel2Idx = null;
+                    }
                 }
                 continue;
             }
@@ -257,20 +346,31 @@ class ContractLegalHelper
             }
 
             if ($isLevel2) {
-                if ($currentLevel1Idx !== null) {
-                    $structured[$currentLevel1Idx]['bullets'][] = [
-                        'text' => $bulletText,
-                        'subbullets' => [],
+                // Check if this child bullet itself contains inline acceptance criteria or (1) (2)
+                $extracted = self::extractInlineSubItems($bulletText);
+                $cleanBulletText = $extracted['main'];
+                // Clean any leading (2), (3) accidentally placed after bullet
+                $cleanBulletText = preg_replace('/^(?:\([0-9]+\)|\b[0-9]+[\.\)])\s*/u', '', $cleanBulletText);
+                $nestedSubs = $extracted['subitems'];
+
+                if ($cleanBulletText !== '') {
+                    $bulletPayload = [
+                        'text' => $cleanBulletText,
+                        'subbullets' => $nestedSubs,
                     ];
-                    $currentLevel2Idx = count($structured[$currentLevel1Idx]['bullets']) - 1;
-                } else {
-                    $structured[] = [
-                        'number' => null,
-                        'title' => $bulletText,
-                        'bullets' => [],
-                    ];
-                    $currentLevel1Idx = count($structured) - 1;
-                    $currentLevel2Idx = null;
+
+                    if ($currentLevel1Idx !== null) {
+                        $structured[$currentLevel1Idx]['bullets'][] = $bulletPayload;
+                        $currentLevel2Idx = count($structured[$currentLevel1Idx]['bullets']) - 1;
+                    } else {
+                        $structured[] = [
+                            'number' => null,
+                            'title' => $cleanBulletText,
+                            'bullets' => [],
+                        ];
+                        $currentLevel1Idx = count($structured) - 1;
+                        $currentLevel2Idx = null;
+                    }
                 }
                 continue;
             }
@@ -283,22 +383,37 @@ class ContractLegalHelper
                 $mainText = trim($m1[2]);
             }
 
-            // Check if mainText has inline colon with semicolon sub-items
+            // Sanitize and check for inline acceptance criteria / (1) (2) (3)
+            $extracted = self::extractInlineSubItems($mainText);
+            $cleanMainText = $extracted['main'];
             $inlineBullets = [];
-            if (str_contains($mainText, ':') && ! str_contains($mainText, '://')) {
-                $parts = explode(':', $mainText, 2);
+
+            if (!empty($extracted['subitems'])) {
+                foreach ($extracted['subitems'] as $sub) {
+                    $inlineBullets[] = [
+                        'text' => $sub,
+                        'subbullets' => [],
+                    ];
+                }
+            } elseif (str_contains($cleanMainText, ':') && ! str_contains($cleanMainText, '://')) {
+                // Check if mainText has inline colon with semicolon sub-items
+                $parts = explode(':', $cleanMainText, 2);
                 $headingPart = trim($parts[0]);
                 $bodyPart = trim($parts[1]);
 
                 if (str_contains($bodyPart, ';')) {
                     $semiParts = array_filter(array_map('trim', explode(';', $bodyPart)));
                     if (count($semiParts) > 1) {
-                        $mainText = $headingPart . ':';
+                        $cleanMainText = $headingPart . ':';
                         foreach ($semiParts as $sp) {
-                            $inlineBullets[] = [
-                                'text' => trim($sp, " .;"),
-                                'subbullets' => [],
-                            ];
+                            $spClean = self::sanitizeLegalClauseText($sp);
+                            $spClean = preg_replace('/^(?:\([0-9]+\)|\b[0-9]+[\.\)])\s*/u', '', $spClean);
+                            if ($spClean !== '') {
+                                $inlineBullets[] = [
+                                    'text' => trim($spClean, " .;"),
+                                    'subbullets' => [],
+                                ];
+                            }
                         }
                     }
                 }
@@ -306,7 +421,7 @@ class ContractLegalHelper
 
             $structured[] = [
                 'number' => $number,
-                'title' => $mainText,
+                'title' => $cleanMainText,
                 'bullets' => $inlineBullets,
             ];
             $currentLevel1Idx = count($structured) - 1;

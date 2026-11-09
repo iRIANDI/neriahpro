@@ -58,10 +58,9 @@
                 wire:ignore
                 x-init="if (window.setupAutographResizer) window.setupAutographResizer($refs.canvas, function() { return signaturePad; })"
                 x-intersect.once="if (window.setupAutographResizer) window.setupAutographResizer($refs.canvas, function() { return signaturePad; })"
-                x-on:pointerdown="if (window.setupAutographResizer) window.setupAutographResizer($refs.canvas, function() { return signaturePad; })"
-                style="overflow-anchor: none;"
+                style="overflow-anchor: none; touch-action: none; -ms-touch-action: none; user-select: none;"
                 @class([
-                    'w-full h-44 rounded-sm border-2 border-dashed border-zinc-400 dark:border-zinc-600 bg-white dark:bg-zinc-950 shadow-inner block transition-colors',
+                    'w-full h-44 rounded-sm border-2 border-dashed border-zinc-400 dark:border-zinc-600 bg-white dark:bg-zinc-950 shadow-inner block transition-colors cursor-crosshair',
                     'opacity-75 bg-gray-50' => $isDisabled,
                 ])
             ></canvas>
@@ -75,13 +74,16 @@
                 window.setupAutographResizer = function(canvasEl, getPad) {
                     if (!canvasEl) return;
                     var sync = function() {
+                        var pad = getPad ? getPad() : null;
+                        // Never resize while actively drawing
+                        if (pad && pad._drawningStroke) return;
+
                         var rect = canvasEl.getBoundingClientRect();
                         if (rect.width <= 0 || rect.height <= 0) return;
                         var ratio = Math.max(window.devicePixelRatio || 1, 1);
                         var targetW = Math.round(rect.width * ratio);
                         var targetH = Math.round(rect.height * ratio);
                         if (Math.abs(canvasEl.width - targetW) > 2 || Math.abs(canvasEl.height - targetH) > 2) {
-                            var pad = getPad ? getPad() : null;
                             var data = pad ? pad.toData() : null;
                             canvasEl.width = targetW;
                             canvasEl.height = targetH;

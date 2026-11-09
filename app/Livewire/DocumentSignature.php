@@ -21,7 +21,22 @@ class DocumentSignature extends Component implements HasForms
     public function mount(Document $document)
     {
         $this->document = $document;
-        $this->isSigned = $this->document->status === 'signed';
+
+        // Auto-heal: If document was recorded as signed but signature image is empty or corrupt (<500 bytes), reset to draft so user can draw properly
+        $sigImage = $this->document->digital_signature_image;
+        $isCorruptOrBlank = empty($sigImage) || (is_string($sigImage) && strlen($sigImage) < 500);
+
+        if ($this->document->status === 'signed' && $isCorruptOrBlank) {
+            $this->document->update([
+                'status' => 'draft',
+                'digital_signature_image' => null,
+                'signed_at' => null,
+                'scope_locked' => false,
+            ]);
+            $this->isSigned = false;
+        } else {
+            $this->isSigned = $this->document->status === 'signed';
+        }
 
         if (!$this->isSigned) {
             $this->form->fill();
@@ -50,12 +65,38 @@ class DocumentSignature extends Component implements HasForms
             ->statePath('data');
     }
 
-    public function submitSignature()
+    public function unlockForResign(): void
     {
-        $data = $this->form->getState();
+        $blueprint = $this->document->related instanceof \App\Models\VisionBlueprint ? $this->document->related : null;
+        if ($blueprint && in_array($blueprint->project_status, ['Active Sprint', 'In Review', 'Completed'])) {
+            $this->dispatch('signature-error', message: 'Kontrak yang sudah berjalan aktif dalam masa sprint tidak dapat diubah kembali.');
+            return;
+        }
 
         $this->document->update([
-            'digital_signature_image' => $data['digital_signature_image'],
+            'status' => 'draft',
+            'digital_signature_image' => null,
+            'signed_at' => null,
+            'scope_locked' => false,
+        ]);
+
+        $this->isSigned = false;
+        $this->form->fill();
+    }
+
+    public function submitSignature(): void
+    {
+        $data = $this->form->getState();
+        $sigImage = $data['digital_signature_image'] ?? null;
+
+        // Strict validation: Reject empty or blank canvas submissions
+        if (empty($sigImage) || !is_string($sigImage) || strlen($sigImage) < 500) {
+            $this->dispatch('signature-error', message: 'Tanda tangan belum dibubuhkan! Silakan goreskan tanda tangan Anda pada kotak yang tersedia terlebih dahulu.');
+            return;
+        }
+
+        $this->document->update([
+            'digital_signature_image' => $sigImage,
             'signed_at' => now(), // Stored in UTC (standard)
             'signer_ip_address' => request()->ip(),
             'status' => 'signed',

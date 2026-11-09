@@ -238,125 +238,114 @@
     </header>
 
     <!-- =================================================================== -->
-    <!-- SUB-DECK: TELEMETRY STATUS + QUICK ACTION DIALOGS                   -->
+    <!-- UNIFIED ARCHITECTURAL TELEMETRY & ACTION DECK (SINGLE COMPACT ROW)  -->
     <!-- =================================================================== -->
-    <div class="shrink-0 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 font-mono text-[11px]">
-        <!-- Left: Telemetry & Scope Integrity -->
-        <div class="flex items-center gap-2 flex-wrap">
-            <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-black text-[10px]">
+    @php
+        $hasAlerts = !empty($doctor['findings']) || !empty($enterpriseUpscaleAdvisor) || !empty($scopeParalysisGuard['execution_stages']);
+        $alertCount = (!empty($doctor['findings']) ? 1 : 0) + (!empty($enterpriseUpscaleAdvisor) ? 1 : 0) + (count($scopeParalysisGuard['execution_stages'] ?? []) > 0 ? 1 : 0);
+    @endphp
+    <div class="shrink-0 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px]">
+        <!-- Left: Sector/Stack, Causal Chain Stats, Determinism, and RAB -->
+        <div class="flex items-center gap-2 flex-wrap tabular-nums">
+            <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-black">
                 {{ $locVal($activeSectorObj['name'] ?? null, 'General Sector') }} &bull; {{ $locVal($activeStackObj['name'] ?? null, 'Laravel Monolith') }}
             </span>
 
-            @if($engagementMode === 'MITRA_TURNKEY_PROJECT')
-                <button
-                    type="button"
-                    wire:click="$set('centerTab', 'commercial_mitra')"
-                    class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 font-black tabular-nums cursor-pointer"
-                >
-                    {{ $isEnLoc ? 'RAB Cost:' : 'Estimasi RAB:' }} {{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }} ({{ $commercialQuotation['timeline_days'] ?? 0 }} {{ $isEnLoc ? 'Days' : 'Hari' }})
-                </button>
-            @endif
+            <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black">
+                {{ $isEnLoc ? 'CAUSAL CHAIN v7.0' : 'RANTAI KAUSAL v7.0' }}
+            </span>
 
-            <div class="flex items-center gap-1.5 px-2 py-0.5 border tabular-nums {{ $isZeroAssumptionReady ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700' : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700' }}">
+            <span class="text-zinc-700 dark:text-zinc-300 font-bold hidden md:inline">
+                {{ count($enterpriseMenuMatrix['v1_mvp_menus'] ?? []) }}/25 {{ $isEnLoc ? 'Menus' : 'Menu' }} &bull;
+                {{ count($tables) }} ULID PG16 &bull;
+                {{ $sopContract['role_count'] ?? 4 }} Role SOP
+            </span>
+
+            <div class="flex items-center gap-1.5 px-2 py-0.5 border {{ $isZeroAssumptionReady ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700' : 'bg-amber-100 text-amber-950 border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700' }}">
                 <span class="font-black">Determinism: {{ $detScore }}%</span>
                 <span>{{ $isZeroAssumptionReady ? 'Zero-Assumption ✅' : ($isEnLoc ? '⚠️ Gaps' : '⚠️ Celah Asumsi') }}</span>
                 @if(!empty($doctor['one_click_auto_fix']['has_fixes']))
                     <button
                         type="button"
                         wire:click="applyDoctorAutoFix"
-                        class="ml-1 px-1.5 py-0.2 bg-zinc-950 text-white dark:bg-amber-400 dark:text-zinc-950 font-black text-[10px] rounded-none cursor-pointer"
+                        class="ml-1 px-1.5 py-0.2 bg-zinc-950 text-white dark:bg-amber-400 dark:text-zinc-950 font-black rounded-none cursor-pointer"
                     >
                         {{ $isEnLoc ? '+ Auto Fix' : '+ Perbaiki Otomatis' }}
                     </button>
                 @endif
             </div>
 
+            @if($engagementMode === 'MITRA_TURNKEY_PROJECT')
+                <button
+                    type="button"
+                    wire:click="$set('centerTab', 'commercial_mitra')"
+                    class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 font-black cursor-pointer"
+                >
+                    {{ $isEnLoc ? 'RAB:' : 'RAB:' }} {{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }} ({{ $commercialQuotation['timeline_days'] ?? 0 }} {{ $isEnLoc ? 'Days' : 'Hari' }})
+                </button>
+            @endif
+
             @if(!empty($commercialQuotation['scope_hash_short']))
-                <span class="hidden xl:inline-flex items-center gap-1 text-zinc-500 dark:text-zinc-400 text-[10px]">
+                <span class="hidden 2xl:inline-flex items-center gap-1 text-zinc-500 dark:text-zinc-400">
                     <span>Scope Hash:</span>
                     <code class="font-black text-zinc-900 dark:text-emerald-400">{{ $commercialQuotation['scope_hash_short'] }}</code>
                 </span>
             @endif
         </div>
 
-        <!-- Right: Action Tools & Modal Triggers -->
+        <!-- Right: Action Tools, Notes & Freeze Button -->
         <div class="flex items-center gap-1.5 flex-wrap">
             <button
                 type="button"
                 wire:click="$set('showWizardModal', true)"
-                class="px-2.5 py-0.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-700 font-bold rounded-none cursor-pointer transition text-[10px]"
+                class="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-700 font-bold rounded-none cursor-pointer transition"
             >
                 ⚡ {{ $isEnLoc ? '60s Wizard' : 'Wizard 60 Detik' }}
             </button>
             <button
                 type="button"
                 wire:click="$set('showSlopDiffModal', true)"
-                class="px-2.5 py-0.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-700 font-bold rounded-none cursor-pointer transition text-[10px]"
+                class="px-2 py-0.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-950 border border-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-700 font-bold rounded-none cursor-pointer transition"
             >
                 ⚖️ {{ $isEnLoc ? 'Slop Diff' : 'Audit Slop' }}
             </button>
             <button
                 type="button"
                 wire:click="$set('rightDockMode', 'mcp_json')"
-                class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black rounded-none cursor-pointer transition text-[10px]"
+                class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black rounded-none cursor-pointer transition"
             >
                 🔌 {{ $isEnLoc ? 'Export / MCP' : 'Ekspor MCP' }}
             </button>
             <button
                 type="button"
                 wire:click="convertRetailToMitraRescue"
-                class="px-2.5 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-500 dark:bg-amber-950/90 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-600 font-black text-[10px] rounded-none cursor-pointer transition"
+                class="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-500 dark:bg-amber-950/90 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-600 font-black rounded-none cursor-pointer transition"
                 title="{{ $rescueCreditData['guarantee_summary'] ?? '' }}"
             >
-                🛟 {{ $isEnLoc ? 'Need Engineers? (100% DP Credit)' : 'Butuh Engineer? (Potong DP 100%)' }}
+                🛟 {{ $isEnLoc ? 'Need Engineers?' : 'Butuh Engineer?' }}
+            </button>
+
+            <!-- Action to Expand System Alerts Drawer -->
+            @if($hasAlerts)
+                <button
+                    type="button"
+                    @click="showSystemAlerts = !showSystemAlerts"
+                    class="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 dark:bg-amber-950 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-700 font-black rounded-none cursor-pointer transition flex items-center gap-1"
+                >
+                    <span>⚠️ {{ $isEnLoc ? 'Notes' : 'Catatan' }} ({{ $alertCount }})</span>
+                    <span x-text="showSystemAlerts ? '▲' : '▼'"></span>
+                </button>
+            @endif
+
+            <button
+                type="button"
+                wire:click="$set('centerTab', 'runtime_sop_v7')"
+                class="px-2 py-0.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black cursor-pointer hover:opacity-90"
+            >
+                {{ $isEnLoc ? '15 Pillars Freeze' : '15 Pilar Freeze' }} &rarr;
             </button>
         </div>
     </div>
-
-    <!-- =================================================================== -->
-    <!-- UNIFIED ARCHITECTURAL STATUS & ACTION RIBBON (PROGRESSIVE DISCLOSURE)-->
-    <!-- =================================================================== -->
-    @php
-        $hasAlerts = !empty($doctor['findings']) || !empty($enterpriseUpscaleAdvisor) || !empty($scopeParalysisGuard['execution_stages']);
-        $alertCount = (!empty($doctor['findings']) ? 1 : 0) + (!empty($enterpriseUpscaleAdvisor) ? 1 : 0) + (count($scopeParalysisGuard['execution_stages'] ?? []) > 0 ? 1 : 0);
-    @endphp
-    <div class="shrink-0 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-        <!-- Compact Summary Row -->
-        <div class="px-3 py-1 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] tabular-nums">
-            <div class="flex items-center gap-2 flex-wrap">
-                <span class="px-1.5 py-0.5 bg-zinc-950 text-white dark:bg-emerald-400 dark:text-zinc-950 font-black">
-                    {{ $isEnLoc ? 'CAUSAL CHAIN v7.0' : 'RANTAI KAUSAL v7.0' }}
-                </span>
-                <span class="text-zinc-800 dark:text-zinc-200 font-bold">
-                    {{ count($enterpriseMenuMatrix['v1_mvp_menus'] ?? []) }}/25 {{ $isEnLoc ? 'Menus' : 'Menu' }} &bull;
-                    {{ count($tables) }} ULID PG16 &bull;
-                    {{ $sopContract['role_count'] ?? 4 }} Role SOP &bull;
-                    <span class="text-emerald-800 dark:text-emerald-300 font-black">{{ $commercialQuotation['formatted_quotation_idr'] ?? 'Rp 0' }}</span>
-                    <span class="text-zinc-500">({{ $commercialQuotation['scope_hash_short'] ?? '-' }})</span>
-                </span>
-            </div>
-
-            <div class="flex items-center gap-1.5">
-                <!-- Action to Expand System Alerts Drawer -->
-                @if($hasAlerts)
-                    <button
-                        type="button"
-                        @click="showSystemAlerts = !showSystemAlerts"
-                        class="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 dark:bg-amber-950 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-700 font-black rounded-none cursor-pointer transition flex items-center gap-1"
-                    >
-                        <span>⚠️ {{ $isEnLoc ? 'Architecture Notes & Staged Execution' : 'Catatan Arsitektur & Tahap Eksekusi' }} ({{ $alertCount }})</span>
-                        <span x-text="showSystemAlerts ? '▲' : '▼'"></span>
-                    </button>
-                @endif
-                <button
-                    type="button"
-                    wire:click="$set('centerTab', 'runtime_sop_v7')"
-                    class="px-2 py-0.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-black cursor-pointer hover:opacity-90"
-                >
-                    {{ $isEnLoc ? '15 Pillars Freeze (100%)' : '15 Pilar Freeze (100%)' }} &rarr;
-                </button>
-            </div>
-        </div>
 
         <!-- Collapsible System Alerts & Staged Execution Drawer -->
         @if($hasAlerts)

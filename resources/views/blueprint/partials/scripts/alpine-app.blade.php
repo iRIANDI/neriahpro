@@ -2397,6 +2397,19 @@
                     const idx = order.indexOf(this.activeSectionId);
                     return idx >= 0 ? (idx + 1) : 1;
                 },
+                copyCoolifyEnv() {
+                    const ws = (this.workspaceDir && this.workspaceDir.trim()) || '{{ \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? "app", $blueprint) }}';
+                    const biz = '{{ addslashes($blueprint->nama_bisnis ?: ($blueprint->client_name ?? "Enterprise App")) }}';
+                    const envText = `APP_NAME="${biz}"\nAPP_ENV=production\nAPP_KEY=base64:GENERATE_KEY_VIA_ARTISAN\nAPP_DEBUG=false\nAPP_URL=https://app.domainanda.com\nCOOLIFY_URL=https://app.domainanda.com\n\nDB_CONNECTION=pgsql\nDB_HOST=postgres\nDB_PORT=5432\nDB_DATABASE=${ws}_db\nDB_USERNAME=${ws}_user\nDB_PASSWORD=GantiDenganPasswordSangatKuat123!\n\nCACHE_STORE=redis\nSESSION_DRIVER=redis\nQUEUE_CONNECTION=redis\nREDIS_HOST=redis\nREDIS_PORT=6379\n\nAI_THREAT_SHIELD_ENABLED=true`;
+                    navigator.clipboard.writeText(envText);
+                    if (window.showToast) {
+                        window.showToast({
+                            type: 'success',
+                            title: this.locale === 'en' ? 'COOLIFY ENV COPIED' : 'ENV COOLIFY DISALIN',
+                            message: this.locale === 'en' ? 'Environment variables ready to paste into Coolify dashboard.' : 'Environment variables siap dipaste ke dashboard Coolify.'
+                        });
+                    }
+                },
                 init() {
                     // Initialize Download Center Artifacts list & countdown ticker
                     this.fetchDownloadArtifacts();

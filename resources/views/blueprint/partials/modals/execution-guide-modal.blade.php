@@ -806,11 +806,7 @@ curl http://localhost:8000/api/health</pre>
                             </div>
                             <button 
                                 type="button" 
-                                @click="
-                                    const envText = `APP_NAME=\"${bizTitle}\"\nAPP_ENV=production\nAPP_KEY=base64:GENERATE_KEY_VIA_ARTISAN\nAPP_DEBUG=false\nAPP_URL=https://app.domainanda.com\nCOOLIFY_URL=https://app.domainanda.com\n\nDB_CONNECTION=pgsql\nDB_HOST=postgres\nDB_PORT=5432\nDB_DATABASE=${(workspaceDir || '{{ $shortSlugVal }}')}_db\nDB_USERNAME=${(workspaceDir || '{{ $shortSlugVal }}')}_user\nDB_PASSWORD=GantiDenganPasswordSangatKuat123!\n\nCACHE_STORE=redis\nSESSION_DRIVER=redis\nQUEUE_CONNECTION=redis\nREDIS_HOST=redis\nREDIS_PORT=6379\n\nAI_THREAT_SHIELD_ENABLED=true`;
-                                    navigator.clipboard.writeText(envText);
-                                    if(window.showToast) window.showToast({ type: 'success', title: 'ENV COOLIFY DISALIN', message: 'Environment variables siap dipaste ke dashboard Coolify.' });
-                                "
+                                @click="copyCoolifyEnv()"
                                 class="px-2 py-0.5 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-[10px] uppercase rounded-none cursor-pointer flex items-center gap-1"
                             >
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>

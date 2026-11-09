@@ -342,8 +342,8 @@
                             <span class="text-[9px] font-mono px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">CUSTOMIZABLE</span>
                         </div>
                         <p class="text-[11px] text-zinc-400 font-sans">
-                            <span x-show="locale === 'en'">Customize this folder name to match your local extracted directory (e.g. <code>htctranslator</code>). All terminal commands below will auto-update!</span>
-                            <span x-show="locale !== 'en'">Ubah nama folder ini sesuai folder hasil ekstrak di komputer Anda (misal <code>htctranslator</code>). Seluruh perintah terminal di bawah akan otomatis menyesuaikan!</span>
+                            <span x-show="locale === 'en'">Customize this folder name to match your local extracted directory (e.g. <code>my-app-workspace</code>). All terminal commands below will auto-update!</span>
+                            <span x-show="locale !== 'en'">Ubah nama folder ini sesuai folder hasil ekstrak di komputer Anda (misal <code>direktori-kerja-saya</code>). Seluruh perintah terminal di bawah akan otomatis menyesuaikan!</span>
                         </p>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
@@ -355,7 +355,8 @@
                                 @input="handleFolderInput($event)"
                                 @keydown.space.prevent="insertHyphen($event)"
                                 @blur="workspaceDir = (workspaceDir || '').replace(/^-+|-+$/g, '')"
-                                placeholder="{{ $shortSlugVal }}" 
+                                :placeholder="locale === 'en' ? 'e.g. my-app-workspace' : 'misal: direktori-kerja-saya'" 
+                                placeholder="{{ $isEn ? 'e.g. my-app-workspace' : 'misal: direktori-kerja-saya' }}" 
                                 style="padding-right: 28px;"
                                 class="pl-2.5 pr-7 py-1 bg-black border border-emerald-500 text-emerald-300 font-mono text-xs focus:ring-1 focus:ring-emerald-400 focus:outline-none w-40 sm:w-48 rounded-none font-bold placeholder:text-zinc-600 placeholder:font-normal"
                                 maxlength="36"

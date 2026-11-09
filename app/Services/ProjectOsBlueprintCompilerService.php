@@ -1963,6 +1963,22 @@ Anda dilarang keras menghasilkan desain "AI Slop" (tampilan template murahan, pe
 ## 7. Multi-Language Input Architecture (In-Place `TranslatableTabs`)
 - **HARAM Global Locale Dropdown (`LocaleSwitcher`) di Pojok Atas Halaman**:
   - Semua field dwibahasa JSON (`id`/`en`) wajib memakai `TranslatableTabs` langsung pada input terkait dengan tombol terjemah 1-klik dan auto-sync saat simpan (`HasTranslatableTabs`).
+
+## 8. Neutral, Informative Placeholders on Every Input with Tier 1 Bilingual Compliance
+- **Wajib Ada Placeholder Informatif di Setiap Elemen Input**:
+  - Setiap field input teks, search field, textarea, nomor telepon, dan URL WAJIB memiliki `placeholder` informatif untuk memandu pengguna tentang apa yang harus diisikan. Dilarang membiarkan input tanpa placeholder.
+- **HARAM Placeholder Berisi Nama Brand / Proyek Spesifik (Standar Netral)**:
+  - Dilarang keras menggunakan nama entitas dummy spesifik (seperti nama brand klien, slug proyek yang sedang diuji, atau data pribadi statis) sebagai teks placeholder.
+  - Placeholder wajib bersifat netral, generik, dan edukatif (misal: `misal: nama-folder-kerja` / `e.g. my-app-workspace`, `misal: cari nama pengguna...` / `e.g. search user name...`).
+- **Wajib Comply dengan Bahasa Tier 1 (ID & EN)**:
+  - Teks placeholder wajib dinamis mengikuti bahasa aktif pengguna:
+    - Di Alpine.js: `:placeholder="locale === 'en' ? 'e.g. my-workspace-folder' : 'misal: direktori-kerja-saya'"`
+    - Di Blade: `placeholder="{{ $isEn ? 'e.g. search records...' : 'misal: cari data...' }}"`
+    - Di React / JSX Islands: `placeholder={locale === 'en' ? 'e.g. enter workspace...' : 'misal: masukkan direktori...'}`
+    - Di Filament v5 Form Schema: `->placeholder(__('forms.fields.placeholder_key'))` atau callback dwibahasa dinamis.
+- **Pemisahan Tegas Placeholder vs Nilai Default (Default Value)**:
+  - Placeholder adalah petunjuk visual abu-abu (*visual hint*), BUKAN nilai default (`value`).
+  - Jika form memiliki nilai default (seperti default short slug), jelaskan nilai default tersebut di teks label/helper di bawah kotak input (misal `Kosong = default sistem: {slug}`), JANGAN masukkan ke atribut placeholder yang membuat pengguna mengira input sudah terisi.
 MD;
     }
 
@@ -2026,6 +2042,10 @@ MD;
 6. **Zero Dead Code & Exception Hygiene**:
    - Hapus unused imports (`use`), blok kode mati/berkomentar, dan dump debugging (`dd()`, `dump()`, `console.log()`).
    - Dilarang menelan exception secara diam-diam. Selalu catat via `Log::error()` dengan konteks array terstruktur.
+7. **Neutral & Tier 1 Bilingual Input Placeholders**:
+   - Seluruh input form, search box, dan textarea wajib memiliki atribut `placeholder` yang netral (dilarang mencantumkan nama brand/proyek spesifik sebagai placeholder).
+   - Wajib comply dengan dwi-bahasa Tier 1 (`locale === 'en' ? 'e.g. ...' : 'misal: ...'`).
+   - Dilarang menyematkan nilai default langsung ke atribut `placeholder`; pisahkan nilai default ke teks bantuan/helper terpisah.
 MD;
     }
 

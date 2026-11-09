@@ -43,8 +43,8 @@
                             <span class="px-1.5 py-0.2 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">AUTO-SANITIZED</span>
                         </div>
                         <p class="text-[10px] text-zinc-400 font-sans mt-0.5">
-                            <span x-show="locale === 'en'">Space auto-replaced by hyphen ("-"). Forbidden characters stripped. Empty = default (<code class="text-emerald-400 font-mono">{{ $shortSlugVal }}</code>).</span>
-                            <span x-show="locale !== 'en'">Spasi otomatis jadi tanda minus ("-"). Karakter dilarang dieliminasi otomatis. Kosong = default (<code class="text-emerald-400 font-mono">{{ $shortSlugVal }}</code>).</span>
+                            <span x-show="locale === 'en'">Space auto-replaced by hyphen ("-"). Forbidden characters stripped. Empty = default system slug (<code class="text-emerald-400 font-mono">{{ $shortSlugVal }}</code>).</span>
+                            <span x-show="locale !== 'en'">Spasi otomatis jadi tanda minus ("-"). Karakter dilarang dieliminasi otomatis. Kosong = default slug sistem (<code class="text-emerald-400 font-mono">{{ $shortSlugVal }}</code>).</span>
                         </p>
                     </div>
                 </div>
@@ -58,7 +58,8 @@
                             @input="handleFolderInput($event)"
                             @keydown.space.prevent="insertHyphen($event)"
                             @blur="workspaceDir = (workspaceDir || '').replace(/^-+|-+$/g, '')"
-                            placeholder="{{ $shortSlugVal }}" 
+                            :placeholder="locale === 'en' ? 'e.g. my-app-workspace' : 'misal: direktori-kerja-saya'" 
+                            placeholder="{{ $isEn ? 'e.g. my-app-workspace' : 'misal: direktori-kerja-saya' }}" 
                             style="padding-right: 28px;"
                             class="pl-2.5 pr-7 py-1.5 bg-zinc-950 border border-emerald-500 text-emerald-300 font-mono text-xs focus:ring-1 focus:ring-emerald-400 focus:outline-none w-44 sm:w-56 rounded-none font-bold tracking-wide placeholder:text-zinc-600 placeholder:font-normal"
                             maxlength="36"
@@ -379,7 +380,8 @@
                             x-model="scaffoldFiles[scaffoldActiveTab]"
                             @input="onScaffoldCodeInput()"
                             @keydown.tab.prevent="insertTabInEditor($event)"
-                            placeholder="Tulis atau elaborasi spesifikasi scaffold kode di sini... Perubahan akan otomatis tersimpan dalam 1 detik."
+                            :placeholder="locale === 'en' ? 'Write or elaborate scaffold code specifications here... Changes auto-save within 1 second.' : 'Tulis atau elaborasi spesifikasi scaffold kode di sini... Perubahan akan otomatis tersimpan dalam 1 detik.'"
+                            placeholder="{{ $isEn ? 'Write or elaborate scaffold code specifications here... Changes auto-save within 1 second.' : 'Tulis atau elaborasi spesifikasi scaffold kode di sini... Perubahan akan otomatis tersimpan dalam 1 detik.' }}"
                         ></textarea>
                         <div class="absolute bottom-2 right-4 pointer-events-none text-[9px] text-zinc-500 bg-zinc-950/90 px-2 py-0.5 border border-zinc-800">
                             TAB = 4 SPASI &bull; AUTO-SAVE 1000ms

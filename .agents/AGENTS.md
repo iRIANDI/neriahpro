@@ -148,6 +148,22 @@ After completing any task, you MUST always suggest which deployment script numbe
   - Setiap Page `CreateRecord` dan `EditRecord` untuk model translatable wajib menggunakan trait `App\Filament\Concerns\HasTranslatableTabs`.
   - Jika admin sedang buru-buru dan hanya mengisi tab Indonesia lalu menekan tombol Simpan, sistem secara otomatis menerjemahkan teks tersebut ke Bahasa Inggris di latar belakang sebelum disimpan ke database, sehingga data publik tidak pernah kosong.
 
+# Mandatory Rule: Neutral, Informative Placeholders on Every Input with Tier 1 Bilingual Compliance
+- 🏷️ **MANDATORY PLACEHOLDER ON EVERY INPUT FIELD**:
+  - Setiap field input teks, search field, textarea, input numerik, dan kotak filter WAJIB memiliki atribut `placeholder` yang jelas dan edukatif untuk memandu pengguna tentang apa yang harus diisikan. Dilarang keras membiarkan input tanpa placeholder.
+- 🚫 **HARAM PLACEHOLDER SPESIFIK NAMA BRAND / PROYEK / DEMO ENTITY (STANDAR NETRAL)**:
+  - DILARANG KERAS menggunakan nama entitas spesifik, dummy company, nama proyek yang sedang diuji (seperti `htctranslator`, `apex-logistics`), atau identitas orang tertentu sebagai teks placeholder.
+  - Teks placeholder WAJIB bersifat **netral, generik, dan informatif** (contoh: `misal: direktori-kerja-saya` / `e.g. my-app-workspace`, `misal: nama-proyek-baru` / `e.g. my-new-project`, `misal: cari nama pengguna atau kode booking...` / `e.g. search user name or booking code...`).
+- 🌐 **100% TIER 1 DUAL-LOCALE COMPLIANCE (ID & EN)**:
+  - Setiap teks placeholder WAJIB bilingual dan bereaksi secara realtime terhadap bahasa aktif pengguna:
+    - Di Alpine.js: `:placeholder="locale === 'en' ? 'e.g. my-app-workspace' : 'misal: direktori-kerja-saya'"`
+    - Di Blade View: `placeholder="{{ $isEn ? 'e.g. search records...' : 'misal: cari data...' }}"`
+    - Di React / JSX Islands: `placeholder={locale === 'en' ? 'e.g. enter workspace...' : 'misal: masukkan direktori...'}`
+    - Di Filament v5 Form Schema: `->placeholder(__('forms.fields.generic_example'))` atau closure dwibahasa.
+- ⚖️ **STRICT SEPARATION: PLACEHOLDER VS DEFAULT VALUE**:
+  - Placeholder adalah petunjuk visual abu-abu (*visual hint/cue*), BUKAN nilai bawaan (`value`).
+  - Jika sistem menyediakan nilai default (seperti default short slug), tampilkan nilai default tersebut pada teks helper/label di bawah input (contoh: `Kosong = default sistem: {slug}`), JANGAN menyematkan nilai default langsung ke atribut `placeholder` karena akan membingungkan pengguna seolah-olah input tersebut sudah terisi.
+
 
 # Mandatory Rule: Country Zone Dialing Code Standard
 - 📞 **COUNTRY ZONE INPUTS**: Setiap membuat input nomor telepon atau WhatsApp, WAJIB menggunakan country code dropdown yang bisa di-search (`config/country_zones.php`, e.g. +62, +65, +1, +44, +81) untuk menegakkan standar E.164 internasional dan mengeliminasi nomor telepon tidak valid.

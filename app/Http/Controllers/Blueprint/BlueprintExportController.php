@@ -361,6 +361,9 @@ class BlueprintExportController extends Controller
         }
 
         if ($format === 'audit-exporter') {
+            if ($tier === 'FREE_SANDBOX') {
+                abort(403, 'Akses Ditolak: Source code ExportFilteredAuditExcelAction eksklusif untuk lisensi berbayar (Retail Pro/Ultimate atau Mitra Turnkey).');
+            }
             $exporterCode = @file_get_contents(app_path('Actions/Audit/ExportFilteredAuditExcelAction.php')) ?: '';
 
             return response($exporterCode, 200, [
@@ -407,11 +410,15 @@ class BlueprintExportController extends Controller
                 'PRINT_THERMAL_AND_A4_CONTRACT.md',
             ],
             'day2-ops' => [
-                ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($univSchema),
+                $tier === 'FREE_SANDBOX'
+                    ? abort(403, 'Akses Ditolak: Runbook Operasi Day-2 & Disaster Recovery eksklusif untuk lisensi Retail Pro / Ultimate.')
+                    : ProjectOsBlueprintCompilerService::renderDayTwoOpsMarkdown($univSchema),
                 'DAY2_OPERATIONS_AND_SECURITY.md',
             ],
             'decision-tables' => [
-                ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($univSchema),
+                $tier === 'FREE_SANDBOX'
+                    ? abort(403, 'Akses Ditolak: Tabel Keputusan Bisnis Eksklusif untuk lisensi Retail Pro / Ultimate.')
+                    : ProjectOsBlueprintCompilerService::renderDecisionTablesMarkdown($univSchema),
                 'DECISION_TABLES_CONTRACT.md',
             ],
             'syntax-lock' => [
@@ -437,11 +444,15 @@ class BlueprintExportController extends Controller
                 'pg16_range_partitioning.sql',
             ],
             'mysql-ddl' => [
-                ScaffoldGeneratorService::generateDatabaseMigrationsMySql($blueprint, $prd['database_schema'] ?? []),
+                $tier === 'FREE_SANDBOX'
+                    ? ScaffoldGeneratorService::generateDatabaseMigrationsMySql($blueprint, array_slice($prd['database_schema'] ?? [], 0, 2))
+                    : ScaffoldGeneratorService::generateDatabaseMigrationsMySql($blueprint, $prd['database_schema'] ?? []),
                 'mysql_migrations.sql',
             ],
             'pg-ddl' => [
-                ScaffoldGeneratorService::generateDatabaseMigrationsSql($blueprint, $prd['database_schema'] ?? []),
+                $tier === 'FREE_SANDBOX'
+                    ? ScaffoldGeneratorService::generateDatabaseMigrationsSql($blueprint, array_slice($prd['database_schema'] ?? [], 0, 2))
+                    : ScaffoldGeneratorService::generateDatabaseMigrationsSql($blueprint, $prd['database_schema'] ?? []),
                 'postgresql_migrations.sql',
             ],
             'env-blueprint' => [

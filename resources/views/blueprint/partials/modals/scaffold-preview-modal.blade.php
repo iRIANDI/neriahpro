@@ -51,7 +51,7 @@
 
                 <div class="flex items-center gap-1.5 shrink-0 font-mono text-xs">
                     <span class="text-zinc-500 text-[11px] hidden md:inline">C:\projects\</span>
-                    <div class="relative flex items-center">
+                    <div class="relative inline-flex items-center" style="position: relative; display: inline-flex; align-items: center;">
                         <input 
                             type="text" 
                             :value="workspaceDir"
@@ -59,7 +59,8 @@
                             @keydown.space.prevent="insertHyphen($event)"
                             @blur="workspaceDir = (workspaceDir || '').replace(/^-+|-+$/g, '')"
                             placeholder="{{ $shortSlugVal }}" 
-                            class="px-2.5 py-1.5 bg-zinc-950 border border-emerald-500 text-emerald-300 font-mono text-xs focus:ring-1 focus:ring-emerald-400 focus:outline-none w-44 sm:w-56 rounded-none font-bold tracking-wide placeholder:text-zinc-600 placeholder:font-normal"
+                            style="padding-right: 28px;"
+                            class="pl-2.5 pr-7 py-1.5 bg-zinc-950 border border-emerald-500 text-emerald-300 font-mono text-xs focus:ring-1 focus:ring-emerald-400 focus:outline-none w-44 sm:w-56 rounded-none font-bold tracking-wide placeholder:text-zinc-600 placeholder:font-normal"
                             maxlength="36"
                         />
                         <button 
@@ -67,7 +68,8 @@
                             x-show="workspaceDir" 
                             @click="setWorkspaceDir('')" 
                             title="Kosongkan (kembali ke default)"
-                            class="absolute right-1.5 text-zinc-400 hover:text-white text-sm px-1 cursor-pointer font-bold"
+                            style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 20; display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: transparent; border: none; line-height: 1;"
+                            class="text-zinc-400 hover:text-emerald-400 text-base cursor-pointer font-black transition-colors select-none"
                         >
                             &times;
                         </button>

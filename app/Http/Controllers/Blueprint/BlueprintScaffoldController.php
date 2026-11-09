@@ -450,6 +450,29 @@ class BlueprintScaffoldController extends Controller
             'locale' => 'nullable|string|in:id,en',
         ]);
 
+        $gateService = app(\App\Services\Entitlement\BlueprintEntitlementGateService::class);
+        $tier = $gateService->resolveUserTier(Auth::user(), $blueprint->slug);
+        if ($tier === 'FREE_SANDBOX') {
+            $proprietaryFiles = [
+                'tests/Feature/ApiContractTest.php',
+                'tests/e2e/critical-flows.spec.ts',
+                'database/seeders/SyntheticDataSeeder.php',
+                'app/Http/Controllers/HealthProbeController.php',
+                'deploy.sh',
+                '.github/workflows/deploy.yml',
+                'scripts/backup.sh',
+                'scripts/restore.sh',
+                'docs/runbooks/disaster-recovery.md',
+                'docs/disaster-recovery-runbook.md',
+            ];
+            if (in_array($validated['filename'], $proprietaryFiles, true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akses Ditolak: Pendalaman berkas produksi ini eksklusif untuk lisensi Retail Pro / Ultimate atau Proyek Mitra Turnkey.',
+                ], 403);
+            }
+        }
+
         try {
             $locale = $validated['locale'] ?? ($request->header('X-Locale') ?: app()->getLocale());
             $refinementService = app(BlueprintRefinementService::class);

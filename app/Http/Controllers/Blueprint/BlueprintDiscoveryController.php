@@ -862,7 +862,7 @@ class BlueprintDiscoveryController extends Controller
             ],
             'enterprise_menu_matrix' => $schema['enterprise_menu_matrix'] ?? [],
             'topological_dag_plan' => $schema['topological_dag_plan'] ?? [],
-            'symbol_manifest' => $schema['symbol_manifest'] ?? [],
+            'symbol_manifest' => app(\App\Services\Entitlement\BlueprintEntitlementGateService::class)->filterSymbolManifestForTier($schema['symbol_manifest'] ?? [], 'FREE_SANDBOX'),
             'sub_chunked_prompts' => array_values(array_map(fn (array $sp): array => [
                 'part_code' => $sp['part_code'],
                 'major_phase' => $sp['major_phase'],

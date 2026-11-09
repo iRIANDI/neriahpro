@@ -261,6 +261,44 @@ final class BlueprintEntitlementGateService
         foreach ($files as $filePath => $content) {
             if (in_array($filePath, $proprietaryPatterns, true)) {
                 $files[$filePath] = $lockedPlaceholder;
+            } elseif ($filePath === 'schema_complete.sql' || $filePath === 'database/migrations/schema_complete.sql') {
+                // On FREE_SANDBOX, show only the foundation tables preview (users + first core entity) with an upgrade banner
+                $tables = explode('CREATE TABLE IF NOT EXISTS ', (string) $content);
+                if (count($tables) > 3) {
+                    $previewTables = array_slice($tables, 0, 3);
+                    $remainingCount = count($tables) - 3;
+                    $teaser = $isEn
+                        ? "\n\n-- =============================================================================\n"
+                            . "-- [LOCKED IN FREE SANDBOX — ZERO-LEAK SERVER-SIDE GATE]\n"
+                            . "-- Remainder of production schema ({$remainingCount} additional domain tables, audit chains, & foreign keys) is locked.\n"
+                            . "-- Upgrade your license to Retail Pro / Ultimate or Mitra Turnkey to unlock full production PostgreSQL 16 DDL.\n"
+                            . "-- =============================================================================\n"
+                        : "\n\n-- =============================================================================\n"
+                            . "-- [TERKUNCI PADA SANDBOX GRATIS — ZERO-LEAK SERVER-SIDE GATE]\n"
+                            . "-- Sisa skema database produksi ({$remainingCount} tabel domain tambahan, audit chains, & foreign keys) terkunci.\n"
+                            . "-- Upgrade lisensi ke Retail Pro / Ultimate atau Proyek Mitra Turnkey untuk membuka DDL PostgreSQL 16 lengkap.\n"
+                            . "-- =============================================================================\n";
+                    $files[$filePath] = implode('CREATE TABLE IF NOT EXISTS ', $previewTables) . $teaser;
+                }
+            } elseif ($filePath === 'openapi.json') {
+                // On FREE_SANDBOX, preview only foundational endpoints
+                $decoded = json_decode((string) $content, true);
+                if (is_array($decoded) && isset($decoded['paths']) && count($decoded['paths']) > 3) {
+                    $keys = array_keys($decoded['paths']);
+                    $allowedKeys = array_slice($keys, 0, 3);
+                    $filteredPaths = [];
+                    foreach ($allowedKeys as $k) {
+                        $filteredPaths[$k] = $decoded['paths'][$k];
+                    }
+                    $filteredPaths['/api/v1/proprietary-business-logic-locked'] = [
+                        'get' => [
+                            'summary' => $isEn ? '[LOCKED IN FREE SANDBOX] Full CRUD & Business Logic Endpoints' : '[TERKUNCI PADA SANDBOX GRATIS] Endpoint Bisnis & CRUD Lengkap',
+                            'description' => $isEn ? 'Upgrade to Retail Pro or Turnkey to unlock full OpenAPI 3.0 specification.' : 'Upgrade ke Retail Pro atau Mitra Turnkey untuk membuka spesifikasi OpenAPI 3.0 lengkap.',
+                        ]
+                    ];
+                    $decoded['paths'] = $filteredPaths;
+                    $files[$filePath] = (string) json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+                }
             }
         }
 

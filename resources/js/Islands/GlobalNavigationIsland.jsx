@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Cpu, 
@@ -46,6 +46,29 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalTab, setAuthModalTab] = useState('login'); // 'login' | 'register'
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  // Dynamic Header Height Tracking for Zero-Gap & Sticky Synchronization
+  const headerRef = useRef(null);
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        const height = Math.round(headerRef.current.getBoundingClientRect().height);
+        if (height > 0) {
+          document.documentElement.style.setProperty('--global-nav-h', `${height}px`);
+        }
+      }
+    };
+    updateHeaderHeight();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateHeaderHeight) : null;
+    if (ro && headerRef.current) {
+      ro.observe(headerRef.current);
+    }
+    window.addEventListener('resize', updateHeaderHeight);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', updateHeaderHeight);
+    };
+  }, []);
 
   const csrfToken = typeof document !== 'undefined' 
     ? document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
@@ -217,8 +240,12 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
   return (
     <>
-      <div className="h-[96px] sm:h-[104px] lg:h-[108px] w-full shrink-0" aria-hidden="true"></div>
-      <header className="fixed top-0 w-full z-50 transition-colors font-sans">
+      <div 
+        className="w-full shrink-0 transition-none" 
+        style={{ height: 'var(--global-nav-h, 88px)' }} 
+        aria-hidden="true"
+      />
+      <header ref={headerRef} className="fixed top-0 w-full z-50 transition-colors font-sans">
       
       {/* 1. TOP ANNOUNCEMENT BAR (HIGH RETENTION & SHAREABLE ALERT) */}
       <div className="bg-zinc-900 border-b border-zinc-800 text-zinc-300 py-1.5 px-4 text-xs font-mono flex items-center justify-between">
@@ -250,8 +277,8 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
       <nav 
         className={`w-full transition-all duration-200 border-b ${
           scrolled 
-            ? 'bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-zinc-200 dark:border-zinc-800 py-2.5 shadow-xs' 
-            : 'bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 py-3 sm:py-3.5'
+            ? 'bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-zinc-200 dark:border-zinc-800 py-2.5 sm:py-3 shadow-xs' 
+            : 'bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 py-2.5 sm:py-3'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">

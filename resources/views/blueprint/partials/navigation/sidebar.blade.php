@@ -1,8 +1,8 @@
             <aside 
                 x-show="navMode === 'sidebar'"
                 x-cloak
-                class="w-72 xl:w-80 shrink-0 hidden xl:flex flex-col sticky z-20 font-mono shadow-sm no-print bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-none overflow-hidden"
-                style="top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 48px) + 16px); max-height: calc(100vh - var(--global-nav-h, 88px) - var(--toolbar-h, 48px) - 32px);"
+                class="w-72 xl:w-80 shrink-0 hidden xl:flex flex-col sticky z-30 font-mono shadow-sm no-print bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 rounded-none overflow-hidden"
+                style="top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 46px) + 12px); max-height: calc(100vh - var(--global-nav-h, 88px) - var(--toolbar-h, 46px) - 24px);"
                 x-on:wheel.passive="(e) => {
                     const scrollEl = $el.querySelector('.custom-prd-scrollbar');
                     if (scrollEl && !scrollEl.contains(e.target)) {

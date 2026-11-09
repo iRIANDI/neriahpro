@@ -1,6 +1,35 @@
     <!-- Alpine.js & Mermaid UMD Bundle (Local Vendor JS) -->
     <script defer src="{{ asset('js/vendor/alpine.min.js') }}"></script>
     <script src="{{ asset('js/vendor/mermaid.min.js') }}"></script>
+    <script>
+        // Dynamic Viewport & Sticky Navigation Synchronization
+        function syncNavMetrics() {
+            try {
+                const header = document.querySelector('header.fixed');
+                if (header) {
+                    const h = Math.round(header.getBoundingClientRect().height);
+                    if (h > 0) {
+                        document.documentElement.style.setProperty('--global-nav-h', h + 'px');
+                    }
+                }
+                const toolbar = document.getElementById('blueprint-toolbar');
+                if (toolbar) {
+                    const th = Math.round(toolbar.getBoundingClientRect().height);
+                    if (th > 0) {
+                        document.documentElement.style.setProperty('--toolbar-h', th + 'px');
+                    }
+                }
+            } catch (e) {}
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', syncNavMetrics);
+        } else {
+            syncNavMetrics();
+        }
+        window.addEventListener('load', syncNavMetrics);
+        window.addEventListener('resize', syncNavMetrics);
+        window.addEventListener('scroll', syncNavMetrics, { passive: true });
+    </script>
     <!-- Midtrans Snap JS (In-Page Popup Modal) -->
     <script src="{{ config('midtrans.snap_url', 'https://app.sandbox.midtrans.com/snap/snap.js') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
     <script>

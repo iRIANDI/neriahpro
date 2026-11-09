@@ -1,15 +1,10 @@
     <style>
         :root {
             --global-nav-h: 88px;
-            --toolbar-h: 48px;
-        }
-        @media (min-width: 640px) {
-            :root {
-                --global-nav-h: 96px;
-            }
+            --toolbar-h: 46px;
         }
         .prd-scroll-target {
-            scroll-margin-top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 48px) + 16px) !important;
+            scroll-margin-top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 46px) + 16px) !important;
         }
         [x-cloak] { display: none !important; }
         .goog-te-banner-frame { display: none !important; }

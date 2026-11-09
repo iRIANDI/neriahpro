@@ -1,5 +1,5 @@
     <header id="blueprint-toolbar" 
-            class="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 py-1.5 px-2 sm:px-4 lg:px-6 sticky z-40 no-print transition-all shadow-xs mt-0 mb-4 w-full max-w-full overflow-hidden"
+            class="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 py-1.5 px-2 sm:px-4 lg:px-6 sticky z-40 no-print transition-all shadow-xs mt-0 mb-0 w-full max-w-full overflow-x-clip"
             style="top: var(--global-nav-h, 88px);">
         <div class="w-full max-w-[1700px] mx-auto overflow-x-auto no-scrollbar overscroll-x-contain">
             <div class="flex items-center justify-between min-w-max gap-2 sm:gap-2.5 py-0.5 pr-6 sm:pr-8">

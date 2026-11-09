@@ -236,6 +236,29 @@ class BlueprintViewController extends Controller
                 }
             }
 
+            // 4. Auto-heal legacy velocity tiers containing "Gemini Ultra" / "Swarm" or outdated labels
+            if (!empty($prd['itemized_cost_breakdown']['velocity_tiers'])) {
+                $hasStaleVelocity = false;
+                foreach ($prd['itemized_cost_breakdown']['velocity_tiers'] as $vt) {
+                    $vtName = strtolower($vt['name'] ?? '');
+                    $vtBadge = strtolower($vt['badge'] ?? '');
+                    $vtFormula = strtolower($vt['cost_formula'] ?? '');
+                    if (str_contains($vtName, 'swarm') || str_contains($vtName, 'gemini') || str_contains($vtBadge, 'ultra_swarm') || str_contains($vtFormula, 'swarm')) {
+                        $hasStaleVelocity = true;
+                        break;
+                    }
+                }
+                if ($hasStaleVelocity) {
+                    $baseSub = (float)($prd['itemized_cost_breakdown']['base_subtotal'] ?? 0);
+                    $prd['itemized_cost_breakdown']['velocity_tiers'] = \App\Services\Prd\PrdCommercialEstimatorService::normalizeVelocityTiers(
+                        $prd['itemized_cost_breakdown']['velocity_tiers'],
+                        $baseSub,
+                        $isEn
+                    );
+                    $needsPrdSave = true;
+                }
+            }
+
             if ($needsPrdSave) {
                 $blueprint->update(['prd_content' => $prd]);
                 $blueprint->refresh();
@@ -243,6 +266,14 @@ class BlueprintViewController extends Controller
         }
 
         $viewPrd = $blueprint->prd_content ?? [];
+        if (!empty($viewPrd['itemized_cost_breakdown']['velocity_tiers'])) {
+            $baseSub = (float)($viewPrd['itemized_cost_breakdown']['base_subtotal'] ?? 0);
+            $viewPrd['itemized_cost_breakdown']['velocity_tiers'] = \App\Services\Prd\PrdCommercialEstimatorService::normalizeVelocityTiers(
+                $viewPrd['itemized_cost_breakdown']['velocity_tiers'],
+                $baseSub,
+                $isEn
+            );
+        }
         if (!empty($viewPrd['engineering_specs']['mvp_specs']) && is_array($viewPrd['engineering_specs']['mvp_specs'])) {
             foreach ($viewPrd['engineering_specs']['mvp_specs'] as &$vSpec) {
                 if (isset($vSpec['acceptance_criteria'])) {

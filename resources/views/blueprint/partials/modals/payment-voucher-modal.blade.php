@@ -51,7 +51,7 @@
                     </div>
                     <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
                         <span><span x-show="locale === 'en'">Signed Contract Tier</span><span x-show="locale !== 'en'">Paket Kontrak Sah</span></span>
-                        <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="tierAmounts[selectedTier]?.name || '{{ $contractDocModal->title }}'"></span>
+                        <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="(locale === 'en' ? tierAmounts[selectedTier]?.name_en : tierAmounts[selectedTier]?.name_id) || tierAmounts[selectedTier]?.name || '{{ $contractDocModal->title }}'"></span>
                     </div>
                     <div class="flex justify-between items-baseline text-zinc-600 dark:text-zinc-400">
                         <span><span x-show="locale === 'en'">Total Contract Value</span><span x-show="locale !== 'en'">Nilai Total Kontrak</span></span>
@@ -74,7 +74,7 @@
                 @else
                     <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
                         <span><span x-show="locale === 'en'">Selected Velocity Option</span><span x-show="locale !== 'en'">Opsi Velocity Terpilih</span></span>
-                        <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="tierAmounts[selectedTier]?.name || 'Standard Velocity'"></span>
+                        <span class="font-bold text-zinc-900 dark:text-zinc-100" x-text="(locale === 'en' ? tierAmounts[selectedTier]?.name_en : tierAmounts[selectedTier]?.name_id) || tierAmounts[selectedTier]?.name || 'Standard Velocity'"></span>
                     </div>
                     <div class="flex justify-between items-baseline text-zinc-600 dark:text-zinc-400">
                         <span><span x-show="locale === 'en'">Total Contract Value</span><span x-show="locale !== 'en'">Nilai Total Kontrak</span></span>

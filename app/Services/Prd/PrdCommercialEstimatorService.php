@@ -993,8 +993,17 @@ class PrdCommercialEstimatorService
      */
     public static function getPrimaryVelocityTiers(VisionBlueprint $blueprint): array
     {
-        // 1. If itemized breakdown has velocity tiers, use it directly (guarantees 100% mathematical harmony with the itemized scope table)
+        $isEn = (request()->query('locale') === 'en') 
+            || (request()->query('lang') === 'en')
+            || (request()->cookie('neriah_locale') === 'en')
+            || (session('locale') === 'en')
+            || (($blueprint->user_metadata['output_locale'] ?? '') === 'en')
+            || (app()->getLocale() === 'en');
+
         $itemized = $blueprint->prd_content['itemized_cost_breakdown'] ?? null;
+        $baseSubtotal = (float)($itemized['base_subtotal'] ?? 0);
+
+        // 1. If itemized breakdown has velocity tiers, use it with guaranteed normalization & sanitization
         if (!empty($itemized['velocity_tiers']) && is_array($itemized['velocity_tiers'])) {
             $tiers = array_values($itemized['velocity_tiers']);
             $existingContract = $blueprint->getContractDocument();
@@ -1005,22 +1014,22 @@ class PrdCommercialEstimatorService
                         $t['contract_amount'] = $cAmount;
                         $t['dp_amount'] = (float)($existingContract->dp_amount ?: ($cAmount * 0.50));
                         $t['pelunasan_amount'] = $t['contract_amount'] - $t['dp_amount'];
-                        $t['cost_formula'] = 'Base Scope (Rp ' . number_format($itemized['base_subtotal'] ?? 0, 0, ',', '.') . ') + Sewa Swarm AI Ultra Cluster (Rp ' . number_format(max(0, $cAmount - ($itemized['base_subtotal'] ?? 0)), 0, ',', '.') . ')';
                     }
                 }
             }
-            return $tiers;
+            return self::normalizeVelocityTiers($tiers, $baseSubtotal, $isEn);
         }
 
         // 2. Fresh calculate itemized estimation
-        $fresh = self::calculateItemizedEstimation($blueprint);
+        $fresh = self::calculateItemizedEstimation($blueprint, [], $isEn);
         if (!empty($fresh['velocity_tiers']) && is_array($fresh['velocity_tiers'])) {
-            return array_values($fresh['velocity_tiers']);
+            $freshSubtotal = (float)($fresh['base_subtotal'] ?? $baseSubtotal);
+            return self::normalizeVelocityTiers(array_values($fresh['velocity_tiers']), $freshSubtotal, $isEn);
         }
 
         // 3. Fallback if stored in prd_content['velocity_pricing_options'] and non-empty
         if (!empty($blueprint->prd_content['velocity_pricing_options']) && is_array($blueprint->prd_content['velocity_pricing_options'])) {
-            return array_values($blueprint->prd_content['velocity_pricing_options']);
+            return self::normalizeVelocityTiers(array_values($blueprint->prd_content['velocity_pricing_options']), $baseSubtotal, $isEn);
         }
 
         // 4. Derive from blueprint budget and context
@@ -1035,10 +1044,142 @@ class PrdCommercialEstimatorService
         );
 
         if (!empty($generated)) {
-            return $generated;
+            return self::normalizeVelocityTiers($generated, $baseSubtotal, $isEn);
         }
 
         return [];
+    }
+
+    /**
+     * Normalize, sanitize, and provide Tier 1 bilingual fields for velocity pricing tiers.
+     * Guarantees that legacy or cached "Gemini Ultra" / "Swarm AI" text is dynamically rewritten
+     * into professional enterprise engineering squad metrics.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function normalizeVelocityTiers(array $tiers, float $baseSubtotal = 0, bool $isEn = false): array
+    {
+        $normalized = [];
+        $subtotal = $baseSubtotal > 0 ? $baseSubtotal : 54500000;
+
+        foreach ($tiers as $idx => $t) {
+            $id = $t['id'] ?? '';
+            $name = strtolower($t['name'] ?? '');
+            $contractAmount = (float)($t['contract_amount'] ?? 0);
+            $dpAmount = (float)($t['dp_amount'] ?? ($contractAmount * 0.5));
+            $pelunasan = max(0, $contractAmount - $dpAmount);
+            $extra = max(0, $contractAmount - $subtotal);
+
+            if ($id === 'fast_track' || str_contains($name, 'fast') || str_contains($name, 'swarm') || str_contains($name, 'accelerat')) {
+                $t['id'] = 'fast_track';
+                $t['name_id'] = 'Accelerated Dedicated Squad (14 Hari Kerja)';
+                $t['name_en'] = 'Accelerated Dedicated Squad (14 Business Days)';
+                $t['name'] = $isEn ? $t['name_en'] : $t['name_id'];
+                $t['badge_id'] = 'RECOMMENDED // DEDICATED_SQUAD';
+                $t['badge_en'] = 'RECOMMENDED // DEDICATED_SQUAD';
+                $t['badge'] = 'RECOMMENDED // DEDICATED_SQUAD';
+                $t['duration_id'] = '14 Hari Kerja';
+                $t['duration_en'] = '14 Business Days';
+                $t['duration'] = $isEn ? $t['duration_en'] : $t['duration_id'];
+                $t['speed_multiplier_id'] = '1.5x (Akselerasi 2 Pekan)';
+                $t['speed_multiplier_en'] = '1.5x (2-Week Acceleration)';
+                $t['speed_multiplier'] = $isEn ? $t['speed_multiplier_en'] : $t['speed_multiplier_id'];
+                $t['cost_formula_id'] = 'Base Scope (Rp ' . number_format($subtotal, 0, ',', '.') . ') + Dedicated Senior Squad & Akselerasi Paralel (Rp ' . number_format($extra, 0, ',', '.') . ')';
+                $t['cost_formula_en'] = 'Base Scope (Rp ' . number_format($subtotal, 0, ',', '.') . ') + Dedicated Senior Squad & Dual-Track Acceleration (Rp ' . number_format($extra, 0, ',', '.') . ')';
+                $t['cost_formula'] = $isEn ? $t['cost_formula_en'] : $t['cost_formula_id'];
+                $t['squad_allocation_id'] = 'Lead Architect + 2 Dedicated Senior Fullstack Engineers';
+                $t['squad_allocation_en'] = 'Lead Architect + 2 Dedicated Senior Fullstack Engineers';
+                $t['squad_allocation'] = $isEn ? $t['squad_allocation_en'] : $t['squad_allocation_id'];
+                $t['ai_quota_spec_id'] = 'Dual-Track Concurrent Architecture (Paralelisasi Frontend Island & Backend DB Sprints)';
+                $t['ai_quota_spec_en'] = 'Dual-Track Concurrent Architecture (Simultaneous Frontend & Backend Sprints)';
+                $t['ai_quota_spec'] = $isEn ? $t['ai_quota_spec_en'] : $t['ai_quota_spec_id'];
+                $t['ai_swarm_specs_id'] = [
+                    'Seluruh cakupan rincian fitur paket Standard',
+                    'Paralelisasi Frontend Island & Backend DB Migration serentak (Dual-Track Sprints)',
+                    'Alokasi eksklusif Senior Engineers tanpa distraksi antrean proyek lain',
+                    'Prioritas Review dan Deploy Staging otomatis setiap akhir sprint',
+                ];
+                $t['ai_swarm_specs_en'] = [
+                    'All feature specifications included in Standard tier',
+                    'Parallelized Frontend Island & Backend DB Migration simultaneously (Dual-Track Sprints)',
+                    'Dedicated Senior Engineers exclusively assigned with zero client-queue delay',
+                    'Priority Code Review and automated Staging deployment at each sprint end',
+                ];
+                $t['ai_swarm_specs'] = $isEn ? $t['ai_swarm_specs_en'] : $t['ai_swarm_specs_id'];
+            } elseif ($id === 'hyper_sprint' || str_contains($name, 'hyper') || str_contains($name, 'war_room') || str_contains($name, 'emergency') || str_contains($name, 'top_speed')) {
+                $t['id'] = 'hyper_sprint';
+                $t['name_id'] = 'Hyper-Sprint Emergency (24/7 War Room)';
+                $t['name_en'] = 'Hyper-Sprint Emergency (24/7 War Room)';
+                $t['name'] = $isEn ? $t['name_en'] : $t['name_id'];
+                $t['badge_id'] = 'TOP_SPEED // 24_7_WAR_ROOM';
+                $t['badge_en'] = 'TOP_SPEED // 24_7_WAR_ROOM';
+                $t['badge'] = 'TOP_SPEED // 24_7_WAR_ROOM';
+                $t['duration_id'] = '7 Hari Kalender';
+                $t['duration_en'] = '7 Calendar Days';
+                $t['duration'] = $isEn ? $t['duration_en'] : $t['duration_id'];
+                $t['speed_multiplier_id'] = '3.0x (Rilis 1 Pekan Kalender)';
+                $t['speed_multiplier_en'] = '3.0x (1 Calendar Week Release)';
+                $t['speed_multiplier'] = $isEn ? $t['speed_multiplier_en'] : $t['speed_multiplier_id'];
+                $t['cost_formula_id'] = 'Base Scope (Rp ' . number_format($subtotal, 0, ',', '.') . ') + Intensive 24/7 War Room Shift Squad (Rp ' . number_format($extra, 0, ',', '.') . ')';
+                $t['cost_formula_en'] = 'Base Scope (Rp ' . number_format($subtotal, 0, ',', '.') . ') + Intensive 24/7 War Room Shift Squad (Rp ' . number_format($extra, 0, ',', '.') . ')';
+                $t['cost_formula'] = $isEn ? $t['cost_formula_en'] : $t['cost_formula_id'];
+                $t['squad_allocation_id'] = 'Dedicated Tri-Engineer War Room (Rotasi Shift 24/7 & DevOps SLA)';
+                $t['squad_allocation_en'] = 'Dedicated Tri-Engineer War Room (24/7 Shift Rotation & DevOps SLA)';
+                $t['squad_allocation'] = $isEn ? $t['squad_allocation_en'] : $t['squad_allocation_id'];
+                $t['ai_quota_spec_id'] = 'Continuous Deployment War Room (Rotasi Shift 24/7 & Real-Time Test Loop)';
+                $t['ai_quota_spec_en'] = 'Continuous Deployment War Room (24/7 Shift Rotation & Real-Time Test Loop)';
+                $t['ai_quota_spec'] = $isEn ? $t['ai_quota_spec_en'] : $t['ai_quota_spec_id'];
+                $t['ai_swarm_specs_id'] = [
+                    'Rotasi engineer 24 jam non-stop dengan deployment kontinyu ke Staging',
+                    'SLA Uptime & Respons Darurat 99.9% dengan dedicated DevOps on-call',
+                    'Automated E2E Regression Test Suite untuk menjamin stabilitas rilis',
+                ];
+                $t['ai_swarm_specs_en'] = [
+                    'Non-stop 24-hour engineer rotation with continuous staging deployment',
+                    '99.9% Uptime SLA & Emergency Response with dedicated on-call DevOps',
+                    'Automated E2E Regression Test Suite guaranteeing production stability',
+                ];
+                $t['ai_swarm_specs'] = $isEn ? $t['ai_swarm_specs_en'] : $t['ai_swarm_specs_id'];
+            } else {
+                $t['id'] = $id ?: 'standard';
+                $t['name_id'] = 'Standard Velocity (30 Hari Kerja)';
+                $t['name_en'] = 'Standard Velocity (30 Business Days)';
+                $t['name'] = $isEn ? $t['name_en'] : $t['name_id'];
+                $t['badge_id'] = 'STANDARD_PACE // BEST_VALUE';
+                $t['badge_en'] = 'STANDARD_PACE // BEST_VALUE';
+                $t['badge'] = 'STANDARD_PACE // BEST_VALUE';
+                $t['duration_id'] = '30 Hari Kerja';
+                $t['duration_en'] = '30 Business Days';
+                $t['duration'] = $isEn ? $t['duration_en'] : $t['duration_id'];
+                $t['speed_multiplier_id'] = '1.0x (Pace Terencana)';
+                $t['speed_multiplier_en'] = '1.0x (Planned Pace)';
+                $t['speed_multiplier'] = $isEn ? $t['speed_multiplier_en'] : $t['speed_multiplier_id'];
+                $t['cost_formula_id'] = 'Bobot Nilai Ruang Lingkup Riil (Komponen Teranalisis)';
+                $t['cost_formula_en'] = 'Real Itemized Scope Value (Analyzed Components)';
+                $t['cost_formula'] = $isEn ? $t['cost_formula_en'] : $t['cost_formula_id'];
+                $t['squad_allocation_id'] = '1 Dedicated Fullstack Lead + QA Reviewer';
+                $t['squad_allocation_en'] = '1 Dedicated Fullstack Lead + QA Reviewer';
+                $t['squad_allocation'] = $isEn ? $t['squad_allocation_en'] : $t['squad_allocation_id'];
+                $t['ai_quota_spec_id'] = 'Modern Monolith Engine (Laravel 13, Filament v5, PostgreSQL Strict ULID)';
+                $t['ai_quota_spec_en'] = 'Modern Monolith Engine (Laravel 13, Filament v5, PostgreSQL Strict ULID)';
+                $t['ai_quota_spec'] = $isEn ? $t['ai_quota_spec_en'] : $t['ai_quota_spec_id'];
+                $t['ai_swarm_specs_id'] = [
+                    'Arsitektur: Laravel 13, Filament v5, PostgreSQL Strict ULID, Docker VPS',
+                    'Hak Akses: Multi-role terisolasi dengan otorisasi ketat',
+                    'Garansi: 30 Hari Bug-free Support + Akses Penuh Private Repo GitHub',
+                ];
+                $t['ai_swarm_specs_en'] = [
+                    'Architecture: Laravel 13, Filament v5, PostgreSQL Strict ULID, Docker VPS',
+                    'Access Control: Multi-role isolated with strict authorization',
+                    'Warranty: 30-Day Bug-free Support + Full Private GitHub Repo Access',
+                ];
+                $t['ai_swarm_specs'] = $isEn ? $t['ai_swarm_specs_en'] : $t['ai_swarm_specs_id'];
+            }
+
+            $normalized[] = $t;
+        }
+
+        return $normalized;
     }
 
 

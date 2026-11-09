@@ -107,10 +107,10 @@
                             }
                         } elseif ($selectedVelocityMeta) {
                             if ($selectedVelocityMeta === 'fast_track' || str_contains($selectedVelocityMeta, 'fast') || str_contains($selectedVelocityMeta, 'swarm')) {
-                                $pkgTitle = $isEn ? 'Studio MVP: Fast-Track Swarm AI Accelerated (14 Business Days)' : 'Studio MVP: Fast-Track Swarm AI Accelerated (14 Hari Kerja)';
-                                $pkgBadge = 'SWARM AI ACCELERATED';
+                                $pkgTitle = $isEn ? 'Studio MVP: Accelerated Dedicated Squad (14 Business Days)' : 'Studio MVP: Accelerated Dedicated Squad (14 Hari Kerja)';
+                                $pkgBadge = 'DEDICATED SENIOR SQUAD';
                             } elseif ($selectedVelocityMeta === 'emergency') {
-                                $pkgTitle = $isEn ? 'Studio MVP: Emergency Concurrency Squad (7 Business Days)' : 'Studio MVP: Emergency Concurrency Squad (7 Hari Kerja)';
+                                $pkgTitle = $isEn ? 'Studio MVP: Emergency War Room Squad (7 Calendar Days)' : 'Studio MVP: Emergency War Room Squad (7 Hari Kalender)';
                                 $pkgBadge = 'EMERGENCY TOP SPEED';
                             }
                         }

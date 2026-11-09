@@ -53,6 +53,8 @@
             'dp' => (float)$t['dp_amount'],
             'days' => $t['duration'],
             'name' => $t['name'],
+            'name_id' => $t['name_id'] ?? $t['name'],
+            'name_en' => $t['name_en'] ?? $t['name'],
         ];
         if ($hasSignedContract && (float)$t['contract_amount'] === (float)$contractDoc->contract_amount) {
             $matchedSignedTierKey = $t['id'];
@@ -302,11 +304,11 @@
                     'id' => 'section-7',
                     'num' => '09',
                     'group' => 'legal',
-                    'title_id' => 'Opsi Kecepatan Pengerjaan (Velocity)',
-                    'title_en' => 'Delivery Velocity Options',
-                    'subtitle_id' => 'Standard, Fast-Track Swarm AI Accelerated, atau Emergency Squad',
-                    'subtitle_en' => 'Standard, Fast-Track Swarm AI Accelerated, or Emergency Squad',
-                    'badge' => 'VELOCITY',
+                    'title_id' => 'Opsi Velocity Pengerjaan & Alokasi Squad Engineering',
+                    'title_en' => 'Delivery Velocity, Engineering Squads & Pricing Tiers',
+                    'subtitle_id' => 'Standard, Accelerated Dedicated Squad, atau Emergency Squad',
+                    'subtitle_en' => 'Standard, Accelerated Dedicated Squad, or Emergency Squad',
+                    'badge' => 'VELOCITY & SQUADS',
                 ],
                 [
                     'id' => 'section-8',

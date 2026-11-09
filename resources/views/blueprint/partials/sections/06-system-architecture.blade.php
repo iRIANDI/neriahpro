@@ -850,7 +850,7 @@
                             </div>
                             <div>
                                 <strong class="text-emerald-600 dark:text-emerald-400 block mb-0.5">&bull; Dynamic JSONB Indexing:</strong>
-                                <span class="text-zinc-600 dark:text-zinc-300">Mendukung penyimpanan context window percakapan agen AI Gemini Ultra serta fleksibilitas metadata dokumen.</span>
+                                <span class="text-zinc-600 dark:text-zinc-300">Mendukung penyimpanan context window percakapan agen AI serta fleksibilitas metadata dokumen.</span>
                             </div>
                         </div>
                     </div>
@@ -2751,4 +2751,4 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
             </section>
 
-            <!-- SECTION 09: OPSI VELOCITY PENGERJAAN & AKSESORIS AI GEMINI ULTRA (PRICING & SPRINT SELECTION) -->
+            <!-- SECTION 09: OPSI VELOCITY PENGERJAAN & SQUAD ENGINEERING (PRICING & SPRINT SELECTION) -->

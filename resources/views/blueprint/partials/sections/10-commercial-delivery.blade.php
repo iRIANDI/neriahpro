@@ -82,7 +82,8 @@
                                     </span>
                                     @if($blueprint->is_free_grant)
                                         <span class="px-2 py-0.5 bg-emerald-500 text-black text-[10px] font-mono font-black uppercase">
-                                            PELAYANAN GRATIS (RP 0)
+                                            <span x-show="locale === 'en'">FREE SERVICE (RP 0)</span>
+                                            <span x-show="locale !== 'en'">PELAYANAN GRATIS (RP 0)</span>
                                         </span>
                                     @endif
                                 </div>
@@ -109,7 +110,9 @@
                                 </a>
                                 @if($blueprint->staging_provisioned_at)
                                     <span class="text-[10px] text-zinc-500 dark:text-zinc-400">
-                                        Aktif: {{ $blueprint->staging_provisioned_at->format('d M Y H:i') }}
+                                        <span x-show="locale === 'en'">Active: </span>
+                                        <span x-show="locale !== 'en'">Aktif: </span>
+                                        {{ $blueprint->staging_provisioned_at->format('d M Y H:i') }}
                                     </span>
                                 @endif
                             </div>
@@ -527,24 +530,32 @@
                         @else
                             <span class="text-zinc-500 dark:text-zinc-400 text-xs block">
                                 @if($blueprint->isDpConfirmed())
-                                    TERMIN TERVERIFIKASI:
+                                    <span x-show="locale === 'en'">VERIFIED TIER: </span>
+                                    <span x-show="locale !== 'en'">TERMIN TERVERIFIKASI: </span>
                                 @elseif(($contractDoc = $contractDocument ?? $blueprint->getContractDocument()) && $contractDoc->status === 'signed' && (float)$contractDoc->contract_amount > 0)
-                                    TERMIN KONTRAK SAH:
+                                    <span x-show="locale === 'en'">EXECUTED CONTRACT TIER: </span>
+                                    <span x-show="locale !== 'en'">TERMIN KONTRAK SAH: </span>
                                 @else
-                                    TERMIN TERPILIH:
+                                    <span x-show="locale === 'en'">SELECTED TIER: </span>
+                                    <span x-show="locale !== 'en'">TERMIN TERPILIH: </span>
                                 @endif
-                                <span class="text-zinc-900 dark:text-white font-bold" x-text="tierAmounts[selectedTier]?.name || 'Standard Velocity'"></span>
+                                <span class="text-zinc-900 dark:text-white font-bold" x-text="(locale === 'en' ? tierAmounts[selectedTier]?.name_en : tierAmounts[selectedTier]?.name_id) || tierAmounts[selectedTier]?.name || 'Standard Velocity'"></span>
                             </span>
                             @if($blueprint->is_free_grant)
                                 <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-block mb-1">
-                                    ✓ SUBSIDI KASIH (RP 0)
+                                    <span x-show="locale === 'en'">✓ FREE SERVICE (RP 0)</span>
+                                    <span x-show="locale !== 'en'">✓ SUBSIDI KASIH (RP 0)</span>
                                 </span>
-                                <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">RP 0 (PELAYANAN KASIH)</span>
+                                <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">
+                                    <span x-show="locale === 'en'">RP 0 (FREE SERVICE)</span>
+                                    <span x-show="locale !== 'en'">RP 0 (PELAYANAN KASIH)</span>
+                                </span>
                                 <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">VOUCHER: {{ $blueprint->voucher_code }}</span>
                             @elseif($blueprint->isDpConfirmed())
                                 <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1 mb-1">
                                     <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                                    <span>DP TERKONFIRMASI // SPRINT AKTIF</span>
+                                    <span x-show="locale === 'en'">CONFIRMED DP // ACTIVE SPRINT</span>
+                                    <span x-show="locale !== 'en'">DP TERKONFIRMASI // SPRINT AKTIF</span>
                                 </span>
                                 @php
                                     $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
@@ -559,17 +570,18 @@
                             @elseif(($contractDoc = $contractDocument ?? $blueprint->getContractDocument()) && $contractDoc->status === 'signed' && (float)$contractDoc->contract_amount > 0)
                                 <span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1 mb-1">
                                     <svg class="w-3 h-3 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    <span>KONTRAK TERTANDATANGANI // MENUNGGU DP</span>
+                                    <span x-show="locale === 'en'">SIGNED CONTRACT // AWAITING DP</span>
+                                    <span x-show="locale !== 'en'">KONTRAK TERTANDATANGANI // MENUNGGU DP</span>
                                 </span>
                                 <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">
                                     DP (50%): Rp {{ number_format($contractDoc->dp_amount ?: ($contractDoc->contract_amount * 0.50), 0, ',', '.') }}
                                 </span>
                                 <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">
-                                    Total Kontrak: Rp {{ number_format($contractDoc->contract_amount, 0, ',', '.') }} &bull; KONTRAK SAH MENGIKAT
+                                    Total Kontrak: Rp {{ number_format($contractDoc->contract_amount, 0, ',', '.') }} &bull; <span x-show="locale === 'en'">LEGALLY BINDING CONTRACT</span><span x-show="locale !== 'en'">KONTRAK SAH MENGIKAT</span>
                                 </span>
                             @else
                                 <span class="text-xl font-black text-emerald-600 dark:text-emerald-400" x-text="'DP (50%): Rp ' + (tierAmounts[selectedTier]?.dp || 0).toLocaleString('id-ID')"></span>
-                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block" x-text="'Total Kontrak: Rp ' + (tierAmounts[selectedTier]?.contract || 0).toLocaleString('id-ID')"></span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block" x-text="(locale === 'en' ? 'Total Contract: Rp ' : 'Total Kontrak: Rp ') + (tierAmounts[selectedTier]?.contract || 0).toLocaleString('id-ID')"></span>
                             @endif
                         @endif
                     </div>

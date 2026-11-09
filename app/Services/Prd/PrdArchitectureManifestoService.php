@@ -306,7 +306,7 @@ class PrdArchitectureManifestoService
                 'features' => [
                     'Ekstensi pgvector: Menyimpan vector embeddings (1536-dim / 3072-dim) langsung berdampingan dengan data relasional bisnis tanpa butuh vector DB terpisah (seperti Pinecone/Milvus).',
                     'Indeks HNSW (Hierarchical Navigable Small World): Pencarian similaritas semantik dan RAG dokumen berkecepatan sub-millisecond O(log N).',
-                    'JSONB Dynamic Indexing: Mendukung penyimpanan context history fleksibel untuk metadata agen AI Gemini Ultra.',
+                    'JSONB Dynamic Indexing: Mendukung penyimpanan context history fleksibel untuk metadata percakapan dan dokumen agen AI cerdas.',
                     'Strict ULID Primary Key: Menjamin partisi data terdistribusi dan keystone cursor pagination O(1) tanpa sequence lock.',
                 ],
             ],
@@ -319,7 +319,7 @@ class PrdArchitectureManifestoService
                 ['category' => 'AI Database Engine', 'name' => 'PostgreSQL 16+ (pgvector)', 'desc' => 'Vector embeddings, HNSW semantic search, JSONB documents, ULID standard'],
                 ['category' => 'In-Memory Cache & Broker', 'name' => 'Redis 7+ & Kafka/RabbitMQ Event Broker', 'desc' => 'Zero-latency sessions, distributed rate limiting, asynchronous event messaging'],
                 ['category' => 'Hosting & Cloud Storage', 'name' => 'Cloudflare Pages (Frontend) + Dedicated VPS (API) + R2', 'desc' => '300+ Edge POPs global + 100% Resource Isolation + $0 Egress Bandwidth Storage'],
-                ['category' => 'AI Acceleration Engine', 'name' => 'Gemini Ultra / Pro API SDK', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
+                ['category' => 'AI Acceleration Engine', 'name' => 'Enterprise LLM API SDK (Gemini / Anthropic / OpenAI)', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
             ] : [
                 ['category' => 'Backend Core', 'name' => 'Laravel 13 Modern Monolith', 'desc' => 'PHP 8.5+ Property Hooks, Eloquent ORM, Action Handlers, Queues'],
                 ['category' => 'Admin & Operations', 'name' => 'Filament PHP v5 Enterprise', 'desc' => 'Dasbor kendali instan, Filter Keyset, Export PDF/Excel, RBAC Shield'],
@@ -327,7 +327,7 @@ class PrdArchitectureManifestoService
                 ['category' => 'AI Database Engine', 'name' => 'PostgreSQL 16+ (pgvector)', 'desc' => 'Vector embeddings, HNSW semantic search, JSONB documents, ULID standard'],
                 ['category' => 'In-Memory Cache & Broker', 'name' => 'Redis / Predis', 'desc' => 'Zero-latency sessions, distributed lock, persistent queue processing'],
                 ['category' => 'Infrastructure & Runtime', 'name' => 'Dedicated VPS via Nixpacks & Docker', 'desc' => 'Container isolation, Nginx HTTP/2, automated SSL, Zero-downtime deploy'],
-                ['category' => 'AI Acceleration Engine', 'name' => 'Gemini Ultra / Pro API SDK', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
+                ['category' => 'AI Acceleration Engine', 'name' => 'Enterprise LLM API SDK (Gemini / Anthropic / OpenAI)', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
             ],
             'server_hardware_sizing' => PrdGeneratorService::calculateServerHardwareSizing($businessName, $masalah, $mvpItems, $extraContext),
         ];

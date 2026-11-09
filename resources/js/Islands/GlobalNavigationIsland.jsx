@@ -140,9 +140,21 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
     document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
     document.cookie = `neriah_locale=${newLang};path=/;max-age=31536000`;
     document.cookie = 'neriah_locale_manual=1;path=/;max-age=31536000';
+    try { localStorage.setItem('neriah_blueprint_lang', newLang); } catch(e) {}
     setLang(newLang);
     setActiveTier2(null);
     setGlobalLangOpen(false);
+
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('locale') || url.searchParams.has('lang')) {
+        url.searchParams.delete('locale');
+        url.searchParams.delete('lang');
+        window.location.href = `/lang/${newLang}?redirect=` + encodeURIComponent(url.pathname + url.search);
+        return;
+      }
+    } catch(e) {}
+
     window.location.href = `/lang/${newLang}`;
   };
 

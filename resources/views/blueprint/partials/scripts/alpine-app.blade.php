@@ -31,7 +31,10 @@
                     }
                 },
                 toggleSection(id) {
-                    this.sectionCollapses[id] = !this.sectionCollapses[id];
+                    this.sectionCollapses = {
+                        ...this.sectionCollapses,
+                        [id]: !this.sectionCollapses[id]
+                    };
                     if (!this.sectionCollapses[id]) {
                         if (id === 'section-3-8' || id === 'section-4' || id === 'section-5') {
                             setTimeout(() => { if (window.reRenderActiveMermaid) window.reRenderActiveMermaid(); }, 120);
@@ -40,28 +43,32 @@
                 },
                 expandAllSections() {
                     this.allSectionsExpanded = true;
+                    const next = {};
                     for (const sec in this.sectionCollapses) {
-                        this.sectionCollapses[sec] = false;
+                        next[sec] = false;
                     }
+                    this.sectionCollapses = next;
                     setTimeout(() => { if (window.reRenderActiveMermaid) window.reRenderActiveMermaid(); }, 150);
                     if (window.showToast) {
                         window.showToast({
                             type: 'info',
-                            title: 'SELURUH SEKSI DIBUKA',
-                            message: '13 seksi arsitektur kini ditampilkan penuh.'
+                            title: this.locale === 'en' ? 'ALL SECTIONS EXPANDED' : 'SELURUH SEKSI DIBUKA',
+                            message: this.locale === 'en' ? 'All architecture sections are now expanded.' : '13 seksi arsitektur kini ditampilkan penuh.'
                         });
                     }
                 },
                 collapseAllSections() {
                     this.allSectionsExpanded = false;
+                    const next = {};
                     for (const sec in this.sectionCollapses) {
-                        this.sectionCollapses[sec] = true;
+                        next[sec] = true;
                     }
+                    this.sectionCollapses = next;
                     if (window.showToast) {
                         window.showToast({
                             type: 'info',
-                            title: 'SELURUH SEKSI DICIUTKAN',
-                            message: 'Seluruh seksi telah diciutkan untuk mempermudah navigasi ringkas.'
+                            title: this.locale === 'en' ? 'ALL SECTIONS COLLAPSED' : 'SELURUH SEKSI DICIUTKAN',
+                            message: this.locale === 'en' ? 'All sections collapsed for streamlined reading.' : 'Seluruh seksi telah diciutkan untuk mempermudah navigasi ringkas.'
                         });
                     }
                 },
@@ -1604,7 +1611,8 @@
                         && !(auth()->user()?->isSuperAdmin() ?? false);
                 @endphp
                 scaffoldIsScopeLocked: {{ $isScaffoldLockedForUser ? 'true' : 'false' }},
-                scaffoldAiPanelOpen: true,
+                scaffoldFullscreenPreview: false,
+                scaffoldAiPanelOpen: false,
                 scaffoldAiPrompt: '',
                 scaffoldAiLoading: false,
                 scaffoldElaboratingDirective: false,
@@ -2157,13 +2165,18 @@
                         window.dispatchEvent(new Event('theme-changed'));
                     }
                 },
-                locale: '{{ $blueprint->user_metadata['output_locale'] ?? '' }}' || localStorage.getItem('neriah_blueprint_lang') || '{{ ($isEn ?? false) ? "en" : "id" }}',
+                locale: '{{ $isEn ? "en" : "id" }}',
                 get isEn() {
-                    return this.locale === 'en' || (document.documentElement.lang && document.documentElement.lang.startsWith('en')) || (document.cookie && document.cookie.includes('neriah_locale=en'));
+                    return this.locale === 'en';
                 },
                 setLocale(l) {
                     this.locale = l;
                     try { localStorage.setItem('neriah_blueprint_lang', l); } catch(e){}
+                    document.cookie = `neriah_locale=${l};path=/;max-age=31536000`;
+                    document.cookie = 'neriah_locale_manual=1;path=/;max-age=31536000';
+                    if (window.dispatchEvent) {
+                        window.dispatchEvent(new CustomEvent('locale-changed', { detail: { locale: l } }));
+                    }
                 },
                 showAiPromptModal: false,
                 showLegalTermsModal: false,

@@ -190,11 +190,12 @@
                             @csrf
                             <button 
                                 type="submit" 
-                                class="px-2 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap border border-amber-600"
+                                class="px-2.5 py-1.5 bg-zinc-950 hover:bg-zinc-900 text-amber-300 border-2 border-amber-500 text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-xs shrink-0 whitespace-nowrap"
                                 :title="locale === 'en' ? 'Instantly activate this Blueprint as VIP Founder without Midtrans payment' : 'Aktifkan Blueprint ini secara instan sebagai VIP Founder tanpa melalui pembayaran Midtrans'"
                             >
-                                <span>👑</span>
-                                <span class="hidden lg:inline">BYPASS</span>
+                                <span class="text-amber-400 text-sm drop-shadow-[0_0_8px_rgba(251,191,36,0.9)]">👑</span>
+                                <span class="hidden lg:inline text-amber-300 font-bold">VIP OWNER BYPASS</span>
+                                <span class="lg:hidden text-amber-300 font-bold">BYPASS</span>
                             </button>
                         </form>
                     @endif

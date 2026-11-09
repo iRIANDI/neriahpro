@@ -226,12 +226,32 @@ Route::post('/logout', function (Request $request) {
     return redirect()->to('/');
 })->name('logout');
 
-Route::get('/lang/{locale}', function (string $locale) {
+Route::get('/lang/{locale}', function (\Illuminate\Http\Request $request, string $locale) {
     if (in_array($locale, ['id', 'en'], true)) {
-        session(['locale' => $locale]);
+        session(['locale' => $locale, 'neriah_locale' => $locale]);
         cookie()->queue(cookie('neriah_locale', $locale, 60 * 24 * 365, '/', null, false, false));
         cookie()->queue(cookie('neriah_locale_manual', '1', 60 * 24 * 365, '/', null, false, false));
         cookie()->queue(cookie()->forget('googtrans'));
+        \Illuminate\Support\Facades\App::setLocale($locale);
+    }
+
+    if ($request->filled('redirect')) {
+        return redirect()->to($request->query('redirect'));
+    }
+
+    $backUrl = url()->previous();
+    if ($backUrl) {
+        $parsed = parse_url($backUrl);
+        if (isset($parsed['query'])) {
+            parse_str($parsed['query'], $queryParams);
+            unset($queryParams['locale'], $queryParams['lang']);
+            $newQuery = http_build_query($queryParams);
+            $cleanUrl = ($parsed['scheme'] ?? 'http') . '://' . ($parsed['host'] ?? '') . ($parsed['path'] ?? '/');
+            if ($newQuery !== '') {
+                $cleanUrl .= '?' . $newQuery;
+            }
+            return redirect()->to($cleanUrl);
+        }
     }
 
     return redirect()->back();

@@ -75,8 +75,28 @@
                     <span x-show="locale === 'en'">SCAFFOLD .ZIP (22 FILES)</span>
                     <span x-show="locale !== 'en'">SCAFFOLD .ZIP (22 FILE)</span>
                 </button>
+                <button 
+                    type="button" 
+                    @click.stop="toggleSection('section-00-execution-guide')" 
+                    class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
+                    :title="sectionCollapses['section-00-execution-guide'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                >
+                    <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-00-execution-guide'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                    <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-00-execution-guide'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
             </div>
         </div>
+
+        <!-- Collapsed Preview -->
+        <div x-show="sectionCollapses['section-00-execution-guide']" @click="toggleSection('section-00-execution-guide')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-emerald-500/40 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
+            <span class="flex items-center gap-2">
+                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span x-text="locale === 'en' ? 'Section 00 collapsed (Developer Roadmap & 3 Ways to Start). Click to expand...' : 'Seksi 00 diciutkan (Peta Jalan & 3 Cara Mulai). Klik untuk membuka...'"></span>
+            </span>
+            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
+        </div>
+
+        <div x-show="!sectionCollapses['section-00-execution-guide']" x-transition class="accordion-body">
 
         <!-- 3 CARA MULAI: INTERACTIVE TABS & CARDS -->
         <div x-data="{ activeGuideCard: 'choice-a' }" class="space-y-4">
@@ -685,6 +705,7 @@ curl http://localhost:8000/api/health</pre>
                     <span x-show="locale !== 'en'">💡 <em>AI Agent (Antigravity, Cursor, Claude Code, Windsurf) otomatis membaca guardrails ini saat mengeksekusi setiap prompt.</em></span>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </section>

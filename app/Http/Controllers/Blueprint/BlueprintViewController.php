@@ -64,19 +64,15 @@ class BlueprintViewController extends Controller
     protected function resolveIsEn(VisionBlueprint $blueprint): bool
     {
         $requested = request()->query('locale') ?: request()->query('lang');
-        if ($requested) {
+        if ($requested && in_array($requested, ['id', 'en'], true)) {
             return $requested === 'en';
         }
         $cookie = request()->cookie('neriah_locale');
-        if ($cookie) {
+        if ($cookie && in_array($cookie, ['id', 'en'], true)) {
             return $cookie === 'en';
         }
-        if (session()->has('locale')) {
+        if (session()->has('locale') && in_array(session('locale'), ['id', 'en'], true)) {
             return session('locale') === 'en';
-        }
-        $blueprintLocale = $blueprint->user_metadata['output_locale'] ?? $blueprint->user_metadata['locale'] ?? null;
-        if ($blueprintLocale) {
-            return $blueprintLocale === 'en';
         }
         return app()->getLocale() === 'en';
     }

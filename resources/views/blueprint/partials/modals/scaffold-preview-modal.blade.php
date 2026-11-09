@@ -16,21 +16,36 @@
         <!-- Modal Dialog Card (Click events stopped from propagating to backdrop) -->
         <div 
             @click.stop
-            class="relative z-10 bg-zinc-950 border-2 border-emerald-500 w-full max-w-5xl rounded-none shadow-2xl p-4 sm:p-6 flex flex-col h-[90vh] max-h-[90vh] overflow-hidden"
+            class="relative z-10 bg-zinc-950 border-2 border-emerald-500 w-full max-w-6xl rounded-none shadow-2xl p-3 sm:p-5 flex flex-col h-[94vh] max-h-[96vh] overflow-hidden"
             x-transition
         >
             <!-- Modal Header -->
-            <div class="flex items-center justify-between border-b border-zinc-800 pb-3 mb-3 shrink-0">
+            <div class="flex items-center justify-between border-b border-zinc-800 pb-2.5 mb-2.5 shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 bg-emerald-500 rounded-none inline-block"></span>
                     <h3 class="text-sm sm:text-base font-mono font-black uppercase text-white tracking-wider">
                         <span x-show="locale === 'en'">SCAFFOLD &amp; BOILERPLATE CODE EXPORTER // 10 PILLARS SOFTWARE FACTORY OS</span><span x-show="locale !== 'en'">EKSPOR KODE SCAFFOLD &amp; BOILERPLATE // 10 PILAR SOFTWARE FACTORY OS</span>
                     </h3>
                 </div>
-                <button @click="scaffoldModalOpen = false" class="text-zinc-400 hover:text-white text-xl font-bold p-1 cursor-pointer">
-                    &times;
-                </button>
+                <div class="flex items-center gap-2">
+                    <button 
+                        type="button" 
+                        @click="scaffoldFullscreenPreview = !scaffoldFullscreenPreview" 
+                        class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700 text-[10px] font-mono font-black uppercase transition flex items-center gap-1.5 cursor-pointer"
+                        :title="scaffoldFullscreenPreview ? (locale === 'en' ? 'Restore standard view' : 'Kembalikan tampilan normal') : (locale === 'en' ? 'Maximize code view (hide top panels)' : 'Perluas tampilan kode (sembunyikan panel atas)')"
+                    >
+                        <svg x-show="!scaffoldFullscreenPreview" class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                        <svg x-show="scaffoldFullscreenPreview" class="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <span x-text="scaffoldFullscreenPreview ? (locale === 'en' ? 'RESTORE' : 'KECILKAN') : (locale === 'en' ? 'MAXIMIZE' : 'PERLUAS')"></span>
+                    </button>
+                    <button @click="scaffoldModalOpen = false" class="text-zinc-400 hover:text-white text-xl font-bold p-1 leading-none cursor-pointer">
+                        &times;
+                    </button>
+                </div>
             </div>
+
+            <!-- Top Configuration Panels (Collapsible on Maximize) -->
+            <div x-show="!scaffoldFullscreenPreview" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" class="shrink-0 space-y-2.5 mb-2.5">
 
             <!-- Custom Folder Name Input Bar (Auto-Sanitized Folder Name with Hyphen Only) -->
             <div class="mb-3 p-2.5 bg-black border border-emerald-500/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
@@ -132,6 +147,7 @@
                     </a>
                 </div>
             </div>
+            </div>
 
             <!-- Background Job Live Progress Strip (Visible when queued or processing) -->
             <div x-show="scaffoldJobStatus === 'processing' || scaffoldJobStatus === 'queued'" x-cloak class="mb-3 p-2 bg-black border border-zinc-800 text-[11px] font-mono space-y-1.5 shrink-0">
@@ -187,7 +203,7 @@
             </div>
 
             <!-- Code Content Area (Strictly Scrollable Container) -->
-            <div class="relative flex-1 min-h-0 flex flex-col bg-black border border-zinc-800 p-4 font-mono text-xs overflow-hidden">
+            <div class="relative flex-1 min-h-[380px] sm:min-h-[460px] flex flex-col bg-black border border-zinc-800 p-3 sm:p-4 font-mono text-xs overflow-hidden">
                 <div x-show="scaffoldLoading" class="absolute inset-0 bg-black/80 flex items-center justify-center text-emerald-400 text-sm font-mono font-bold animate-pulse z-10">
                     <span x-show="locale === 'en'">Loading scaffold code synthesis...</span>
                     <span x-show="locale !== 'en'">Memuat sintesis file scaffold...</span>
@@ -263,6 +279,28 @@
                                 </span>
                             </button>
                         </div>
+
+                        <!-- Maximize / Restore Code Area Button -->
+                        <button 
+                            type="button" 
+                            @click="scaffoldFullscreenPreview = !scaffoldFullscreenPreview" 
+                            class="px-2 py-0.5 transition cursor-pointer flex items-center gap-1 font-mono text-[10px] font-black border"
+                            :class="scaffoldFullscreenPreview ? 'bg-amber-400 text-black border-amber-300' : 'bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border-zinc-700 hover:border-zinc-500'"
+                            :title="scaffoldFullscreenPreview ? (locale === 'en' ? 'Restore standard view' : 'Kecilkan ke tampilan normal') : (locale === 'en' ? 'Maximize code view (hide top panels)' : 'Perluas tampilan kode (sembunyikan panel atas)')"
+                        >
+                            <svg x-show="!scaffoldFullscreenPreview" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                            <svg x-show="scaffoldFullscreenPreview" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                            <span>
+                                <span x-show="scaffoldFullscreenPreview">
+                                    <span x-show="locale === 'en'">RESTORE</span>
+                                    <span x-show="locale !== 'en'">KECILKAN</span>
+                                </span>
+                                <span x-show="!scaffoldFullscreenPreview">
+                                    <span x-show="locale === 'en'">MAXIMIZE</span>
+                                    <span x-show="locale !== 'en'">PERLUAS</span>
+                                </span>
+                            </span>
+                        </button>
 
                         <!-- Toggle In-Modal AI Scaffold Elaboration Co-Pilot -->
                         <button 
@@ -395,19 +433,19 @@
                 </div>
 
                 <!-- Code Container: Preview Mode vs Edit/Elaborasi Mode -->
-                <div class="flex-1 min-h-0 relative overflow-hidden flex flex-col">
+                <div class="flex-1 min-h-[350px] sm:min-h-[440px] relative overflow-hidden flex flex-col">
                     <!-- PREVIEW MODE -->
                     <pre 
                         x-show="scaffoldMode === 'preview'"
-                        class="flex-1 min-h-0 w-full overflow-y-scroll overflow-x-auto text-[11px] text-emerald-400 leading-relaxed select-all font-mono whitespace-pre p-3 bg-zinc-950/90 border border-zinc-900 custom-prd-scrollbar focus:outline-none" 
+                        class="flex-1 h-full min-h-[350px] sm:min-h-[440px] w-full overflow-y-scroll overflow-x-auto text-[11px] sm:text-xs text-emerald-400 leading-relaxed select-all font-mono whitespace-pre p-3.5 bg-zinc-950 border border-zinc-900 custom-prd-scrollbar focus:outline-none" 
                         tabindex="0"
                         x-text="getScaffoldCode(scaffoldActiveTab)"
                     ></pre>
 
                     <!-- EDIT & ELABORASI MODE (<textarea> with Tab Support & Auto-Save) -->
-                    <div x-show="scaffoldMode === 'edit'" class="flex-1 min-h-0 flex flex-col relative">
+                    <div x-show="scaffoldMode === 'edit'" class="flex-1 h-full min-h-[350px] sm:min-h-[440px] flex flex-col relative">
                         <textarea 
-                            class="flex-1 min-h-0 w-full overflow-y-scroll overflow-x-auto text-[11px] text-emerald-300 leading-relaxed font-mono p-3 bg-zinc-950 border border-emerald-500/40 custom-prd-scrollbar focus:outline-none focus:border-emerald-400 resize-none selection:bg-emerald-500/30 selection:text-white"
+                            class="flex-1 h-full min-h-[350px] sm:min-h-[440px] w-full overflow-y-scroll overflow-x-auto text-[11px] sm:text-xs text-emerald-300 leading-relaxed font-mono p-3.5 bg-zinc-950 border border-emerald-500/40 custom-prd-scrollbar focus:outline-none focus:border-emerald-400 resize-none selection:bg-emerald-500/30 selection:text-white"
                             spellcheck="false"
                             x-model="scaffoldFiles[scaffoldActiveTab]"
                             @input="onScaffoldCodeInput()"

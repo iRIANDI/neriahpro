@@ -552,8 +552,9 @@ class BlueprintArchitectStudio extends Component
         $jurisdiction = PosInclusiveCommercialCatalog::jurisdictionComplianceProfile($this->outputLocale);
 
         if (in_array($this->outputLocale, ['id', 'en', 'ar', 'ja', 'zh-CN', 'de', 'es'], true)) {
-            session(['neriah_locale' => $this->outputLocale]);
-            cookie()->queue('neriah_locale', $this->outputLocale, 60 * 24 * 365);
+            session(['locale' => $this->outputLocale, 'neriah_locale' => $this->outputLocale]);
+            cookie()->queue(cookie('neriah_locale', $this->outputLocale, 60 * 24 * 365, '/', null, false, false));
+            cookie()->queue(cookie('neriah_locale_manual', '1', 60 * 24 * 365, '/', null, false, false));
             app()->setLocale($this->outputLocale);
         }
 

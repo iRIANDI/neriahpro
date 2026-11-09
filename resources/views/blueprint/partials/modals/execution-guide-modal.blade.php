@@ -348,16 +348,30 @@
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
                         <span class="font-mono text-xs text-zinc-400 bg-zinc-950 px-2 py-1 border border-zinc-800">C:\projects\</span>
-                        <input 
-                            type="text" 
-                            :value="workspaceDir"
-                            @input="setWorkspaceDir($event.target.value)"
-                            placeholder="{{ $shortSlugVal }}" 
-                            class="px-2.5 py-1 bg-black border border-emerald-500 text-emerald-400 font-mono text-xs focus:ring-1 focus:ring-emerald-400 focus:outline-none w-40 sm:w-44 rounded-none font-bold"
-                        />
+                        <div class="relative flex items-center">
+                            <input 
+                                type="text" 
+                                :value="workspaceDir"
+                                @input="handleFolderInput($event)"
+                                @keydown.space.prevent="insertHyphen($event)"
+                                @blur="workspaceDir = (workspaceDir || '').replace(/^-+|-+$/g, '')"
+                                placeholder="{{ $shortSlugVal }}" 
+                                class="px-2.5 py-1 bg-black border border-emerald-500 text-emerald-300 font-mono text-xs focus:ring-1 focus:ring-emerald-400 focus:outline-none w-40 sm:w-48 rounded-none font-bold placeholder:text-zinc-600 placeholder:font-normal"
+                                maxlength="36"
+                            />
+                            <button 
+                                type="button" 
+                                x-show="workspaceDir" 
+                                @click="setWorkspaceDir('')" 
+                                title="Kosongkan (kembali ke default)"
+                                class="absolute right-1.5 text-zinc-400 hover:text-white text-sm px-1 cursor-pointer font-bold"
+                            >
+                                &times;
+                            </button>
+                        </div>
                         <button 
                             type="button" 
-                            @click="setWorkspaceDir('{{ $shortSlugVal }}')"
+                            @click="setWorkspaceDir('')"
                             title="Reset ke default pendek"
                             class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-[10px] font-mono rounded-none cursor-pointer"
                         >

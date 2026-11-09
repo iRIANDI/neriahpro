@@ -575,12 +575,53 @@
                 executionGuideTab: 'choice-a',
                 workspaceDir: (function() {
                     var saved = localStorage.getItem('neriah_workspace_{{ $blueprint->slug }}');
-                    return saved ? saved : '{{ \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? "app") }}';
+                    return saved !== null ? saved : '';
                 })(),
+                sanitizeFolderName(val) {
+                    if (!val) return '';
+                    // 1. Replace spaces with hyphens
+                    var str = String(val).replace(/\s+/g, '-');
+                    // 2. Remove all characters except a-z, 0-9, hyphen (-), and underscore (_)
+                    str = str.replace(/[^a-zA-Z0-9_-]/g, '');
+                    // 3. Prevent multiple consecutive hyphens (e.g. --- becomes -)
+                    str = str.replace(/-+/g, '-');
+                    // 4. Force lowercase
+                    return str.toLowerCase();
+                },
                 setWorkspaceDir(val) {
-                    var sanitized = (val || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
-                    this.workspaceDir = sanitized ? sanitized : '{{ \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? "app") }}';
-                    localStorage.setItem('neriah_workspace_{{ $blueprint->slug }}', this.workspaceDir);
+                    var sanitized = this.sanitizeFolderName(val);
+                    this.workspaceDir = sanitized;
+                    localStorage.setItem('neriah_workspace_{{ $blueprint->slug }}', sanitized);
+                },
+                handleFolderInput(e) {
+                    var raw = (e && e.target) ? e.target.value : (e || '');
+                    var sanitized = this.sanitizeFolderName(raw);
+                    this.setWorkspaceDir(sanitized);
+                },
+                insertHyphen(e) {
+                    var target = e.target;
+                    var start = target.selectionStart || 0;
+                    var end = target.selectionEnd || 0;
+                    var current = target.value || '';
+                    if (start > 0 && current.charAt(start - 1) === '-') {
+                        return;
+                    }
+                    var nextVal = current.substring(0, start) + '-' + current.substring(end);
+                    this.setWorkspaceDir(nextVal);
+                    this.$nextTick(function() {
+                        if (target && target.setSelectionRange) {
+                            target.setSelectionRange(start + 1, start + 1);
+                        }
+                    });
+                },
+                getEffectiveFolder() {
+                    var clean = (this.workspaceDir || '').trim().replace(/^-+|-+$/g, '');
+                    return clean ? clean : '{{ \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? "app", $blueprint) }}';
+                },
+                getScaffoldDownloadUrl() {
+                    var folder = (this.workspaceDir || '').trim().replace(/^-+|-+$/g, '');
+                    var base = '{{ route("blueprint.export-scaffold", $blueprint->slug) }}';
+                    return folder ? (base + '?folder=' + encodeURIComponent(folder)) : base;
                 },
                 scaffoldJobStatus: '{{ !empty($blueprint->user_metadata['scaffold_ready']) ? 'completed' : 'idle' }}',
                 scaffoldJobProgress: {{ !empty($blueprint->user_metadata['scaffold_ready']) ? 100 : 0 }},
@@ -868,6 +909,7 @@
 
                     try {
                         const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const folder = this.getEffectiveFolder();
                         const url = '{{ route('blueprint.scaffold.generate-async', $blueprint->slug) }}' + (instant ? '?instant=1' : '');
                         const res = await fetch(url, {
                             method: 'POST',
@@ -875,7 +917,10 @@
                                 'Content-Type': 'application/json',
                                 'Accept': 'application/json',
                                 'X-CSRF-TOKEN': token || ''
-                            }
+                            },
+                            body: JSON.stringify({
+                                folder: folder
+                            })
                         });
                         const data = await res.json();
                         if (data && data.success) {
@@ -1743,7 +1788,8 @@
                     if (Object.keys(this.scaffoldFiles).length === 0) {
                         this.scaffoldLoading = true;
                         try {
-                            const res = await fetch('{{ route('blueprint.scaffold.preview', $blueprint->slug) }}', {
+                            const folderParam = '?folder=' + encodeURIComponent(this.getEffectiveFolder());
+                            const res = await fetch('{{ route('blueprint.scaffold.preview', $blueprint->slug) }}' + folderParam, {
                                 headers: {
                                     'Accept': 'application/json',
                                     'X-Requested-With': 'XMLHttpRequest',

@@ -1,3 +1,7 @@
+    @php
+        $shortSlugVal = \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? 'app', $blueprint);
+    @endphp
+
     <!-- Scaffold & Boilerplate Code Preview Modal (One-Click Exporter) -->
     <div 
         x-show="scaffoldModalOpen" 
@@ -26,6 +30,57 @@
                 <button @click="scaffoldModalOpen = false" class="text-zinc-400 hover:text-white text-xl font-bold p-1 cursor-pointer">
                     &times;
                 </button>
+            </div>
+
+            <!-- Custom Folder Name Input Bar (Auto-Sanitized Folder Name with Hyphen Only) -->
+            <div class="mb-3 p-2.5 bg-black border border-emerald-500/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 bg-emerald-400 rounded-none inline-block shrink-0"></span>
+                    <div>
+                        <div class="flex items-center gap-2 font-mono text-[11px] font-bold text-zinc-100 uppercase">
+                            <span x-show="locale === 'en'">Custom Workspace / Folder Name:</span>
+                            <span x-show="locale !== 'en'">Kustomisasi Nama Folder / Direktori Kerja:</span>
+                            <span class="px-1.5 py-0.2 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">AUTO-SANITIZED</span>
+                        </div>
+                        <p class="text-[10px] text-zinc-400 font-sans mt-0.5">
+                            <span x-show="locale === 'en'">Space auto-replaced by hyphen ("-"). Forbidden characters stripped. Empty = default (<code class="text-emerald-400 font-mono">{{ $shortSlugVal }}</code>).</span>
+                            <span x-show="locale !== 'en'">Spasi otomatis jadi tanda minus ("-"). Karakter dilarang dieliminasi otomatis. Kosong = default (<code class="text-emerald-400 font-mono">{{ $shortSlugVal }}</code>).</span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 shrink-0 font-mono text-xs">
+                    <span class="text-zinc-500 text-[11px] hidden md:inline">C:\projects\</span>
+                    <div class="relative flex items-center">
+                        <input 
+                            type="text" 
+                            :value="workspaceDir"
+                            @input="handleFolderInput($event)"
+                            @keydown.space.prevent="insertHyphen($event)"
+                            @blur="workspaceDir = (workspaceDir || '').replace(/^-+|-+$/g, '')"
+                            placeholder="{{ $shortSlugVal }}" 
+                            class="px-2.5 py-1.5 bg-zinc-950 border border-emerald-500 text-emerald-300 font-mono text-xs focus:ring-1 focus:ring-emerald-400 focus:outline-none w-44 sm:w-56 rounded-none font-bold tracking-wide placeholder:text-zinc-600 placeholder:font-normal"
+                            maxlength="36"
+                        />
+                        <button 
+                            type="button" 
+                            x-show="workspaceDir" 
+                            @click="setWorkspaceDir('')" 
+                            title="Kosongkan (kembali ke default)"
+                            class="absolute right-1.5 text-zinc-400 hover:text-white text-sm px-1 cursor-pointer font-bold"
+                        >
+                            &times;
+                        </button>
+                    </div>
+                    <button 
+                        type="button" 
+                        @click="setWorkspaceDir('')"
+                        class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-[10px] font-mono border border-zinc-700 rounded-none cursor-pointer font-bold"
+                        title="Kembalikan ke nama default sistem"
+                    >
+                        RESET
+                    </button>
+                </div>
             </div>
 
             <!-- Modal Info Banner & Background Job Engine -->
@@ -57,9 +112,17 @@
                     </button>
 
                     <!-- Instant Download Button -->
-                    <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[11px] flex items-center gap-1.5 transition cursor-pointer w-fit shadow-xs">
+                    <a 
+                        :href="getScaffoldDownloadUrl()" 
+                        class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[11px] flex items-center gap-1.5 transition cursor-pointer w-fit shadow-xs rounded-none"
+                        :title="locale === 'en' ? `Download ${getEffectiveFolder()}-starter-kit.zip` : `Unduh ${getEffectiveFolder()}-starter-kit.zip`"
+                    >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        <span><span x-show="locale === 'en'">DOWNLOAD FULL ZIP (.ZIP)</span><span x-show="locale !== 'en'">UNDUH ZIP LENGKAP (.ZIP)</span></span>
+                        <span>
+                            <span x-show="locale === 'en'">DOWNLOAD FULL ZIP</span>
+                            <span x-show="locale !== 'en'">UNDUH FULL ZIP</span>
+                            <span class="font-mono text-[10px] text-zinc-950 bg-white/70 px-1 py-0.2 ml-1 font-bold" x-text="`.ZIP (${getEffectiveFolder()})`"></span>
+                        </span>
                     </a>
                 </div>
             </div>

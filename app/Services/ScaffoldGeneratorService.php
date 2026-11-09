@@ -16,10 +16,23 @@ class ScaffoldGeneratorService
     /**
      * Generate all scaffold files as an associative array: filename => content.
      */
-    public static function generateFiles(VisionBlueprint $blueprint): array
+    public static function generateFiles(VisionBlueprint $blueprint, ?string $customFolder = null): array
     {
         $projectName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'MyApplication');
         $slug = $blueprint->slug ?: Str::slug($projectName);
+        if (!empty($customFolder)) {
+            $customClean = preg_replace('/[^a-z0-9_-]/', '', strtolower(str_replace(' ', '-', $customFolder)));
+            $customClean = trim($customClean, '-_');
+            if (!empty($customClean)) {
+                $slug = $customClean;
+            }
+        } elseif (!empty($blueprint->user_metadata['short_slug'])) {
+            $customClean = preg_replace('/[^a-z0-9_-]/', '', strtolower(str_replace(' ', '-', (string)$blueprint->user_metadata['short_slug'])));
+            $customClean = trim($customClean, '-_');
+            if (!empty($customClean)) {
+                $slug = $customClean;
+            }
+        }
         $prd = $blueprint->prd_content ?? [];
         $erdTables = $prd['erd_schema']['tables']
             ?? ($prd['engineering_specs']['database_erd']['entities'] ?? ($prd['database_erd'] ?? []));
@@ -386,11 +399,15 @@ class ScaffoldGeneratorService
     {
         // 0. Use explicit custom short slug if defined in user_metadata
         if ($blueprint && !empty($blueprint->user_metadata['short_slug'])) {
-            $custom = preg_replace('/[^a-z0-9_-]/', '', strtolower((string)$blueprint->user_metadata['short_slug']));
+            $custom = preg_replace('/[^a-z0-9_-]/', '', strtolower(str_replace(' ', '-', (string)$blueprint->user_metadata['short_slug'])));
+            $custom = trim($custom, '-_');
             if (!empty($custom)) {
                 return $custom;
             }
         }
+
+        // 0b. Replace any spaces with hyphens
+        $slug = str_replace(' ', '-', $slug);
 
         // 1. Strip random hash suffixes like '-wxe8k', '-8x9k', or numeric suffixes
         $clean = preg_replace('/-[a-z0-9]{4,8}$/i', '', strtolower($slug));
@@ -899,9 +916,9 @@ class ScaffoldGeneratorService
     /**
      * Package files into a downloadable ZIP archive.
      */
-    public static function createZipArchive(VisionBlueprint $blueprint): string
+    public static function createZipArchive(VisionBlueprint $blueprint, ?string $customFolder = null): string
     {
-        $files = self::generateFiles($blueprint);
+        $files = self::generateFiles($blueprint, $customFolder);
         $tempDir = storage_path('app/temp_scaffolds');
         if (! is_dir($tempDir)) {
             @mkdir($tempDir, 0777, true);
@@ -910,8 +927,15 @@ class ScaffoldGeneratorService
             $tempDir = sys_get_temp_dir();
         }
 
-        $slug = $blueprint->slug ?: 'project';
-        $zipPath = $tempDir.'/'.$slug.'-starter-kit.zip';
+        $effectiveSlug = !empty($customFolder)
+            ? trim(preg_replace('/[^a-z0-9_-]/', '', strtolower(str_replace(' ', '-', $customFolder))), '-_')
+            : self::deriveShortSlug($blueprint->slug ?: 'project', $blueprint);
+
+        if (empty($effectiveSlug)) {
+            $effectiveSlug = self::deriveShortSlug($blueprint->slug ?: 'project', $blueprint);
+        }
+
+        $zipPath = $tempDir.'/'.$effectiveSlug.'-starter-kit.zip';
 
         if (class_exists(ZipArchive::class)) {
             $zip = new ZipArchive;

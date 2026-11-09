@@ -140,9 +140,16 @@
                                 >
                                     @foreach($blueprintSections as $sec)
                                         @if($sec['group'] === $groupKey)
+                                            @php
+                                                $isStudioExclusive = in_array($sec['id'], ['section-7', 'section-8', 'section-9'], true);
+                                            @endphp
                                             <div 
                                                 data-spy-sec="{{ $sec['id'] }}"
-                                                x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
+                                                @if($isStudioExclusive)
+                                                    x-show="executionTrack === 'studio' && (!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase()))"
+                                                @else
+                                                    x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
+                                                @endif
                                                 @click="jumpTo('{{ $sec['id'] }}')"
                                                 :class="activeSectionId === '{{ $sec['id'] }}' 
                                                     ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold' 

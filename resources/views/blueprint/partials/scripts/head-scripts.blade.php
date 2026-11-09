@@ -359,7 +359,7 @@
                 } else {
                     for (let i = sectionIds.length - 1; i >= 0; i--) {
                         const el = document.getElementById(sectionIds[i]);
-                        if (el) {
+                        if (el && el.offsetParent !== null) {
                             const rect = el.getBoundingClientRect();
                             if (rect.top <= 220) {
                                 current = sectionIds[i];

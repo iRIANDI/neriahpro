@@ -373,11 +373,11 @@
                     'count' => 2,
                 ],
                 'legal' => [
-                    'title_id' => 'Investasi, SLA, Kontrak & Pembayaran',
-                    'title_en' => 'Investment, SLA, Contracts & Payment',
-                    'desc_id' => 'Opsi velocity pricing, timeline sprint, SLA garansi, dan kunci scope DP',
-                    'desc_en' => 'Velocity pricing tiers, sprint timeline, SLA warranty, and DP scope lock',
-                    'count' => 4,
+                    'title_id' => $isRetailLicense ? 'Lisensi Digital, Integritas & Ekspor' : 'Investasi, SLA, Kontrak & Pembayaran',
+                    'title_en' => $isRetailLicense ? 'Digital License, Integrity & Exports' : 'Investment, SLA, Contracts & Payment',
+                    'desc_id' => $isRetailLicense ? 'Lisensi software arsitektur mandiri, integritas SHA-256, dan ekspor starter kit repo' : 'Opsi velocity pricing, timeline sprint, SLA garansi, dan kunci scope DP',
+                    'desc_en' => $isRetailLicense ? 'Self-dev architecture license, SHA-256 integrity, and starter kit repo exports' : 'Velocity pricing tiers, sprint timeline, SLA warranty, and DP scope lock',
+                    'count' => $isRetailLicense ? 1 : 4,
                 ],
             ];
         @endphp
@@ -421,14 +421,18 @@
                 <!-- SECTION 6 & 13: SYSTEM ARCHITECTURE & 15-PILLAR PROJECT OS EXPORTER -->
                 @include('blueprint.partials.sections.06-system-architecture')
 
-                <!-- SECTION 7: ANTI-MALWARE & THREAT DEFENSE -->
-                @include('blueprint.partials.sections.07-security-malware')
+                <!-- STUDIO TURNKEY EXCLUSIVE SUITE (SECTIONS 09, 10, 11) -->
+                <!-- Strictly scoped to Dedicated Studio Turnkey mode; completely hidden in Self-Dev Retail mode -->
+                <div x-show="executionTrack === 'studio'" x-cloak class="space-y-8">
+                    <!-- SECTION 7: DELIVERY VELOCITY & PRICING TIERS -->
+                    @include('blueprint.partials.sections.07-security-malware')
 
-                <!-- SECTION 8: AUDIT TRAILS & UU PDP COMPLIANCE -->
-                @include('blueprint.partials.sections.08-audit-compliance')
+                    <!-- SECTION 8: SPRINT TIMELINE & ROADMAP -->
+                    @include('blueprint.partials.sections.08-audit-compliance')
 
-                <!-- SECTION 9: DISASTER RECOVERY & RUNBOOKS -->
-                @include('blueprint.partials.sections.09-disaster-recovery')
+                    <!-- SECTION 9: SLA & TURNKEY GOVERNANCE -->
+                    @include('blueprint.partials.sections.09-disaster-recovery')
+                </div>
 
                 <!-- SECTION 10: COMMERCIAL QUOTATION, SPRINT ROADMAP & SCOPE LOCK -->
                 @include('blueprint.partials.sections.10-commercial-delivery')

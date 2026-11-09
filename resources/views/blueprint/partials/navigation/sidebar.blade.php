@@ -27,8 +27,8 @@
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
                         <div class="text-[10px] font-bold text-emerald-400 bg-zinc-800 px-2 py-0.5 border border-zinc-700 whitespace-nowrap">
-                            <span x-show="locale === 'en'">13 CH // {{ count($blueprintSections ?? []) }} BLOCKS</span>
-                            <span x-show="locale !== 'en'">13 BAB // {{ count($blueprintSections ?? []) }} BLOK</span>
+                            <span x-show="locale === 'en'"><span x-text="executionTrack === 'studio' ? '13' : '10'">13</span> CH // <span x-text="executionTrack === 'studio' ? '{{ count($blueprintSections ?? []) }}' : '{{ count($blueprintSections ?? []) - 3 }}'">{{ count($blueprintSections ?? []) }}</span> BLOCKS</span>
+                            <span x-show="locale !== 'en'"><span x-text="executionTrack === 'studio' ? '13' : '10'">13</span> BAB // <span x-text="executionTrack === 'studio' ? '{{ count($blueprintSections ?? []) }}' : '{{ count($blueprintSections ?? []) - 3 }}'">{{ count($blueprintSections ?? []) }}</span> BLOK</span>
                         </div>
                         <button 
                             type="button" 
@@ -134,9 +134,16 @@
                             >
                                 @foreach($blueprintSections as $sec)
                                     @if($sec['group'] === $groupKey)
+                                        @php
+                                            $isStudioExclusive = in_array($sec['id'], ['section-7', 'section-8', 'section-9'], true);
+                                        @endphp
                                         <div 
                                             data-spy-sec="{{ $sec['id'] }}"
-                                            x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
+                                            @if($isStudioExclusive)
+                                                x-show="executionTrack === 'studio' && (!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase()))"
+                                            @else
+                                                x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
+                                            @endif
                                             @click="jumpTo('{{ $sec['id'] }}')"
                                             :class="activeSectionId === '{{ $sec['id'] }}' 
                                                 ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold' 

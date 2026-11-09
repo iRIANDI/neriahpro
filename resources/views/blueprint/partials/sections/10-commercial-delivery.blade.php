@@ -1,11 +1,45 @@
+
+
+@php
+    $litePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_lite_price', '190.000');
+    $proPrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_pro_price', '490.000');
+    $ultimatePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_ultimate_price', '1.490.000');
+
+    // Determine concrete retail status & explicit track context
+    $hasPaidRetail = ($isPurchased ?? false)
+        || $blueprint->project_status === 'Retail License'
+        || (method_exists($blueprint, 'hasPaidRetailLicense') && $blueprint->hasPaidRetailLicense())
+        || !empty($blueprint->user_metadata['paid'])
+        || !empty($blueprint->user_metadata['retail_tier'])
+        || !empty($blueprint->user_metadata['package_tier'])
+        || str_contains(strtolower($blueprint->slug ?? ''), '-retail-');
+
+    $isRetailExplicit = $hasPaidRetail || ($blueprint->user_metadata['track'] ?? '') === 'retail' || request('track') === 'retail';
+    $isStudioExplicit = (! $isRetailExplicit) && (($blueprint->user_metadata['track'] ?? '') === 'studio' || request('track') === 'studio' || request('mode') === 'mitra' || in_array($blueprint->project_status, ['Active Sprint', 'In Development (DP Paid)', 'Awaiting DP Payment', 'Completed & Fully Settled'], true));
+@endphp
+
             <section id="section-10" class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-2 border-emerald-600 dark:border-emerald-500 p-6 sm:p-8 mb-8 rounded-none prd-scroll-target shadow-sm">
                 <!-- Section 12 Header Accordion Bar -->
                 <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3 cursor-pointer select-none" @click="toggleSection('section-10')">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-emerald-600 text-white font-mono font-bold text-xs flex items-center justify-center rounded-none">12</span>
+                        <span class="w-6 h-6 bg-emerald-600 text-white font-mono font-bold text-xs flex items-center justify-center rounded-none" x-text="executionTrack === 'studio' ? '12' : '10'">12</span>
                         <div>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Kunci Scope, Digital Contract &amp; Pembayaran DP / Lisensi</h2>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">SHA-256 Scope Seal, Midtrans Instant Snap &amp; Dedicated Engineer Slot</p>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
+                                @if($hasPaidRetail)
+                                    Lisensi Digital Retail Aktif &amp; Akses Starter Kit Seumur Hidup
+                                @else
+                                    <span x-show="executionTrack === 'retail'">Kunci Scope &amp; Lisensi Digital Retail</span>
+                                    <span x-show="executionTrack === 'studio'">Kunci Scope, Digital Contract &amp; Pembayaran DP</span>
+                                @endif
+                            </h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                                @if($hasPaidRetail)
+                                    Segel Integritas SHA-256 Terverifikasi &bull; Berkas Arsitektur &amp; Starter Kit ZIP Siap Diunduh
+                                @else
+                                    <span x-show="executionTrack === 'retail'">SHA-256 Scope Seal, Lisensi Software Factory OS &amp; Unduh Starter Kit ZIP</span>
+                                    <span x-show="executionTrack === 'studio'">SHA-256 Scope Seal, Midtrans Instant Snap &amp; Dedicated Engineer Slot</span>
+                                @endif
+                            </p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -83,23 +117,7 @@
                     </div>
                 @endif
 
-@php
-    $litePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_lite_price', '190.000');
-    $proPrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_pro_price', '490.000');
-    $ultimatePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_ultimate_price', '1.490.000');
 
-    // Determine concrete retail status & explicit track context
-    $hasPaidRetail = ($isPurchased ?? false)
-        || $blueprint->project_status === 'Retail License'
-        || (method_exists($blueprint, 'hasPaidRetailLicense') && $blueprint->hasPaidRetailLicense())
-        || !empty($blueprint->user_metadata['paid'])
-        || !empty($blueprint->user_metadata['retail_tier'])
-        || !empty($blueprint->user_metadata['package_tier'])
-        || str_contains(strtolower($blueprint->slug ?? ''), '-retail-');
-
-    $isRetailExplicit = $hasPaidRetail || ($blueprint->user_metadata['track'] ?? '') === 'retail' || request('track') === 'retail';
-    $isStudioExplicit = (! $isRetailExplicit) && (($blueprint->user_metadata['track'] ?? '') === 'studio' || request('track') === 'studio' || request('mode') === 'mitra' || in_array($blueprint->project_status, ['Active Sprint', 'In Development (DP Paid)', 'Awaiting DP Payment', 'Completed & Fully Settled'], true));
-@endphp
 
                 @if($isStudioExplicit)
                     <!-- MITRA TURNKEY STUDIO TRACK HEADER BANNER -->

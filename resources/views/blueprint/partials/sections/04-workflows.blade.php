@@ -9,8 +9,14 @@
                         <div class="flex items-center gap-2">
                             <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">06</span>
                             <div>
-                                <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">{{ $isEn ? 'Core System Workflows (User Journey)' : 'Alur Kerja Utama (User Flow)' }}</h2>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">{{ $isEn ? 'Transaction Flow Diagrams, Visual State Machine & Business Validations' : 'Diagram Alur Transaksi, Interaksi Visual & Validasi Bisnis' }}</p>
+                                <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
+                                    <span x-show="locale === 'en'">Core System Workflows (User Journey)</span>
+                                    <span x-show="locale !== 'en'">Alur Kerja Utama (User Flow)</span>
+                                </h2>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                                    <span x-show="locale === 'en'">Transaction Flow Diagrams, Visual State Machine &amp; Business Validations</span>
+                                    <span x-show="locale !== 'en'">Diagram Alur Transaksi, Interaksi Visual &amp; Validasi Bisnis</span>
+                                </p>
                             </div>
                         </div>
 
@@ -40,19 +46,19 @@
                                     class="px-3 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1.5 cursor-pointer"
                                 >
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-                                    <span>{{ $isEn ? 'DETAILED STEPS (GRID)' : 'RINCIAN LANGKAH (GRID)' }}</span>
+                                    <span x-text="locale === 'en' ? 'DETAILED STEPS (GRID)' : 'RINCIAN LANGKAH (GRID)'">RINCIAN LANGKAH (GRID)</span>
                                 </button>
                             </div>
 
                             @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                                 <button 
                                     type="button" 
-                                    @click.stop="openTweakModal('alurs_kerja', '{{ $isEn ? 'Core System Workflows (User Journey)' : 'Alur Kerja Utama (User Flow)' }}')" 
+                                    @click.stop="openTweakModal('alurs_kerja', locale === 'en' ? 'Core System Workflows (User Journey)' : 'Alur Kerja Utama (User Flow)')" 
                                     class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
-                                    title="{{ $isEn ? 'Expand branches and exception flows from grounded project documents' : 'Perluas percabangan dan exception flow dari Dokumen Acuan Proyek' }}"
+                                    :title="locale === 'en' ? 'Expand branches and exception flows from grounded project documents' : 'Perluas percabangan dan exception flow dari Dokumen Acuan Proyek'"
                                 >
                                     <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                    <span>{{ $isEn ? 'ELABORATE WORKFLOW FROM GROUNDED CORPUS' : 'PERDALAM ALUR KERJA DARI DOKUMEN ACUAN' }}</span>
+                                    <span x-text="locale === 'en' ? 'ELABORATE WORKFLOW FROM GROUNDED CORPUS' : 'PERDALAM ALUR KERJA DARI DOKUMEN ACUAN'">PERDALAM ALUR KERJA DARI DOKUMEN ACUAN</span>
                                 </button>
                             @endif
 
@@ -60,9 +66,9 @@
                                 type="button" 
                                 @click.stop="toggleSection('section-4')" 
                                 class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
-                                :title="sectionCollapses['section-4'] ? (isEn ? 'Expand this section' : 'Buka seksi ini') : (isEn ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                                :title="sectionCollapses['section-4'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
                             >
-                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-4'] ? (isEn ? 'EXPAND' : 'BUKA') : (isEn ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-4'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
                                 <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-4'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
@@ -79,9 +85,10 @@
                 <div x-show="sectionCollapses['section-4']" @click="toggleSection('section-4')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
                     <span class="flex items-center gap-2">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>{{ $isEn ? 'Section 06 collapsed (Core System Workflows / User Journey). Click to expand...' : 'Seksi 06 diciutkan (Alur Kerja Utama / User Flow). Klik untuk membuka...' }}</span>
+                        <span x-show="locale === 'en'">Section 06 collapsed (Core System Workflows / User Journey). Click to expand...</span>
+                        <span x-show="locale !== 'en'">Seksi 06 diciutkan (Alur Kerja Utama / User Flow). Klik untuk membuka...</span>
                     </span>
-                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                 </div>
 
                 <div x-show="!sectionCollapses['section-4']" x-transition class="accordion-body">
@@ -121,12 +128,12 @@
 
                                         <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono">
                                             <div class="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
-                                                <span class="text-zinc-500 dark:text-zinc-400">AKTOR:</span>
+                                                <span class="text-zinc-500 dark:text-zinc-400" x-text="locale === 'en' ? 'ACTOR:' : 'AKTOR:'">AKTOR:</span>
                                                 <span class="text-emerald-700 dark:text-emerald-400 font-bold truncate max-w-[140px]">{{ $flow['actor'] ?? 'Pengguna' }}</span>
                                             </div>
                                             @if(!empty($flow['trigger']))
                                                 <div class="text-[10px] text-zinc-600 dark:text-zinc-400">
-                                                    <span class="text-zinc-500 dark:text-zinc-400 block">TRIGGER:</span>
+                                                    <span class="text-zinc-500 dark:text-zinc-400 block" x-text="locale === 'en' ? 'TRIGGER:' : 'PEMICU:'">TRIGGER:</span>
                                                     <span class="text-zinc-800 dark:text-zinc-300 font-sans text-[11px]">{{ $flow['trigger'] }}</span>
                                                 </div>
                                             @endif
@@ -156,16 +163,19 @@
                     <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
                             <div class="flex items-center gap-2">
-                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">ALUR KERJA MERMAID (FLOWCHART TD)</span>
-                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">
+                                    <span x-show="locale === 'en'">MERMAID WORKFLOW (FLOWCHART TD)</span>
+                                    <span x-show="locale !== 'en'">ALUR KERJA MERMAID (FLOWCHART TD)</span>
+                                </span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline" x-text="locale === 'en' ? '(Drag to Pan • Scroll to Zoom)' : '(Drag untuk Pan • Scroll untuk Zoom)'">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <button type="button" @click="zoomDiagram('mermaid-flow-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-flow-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
-                                <button type="button" @click="zoomDiagram('mermaid-flow-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
-                                <button type="button" @click="openDiagramFullscreen('Diagram Alur Kerja Sistem (Workflow Flowchart)', 'mermaid-flow-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                <button type="button" @click="zoomDiagram('mermaid-flow-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom Out (-)' : 'Perkecil Zoom (-)'">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-flow-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Fit to Screen / Reset Zoom (1:1)' : 'Fit to Screen / Reset Zoom (1:1)'">FIT (1:1)</button>
+                                <button type="button" @click="zoomDiagram('mermaid-flow-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom In (+)' : 'Perbesar Zoom (+)'">+</button>
+                                <button type="button" @click="openDiagramFullscreen(locale === 'en' ? 'System Workflow Flowchart' : 'Diagram Alur Kerja Sistem (Workflow Flowchart)', 'mermaid-flow-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" :title="locale === 'en' ? 'Open Fullscreen' : 'Buka di Layar Penuh'">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                                    <span>LAYAR PENUH</span>
+                                    <span x-text="locale === 'en' ? 'FULLSCREEN' : 'LAYAR PENUH'">LAYAR PENUH</span>
                                 </button>
                                 <button 
                                     type="button"
@@ -173,7 +183,7 @@
                                     class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer"
                                 >
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                    <span>SALIN KODE MERMAID</span>
+                                    <span x-text="locale === 'en' ? 'COPY MERMAID CODE' : 'SALIN KODE MERMAID'">SALIN KODE MERMAID</span>
                                 </button>
                             </div>
                         </div>
@@ -191,7 +201,8 @@
                             <div id="mermaid-flow-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
-                                    <span>Memuat visualisasi alur kerja Mermaid...</span>
+                                    <span x-show="locale === 'en'">Loading Mermaid workflow visualization...</span>
+                                    <span x-show="locale !== 'en'">Memuat visualisasi alur kerja Mermaid...</span>
                                 </div>
                             </div>
                         </div>
@@ -216,29 +227,41 @@
 
                                 <div class="space-y-2.5 pt-3 border-t border-zinc-200 dark:border-zinc-800 text-[11px]">
                                     <div>
-                                        <span class="font-mono text-[10px] uppercase text-zinc-400 font-bold block">Pemicu &amp; Trigger:</span>
+                                        <span class="font-mono text-[10px] uppercase text-zinc-400 font-bold block">
+                                            <span x-show="locale === 'en'">Trigger &amp; Event:</span>
+                                            <span x-show="locale !== 'en'">Pemicu &amp; Trigger:</span>
+                                        </span>
                                         <span class="text-zinc-700 dark:text-zinc-300 font-sans">{{ $flow['trigger'] ?? 'Aksi langsung pengguna pada antarmuka.' }}</span>
                                     </div>
                                     <div>
-                                        <span class="font-mono text-[10px] uppercase text-zinc-400 font-bold block">Komputasi &amp; Basis Data:</span>
+                                        <span class="font-mono text-[10px] uppercase text-zinc-400 font-bold block">
+                                            <span x-show="locale === 'en'">Computation &amp; Database:</span>
+                                            <span x-show="locale !== 'en'">Komputasi &amp; Basis Data:</span>
+                                        </span>
                                         <span class="text-zinc-700 dark:text-zinc-300 font-sans">{{ $flow['system_process'] ?? 'Validasi request FormRequest & query database terindeks.' }}</span>
                                     </div>
                                     @if(!empty($flow['output_state']))
                                         <div>
-                                            <span class="font-mono text-[10px] uppercase text-zinc-400 font-bold block">Hasil &amp; State Response:</span>
+                                            <span class="font-mono text-[10px] uppercase text-zinc-400 font-bold block">
+                                                <span x-show="locale === 'en'">Output &amp; State Response:</span>
+                                                <span x-show="locale !== 'en'">Hasil &amp; State Response:</span>
+                                            </span>
                                             <span class="text-zinc-700 dark:text-zinc-300 font-sans">{{ $flow['output_state'] }}</span>
                                         </div>
                                     @endif
                                     @if(!empty($flow['edge_case']))
                                         <div class="bg-amber-500/5 border border-amber-500/20 p-2 text-[10px]">
-                                            <span class="font-mono uppercase text-amber-600 dark:text-amber-400 font-bold block">Mitigasi &amp; Edge Case:</span>
+                                            <span class="font-mono uppercase text-amber-600 dark:text-amber-400 font-bold block">
+                                                <span x-show="locale === 'en'">Mitigation &amp; Edge Case:</span>
+                                                <span x-show="locale !== 'en'">Mitigasi &amp; Edge Case:</span>
+                                            </span>
                                             <span class="text-zinc-600 dark:text-zinc-300 font-sans">{{ $flow['edge_case'] }}</span>
                                         </div>
                                     @endif
                                 </div>
                             </div>
                             <div class="mt-4 pt-2 border-t border-zinc-200 dark:border-zinc-800 text-[10px] font-mono flex items-center justify-between">
-                                <span class="text-zinc-500 uppercase">AKTOR UTAMA:</span>
+                                <span class="text-zinc-500 uppercase" x-text="locale === 'en' ? 'PRIMARY ACTOR:' : 'AKTOR UTAMA:'">AKTOR UTAMA:</span>
                                 <span class="text-emerald-600 dark:text-emerald-400 font-bold">{{ $flow['actor'] ?? 'Pengguna' }}</span>
                             </div>
                         </div>

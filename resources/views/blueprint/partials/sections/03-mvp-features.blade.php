@@ -75,9 +75,9 @@
                 <div x-show="sectionCollapses['section-3']" @click="toggleSection('section-3')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
                     <span class="flex items-center gap-2">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>Seksi 03 diciutkan (Spesifikasi Rekayasa Fitur &amp; Agent Task Matrix). Klik untuk membuka...</span>
+                        <span x-text="locale === 'en' ? 'Section 03 collapsed (Feature Engineering Specifications & Agent Task Matrix). Click to expand...' : 'Seksi 03 diciutkan (Spesifikasi Rekayasa Fitur & Agent Task Matrix). Klik untuk membuka...'">Seksi 03 diciutkan (Spesifikasi Rekayasa Fitur &amp; Agent Task Matrix). Klik untuk membuka...</span>
                     </span>
-                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                 </div>
 
                 <div x-show="!sectionCollapses['section-3']" x-transition class="accordion-body">
@@ -89,9 +89,14 @@
                         <div class="flex items-center justify-between gap-2 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold uppercase tracking-wider mb-3">
                             <div class="flex items-center gap-2">
                                 <span class="w-2 h-2 bg-emerald-500 inline-block"></span>
-                                <h3>Fitur Wajib (Fase 1 - MVP Peluncuran)</h3>
+                                <h3>
+                                    <span x-show="locale === 'en'">Core Features (Phase 1 - MVP Launch)</span>
+                                    <span x-show="locale !== 'en'">Fitur Wajib (Fase 1 - MVP Peluncuran)</span>
+                                </h3>
                             </div>
-                            <span class="px-1.5 py-0.5 bg-emerald-500 text-black text-[10px] font-bold">{{ count($prd['features']['mvp_phase1'] ?? []) }} FITUR</span>
+                            <span class="px-1.5 py-0.5 bg-emerald-500 text-black text-[10px] font-bold">
+                                {{ count($prd['features']['mvp_phase1'] ?? []) }} <span x-text="locale === 'en' ? 'FEATURES' : 'FITUR'">FITUR</span>
+                            </span>
                         </div>
                         <ul class="space-y-2">
                             @foreach($prd['features']['mvp_phase1'] ?? [] as $fitur)
@@ -111,12 +116,20 @@
                         <div class="flex items-center justify-between gap-2 text-zinc-600 dark:text-zinc-400 font-mono text-xs font-bold uppercase tracking-wider mb-3">
                             <div class="flex items-center gap-2">
                                 <span class="w-2 h-2 bg-zinc-400 inline-block"></span>
-                                <h3>Fitur Tambahan (Fase 2 - Roadmap)</h3>
+                                <h3>
+                                    <span x-show="locale === 'en'">Roadmap Features (Phase 2)</span>
+                                    <span x-show="locale !== 'en'">Fitur Tambahan (Fase 2 - Roadmap)</span>
+                                </h3>
                             </div>
-                            <span class="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-bold">{{ count($prd['features']['phase2_roadmap'] ?? []) }} FITUR</span>
+                            <span class="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-bold">
+                                {{ count($prd['features']['phase2_roadmap'] ?? []) }} <span x-text="locale === 'en' ? 'FEATURES' : 'FITUR'">FITUR</span>
+                            </span>
                         </div>
                         @if(empty($prd['features']['phase2_roadmap']))
-                            <p class="text-xs text-zinc-400 italic font-mono p-3">Belum ada fitur susulan. Fokus 100% pada rilis Fase 1 MVP.</p>
+                            <p class="text-xs text-zinc-400 italic font-mono p-3">
+                                <span x-show="locale === 'en'">No roadmap features defined. 100% focused on Phase 1 MVP launch.</span>
+                                <span x-show="locale !== 'en'">Belum ada fitur susulan. Fokus 100% pada rilis Fase 1 MVP.</span>
+                            </p>
                         @else
                             <ul class="space-y-2">
                                 @foreach($prd['features']['phase2_roadmap'] as $fitur)
@@ -137,13 +150,18 @@
                 <div class="mb-8 p-5 bg-amber-500/10 border-2 border-amber-500/50 flex flex-col gap-4 rounded-none">
                     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div>
-                            <h4 class="text-amber-600 dark:text-amber-500 font-bold font-mono text-sm uppercase">🚀 Modul Change Request (CR) / Addendum</h4>
+                            <h4 class="text-amber-600 dark:text-amber-500 font-bold font-mono text-sm uppercase">
+                                <span x-show="locale === 'en'">🚀 Change Request (CR) / Addendum Module</span>
+                                <span x-show="locale !== 'en'">🚀 Modul Change Request (CR) / Addendum</span>
+                            </h4>
                             <p class="text-zinc-600 dark:text-zinc-400 text-xs font-sans mt-1 max-w-2xl">
-                                {{ $isEn ? 'Project already in progress or scope frozen? Request additional features anytime. Neriah Pro Team will estimate Story Points (SP) and issue a mini-SPK.' : 'Proyek sudah berjalan atau scope terkunci? Jangan khawatir. Anda bisa meminta fitur tambahan (Addendum) kapan saja. Tim Neriah Pro akan menghitung estimasi Story Points (SP) dan menerbitkan mini-SPK.' }}
+                                <span x-show="locale === 'en'">Project already in progress or scope frozen? Request additional features anytime. Neriah Pro Team will estimate Story Points (SP) and issue a mini-SPK.</span>
+                                <span x-show="locale !== 'en'">Proyek sudah berjalan atau scope terkunci? Jangan khawatir. Anda bisa meminta fitur tambahan (Addendum) kapan saja. Tim Neriah Pro akan menghitung estimasi Story Points (SP) dan menerbitkan mini-SPK.</span>
                             </p>
                         </div>
                         <button type="button" @click="crModalOpen = true" class="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase text-xs transition border border-amber-600 shadow-[2px_2px_0px_#b45309] active:shadow-[0px_0px_0px_#b45309] active:translate-y-[2px] whitespace-nowrap cursor-pointer">
-                            {{ $isEn ? '+ REQUEST ADDENDUM' : '+ AJUKAN FITUR TAMBAHAN' }}
+                            <span x-show="locale === 'en'">+ REQUEST ADDENDUM</span>
+                            <span x-show="locale !== 'en'">+ AJUKAN FITUR TAMBAHAN</span>
                         </button>
                     </div>
 
@@ -158,7 +176,10 @@
                     @endphp
                     @if($crIssues->count() > 0)
                         <div class="mt-4 border-t border-amber-500/20 pt-4 space-y-3">
-                            <h5 class="font-mono text-[10px] uppercase font-bold text-amber-700 dark:text-amber-500 tracking-wider">Draft & Active Change Requests:</h5>
+                            <h5 class="font-mono text-[10px] uppercase font-bold text-amber-700 dark:text-amber-500 tracking-wider">
+                                <span x-show="locale === 'en'">Draft &amp; Active Change Requests:</span>
+                                <span x-show="locale !== 'en'">Draft &amp; Active Change Requests:</span>
+                            </h5>
                             @foreach($crIssues as $cr)
                                 <div class="bg-white/50 dark:bg-zinc-900/50 border border-amber-500/30 p-3 rounded-none flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div>
@@ -170,8 +191,11 @@
                                         <p class="text-xs text-zinc-600 dark:text-zinc-400 font-sans mt-1">{{ $isEn ? ($cr->description['en'] ?? '') : ($cr->description['id'] ?? '') }}</p>
                                     </div>
                                     <div class="text-right">
-                                        <span class="block font-mono text-[10px] text-zinc-500">Estimasi Biaya:</span>
-                                        <span class="font-bold text-sm text-zinc-900 dark:text-white">{{ $cr->status === 'open' ? 'Menunggu Penilaian' : 'Tersedia di Dashboard' }}</span>
+                                        <span class="block font-mono text-[10px] text-zinc-500" x-text="locale === 'en' ? 'Estimated Cost:' : 'Estimasi Biaya:'">Estimasi Biaya:</span>
+                                        <span class="font-bold text-sm text-zinc-900 dark:text-white">
+                                            <span x-show="locale === 'en'">{{ $cr->status === 'open' ? 'Pending Assessment' : 'Available on Dashboard' }}</span>
+                                            <span x-show="locale !== 'en'">{{ $cr->status === 'open' ? 'Menunggu Penilaian' : 'Tersedia di Dashboard' }}</span>
+                                        </span>
                                     </div>
                                 </div>
                             @endforeach

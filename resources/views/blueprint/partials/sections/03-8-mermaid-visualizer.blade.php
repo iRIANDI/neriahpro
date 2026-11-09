@@ -3,8 +3,14 @@
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-sky-500 text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">05</span>
                         <div>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Virtual Architecture Studio (Visual Chart Center)</h2>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Visualisasi komprehensif diagram alur, topologi basis data, peta dependensi, dan timeline sprint standar AI Agent.</p>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
+                                <span x-show="locale === 'en'">Virtual Architecture Studio (Visual Chart Center)</span>
+                                <span x-show="locale !== 'en'">Virtual Architecture Studio (Visual Chart Center)</span>
+                            </h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                                <span x-show="locale === 'en'">Comprehensive visual workflows, database ERD topology, dependency graphs, and sprint timelines.</span>
+                                <span x-show="locale !== 'en'">Visualisasi komprehensif diagram alur, topologi basis data, peta dependensi, dan timeline sprint standar AI Agent.</span>
+                            </p>
                         </div>
                     </div>
                     
@@ -16,7 +22,7 @@
                             :class="chartStudioTab === 'workflow' ? 'bg-sky-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
                             class="px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1"
                         >
-                            <span>1. WORKFLOW (ALUR)</span>
+                            <span>1. WORKFLOW <span x-text="locale === 'en' ? '(FLOW)' : '(ALUR)'">(ALUR)</span></span>
                         </button>
                         <button 
                             type="button"
@@ -32,7 +38,7 @@
                             :class="chartStudioTab === 'feature_dep' ? 'bg-sky-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
                             class="px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1"
                         >
-                            <span>3. DEPENDENCY (FITUR)</span>
+                            <span>3. DEPENDENCY <span x-text="locale === 'en' ? '(FEATURE)' : '(FITUR)'">(FITUR)</span></span>
                         </button>
                         <button 
                             type="button"
@@ -48,7 +54,7 @@
                             :class="chartStudioTab === 'infra' ? 'bg-sky-500 text-black font-bold' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
                             class="px-2.5 py-1 border border-zinc-300 dark:border-zinc-700 transition flex items-center gap-1"
                         >
-                            <span>5. INFRASTRUKTUR</span>
+                            <span>5. <span x-text="locale === 'en' ? 'INFRASTRUCTURE' : 'INFRASTRUKTUR'">INFRASTRUKTUR</span></span>
                         </button>
                         <button 
                             type="button"
@@ -62,9 +68,9 @@
                             type="button" 
                             @click.stop="toggleSection('section-3-8')" 
                             class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
-                            :title="sectionCollapses['section-3-8'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                            :title="sectionCollapses['section-3-8'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
                         >
-                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-3-8'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-3-8'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
                             <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-3-8'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                     </div>
@@ -74,9 +80,10 @@
                 <div x-show="sectionCollapses['section-3-8']" @click="toggleSection('section-3-8')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-sky-600 dark:hover:text-sky-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
                     <span class="flex items-center gap-2">
                         <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>Seksi 05 diciutkan (Virtual Architecture Studio - 6 Diagram Visual). Klik untuk membuka...</span>
+                        <span x-show="locale === 'en'">Section 05 collapsed (Virtual Architecture Studio - 6 Visual Diagrams). Click to expand...</span>
+                        <span x-show="locale !== 'en'">Seksi 05 diciutkan (Virtual Architecture Studio - 6 Diagram Visual). Klik untuk membuka...</span>
                     </span>
-                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                 </div>
 
                 <div x-show="!sectionCollapses['section-3-8']" x-transition class="accordion-body">
@@ -86,20 +93,23 @@
                     <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
                             <div class="flex items-center gap-2">
-                                <span class="text-sky-600 dark:text-sky-400 font-bold uppercase">DIAGRAM 1: ALUR KERJA SISTEM (WORKFLOW STATE MACHINE)</span>
-                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                                <span class="text-sky-600 dark:text-sky-400 font-bold uppercase">
+                                    <span x-show="locale === 'en'">DIAGRAM 1: SYSTEM WORKFLOW (WORKFLOW STATE MACHINE)</span>
+                                    <span x-show="locale !== 'en'">DIAGRAM 1: ALUR KERJA SISTEM (WORKFLOW STATE MACHINE)</span>
+                                </span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline" x-text="locale === 'en' ? '(Drag to Pan • Scroll to Zoom)' : '(Drag untuk Pan • Scroll untuk Zoom)'">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <button type="button" @click="zoomDiagram('mermaid-studio-flow-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-flow-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
-                                <button type="button" @click="zoomDiagram('mermaid-studio-flow-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
-                                <button type="button" @click="openDiagramFullscreen('Diagram 1: Alur Kerja Sistem (Workflow)', 'mermaid-studio-flow-source')" class="px-2.5 py-0.5 bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-flow-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom Out (-)' : 'Perkecil Zoom (-)'">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-flow-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Fit to Screen / Reset Zoom (1:1)' : 'Fit to Screen / Reset Zoom (1:1)'">FIT (1:1)</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-flow-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom In (+)' : 'Perbesar Zoom (+)'">+</button>
+                                <button type="button" @click="openDiagramFullscreen(locale === 'en' ? 'Diagram 1: System Workflow State Machine' : 'Diagram 1: Alur Kerja Sistem (Workflow)', 'mermaid-studio-flow-source')" class="px-2.5 py-0.5 bg-sky-600 hover:bg-sky-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" :title="locale === 'en' ? 'Open Fullscreen' : 'Buka di Layar Penuh'">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                                    <span>LAYAR PENUH</span>
+                                    <span x-text="locale === 'en' ? 'FULLSCREEN' : 'LAYAR PENUH'">LAYAR PENUH</span>
                                 </button>
                                 <button type="button" onclick="window.copyMermaidCode('mermaid-studio-flow-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-sky-500 hover:text-white dark:hover:bg-sky-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                    <span>SALIN KODE</span>
+                                    <span x-text="locale === 'en' ? 'COPY CODE' : 'SALIN KODE'">SALIN KODE</span>
                                 </button>
                             </div>
                         </div>
@@ -115,7 +125,8 @@
                             <div id="mermaid-studio-flow-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-sky-500 animate-ping"></span>
-                                    <span>Memuat visualisasi alur kerja Mermaid...</span>
+                                    <span x-show="locale === 'en'">Loading Mermaid workflow visualization...</span>
+                                    <span x-show="locale !== 'en'">Memuat visualisasi alur kerja Mermaid...</span>
                                 </div>
                             </div>
                         </div>
@@ -127,20 +138,23 @@
                     <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
                             <div class="flex items-center gap-2">
-                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">DIAGRAM 2: SKEMA BASIS DATA RELASIONAL (POSTGRESQL STRICT ULID)</span>
-                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">
+                                    <span x-show="locale === 'en'">DIAGRAM 2: RELATIONAL DATABASE SCHEMA (POSTGRESQL STRICT ULID)</span>
+                                    <span x-show="locale !== 'en'">DIAGRAM 2: SKEMA BASIS DATA RELASIONAL (POSTGRESQL STRICT ULID)</span>
+                                </span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline" x-text="locale === 'en' ? '(Drag to Pan • Scroll to Zoom)' : '(Drag untuk Pan • Scroll untuk Zoom)'">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <button type="button" @click="zoomDiagram('mermaid-studio-erd-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-erd-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
-                                <button type="button" @click="zoomDiagram('mermaid-studio-erd-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
-                                <button type="button" @click="openDiagramFullscreen('Diagram 2: Skema Basis Data Relasional (ERD)', 'mermaid-studio-erd-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-erd-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom Out (-)' : 'Perkecil Zoom (-)'">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-erd-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Fit to Screen / Reset Zoom (1:1)' : 'Fit to Screen / Reset Zoom (1:1)'">FIT (1:1)</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-erd-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom In (+)' : 'Perbesar Zoom (+)'">+</button>
+                                <button type="button" @click="openDiagramFullscreen(locale === 'en' ? 'Diagram 2: Relational Database Schema (ERD)' : 'Diagram 2: Skema Basis Data Relasional (ERD)', 'mermaid-studio-erd-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" :title="locale === 'en' ? 'Open Fullscreen' : 'Buka di Layar Penuh'">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                                    <span>LAYAR PENUH</span>
+                                    <span x-text="locale === 'en' ? 'FULLSCREEN' : 'LAYAR PENUH'">LAYAR PENUH</span>
                                 </button>
                                 <button type="button" onclick="window.copyMermaidCode('mermaid-studio-erd-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                    <span>SALIN KODE</span>
+                                    <span x-text="locale === 'en' ? 'COPY CODE' : 'SALIN KODE'">SALIN KODE</span>
                                 </button>
                             </div>
                         </div>
@@ -156,7 +170,8 @@
                             <div id="mermaid-studio-erd-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
-                                    <span>Memuat topologi ERD Mermaid...</span>
+                                    <span x-show="locale === 'en'">Loading Mermaid ERD topology...</span>
+                                    <span x-show="locale !== 'en'">Memuat topologi ERD Mermaid...</span>
                                 </div>
                             </div>
                         </div>
@@ -168,20 +183,23 @@
                     <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
                             <div class="flex items-center gap-2">
-                                <span class="text-amber-600 dark:text-amber-400 font-bold uppercase">DIAGRAM 3: PETA KETERGANTUNGAN (AKTOR &rarr; FITUR &rarr; ENTITAS BASIS DATA)</span>
-                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                                <span class="text-amber-600 dark:text-amber-400 font-bold uppercase">
+                                    <span x-show="locale === 'en'">DIAGRAM 3: DEPENDENCY MAP (ACTORS &rarr; FEATURES &rarr; DATABASE ENTITIES)</span>
+                                    <span x-show="locale !== 'en'">DIAGRAM 3: PETA KETERGANTUNGAN (AKTOR &rarr; FITUR &rarr; ENTITAS BASIS DATA)</span>
+                                </span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline" x-text="locale === 'en' ? '(Drag to Pan • Scroll to Zoom)' : '(Drag untuk Pan • Scroll untuk Zoom)'">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <button type="button" @click="zoomDiagram('mermaid-studio-featdep-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-featdep-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
-                                <button type="button" @click="zoomDiagram('mermaid-studio-featdep-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
-                                <button type="button" @click="openDiagramFullscreen('Diagram 3: Peta Ketergantungan Fitur', 'mermaid-studio-featdep-source')" class="px-2.5 py-0.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-featdep-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom Out (-)' : 'Perkecil Zoom (-)'">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-featdep-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Fit to Screen / Reset Zoom (1:1)' : 'Fit to Screen / Reset Zoom (1:1)'">FIT (1:1)</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-featdep-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom In (+)' : 'Perbesar Zoom (+)'">+</button>
+                                <button type="button" @click="openDiagramFullscreen(locale === 'en' ? 'Diagram 3: Feature & Entity Dependency Map' : 'Diagram 3: Peta Ketergantungan Fitur', 'mermaid-studio-featdep-source')" class="px-2.5 py-0.5 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" :title="locale === 'en' ? 'Open Fullscreen' : 'Buka di Layar Penuh'">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                                    <span>LAYAR PENUH</span>
+                                    <span x-text="locale === 'en' ? 'FULLSCREEN' : 'LAYAR PENUH'">LAYAR PENUH</span>
                                 </button>
                                 <button type="button" onclick="window.copyMermaidCode('mermaid-studio-featdep-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-amber-500 hover:text-white dark:hover:bg-amber-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                    <span>SALIN KODE</span>
+                                    <span x-text="locale === 'en' ? 'COPY CODE' : 'SALIN KODE'">SALIN KODE</span>
                                 </button>
                             </div>
                         </div>
@@ -197,7 +215,8 @@
                             <div id="mermaid-studio-featdep-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-amber-500 animate-ping"></span>
-                                    <span>Memuat peta ketergantungan fitur Mermaid...</span>
+                                    <span x-show="locale === 'en'">Loading Mermaid feature dependency map...</span>
+                                    <span x-show="locale !== 'en'">Memuat peta ketergantungan fitur Mermaid...</span>
                                 </div>
                             </div>
                         </div>
@@ -209,20 +228,23 @@
                     <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
                             <div class="flex items-center gap-2">
-                                <span class="text-rose-600 dark:text-rose-400 font-bold uppercase">DIAGRAM 4: ROADMAP EKSEKUSI &amp; TIMELINE SPRINT (GANTT CHART)</span>
-                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                                <span class="text-rose-600 dark:text-rose-400 font-bold uppercase">
+                                    <span x-show="locale === 'en'">DIAGRAM 4: EXECUTION ROADMAP &amp; SPRINT TIMELINE (GANTT CHART)</span>
+                                    <span x-show="locale !== 'en'">DIAGRAM 4: ROADMAP EKSEKUSI &amp; TIMELINE SPRINT (GANTT CHART)</span>
+                                </span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline" x-text="locale === 'en' ? '(Drag to Pan • Scroll to Zoom)' : '(Drag untuk Pan • Scroll untuk Zoom)'">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <button type="button" @click="zoomDiagram('mermaid-studio-gantt-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-gantt-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
-                                <button type="button" @click="zoomDiagram('mermaid-studio-gantt-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
-                                <button type="button" @click="openDiagramFullscreen('Diagram 4: Timeline Roadmap & Gantt Chart', 'mermaid-studio-gantt-source')" class="px-2.5 py-0.5 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-gantt-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom Out (-)' : 'Perkecil Zoom (-)'">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-gantt-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Fit to Screen / Reset Zoom (1:1)' : 'Fit to Screen / Reset Zoom (1:1)'">FIT (1:1)</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-gantt-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom In (+)' : 'Perbesar Zoom (+)'">+</button>
+                                <button type="button" @click="openDiagramFullscreen(locale === 'en' ? 'Diagram 4: Timeline Roadmap & Gantt Chart' : 'Diagram 4: Timeline Roadmap & Gantt Chart', 'mermaid-studio-gantt-source')" class="px-2.5 py-0.5 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" :title="locale === 'en' ? 'Open Fullscreen' : 'Buka di Layar Penuh'">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                                    <span>LAYAR PENUH</span>
+                                    <span x-text="locale === 'en' ? 'FULLSCREEN' : 'LAYAR PENUH'">LAYAR PENUH</span>
                                 </button>
                                 <button type="button" onclick="window.copyMermaidCode('mermaid-studio-gantt-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-rose-500 hover:text-white dark:hover:bg-rose-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                    <span>SALIN KODE</span>
+                                    <span x-text="locale === 'en' ? 'COPY CODE' : 'SALIN KODE'">SALIN KODE</span>
                                 </button>
                             </div>
                         </div>
@@ -238,7 +260,8 @@
                             <div id="mermaid-studio-gantt-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-rose-500 animate-ping"></span>
-                                    <span>Memuat timeline roadmap Mermaid...</span>
+                                    <span x-show="locale === 'en'">Loading Mermaid roadmap timeline...</span>
+                                    <span x-show="locale !== 'en'">Memuat timeline roadmap Mermaid...</span>
                                 </div>
                             </div>
                         </div>
@@ -250,20 +273,23 @@
                     <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
                             <div class="flex items-center gap-2">
-                                <span class="text-violet-600 dark:text-violet-400 font-bold uppercase">DIAGRAM 5: TOPOLOGI INFRASTRUKTUR, KEAMANAN &amp; HOSTING</span>
-                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                                <span class="text-violet-600 dark:text-violet-400 font-bold uppercase">
+                                    <span x-show="locale === 'en'">DIAGRAM 5: INFRASTRUCTURE, SECURITY &amp; HOSTING TOPOLOGY</span>
+                                    <span x-show="locale !== 'en'">DIAGRAM 5: TOPOLOGI INFRASTRUKTUR, KEAMANAN &amp; HOSTING</span>
+                                </span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline" x-text="locale === 'en' ? '(Drag to Pan • Scroll to Zoom)' : '(Drag untuk Pan • Scroll untuk Zoom)'">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <button type="button" @click="zoomDiagram('mermaid-studio-infra-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-infra-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
-                                <button type="button" @click="zoomDiagram('mermaid-studio-infra-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
-                                <button type="button" @click="openDiagramFullscreen('Diagram 5: Topologi Infrastruktur & Keamanan', 'mermaid-studio-infra-source')" class="px-2.5 py-0.5 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-infra-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom Out (-)' : 'Perkecil Zoom (-)'">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-infra-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Fit to Screen / Reset Zoom (1:1)' : 'Fit to Screen / Reset Zoom (1:1)'">FIT (1:1)</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-infra-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom In (+)' : 'Perbesar Zoom (+)'">+</button>
+                                <button type="button" @click="openDiagramFullscreen(locale === 'en' ? 'Diagram 5: Infrastructure & Security Topology' : 'Diagram 5: Topologi Infrastruktur & Keamanan', 'mermaid-studio-infra-source')" class="px-2.5 py-0.5 bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" :title="locale === 'en' ? 'Open Fullscreen' : 'Buka di Layar Penuh'">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                                    <span>LAYAR PENUH</span>
+                                    <span x-text="locale === 'en' ? 'FULLSCREEN' : 'LAYAR PENUH'">LAYAR PENUH</span>
                                 </button>
                                 <button type="button" onclick="window.copyMermaidCode('mermaid-studio-infra-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-violet-500 hover:text-white dark:hover:bg-violet-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                    <span>SALIN KODE</span>
+                                    <span x-text="locale === 'en' ? 'COPY CODE' : 'SALIN KODE'">SALIN KODE</span>
                                 </button>
                             </div>
                         </div>
@@ -279,7 +305,8 @@
                             <div id="mermaid-studio-infra-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-violet-500 animate-ping"></span>
-                                    <span>Memuat topologi infrastruktur Mermaid...</span>
+                                    <span x-show="locale === 'en'">Loading Mermaid infrastructure topology...</span>
+                                    <span x-show="locale !== 'en'">Memuat topologi infrastruktur Mermaid...</span>
                                 </div>
                             </div>
                         </div>
@@ -291,20 +318,23 @@
                     <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
                             <div class="flex items-center gap-2">
-                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">DIAGRAM 6: ALUR SINKRONISASI MOBILE &amp; LOCAL SQLITE (OFFLINE-FIRST)</span>
-                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">
+                                    <span x-show="locale === 'en'">DIAGRAM 6: MOBILE &amp; LOCAL SQLITE SYNC SEQUENCE (OFFLINE-FIRST)</span>
+                                    <span x-show="locale !== 'en'">DIAGRAM 6: ALUR SINKRONISASI MOBILE &amp; LOCAL SQLITE (OFFLINE-FIRST)</span>
+                                </span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline" x-text="locale === 'en' ? '(Drag to Pan • Scroll to Zoom)' : '(Drag untuk Pan • Scroll untuk Zoom)'">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <button type="button" @click="zoomDiagram('mermaid-studio-mobilesync-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-studio-mobilesync-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
-                                <button type="button" @click="zoomDiagram('mermaid-studio-mobilesync-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
-                                <button type="button" @click="openDiagramFullscreen('Diagram 6: Sinkronisasi Mobile & Local SQLite', 'mermaid-studio-mobilesync-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                <button type="button" @click="zoomDiagram('mermaid-studio-mobilesync-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom Out (-)' : 'Perkecil Zoom (-)'">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-studio-mobilesync-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Fit to Screen / Reset Zoom (1:1)' : 'Fit to Screen / Reset Zoom (1:1)'">FIT (1:1)</button>
+                                <button type="button" @click="zoomDiagram('mermaid-studio-mobilesync-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom In (+)' : 'Perbesar Zoom (+)'">+</button>
+                                <button type="button" @click="openDiagramFullscreen(locale === 'en' ? 'Diagram 6: Mobile & Local SQLite Sync Sequence' : 'Diagram 6: Sinkronisasi Mobile & Local SQLite', 'mermaid-studio-mobilesync-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" :title="locale === 'en' ? 'Open Fullscreen' : 'Buka di Layar Penuh'">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                                    <span>LAYAR PENUH</span>
+                                    <span x-text="locale === 'en' ? 'FULLSCREEN' : 'LAYAR PENUH'">LAYAR PENUH</span>
                                 </button>
                                 <button type="button" onclick="window.copyMermaidCode('mermaid-studio-mobilesync-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                    <span>SALIN KODE</span>
+                                    <span x-text="locale === 'en' ? 'COPY CODE' : 'SALIN KODE'">SALIN KODE</span>
                                 </button>
                             </div>
                         </div>
@@ -320,7 +350,8 @@
                             <div id="mermaid-studio-mobilesync-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-500 dark:text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
-                                    <span>Memuat topologi sinkronisasi Mobile &amp; SQLite Mermaid...</span>
+                                    <span x-show="locale === 'en'">Loading Mermaid mobile &amp; SQLite sync sequence...</span>
+                                    <span x-show="locale !== 'en'">Memuat topologi sinkronisasi Mobile &amp; SQLite Mermaid...</span>
                                 </div>
                             </div>
                         </div>

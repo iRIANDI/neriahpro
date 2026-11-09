@@ -8,29 +8,35 @@
                         <div class="flex items-center gap-2">
                             <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">07</span>
                             <div>
-                                <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">{{ $isEn ? 'Database ERD & Relational Schema (PostgreSQL Strict ULID)' : 'Database ERD & Skema Relasi (PostgreSQL Strict ULID)' }}</h2>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">{{ $isEn ? 'Relational Database Topology, Key Entities & Foreign Key Constraints' : 'Topologi Basis Data Relasional, Entitas Kunci & Foreign Key Constraints' }}</p>
+                                <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
+                                    <span x-show="locale === 'en'">Database ERD &amp; Relational Schema (PostgreSQL Strict ULID)</span>
+                                    <span x-show="locale !== 'en'">Database ERD &amp; Skema Relasi (PostgreSQL Strict ULID)</span>
+                                </h2>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                                    <span x-show="locale === 'en'">Relational Database Topology, Key Entities &amp; Foreign Key Constraints</span>
+                                    <span x-show="locale !== 'en'">Topologi Basis Data Relasional, Entitas Kunci &amp; Foreign Key Constraints</span>
+                                </p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
                             @if(!($isScopeLocked ?? false) || ($blueprint->project_status === 'Retail License') || (auth()->user()?->isSuperAdmin() ?? false))
                                 <button 
                                     type="button" 
-                                    @click.stop="openTweakModal('database_erd', '{{ $isEn ? 'Database ERD (PostgreSQL Strict ULID)' : 'Database ERD (PostgreSQL Strict ULID)' }}')" 
+                                    @click.stop="openTweakModal('database_erd', locale === 'en' ? 'Database ERD (PostgreSQL Strict ULID)' : 'Database ERD (PostgreSQL Strict ULID)')" 
                                     class="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-mono font-bold text-xs border border-emerald-500/30 flex items-center gap-1.5 transition shrink-0 cursor-pointer"
-                                    title="{{ $isEn ? 'Synchronize and deepen table schemas and ERD relations from grounded project documents' : 'Sinkronkan dan perdalam skema tabel serta relasi ERD dari Dokumen Acuan Proyek' }}"
+                                    :title="locale === 'en' ? 'Synchronize and deepen table schemas and ERD relations from grounded project documents' : 'Sinkronkan dan perdalam skema tabel serta relasi ERD dari Dokumen Acuan Proyek'"
                                 >
                                     <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                    <span>{{ $isEn ? 'ELABORATE ERD FROM GROUNDED CORPUS' : 'PERDALAM ERD DARI DOKUMEN ACUAN' }}</span>
+                                    <span x-text="locale === 'en' ? 'ELABORATE ERD FROM GROUNDED CORPUS' : 'PERDALAM ERD DARI DOKUMEN ACUAN'">PERDALAM ERD DARI DOKUMEN ACUAN</span>
                                 </button>
                             @endif
                             <button 
                                 type="button" 
                                 @click.stop="toggleSection('section-5')" 
                                 class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
-                                :title="sectionCollapses['section-5'] ? (isEn ? 'Expand this section' : 'Buka seksi ini') : (isEn ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                                :title="sectionCollapses['section-5'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
                             >
-                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-5'] ? (isEn ? 'EXPAND' : 'BUKA') : (isEn ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-5'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
                                 <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-5'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
@@ -47,9 +53,10 @@
                 <div x-show="sectionCollapses['section-5']" @click="toggleSection('section-5')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
                     <span class="flex items-center gap-2">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>{{ $isEn ? 'Section 07 collapsed (Database ERD & Relational Schema). Click to expand...' : 'Seksi 07 diciutkan (Database ERD & Skema Relasi). Klik untuk membuka...' }}</span>
+                        <span x-show="locale === 'en'">Section 07 collapsed (Database ERD &amp; Relational Schema). Click to expand...</span>
+                        <span x-show="locale !== 'en'">Seksi 07 diciutkan (Database ERD &amp; Skema Relasi). Klik untuk membuka...</span>
                     </span>
-                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                 </div>
 
                 <div x-show="!sectionCollapses['section-5']" x-transition class="accordion-body">
@@ -230,9 +237,12 @@
                             <div class="flex items-center justify-between gap-3 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
                                 <div class="flex items-center gap-2">
                                     <span class="px-2 py-0.5 bg-emerald-500 text-black font-black text-[10px]">RELATIONAL GRAPH</span>
-                                    <span class="text-zinc-800 dark:text-zinc-200 text-xs font-bold">Relasi Antar Tabel (PostgreSQL Strict Foreign Key Cardinalities)</span>
+                                    <span class="text-zinc-800 dark:text-zinc-200 text-xs font-bold">
+                                        <span x-show="locale === 'en'">Inter-Table Relationships (PostgreSQL Strict Foreign Key Cardinalities)</span>
+                                        <span x-show="locale !== 'en'">Relasi Antar Tabel (PostgreSQL Strict Foreign Key Cardinalities)</span>
+                                    </span>
                                 </div>
-                                <span class="text-[10px] text-zinc-500 font-mono hidden sm:inline">{{ count($resolvedRelations) }} Relasi Terdefinisi</span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden sm:inline">{{ count($resolvedRelations) }} <span x-text="locale === 'en' ? 'Relations Defined' : 'Relasi Terdefinisi'">Relasi Terdefinisi</span></span>
                             </div>
                             <div class="flex flex-wrap items-center gap-2 text-[11px]">
                                 @foreach($resolvedRelations as $rel)
@@ -309,20 +319,23 @@
                     <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-none relative">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-zinc-200 dark:border-zinc-800 text-xs font-mono">
                             <div class="flex items-center gap-2">
-                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">SKEMA BASIS DATA MERMAID (POSTGRESQL STRICT ERD)</span>
-                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold uppercase">
+                                    <span x-show="locale === 'en'">MERMAID DATABASE SCHEMA (POSTGRESQL STRICT ERD)</span>
+                                    <span x-show="locale !== 'en'">SKEMA BASIS DATA MERMAID (POSTGRESQL STRICT ERD)</span>
+                                </span>
+                                <span class="text-[10px] text-zinc-500 font-mono hidden md:inline" x-text="locale === 'en' ? '(Drag to Pan • Scroll to Zoom)' : '(Drag untuk Pan • Scroll untuk Zoom)'">(Drag untuk Pan &bull; Scroll untuk Zoom)</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <button type="button" @click="zoomDiagram('mermaid-erd-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perkecil Zoom (-)">-</button>
-                                <button type="button" @click="resetDiagram('mermaid-erd-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" title="Fit to Screen / Reset Zoom (1:1)">FIT (1:1)</button>
-                                <button type="button" @click="zoomDiagram('mermaid-erd-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" title="Perbesar Zoom (+)">+</button>
-                                <button type="button" @click="openDiagramFullscreen('Skema Basis Data Relasional (PostgreSQL Strict ERD)', 'mermaid-erd-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" title="Buka di Layar Penuh">
+                                <button type="button" @click="zoomDiagram('mermaid-erd-target', -0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom Out (-)' : 'Perkecil Zoom (-)'">-</button>
+                                <button type="button" @click="resetDiagram('mermaid-erd-target')" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px] font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Fit to Screen / Reset Zoom (1:1)' : 'Fit to Screen / Reset Zoom (1:1)'">FIT (1:1)</button>
+                                <button type="button" @click="zoomDiagram('mermaid-erd-target', 0.25)" class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-bold transition rounded-none cursor-pointer" :title="locale === 'en' ? 'Zoom In (+)' : 'Perbesar Zoom (+)'">+</button>
+                                <button type="button" @click="openDiagramFullscreen(locale === 'en' ? 'Relational Database Schema (PostgreSQL Strict ERD)' : 'Skema Basis Data Relasional (PostgreSQL Strict ERD)', 'mermaid-erd-source')" class="px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase transition rounded-none cursor-pointer flex items-center gap-1" :title="locale === 'en' ? 'Open Fullscreen' : 'Buka di Layar Penuh'">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                                    <span>LAYAR PENUH</span>
+                                    <span x-text="locale === 'en' ? 'FULLSCREEN' : 'LAYAR PENUH'">LAYAR PENUH</span>
                                 </button>
                                 <button type="button" onclick="window.copyMermaidCode('mermaid-erd-source', this)" class="px-2.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-emerald-500 hover:text-black text-zinc-700 dark:text-zinc-300 text-[10px] font-mono font-bold transition flex items-center gap-1 border border-zinc-300 dark:border-zinc-700 cursor-pointer">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                    <span>SALIN KODE MERMAID ERD</span>
+                                    <span x-text="locale === 'en' ? 'COPY MERMAID ERD' : 'SALIN KODE MERMAID ERD'">SALIN KODE MERMAID ERD</span>
                                 </button>
                             </div>
                         </div>
@@ -352,7 +365,10 @@
                             <div id="mermaid-erd-target" class="w-full h-full flex items-center justify-center text-center text-zinc-800 dark:text-zinc-200" data-zoom="1" data-pan-x="0" data-pan-y="0">
                                 <div class="text-zinc-400 text-xs font-mono animate-pulse flex items-center gap-2">
                                     <span class="w-2 h-2 rounded-none bg-emerald-500 animate-ping"></span>
-                                    <span>Memuat skema relasi database Mermaid...</span>
+                                    <span x-show="locale === 'en'">Loading Mermaid database relational schema...</span>
+                                    <span x-show="locale !== 'en'">Memuat skema relasi database Mermaid...</span>
+                                </div>
+                            </div>
                                 </div>
                             </div>
                         </div>

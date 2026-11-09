@@ -14,8 +14,14 @@
                     <div class="flex items-center gap-2">
                         <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">08</span>
                         <div>
-                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">Evaluasi Arsitektur &amp; Infrastruktur (AI Database Ready)</h2>
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">Spesifikasi Cloud VPS, AI Database, Redis Cache &amp; Keamanan</p>
+                            <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
+                                <span x-show="locale === 'en'">Architecture &amp; Infrastructure Evaluation (AI Database Ready)</span>
+                                <span x-show="locale !== 'en'">Evaluasi Arsitektur &amp; Infrastruktur (AI Database Ready)</span>
+                            </h2>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
+                                <span x-show="locale === 'en'">Cloud VPS Specifications, AI Database, Redis Cache &amp; Security Topology</span>
+                                <span x-show="locale !== 'en'">Spesifikasi Cloud VPS, AI Database, Redis Cache &amp; Keamanan</span>
+                            </p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -26,9 +32,9 @@
                             type="button" 
                             @click.stop="toggleSection('section-6')" 
                             class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
-                            :title="sectionCollapses['section-6'] ? 'Buka seksi ini' : 'Ciutkan seksi ini'"
+                            :title="sectionCollapses['section-6'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
                         >
-                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-6'] ? 'BUKA' : 'CIUTKAN'"></span>
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-6'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
                             <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-6'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
                     </div>
@@ -38,31 +44,47 @@
                 <div x-show="sectionCollapses['section-6']" @click="toggleSection('section-6')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
                     <span class="flex items-center gap-2">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>Seksi 08 diciutkan (Evaluasi Arsitektur &amp; Infrastruktur Cloud). Klik untuk membuka...</span>
+                        <span x-show="locale === 'en'">Section 08 collapsed (Architecture &amp; Cloud Infrastructure Evaluation). Click to expand...</span>
+                        <span x-show="locale !== 'en'">Seksi 08 diciutkan (Evaluasi Arsitektur &amp; Infrastruktur Cloud). Klik untuk membuka...</span>
                     </span>
-                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                 </div>
 
                 <div x-show="!sectionCollapses['section-6']" x-transition class="accordion-body">
 
                 <!-- Client Architectural Parameters Summary -->
                 <div class="mb-8 p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs">
-                    <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider mb-2">PARAMETER PENILAIAN DARI KUESIONER KLIEN:</div>
+                    <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider mb-2">
+                        <span x-show="locale === 'en'">EVALUATION PARAMETERS FROM CLIENT QUESTIONNAIRE:</span>
+                        <span x-show="locale !== 'en'">PARAMETER PENILAIAN DARI KUESIONER KLIEN:</span>
+                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px]">
                         <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">TARGET SKALA / TRAFIK</span>
+                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">
+                                <span x-show="locale === 'en'">TARGET SCALE / TRAFFIC</span>
+                                <span x-show="locale !== 'en'">TARGET SKALA / TRAFIK</span>
+                            </span>
                             <strong class="text-zinc-900 dark:text-zinc-200">{{ $archEval['scope_boundaries']['client_scale'] ?? ($blueprint->user_metadata['skala_pengguna'] ?? '0 - 100k User / Bulan') }}</strong>
                         </div>
                         <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">JANGKAUAN PASAR</span>
+                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">
+                                <span x-show="locale === 'en'">MARKET REACH</span>
+                                <span x-show="locale !== 'en'">JANGKAUAN PASAR</span>
+                            </span>
                             <strong class="text-zinc-900 dark:text-zinc-200">{{ $archEval['scope_boundaries']['client_market'] ?? ($blueprint->user_metadata['jangkauan_pasar'] ?? 'Domestik Indonesia (IDR)') }}</strong>
                         </div>
                         <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">STANDAR KEPATUHAN</span>
+                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">
+                                <span x-show="locale === 'en'">COMPLIANCE STANDARD</span>
+                                <span x-show="locale !== 'en'">STANDAR KEPATUHAN</span>
+                            </span>
                             <strong class="text-zinc-900 dark:text-zinc-200">{{ $archEval['scope_boundaries']['client_compliance'] ?? ($blueprint->user_metadata['kepatuhan_keamanan'] ?? 'OWASP Top 10 & Enkripsi') }}</strong>
                         </div>
                         <div class="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">RENCANA ANGGARAN KLIEN</span>
+                            <span class="text-zinc-500 dark:text-zinc-400 text-[10px] block">
+                                <span x-show="locale === 'en'">CLIENT BUDGET RANGE</span>
+                                <span x-show="locale !== 'en'">RENCANA ANGGARAN KLIEN</span>
+                            </span>
                             <strong class="text-emerald-600 dark:text-emerald-400">{{ $archEval['scope_boundaries']['client_budget'] ?? ($blueprint->user_metadata['kisaran_budget'] ?? 'Rp 50M - Rp 100M') }}</strong>
                         </div>
                     </div>
@@ -85,9 +107,10 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                         <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
                             <span class="w-2 h-2 bg-emerald-500"></span>
-                            1. Evaluasi Lingkungan Hosting: Tangga Solusi Bertahap (Hosting Ladder 3-Tier)
+                            <span x-show="locale === 'en'">1. Hosting Environment Evaluation: Phased Solution Ladder (3-Tier Hosting Ladder)</span>
+                            <span x-show="locale !== 'en'">1. Evaluasi Lingkungan Hosting: Tangga Solusi Bertahap (Hosting Ladder 3-Tier)</span>
                         </h3>
-                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase border bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase border bg-emerald-500/10 text-emerald-400 border-emerald-500/30" x-text="locale === 'en' ? 'ADAPTIVE FROM SMB TO ENTERPRISE' : 'ADAPTIF DARI UMKM S/D ENTERPRISE'">
                             ADAPTIF DARI UMKM S/D ENTERPRISE
                         </span>
                     </div>

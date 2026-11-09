@@ -25,9 +25,10 @@
         <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500"></div>
 
         <!-- Section Title & Meta Header -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5 mb-6">
-            <div>
-                <div class="flex flex-wrap items-center gap-2 mb-2">
+        <div class="border-b border-zinc-200 dark:border-zinc-800 pb-5 mb-6 space-y-4">
+            <!-- Row 1: Meta Badges & Section Collapse Toggle -->
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-2">
                     <span class="px-2.5 py-0.5 text-xs font-mono font-black uppercase tracking-wider bg-emerald-500 text-black rounded-none">
                         <span x-show="locale === 'en'">WORLD-CLASS ROADMAP &amp; GUARDRAILS</span>
                         <span x-show="locale !== 'en'">PETA JALAN KELAS DUNIA &amp; GUARDRAILS</span>
@@ -36,18 +37,31 @@
                         DOCKER PHP 8.5+ &bull; PG 16 ULID &bull; ECC HARNESS
                     </span>
                 </div>
-                <h2 class="text-xl sm:text-2xl lg:text-3xl font-black uppercase text-zinc-950 dark:text-zinc-50 tracking-tight flex items-center gap-2">
+                <button 
+                    type="button" 
+                    @click.stop="toggleSection('section-00-execution-guide')" 
+                    class="px-2.5 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1.5 font-mono text-xs border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 cursor-pointer shrink-0"
+                    :title="sectionCollapses['section-00-execution-guide'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                >
+                    <span class="text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400" x-text="sectionCollapses['section-00-execution-guide'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                    <svg class="w-3.5 h-3.5 transform transition-transform duration-200" :class="sectionCollapses['section-00-execution-guide'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+            </div>
+
+            <!-- Row 2: Full-width Title & Subtitle -->
+            <div class="space-y-1.5">
+                <h2 class="text-xl sm:text-2xl lg:text-3xl font-black uppercase text-zinc-950 dark:text-zinc-50 tracking-tight">
                     <span x-show="locale === 'en'">🚀 DEVELOPER EXECUTION GUIDE &amp; 3 WAYS TO START</span>
                     <span x-show="locale !== 'en'">🚀 PANDUAN EKSEKUSI &amp; 3 CARA MULAI PROYEK</span>
                 </h2>
-                <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-mono mt-1">
+                <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-mono leading-relaxed max-w-5xl">
                     <span x-show="locale === 'en'">This blueprint is designed not merely as a reading document, but as a production-grade <strong class="text-zinc-900 dark:text-zinc-200">Executable Architecture Contract</strong> ready for coding. Choose one of the 3 approaches below to start executing your project.</span>
                     <span x-show="locale !== 'en'">Blueprint ini dirancang bukan sekadar dokumen bacaan, melainkan <strong class="text-zinc-900 dark:text-zinc-200">Executable Architecture Contract</strong> siap koding. Pilih salah satu dari 3 cara berikut untuk mulai mengeksekusi proyek Anda.</span>
                 </p>
             </div>
 
-            <!-- Quick Action Toolbar -->
-            <div class="flex flex-wrap items-center gap-2 shrink-0 font-mono text-xs">
+            <!-- Row 3: Action Buttons Dedicated Toolbar -->
+            <div class="flex flex-wrap items-center gap-2.5 pt-2 font-mono text-xs">
                 <button 
                     type="button" 
                     @click="showExecutionGuideModal = true"
@@ -74,15 +88,6 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     <span x-show="locale === 'en'">SCAFFOLD .ZIP (22 FILES)</span>
                     <span x-show="locale !== 'en'">SCAFFOLD .ZIP (22 FILE)</span>
-                </button>
-                <button 
-                    type="button" 
-                    @click.stop="toggleSection('section-00-execution-guide')" 
-                    class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 ml-1 cursor-pointer"
-                    :title="sectionCollapses['section-00-execution-guide'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
-                >
-                    <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="sectionCollapses['section-00-execution-guide'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
-                    <svg class="w-4 h-4 transform transition-transform duration-200" :class="sectionCollapses['section-00-execution-guide'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
             </div>
         </div>

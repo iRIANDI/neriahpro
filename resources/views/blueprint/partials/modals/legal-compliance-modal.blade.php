@@ -15,10 +15,12 @@
             <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-4 shrink-0">
                 <div>
                     <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white tracking-tight flex items-center gap-2">
-                        <span>KEPATUHAN LAYANAN &amp; MIDTRANS SNAP PAYMENT</span>
+                        <span x-show="legalTermsTab === 'en'">SERVICE COMPLIANCE &amp; MIDTRANS SNAP PAYMENT</span>
+                        <span x-show="legalTermsTab !== 'en'">KEPATUHAN LAYANAN &amp; MIDTRANS SNAP PAYMENT</span>
                     </h3>
                     <p class="text-xs text-zinc-500 dark:text-zinc-400 font-mono mt-0.5">
-                        Transparansi Konsumen, Garansi SLA 30 Hari, &amp; Penanganan Idempotency Transaksi
+                        <span x-show="legalTermsTab === 'en'">Consumer Transparency, 30-Day SLA Warranty, &amp; Transaction Idempotency Handling</span>
+                        <span x-show="legalTermsTab !== 'en'">Transparansi Konsumen, Garansi SLA 30 Hari, &amp; Penanganan Idempotency Transaksi</span>
                     </p>
                 </div>
                 <!-- Lang Switcher inside modal -->

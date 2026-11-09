@@ -49,13 +49,19 @@
 
                 <div class="grid md:grid-cols-2 gap-4 mb-6">
                     <div class="bg-zinc-50 dark:bg-zinc-950 p-5 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                        <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-2">Masalah Utama yang Diselesaikan</h3>
+                        <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 mb-2">
+                            <span x-show="locale === 'en'">Key Problems Solved</span>
+                            <span x-show="locale !== 'en'">Masalah Utama yang Diselesaikan</span>
+                        </h3>
                         <div class="text-zinc-700 dark:text-zinc-300 text-sm leading-relaxed font-sans">
                             {!! \App\Support\BlueprintPdfHelper::formatWebPoints($blueprint->masalah_utama ?? ($prd['executive_summary']['problem_statement'] ?? '-'), true) !!}
                         </div>
                     </div>
                     <div class="bg-zinc-50 dark:bg-zinc-950 p-5 border border-zinc-200 dark:border-zinc-800 rounded-none">
-                        <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">Tolak Ukur Kesuksesan (KPI)</h3>
+                        <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">
+                            <span x-show="locale === 'en'">Success Metrics (KPI)</span>
+                            <span x-show="locale !== 'en'">Tolak Ukur Kesuksesan (KPI)</span>
+                        </h3>
                         <div class="text-zinc-700 dark:text-zinc-300 text-sm leading-relaxed font-sans">
                             {!! \App\Support\BlueprintPdfHelper::formatWebPoints($blueprint->tujuan_utama ?? ($prd['executive_summary']['success_metrics'] ?? '-'), true) !!}
                         </div>
@@ -63,7 +69,10 @@
                 </div>
 
                 <div class="bg-zinc-50 dark:bg-zinc-950 border-l-4 border-emerald-500 p-4 font-sans text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed rounded-none mb-6">
-                    <strong class="font-mono uppercase text-xs text-emerald-600 dark:text-emerald-400 block mb-1">Filosofi Arsitektur & Efisiensi Biaya</strong>
+                    <strong class="font-mono uppercase text-xs text-emerald-600 dark:text-emerald-400 block mb-1">
+                        <span x-show="locale === 'en'">Architecture Philosophy &amp; Cost Efficiency</span>
+                        <span x-show="locale !== 'en'">Filosofi Arsitektur &amp; Efisiensi Biaya</span>
+                    </strong>
                     {{ $prd['executive_summary']['architecture_philosophy'] ?? 'Sistem menggunakan arsitektur Modern Monolith (Laravel 13 & Filament PHP) untuk memangkas biaya server, menjamin isolasi data, dan mempercepat peluncuran fitur hingga 3x lipat.' }}
                 </div>
 
@@ -190,9 +199,9 @@
                 <div x-show="sectionCollapses['section-1-5']" @click="toggleSection('section-1-5')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
                     <span class="flex items-center gap-2">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span>Seksi 01.5 diciutkan (Analisis Kelayakan Bisnis, Formula Balik Modal &amp; 5 Garansi Bebas Penyesalan). Klik untuk membuka...</span>
+                        <span x-text="locale === 'en' ? 'Section 01.5 collapsed (Business Viability, ROI Formula & 5 No-Regret Guarantees). Click to expand...' : 'Seksi 01.5 diciutkan (Analisis Kelayakan Bisnis, Formula Balik Modal & 5 Garansi Bebas Penyesalan). Klik untuk membuka...'"></span>
                     </span>
-                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold">[ + EXPAND ]</span>
+                    <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                 </div>
 
                 <div x-show="!sectionCollapses['section-1-5']" x-transition class="accordion-body">
@@ -200,11 +209,11 @@
                 <!-- TOP BENCHMARK SUMMARY STRIP -->
                 <div class="mb-6 p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-none flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs font-mono">
                     <div class="flex items-center gap-2">
-                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">● BENCHMARK PASAR:</span>
+                        <span class="text-emerald-600 dark:text-emerald-400 font-bold" x-text="locale === 'en' ? '● MARKET BENCHMARK:' : '● BENCHMARK PASAR:'">● BENCHMARK PASAR:</span>
                         <span class="text-zinc-700 dark:text-zinc-300 font-semibold">{{ $businessRoi['ticket_benchmark'] ?? 'Transaksi Komersial' }}</span>
                     </div>
                     <div class="text-zinc-500 dark:text-zinc-400 text-[11px]">
-                        Target BEP Realistis: <span class="text-emerald-600 dark:text-emerald-400 font-bold">{{ $businessRoi['deadly_roi_equation']['projected_annual_roi'] ?? '250% - 500%' }}</span>
+                        <span x-text="locale === 'en' ? 'Realistic BEP Target: ' : 'Target BEP Realistis: '">Target BEP Realistis: </span><span class="text-emerald-600 dark:text-emerald-400 font-bold">{{ $businessRoi['deadly_roi_equation']['projected_annual_roi'] ?? '250% - 500%' }}</span>
                     </div>
                 </div>
 
@@ -229,7 +238,7 @@
 
                             <!-- FORMULA DISPLAY BOX -->
                             <div class="p-4 bg-zinc-50 dark:bg-zinc-900 border border-emerald-500/40 rounded-none font-mono text-xs mb-4 leading-relaxed">
-                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block mb-1 font-sans uppercase font-bold tracking-wider">Perhitungan Matematis Nilai Transaksi:</span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block mb-1 font-sans uppercase font-bold tracking-wider" x-text="locale === 'en' ? 'Mathematical Transaction Value Calculation:' : 'Perhitungan Matematis Nilai Transaksi:'">Perhitungan Matematis Nilai Transaksi:</span>
                                 <div class="font-bold text-zinc-900 dark:text-emerald-300 text-xs sm:text-sm">
                                     {{ $businessRoi['deadly_roi_equation']['formula'] ?? '-' }}
                                 </div>
@@ -241,7 +250,7 @@
                         </div>
 
                         <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 text-xs font-mono flex items-center justify-between">
-                            <span class="text-zinc-500 dark:text-zinc-400">Estimasi Proyeksi ROI Tahun 1:</span>
+                            <span class="text-zinc-500 dark:text-zinc-400" x-text="locale === 'en' ? 'Estimated Year 1 Projected ROI:' : 'Estimasi Proyeksi ROI Tahun 1:'">Estimasi Proyeksi ROI Tahun 1:</span>
                             <span class="text-emerald-600 dark:text-emerald-400 font-bold text-sm sm:text-base">{{ $businessRoi['deadly_roi_equation']['projected_annual_roi'] ?? '450%+' }}</span>
                         </div>
                     </div>
@@ -345,7 +354,7 @@
                                 </div>
                                 <div class="mt-3 pt-2 border-t border-zinc-200 dark:border-zinc-800/80 flex items-center gap-1 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                    <span>{{ $isRetail ? 'TERJAMIN LISENSI DIGITAL' : 'TERJAMIN KONTRAK' }}</span>
+                                    <span x-text="locale === 'en' ? '{{ $isRetail ? 'DIGITAL LICENSE GUARANTEED' : 'CONTRACTUALLY GUARANTEED' }}' : '{{ $isRetail ? 'TERJAMIN LISENSI DIGITAL' : 'TERJAMIN KONTRAK' }}'">{{ $isRetail ? 'TERJAMIN LISENSI DIGITAL' : 'TERJAMIN KONTRAK' }}</span>
                                 </div>
                             </div>
                         @endforeach

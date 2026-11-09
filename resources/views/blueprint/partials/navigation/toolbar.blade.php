@@ -1,5 +1,4 @@
     <header id="blueprint-toolbar" 
-            x-data="{ exportDropdownOpen: false, aiDropdownOpen: false }"
             class="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 py-1.5 px-2 sm:px-4 lg:px-6 sticky z-40 no-print transition-all shadow-xs mt-0 mb-4 w-full max-w-full overflow-hidden"
             style="top: var(--global-nav-h, 88px);">
         <div class="w-full max-w-[1700px] mx-auto overflow-x-auto no-scrollbar overscroll-x-contain">
@@ -73,244 +72,37 @@
                     <span x-show="activeDownloadsCount > 0" x-cloak class="px-1.5 py-0.2 bg-emerald-500 text-black text-[10px] font-black rounded-none" x-text="activeDownloadsCount"></span>
                 </button>
 
-                <!-- AI Suite Dropdown Menu -->
-                <div class="relative" @click.outside="aiDropdownOpen = false">
-                    <button 
-                        type="button" 
-                        @click="aiDropdownOpen = !aiDropdownOpen" 
-                        class="px-2.5 sm:px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono uppercase font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer"
-                        :title="locale === 'en' ? 'AI Tools Suite: Tech Radar, Prompt Helper, Sprint Cockpit' : 'Menu AI: Tech Radar, Prompt Helper, Cockpit Eksekusi'"
-                    >
-                        <span class="w-2 h-2 rounded-none bg-emerald-500 animate-pulse"></span>
-                        <span class="hidden sm:inline">AI SUITE</span>
-                        <svg class="w-3 h-3 text-zinc-500 transition-transform duration-150" :class="aiDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-
-                    <div 
-                        x-show="aiDropdownOpen" 
-                        x-transition:enter="transition ease-out duration-100" 
-                        x-transition:enter-start="opacity-0 scale-95" 
-                        x-transition:enter-end="opacity-100 scale-100" 
-                        x-transition:leave="transition ease-in duration-75" 
-                        x-transition:leave-start="opacity-100 scale-100" 
-                        x-transition:leave-end="opacity-0 scale-95"
-                        class="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-zinc-900 border-2 border-emerald-500 shadow-2xl z-50 p-2 font-mono text-xs space-y-1 rounded-none text-left"
-                        style="display: none;"
-                    >
-                        <div class="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase px-2 py-1 border-b border-zinc-200 dark:border-zinc-800">
-                            <span x-show="locale === 'en'">AI ENGINE &amp; ORCHESTRATION</span>
-                            <span x-show="locale !== 'en'">ENGINE AI &amp; ORKESTRASI</span>
-                        </div>
-
-                        <!-- Tech Radar & Advisory -->
-                        <button 
-                            type="button" 
-                            @click="aiDropdownOpen = false; openAdvisoryModal()" 
-                            class="w-full text-left px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition cursor-pointer"
-                        >
-                            <span class="flex items-center gap-2">
-                                <span>✨</span>
-                                <span class="font-bold">
-                                    <span x-show="locale === 'en'">Tech Radar &amp; Advisory</span>
-                                    <span x-show="locale !== 'en'">Saran Fitur &amp; Tech Radar</span>
-                                </span>
-                            </span>
-                            @if($blueprint->isPurchasedPackage())
-                                <span class="text-[9px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-1 font-bold">READY</span>
-                            @else
-                                <span class="text-[9px] bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1 font-bold">PRO</span>
-                            @endif
-                        </button>
-
-                        <!-- Dedicated AI AGENT HELPER Trigger -->
-                        <button 
-                            type="button" 
-                            @click="aiDropdownOpen = false; showAiPromptModal = true" 
-                            class="w-full text-left px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition cursor-pointer"
-                        >
-                            <span class="flex items-center gap-2">
-                                <span>💬</span>
-                                <span class="font-bold">
-                                    <span x-show="locale === 'en'">Prompt Agent Helper</span>
-                                    <span x-show="locale !== 'en'">Prompt Agent Helper</span>
-                                </span>
-                            </span>
-                            <span class="text-[9px] bg-zinc-200 dark:bg-zinc-800 text-zinc-500 px-1">IDE</span>
-                        </button>
-
-                        <!-- AI Sprint Cockpit -->
-                        <button 
-                            type="button" 
-                            @click="aiDropdownOpen = false; jumpTo('section-3-5')" 
-                            class="w-full text-left px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition cursor-pointer"
-                        >
-                            <span class="flex items-center gap-2">
-                                <span>🎯</span>
-                                <span class="font-bold">
-                                    <span x-show="locale === 'en'">Sprint Cockpit</span>
-                                    <span x-show="locale !== 'en'">Cockpit Eksekusi</span>
-                                </span>
-                            </span>
-                            <span class="text-[9px] bg-emerald-500 text-black px-1.5 py-0.2 font-black" x-text="getDevCompletedCount() + '/' + {{ $totalDevSteps }}"></span>
-                        </button>
-                    </div>
-                </div>
+                <!-- AI Suite Modal Trigger -->
+                <button 
+                    type="button" 
+                    @click="showAiSuiteModal = true" 
+                    class="px-2.5 sm:px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono uppercase font-bold rounded-none border border-zinc-300 dark:border-zinc-700 flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer shadow-xs"
+                    :title="locale === 'en' ? 'Open AI Tools Suite: Tech Radar, Prompt Helper, Sprint Cockpit' : 'Buka Menu AI: Tech Radar, Prompt Helper, Cockpit Eksekusi'"
+                >
+                    <span class="w-2 h-2 rounded-none bg-emerald-500 animate-pulse"></span>
+                    <span class="hidden sm:inline">AI SUITE</span>
+                    <span class="sm:hidden">AI</span>
+                    <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
             </div>
 
             <!-- RIGHT WING: Unified Export Dropdown + View Mode + Scope Status -->
             <div class="flex items-center gap-2 shrink-0">
-                <!-- UNIFIED EXPORT & DOCUMENTS DROPDOWN (Consolidates all 15 export actions) -->
-                <div class="relative" @click.outside="exportDropdownOpen = false">
-                    <button 
-                        type="button" 
-                        @click="exportDropdownOpen = !exportDropdownOpen" 
-                        class="px-3 py-1.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white text-xs font-mono font-black rounded-none border border-zinc-800 dark:border-zinc-200 flex items-center gap-1.5 transition cursor-pointer shadow-xs whitespace-nowrap"
-                        :title="locale === 'en' ? 'Open Export & Documents Hub (PDF, Markdown, .cursorrules, Schema, Contracts)' : 'Buka Hub Dokumen & Ekspor (PDF, Markdown, .cursorrules, Skema, Dokumen Kontrak)'"
-                    >
-                        <svg class="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        <span class="hidden md:inline">
-                            <span x-show="locale === 'en'">EXPORT &amp; DOCUMENTS</span>
-                            <span x-show="locale !== 'en'">DOKUMEN &amp; EKSPOR</span>
-                        </span>
-                        <span class="md:hidden">EXPORT</span>
-                        <svg class="w-3 h-3 text-zinc-400 transition-transform duration-150" :class="exportDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-
-                    <!-- The Structured Enterprise Exporter Menu Popover -->
-                    <div 
-                        x-show="exportDropdownOpen" 
-                        x-transition:enter="transition ease-out duration-100" 
-                        x-transition:enter-start="opacity-0 scale-95" 
-                        x-transition:enter-end="opacity-100 scale-100" 
-                        x-transition:leave="transition ease-in duration-75" 
-                        x-transition:leave-start="opacity-100 scale-100" 
-                        x-transition:leave-end="opacity-0 scale-95"
-                        class="absolute top-full right-0 mt-1 w-80 sm:w-96 max-h-[82vh] overflow-y-auto bg-white dark:bg-zinc-900 border-2 border-emerald-500 shadow-2xl z-50 p-2 font-mono text-xs rounded-none text-left custom-prd-scrollbar"
-                        style="display: none;"
-                    >
-                        <!-- Group 1: Official Documents -->
-                        <div class="px-2 py-1 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800 mb-1 flex items-center justify-between">
-                            <span>
-                                <span x-show="locale === 'en'">📄 OFFICIAL DOCUMENTS &amp; PRINT</span>
-                                <span x-show="locale !== 'en'">📄 DOKUMEN RESMI &amp; CETAK</span>
-                            </span>
-                        </div>
-                        <div class="grid grid-cols-1 gap-1 mb-2">
-                            <button type="button" @click="exportDropdownOpen = false; window.printPrdDocument()" class="w-full text-left px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition cursor-pointer">
-                                <span class="flex items-center gap-2">
-                                    <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                    <span class="font-bold"><span x-show="locale === 'en'">Print Formal PRD Document</span><span x-show="locale !== 'en'">Cetak Dokumen Resmi PRD</span></span>
-                                </span>
-                                <span class="text-[10px] text-zinc-400 font-mono">Ctrl+P</span>
-                            </button>
-                            <button type="button" @click="exportDropdownOpen = false; triggerPdfDownload()" class="w-full text-left px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition cursor-pointer">
-                                <span class="flex items-center gap-2">
-                                    <span class="text-rose-500 font-bold text-xs">PDF</span>
-                                    <span class="font-bold"><span x-show="locale === 'en'">Official PDF Document</span><span x-show="locale !== 'en'">Dokumen PDF Resmi</span></span>
-                                </span>
-                                <span class="text-[9px] bg-zinc-200 dark:bg-zinc-800 px-1 text-zinc-500">JOB QUEUE</span>
-                            </button>
-                            <button type="button" @click="exportDropdownOpen = false; triggerMdDownload()" class="w-full text-left px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition cursor-pointer">
-                                <span class="flex items-center gap-2">
-                                    <span class="text-sky-500 font-bold text-xs">.MD</span>
-                                    <span class="font-bold"><span x-show="locale === 'en'">Raw Markdown Corpus (.MD)</span><span x-show="locale !== 'en'">Dokumen Asli Markdown (.MD)</span></span>
-                                </span>
-                                <span class="text-[9px] bg-zinc-200 dark:bg-zinc-800 px-1 text-zinc-500">CORPUS</span>
-                            </button>
-                        </div>
-
-                        <!-- Group 2: AI & Agent Directives -->
-                        <div class="px-2 py-1 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800 mb-1 flex items-center justify-between">
-                            <span>
-                                <span x-show="locale === 'en'">🤖 AI IDE &amp; AGENT DIRECTIVES</span>
-                                <span x-show="locale !== 'en'">🤖 ATURAN AI IDE &amp; AGENT</span>
-                            </span>
-                        </div>
-                        <div class="grid grid-cols-1 gap-1 mb-2">
-                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', $blueprint->slug) }}?locale=' + (locale || 'id')" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold text-emerald-600 dark:text-emerald-400">.cursorrules / CLAUDE.md</span>
-                                <span class="text-[10px] text-zinc-500">AI AGENT RULES</span>
-                            </a>
-                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint']) }}&locale=' + (locale || 'id')" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">EXECUTION.MD</span>
-                                <span class="text-[10px] text-zinc-500"><span x-show="locale === 'en'">Zero-Assumption Contract</span><span x-show="locale !== 'en'">Kontrak Eksekusi</span></span>
-                            </a>
-                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'decision-tables', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'decision-tables']) }}&locale=' + (locale || 'id')" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">DECISION.MD</span>
-                                <span class="text-[10px] text-zinc-500"><span x-show="locale === 'en'">Deterministic Decision Tables</span><span x-show="locale !== 'en'">Tabel Aturan Keputusan</span></span>
-                            </a>
-                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'syntax-lock', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'syntax-lock']) }}&locale=' + (locale || 'id')" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">SYNTAX26.MD</span>
-                                <span class="text-[10px] text-zinc-500"><span x-show="locale === 'en'">Syntax Anti-Hallucination</span><span x-show="locale !== 'en'">Kamus Anti-Halusinasi</span></span>
-                            </a>
-                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'symbol-manifest', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'symbol-manifest']) }}&locale=' + (locale || 'id')" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">SYMBOL.JSON</span>
-                                <span class="text-[10px] text-zinc-500"><span x-show="locale === 'en'">Exact Symbol Lock</span><span x-show="locale !== 'en'">Manifest Simbol Presisi</span></span>
-                            </a>
-                        </div>
-
-                        <!-- Group 3: Architecture & Engineering Configs -->
-                        <div class="px-2 py-1 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800 mb-1 flex items-center justify-between">
-                            <span>
-                                <span x-show="locale === 'en'">⚙️ ARCHITECTURE &amp; DEVOPS</span>
-                                <span x-show="locale !== 'en'">⚙️ ARSITEKTUR &amp; DEVOPS</span>
-                            </span>
-                        </div>
-                        <div class="grid grid-cols-1 gap-1 mb-2">
-                            <a href="{{ route('blueprint.download-schema-json', ['slug' => $blueprint->slug, 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-schema-json', $blueprint->slug) }}?locale=' + (locale || 'id')" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">BLUEPRINT_SCHEMA.json</span>
-                                <span class="text-[10px] text-zinc-500">JSON v2.0</span>
-                            </a>
-                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'env-blueprint', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'env-blueprint']) }}&locale=' + (locale || 'id')" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">.env.blueprint</span>
-                                <span class="text-[10px] text-zinc-500"><span x-show="locale === 'en'">Secret Vault Blueprint</span><span x-show="locale !== 'en'">Blueprint Secret Vault</span></span>
-                            </a>
-                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'verify-blueprint']) }}&locale=' + (locale || 'id')" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">verify-blueprint.sh</span>
-                                <span class="text-[10px] text-zinc-500"><span x-show="locale === 'en'">CI Gatekeeper Scanner</span><span x-show="locale !== 'en'">Scanner Anti-Slop CI</span></span>
-                            </a>
-                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'enterprise-menu', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'enterprise-menu']) }}&locale=' + (locale || 'id')" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">MENU25.MD</span>
-                                <span class="text-[10px] text-zinc-500"><span x-show="locale === 'en'">Enterprise 25-Menu Matrix</span><span x-show="locale !== 'en'">Matriks 25 Menu L1–L4</span></span>
-                            </a>
-                        </div>
-
-                        <!-- Group 4: Commercial Pack (Mitra A4) -->
-                        <div class="px-2 py-1 text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider border-b border-zinc-200 dark:border-zinc-800 mb-1 flex items-center justify-between">
-                            <span>
-                                <span x-show="locale === 'en'">📋 MITRA COMMERCIAL PACK (A4)</span>
-                                <span x-show="locale !== 'en'">📋 PAKET KOMERSIAL MITRA (A4)</span>
-                            </span>
-                        </div>
-                        <div class="grid grid-cols-1 gap-1 mb-2">
-                            <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'rab']) }}" :href="'{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'rab']) }}&locale=' + (locale || 'id')" target="_blank" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">RAB A4</span>
-                                <span class="text-[10px] text-zinc-500"><span x-show="locale === 'en'">Algorithmic BoQ &amp; 7-Phase WBS</span><span x-show="locale !== 'en'">RAB Algoritmik &amp; WBS 7 Fase</span></span>
-                            </a>
-                            <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'spk-appendix']) }}" :href="'{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'spk-appendix']) }}&locale=' + (locale || 'id')" target="_blank" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">SPK SHA-256</span>
-                                <span class="text-[10px] text-zinc-500"><span x-show="locale === 'en'">Contract Appendix with Hash Seal</span><span x-show="locale !== 'en'">Lampiran SPK Segel Hash</span></span>
-                            </a>
-                            <a href="{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'bast']) }}" :href="'{{ route('blueprint.mitra-document', ['slug' => $blueprint->slug, 'docType' => 'bast']) }}&locale=' + (locale || 'id')" target="_blank" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">BAST A4</span>
-                                <span class="text-[10px] text-zinc-500"><span x-show="locale === 'en'">Digital Handover &amp; UAT Sign-off</span><span x-show="locale !== 'en'">Berita Acara &amp; UAT Digital</span></span>
-                            </a>
-                            <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'client-sop', 'locale' => $isEn ? 'en' : 'id']) }}" :href="'{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'client-sop']) }}&locale=' + (locale || 'id')" @click="exportDropdownOpen = false" class="px-2.5 py-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-between text-zinc-900 dark:text-zinc-100 transition">
-                                <span class="font-bold">SOP.MD / SOP-A4</span>
-                                <span class="text-[10px] text-zinc-500"><span x-show="locale === 'en'">Client Staff Training Manual</span><span x-show="locale !== 'en'">Manual Operasional &amp; Training</span></span>
-                            </a>
-                        </div>
-
-                        <!-- Footer: New Project Action -->
-                        <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                            <a href="{{ url('/blueprint?tier=retail_spark&new=1') }}" class="w-full px-2.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black flex items-center justify-center gap-1.5 text-center transition">
-                                <span>+</span>
-                                <span x-show="locale === 'en'">START NEW ISOLATED PROJECT</span>
-                                <span x-show="locale !== 'en'">MULAI PROYEK BARU TERISOLASI</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
+                <!-- UNIFIED EXPORT & DOCUMENTS MODAL TRIGGER -->
+                <button 
+                    type="button" 
+                    @click="showExportHubModal = true" 
+                    class="px-3 py-1.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-white text-xs font-mono font-black rounded-none border border-zinc-800 dark:border-zinc-200 flex items-center gap-1.5 transition cursor-pointer shadow-xs whitespace-nowrap shrink-0"
+                    :title="locale === 'en' ? 'Open Export & Documents Hub (PDF, Markdown, .cursorrules, Schema, Contracts)' : 'Buka Hub Dokumen & Ekspor (PDF, Markdown, .cursorrules, Skema, Dokumen Kontrak)'"
+                >
+                    <svg class="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span class="hidden md:inline">
+                        <span x-show="locale === 'en'">EXPORT &amp; DOCUMENTS</span>
+                        <span x-show="locale !== 'en'">DOKUMEN &amp; EKSPOR</span>
+                    </span>
+                    <span class="md:hidden">EXPORT</span>
+                    <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
 
                 <!-- Navigation Layout Mode Switcher (Mode 1: Sidebar vs Mode 2: Full Width) -->
                 <button 

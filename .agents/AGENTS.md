@@ -380,6 +380,10 @@ All AI agents and developers operating in this codebase MUST strictly adhere to 
   - Tombol aksi yang memiliki dua status berlawanan (seperti Expand/Collapse, Buka/Tutup Seksi, Mode Fokus/Sidebar, Dark/Light) WAJIB dibuat menjadi SATU tombol dinamis tunggal.
   - DILARANG KERAS membuat 2 tombol berdampingan untuk aksi yang sama (misal tombol EXPAND dan tombol COLLAPSE berdampingan).
   - Tombol tunggal tersebut wajib secara otomatis berganti ikon dan label saat diklik (contoh: status ciut menampilkan `▾ EXPAND` / `BUKA`, status buka menampilkan `▴ COLLAPSE` / `CIUTKAN`).
+- 🚫 **STRICT BAN ON ABSOLUTE DROPDOWNS INSIDE SCROLL/OVERFLOW CONTAINERS**:
+  - DILARANG KERAS menempatkan menu dropdown popover (`position: absolute`) di dalam toolbar atau ribbon yang memiliki `overflow-x-auto` atau `overflow-hidden`.
+  - Kontainer overflow membatasi clipping box dan menjebak dropdown di dalamnya, sehingga menu terpotong atau memicu scrollbar vertikal yang merusak tampilan toolbar.
+  - Untuk aksi dengan banyak item (seperti Hub Dokumen/Ekspor, AI Tools Suite), WAJIB menggunakan dialog Modal khusus (`fixed inset-0 z-50 overflow-y-auto`) dengan backdrop overlay, layout responsif (desktop & portrait mobile), dan scroll vertikal mandiri.
 
 # Mandatory Rule: 100% Desktop & Portrait Mobile Dual-Fidelity (Anti-Blowout & Multi-Pane Responsiveness)
 - 📱 **ZERO HORIZONTAL BLOWOUT (ANTI-LEBAR BOCOR PADA PORTRAIT)**:

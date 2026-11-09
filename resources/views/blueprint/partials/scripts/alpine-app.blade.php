@@ -583,6 +583,10 @@
                 },
                 scaffoldModalOpen: false,
                 showExecutionGuideModal: false,
+                showAiSuiteModal: false,
+                showExportHubModal: false,
+                exportHubFilter: '',
+                aiSuiteFilter: '',
                 executionGuideTab: 'choice-a',
                 workspaceDir: (function() {
                     var saved = localStorage.getItem('neriah_workspace_{{ $blueprint->slug }}');

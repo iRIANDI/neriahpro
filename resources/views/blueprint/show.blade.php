@@ -448,6 +448,8 @@
     @endif
 
     <!-- MODAL DIALOGS -->
+    @include('blueprint.partials.modals.export-documents-modal')
+    @include('blueprint.partials.modals.ai-suite-modal')
     @include('blueprint.partials.modals.execution-guide-modal')
     @include('blueprint.partials.modals.task-scope-editor-modal')
     @include('blueprint.partials.modals.payment-voucher-modal')

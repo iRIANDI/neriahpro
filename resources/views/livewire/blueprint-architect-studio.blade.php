@@ -244,7 +244,9 @@
         $hasAlerts = !empty($doctor['findings']) || !empty($enterpriseUpscaleAdvisor) || !empty($scopeParalysisGuard['execution_stages']);
         $alertCount = (!empty($doctor['findings']) ? 1 : 0) + (!empty($enterpriseUpscaleAdvisor) ? 1 : 0) + (count($scopeParalysisGuard['execution_stages'] ?? []) > 0 ? 1 : 0);
     @endphp
-    <div class="shrink-0 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px]">
+    <div class="shrink-0 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800">
+        <!-- Compact Summary Row -->
+        <div class="px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px]">
         <!-- Left: Sector/Stack, Causal Chain Stats, Determinism, and RAB -->
         <div class="flex items-center gap-2 flex-wrap tabular-nums">
             <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-black">

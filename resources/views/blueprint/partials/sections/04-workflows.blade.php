@@ -95,7 +95,7 @@
 
                         <!-- Horizontal Scroll Pipeline Container -->
                         <div class="overflow-x-auto pb-4 pt-2">
-                            <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 min-w-[700px]">
+                            <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3 min-w-0 lg:min-w-[700px] w-full">
                                 @foreach($rawWorkflows as $index => $flow)
                                     <!-- Node Card -->
                                     <div class="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 p-4 relative group hover:border-emerald-500 transition shadow-sm dark:shadow-lg flex flex-col justify-between">

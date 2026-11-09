@@ -1,8 +1,9 @@
     <header id="blueprint-toolbar" 
             x-data="{ exportDropdownOpen: false, aiDropdownOpen: false }"
-            class="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 py-2 px-3 sm:px-6 sticky z-40 no-print transition-all shadow-xs mt-0 mb-4"
+            class="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 py-1.5 px-2 sm:px-4 lg:px-6 sticky z-40 no-print transition-all shadow-xs mt-0 mb-4 w-full max-w-full overflow-hidden"
             style="top: var(--global-nav-h, 88px);">
-        <div class="w-full max-w-[1700px] mx-auto flex items-center justify-between gap-2.5">
+        <div class="w-full max-w-[1700px] mx-auto overflow-x-auto no-scrollbar overscroll-x-contain">
+            <div class="flex items-center justify-between min-w-max gap-2 sm:gap-2.5 py-0.5 pr-6 sm:pr-8">
             
             <!-- LEFT WING: Navigation & Workspace Switcher -->
             <div class="flex items-center gap-2 shrink-0">
@@ -327,17 +328,24 @@
                     <span class="hidden xl:inline"><span x-show="navMode === 'sidebar'">SIDEBAR</span><span x-show="navMode !== 'sidebar'">FULL WIDTH</span></span>
                 </button>
 
-                <!-- Section Expand / Collapse Toggle -->
-                <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0">
-                    <button type="button" @click="expandAllSections()" class="px-2 py-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" :title="locale === 'en' ? 'Expand all 13 PRD sections' : 'Buka Seluruh 13 Seksi PRD'">
-                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        <span class="hidden 2xl:inline"><span x-show="locale === 'en'">EXPAND</span><span x-show="locale !== 'en'">BUKA</span></span>
-                    </button>
-                    <button type="button" @click="collapseAllSections()" class="px-2 py-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" :title="locale === 'en' ? 'Collapse all PRD sections' : 'Ciutkan Seluruh Seksi PRD'">
-                        <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
-                        <span class="hidden 2xl:inline"><span x-show="locale === 'en'">COLLAPSE</span><span x-show="locale !== 'en'">TUTUP</span></span>
-                    </button>
-                </div>
+                <!-- Single Unified Section Expand / Collapse Toggle -->
+                <button 
+                    type="button" 
+                    @click="toggleAllSections()" 
+                    class="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 text-xs font-mono font-bold rounded-none transition flex items-center gap-1.5 cursor-pointer shrink-0" 
+                    :title="allSectionsExpanded ? (locale === 'en' ? 'Collapse all PRD sections' : 'Ciutkan seluruh seksi PRD') : (locale === 'en' ? 'Expand all PRD sections' : 'Buka seluruh seksi PRD')"
+                >
+                    <svg x-show="allSectionsExpanded" class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                    <svg x-show="!allSectionsExpanded" class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    <span x-show="allSectionsExpanded">
+                        <span x-show="locale === 'en'">COLLAPSE</span>
+                        <span x-show="locale !== 'en'">CIUTKAN</span>
+                    </span>
+                    <span x-show="!allSectionsExpanded">
+                        <span x-show="locale === 'en'">EXPAND</span>
+                        <span x-show="locale !== 'en'">BUKA</span>
+                    </span>
+                </button>
 
                 @php
                     $isRetailLicense = ($blueprint->project_status === 'Retail License'
@@ -400,6 +408,7 @@
                     @endif
                 @endif
             </div>
+        </div>
         </div>
     </header>
 

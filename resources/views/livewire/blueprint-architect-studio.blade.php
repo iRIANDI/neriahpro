@@ -39,6 +39,13 @@
         showLeftPane: true,
         showRightPane: true,
         viewAllTabs: false,
+        mobileStudioPane: 'editor',
+        isDesktop: typeof window !== 'undefined' ? window.innerWidth >= 1024 : true,
+        init() {
+            window.addEventListener('resize', () => {
+                this.isDesktop = window.innerWidth >= 1024;
+            });
+        },
         activeHub: '{{ in_array($centerTab, ['proposal_wow', 'commercial_mitra', 'codesign_room']) ? 'business' : (in_array($centerTab, ['schema', 'states', 'decisions', 'menus_glue']) ? 'architecture' : (in_array($centerTab, ['ui_print', 'inclusive_security_v8', 'seo_geo_v11']) ? 'ui_security' : 'execution')) }}',
         toggleFullCanvas() {
             if (!this.showLeftPane && !this.showRightPane) {
@@ -246,7 +253,7 @@
     @endphp
     <div class="shrink-0 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800">
         <!-- Compact Summary Row -->
-        <div class="px-3 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px]">
+        <div class="px-2 sm:px-4 py-1.5 flex items-center justify-between gap-2 font-mono text-[10px] overflow-x-auto no-scrollbar overscroll-x-contain">
         <!-- Left: Sector/Stack, Causal Chain Stats, Determinism, and RAB -->
         <div class="flex items-center gap-2 flex-wrap tabular-nums">
             <span class="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-black">
@@ -418,6 +425,50 @@
     </div>
 
     <!-- =================================================================== -->
+    <!-- MOBILE / PORTRAIT PANE SWITCHER TABS (lg:hidden)                    -->
+    <!-- =================================================================== -->
+    <div class="lg:hidden shrink-0 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 p-1.5 z-20">
+        <div class="grid grid-cols-4 gap-1 font-mono text-[10px] font-black uppercase">
+            <button 
+                type="button" 
+                @click="mobileStudioPane = 'explorer'" 
+                class="py-1 px-1 text-center transition rounded-none flex items-center justify-center gap-1 cursor-pointer"
+                :class="mobileStudioPane === 'explorer' ? 'bg-zinc-950 text-emerald-400 dark:bg-emerald-600 dark:text-zinc-950 font-black shadow-xs' : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+            >
+                <span>◧</span>
+                <span>EXPLORER</span>
+            </button>
+            <button 
+                type="button" 
+                @click="mobileStudioPane = 'editor'" 
+                class="py-1 px-1 text-center transition rounded-none flex items-center justify-center gap-1 cursor-pointer"
+                :class="mobileStudioPane === 'editor' ? 'bg-zinc-950 text-emerald-400 dark:bg-emerald-600 dark:text-zinc-950 font-black shadow-xs' : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+            >
+                <span>⚡</span>
+                <span>EDITOR</span>
+            </button>
+            <button 
+                type="button" 
+                @click="mobileStudioPane = 'compiler'" 
+                class="py-1 px-1 text-center transition rounded-none flex items-center justify-center gap-1 cursor-pointer"
+                :class="mobileStudioPane === 'compiler' ? 'bg-zinc-950 text-emerald-400 dark:bg-emerald-600 dark:text-zinc-950 font-black shadow-xs' : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+            >
+                <span>🔌</span>
+                <span>DOCK</span>
+            </button>
+            <button 
+                type="button" 
+                @click="mobileStudioPane = 'all'" 
+                class="py-1 px-1 text-center transition rounded-none flex items-center justify-center gap-1 cursor-pointer"
+                :class="mobileStudioPane === 'all' ? 'bg-zinc-950 text-emerald-400 dark:bg-emerald-600 dark:text-zinc-950 font-black shadow-xs' : 'bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-700'"
+            >
+                <span>☰</span>
+                <span>ALL</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
     <!-- MAIN 3-PANE IDE WORKBENCH (LEFT 3 | CENTER 5 | RIGHT 4)             -->
     <!-- =================================================================== -->
     <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 lg:overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-zinc-300 dark:divide-zinc-800 select-text">
@@ -426,7 +477,7 @@
         <!-- LEFT PANE (col-span-3): ARCHITECTURE EXPLORER TREE              -->
         <!-- =============================================================== -->
         <aside
-            x-show="showLeftPane"
+            x-show="isDesktop ? showLeftPane : (mobileStudioPane === 'explorer' || mobileStudioPane === 'all')"
             :class="showRightPane ? 'lg:col-span-3' : 'lg:col-span-4'"
             class="bg-white dark:bg-zinc-950 flex flex-col lg:overflow-y-auto studio-scroll p-3 space-y-3"
         >
@@ -535,6 +586,7 @@
         <!-- CENTER CANVAS: INTERACTIVE BLUEPRINT WORKBENCH                 -->
         <!-- =============================================================== -->
         <section
+            x-show="isDesktop || (mobileStudioPane === 'editor' || mobileStudioPane === 'all')"
             :class="{
                 'lg:col-span-12': !showLeftPane && !showRightPane,
                 'lg:col-span-9': showLeftPane && !showRightPane,
@@ -2700,7 +2752,7 @@ docker compose exec app npm install && docker compose exec app npm run build</pr
         <!-- RIGHT PANE (col-span-4): LIVE COMPILER & 7-PHASE PROMPT DOCK    -->
         <!-- =============================================================== -->
         <aside
-            x-show="showRightPane"
+            x-show="isDesktop ? showRightPane : (mobileStudioPane === 'compiler' || mobileStudioPane === 'all')"
             :class="showLeftPane ? 'lg:col-span-4' : 'lg:col-span-4'"
             class="bg-white dark:bg-zinc-950 flex flex-col lg:overflow-hidden"
         >

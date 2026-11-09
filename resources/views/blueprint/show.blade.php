@@ -103,7 +103,7 @@
         . "6. Setelah exit code 0, lakukan commit git: git commit -m 'chore(db): setup ULID migrations and base foundation'";
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth overflow-x-hidden max-w-full">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -188,7 +188,7 @@
     @include('blueprint.partials.scripts.head-scripts')
     @include('blueprint.partials.scripts.alpine-app')
 </head>
-<body x-data="blueprintApp()" @open-raw-md-warning.window="openRawMdWarning($event.detail?.action)" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200 overflow-x-clip max-w-full">
+<body x-data="blueprintApp()" @open-raw-md-warning.window="openRawMdWarning($event.detail?.action)" class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200 overflow-x-hidden max-w-full">
 
     <!-- 1. TOP UTILITY HEADER (FULL SITE NAVIGATION + DUAL TIER LANGUAGE + THEME TOGGLE) -->
     <x-global-navigation :global-settings="$globalSettings ?? []" />

@@ -372,6 +372,27 @@ All AI agents and developers operating in this codebase MUST strictly adhere to 
    - Wrap multi-table database state mutations in `DB::transaction()`.
    - Implement deterministic auto-rescue mechanisms for background queue operations when queue daemons are offline.
 
+# Mandatory Rule: Structured Action Bar Hierarchy & Progressive Disclosure (Strict Ban on Scattered Button Proliferation)
+- 🚫 **STRICT BAN ON BUTTON PROLIFERATION ("HARAM TOMBOL BERHAMBURAN")**:
+  - DILARANG KERAS membiarkan tombol aksi bertebaran liar tanpa konsep teratur di header, toolbar, atau action deck. Menambah tombol baru secara horizontal tanpa batas merusak visual hierarchy, memenuhi layar, dan memotong tombol terluar (clipping bug).
+  - Tindakan yang memiliki konteks serupa (misal: ekspor dokumen resmi, AI tools, setting workspace, download artifacts) WAJIB dikelompokkan ke dalam dropdown terstruktur, dialog hub, atau collapsible drawer dengan progressive disclosure.
+- 🔄 **SINGLE TOGGLE BUTTON FOR DUAL-STATE ACTIONS (STANDAR 1 TOMBOL DUA STATUS)**:
+  - Tombol aksi yang memiliki dua status berlawanan (seperti Expand/Collapse, Buka/Tutup Seksi, Mode Fokus/Sidebar, Dark/Light) WAJIB dibuat menjadi SATU tombol dinamis tunggal.
+  - DILARANG KERAS membuat 2 tombol berdampingan untuk aksi yang sama (misal tombol EXPAND dan tombol COLLAPSE berdampingan).
+  - Tombol tunggal tersebut wajib secara otomatis berganti ikon dan label saat diklik (contoh: status ciut menampilkan `▾ EXPAND` / `BUKA`, status buka menampilkan `▴ COLLAPSE` / `CIUTKAN`).
+
+# Mandatory Rule: 100% Desktop & Portrait Mobile Dual-Fidelity (Anti-Blowout & Multi-Pane Responsiveness)
+- 📱 **ZERO HORIZONTAL BLOWOUT (ANTI-LEBAR BOCOR PADA PORTRAIT)**:
+  - Seluruh layout, header, toolbar, kartu, dan tabel WAJIB memiliki lebar dinamis yang presisi pada mode portrait (mobile & tablet 360px–768px). Dilarang keras elemen yang memaksa lebar layar melar (seperti unconstrained `min-w-[...]` atau flex bar kaku tanpa scroll), yang menyebabkan separuh layar sebelah kanan menjadi ruang putih kosong (whitespace blowout bug).
+  - Root container dan body wajib menegakkan `w-full max-w-full overflow-x-hidden`.
+  - Action bar dan toolbar horizontal pada mode mobile/portrait WAJIB menggunakan command ribbon yang dapat digeser mulus (`overflow-x-auto no-scrollbar overscroll-x-contain`) dengan safe padding kanan (`pr-4 sm:pr-8`) sehingga tombol paling ujung kanan tidak pernah terpotong layar.
+- 🖥️📱 **MULTI-PANE IDE / 3-PANE STUDIO PORTRAIT STANDARD**:
+  - Pada layar desktop landscape (≥ 1024px), layout multi-pane (seperti 3-Pane Studio: Explorer, Editor, Dock/Compiler) tampil berdampingan dalam grid 12-kolom yang luas.
+  - Pada layar mobile/tablet portrait (< 1024px), sistem WAJIB menyediakan navigasi tab switcher cepat di bagian atas (contoh: `[ ◧ Explorer ] [ ⚡ Editor ] [ 🔌 Dock ] [ ☰ All ]`):
+    - Pengguna mobile dapat beralih pane secara instan dengan 1 tap tanpa dipaksa melakukan doom-scrolling vertikal ribuan piksel melalui panel lain.
+    - Opsi `[ ☰ All ]` tetap disediakan jika pengguna ingin melihat semua panel secara bertumpuk.
+
+
 
 
 

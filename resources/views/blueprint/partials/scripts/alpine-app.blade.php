@@ -21,6 +21,15 @@
                     'section-10': false,
                     'section-13': false,
                 },
+                allSectionsExpanded: true,
+                toggleAllSections() {
+                    this.allSectionsExpanded = !this.allSectionsExpanded;
+                    if (this.allSectionsExpanded) {
+                        this.expandAllSections();
+                    } else {
+                        this.collapseAllSections();
+                    }
+                },
                 toggleSection(id) {
                     this.sectionCollapses[id] = !this.sectionCollapses[id];
                     if (!this.sectionCollapses[id]) {
@@ -30,6 +39,7 @@
                     }
                 },
                 expandAllSections() {
+                    this.allSectionsExpanded = true;
                     for (const sec in this.sectionCollapses) {
                         this.sectionCollapses[sec] = false;
                     }
@@ -43,6 +53,7 @@
                     }
                 },
                 collapseAllSections() {
+                    this.allSectionsExpanded = false;
                     for (const sec in this.sectionCollapses) {
                         this.sectionCollapses[sec] = true;
                     }

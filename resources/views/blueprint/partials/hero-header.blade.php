@@ -948,26 +948,19 @@
                 <div class="flex flex-wrap items-center gap-2 font-mono text-xs shrink-0">
                     <button 
                         type="button" 
-                        @click="expandAllSections()" 
+                        @click="toggleAllSections()" 
                         class="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold transition flex items-center gap-1.5 cursor-pointer"
-                        :title="locale === 'en' ? 'Expand all 13 architecture sections' : 'Buka seluruh 13 seksi arsitektur'"
+                        :title="allSectionsExpanded ? (locale === 'en' ? 'Collapse all sections into titles & badges' : 'Ciutkan seluruh seksi menjadi ringkasan judul & badge') : (locale === 'en' ? 'Expand all 13 architecture sections' : 'Buka seluruh 13 seksi arsitektur')"
                     >
-                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        <span>
-                            <span x-show="locale === 'en'">EXPAND ALL</span>
-                            <span x-show="locale !== 'en'">BUKA SEMUA (EXPAND)</span>
-                        </span>
-                    </button>
-                    <button 
-                        type="button" 
-                        @click="collapseAllSections()" 
-                        class="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold transition flex items-center gap-1.5 cursor-pointer"
-                        :title="locale === 'en' ? 'Collapse all sections into titles & badges' : 'Ciutkan seluruh seksi menjadi ringkasan judul & badge'"
-                    >
-                        <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
-                        <span>
+                        <svg x-show="allSectionsExpanded" class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                        <svg x-show="!allSectionsExpanded" class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <span x-show="allSectionsExpanded">
                             <span x-show="locale === 'en'">COLLAPSE ALL</span>
-                            <span x-show="locale !== 'en'">TUTUP SEMUA (COLLAPSE)</span>
+                            <span x-show="locale !== 'en'">CIUTKAN SEMUA</span>
+                        </span>
+                        <span x-show="!allSectionsExpanded">
+                            <span x-show="locale === 'en'">EXPAND ALL</span>
+                            <span x-show="locale !== 'en'">BUKA SEMUA</span>
                         </span>
                     </button>
                     @if(!($isLocked ?? false))

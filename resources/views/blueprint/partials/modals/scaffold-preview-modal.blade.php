@@ -40,7 +40,10 @@
                         <div class="flex items-center gap-2 font-mono text-[11px] font-bold text-zinc-100 uppercase">
                             <span x-show="locale === 'en'">Custom Workspace / Folder Name:</span>
                             <span x-show="locale !== 'en'">Kustomisasi Nama Folder / Direktori Kerja:</span>
-                            <span class="px-1.5 py-0.2 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">AUTO-SANITIZED</span>
+                            <span class="px-1.5 py-0.2 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">
+                                <span x-show="locale === 'en'">AUTO-SANITIZED</span>
+                                <span x-show="locale !== 'en'">SANITASI-OTOMATIS</span>
+                            </span>
                         </div>
                         <p class="text-[10px] text-zinc-400 font-sans mt-0.5">
                             <span x-show="locale === 'en'">Space auto-replaced by hyphen ("-"). Forbidden characters stripped. Empty = default system slug (<code class="text-emerald-400 font-mono">{{ $shortSlugVal }}</code>).</span>
@@ -68,7 +71,7 @@
                             type="button" 
                             x-show="workspaceDir" 
                             @click="setWorkspaceDir('')" 
-                            title="Kosongkan (kembali ke default)"
+                            :title="locale === 'en' ? 'Clear (revert to default)' : 'Kosongkan (kembali ke default)'"
                             style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 20; display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: transparent; border: none; line-height: 1;"
                             class="text-zinc-400 hover:text-emerald-400 text-base cursor-pointer font-black transition-colors select-none"
                         >
@@ -79,7 +82,7 @@
                         type="button" 
                         @click="setWorkspaceDir('')"
                         class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-[10px] font-mono border border-zinc-700 rounded-none cursor-pointer font-bold"
-                        title="Kembalikan ke nama default sistem"
+                        :title="locale === 'en' ? 'Revert to system default name' : 'Kembalikan ke nama default sistem'"
                     >
                         RESET
                     </button>
@@ -177,7 +180,7 @@
                         <span 
                             x-show="scaffoldCustomizedFiles.includes(tab.id)" 
                             class="w-1.5 h-1.5 bg-amber-400 inline-block rounded-none shadow-sm"
-                            title="File ini telah dielaborasi secara kustom"
+                            :title="locale === 'en' ? 'This file has been custom elaborated' : 'File ini telah dielaborasi secara kustom'"
                         ></span>
                     </button>
                 </template>
@@ -186,21 +189,24 @@
             <!-- Code Content Area (Strictly Scrollable Container) -->
             <div class="relative flex-1 min-h-0 flex flex-col bg-black border border-zinc-800 p-4 font-mono text-xs overflow-hidden">
                 <div x-show="scaffoldLoading" class="absolute inset-0 bg-black/80 flex items-center justify-center text-emerald-400 text-sm font-mono font-bold animate-pulse z-10">
-                    Memuat sintesis file scaffold...
+                    <span x-show="locale === 'en'">Loading scaffold code synthesis...</span>
+                    <span x-show="locale !== 'en'">Memuat sintesis file scaffold...</span>
                 </div>
                 <div class="shrink-0 flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-zinc-900 text-[10px]">
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="w-2 h-2 rounded-none shrink-0" :class="scaffoldCustomizedFiles.includes(scaffoldActiveTab) ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'bg-emerald-500'"></span>
                         <span class="text-zinc-200 font-bold" x-text="scaffoldActiveTab">docker-compose.yml</span>
-                        <span class="text-zinc-500" x-text="'(' + ((getScaffoldCode(scaffoldActiveTab) || '').split('\n').length) + ' baris)'"></span>
+                        <span class="text-zinc-500" x-text="'(' + ((getScaffoldCode(scaffoldActiveTab) || '').split('\n').length) + ' ' + (locale === 'en' ? 'lines)' : 'baris)')"></span>
                         <template x-if="scaffoldCustomizedFiles.includes(scaffoldActiveTab)">
                             <span class="px-1.5 py-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[9px] font-bold uppercase tracking-wider">
-                                DIELABORASI (CUSTOM)
+                                <span x-show="locale === 'en'">ELABORATED (CUSTOM)</span>
+                                <span x-show="locale !== 'en'">DIELABORASI (CUSTOM)</span>
                             </span>
                         </template>
                         <template x-if="!scaffoldCustomizedFiles.includes(scaffoldActiveTab)">
                             <span class="px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold uppercase tracking-wider">
-                                DEFAULT AI SINTESIS
+                                <span x-show="locale === 'en'">DEFAULT AI SYNTHESIS</span>
+                                <span x-show="locale !== 'en'">DEFAULT AI SINTESIS</span>
                             </span>
                         </template>
                     </div>
@@ -212,29 +218,35 @@
                             <template x-if="scaffoldSaveStatus === 'typing'">
                                 <span class="flex items-center gap-1 text-amber-400">
                                     <span class="w-1.5 h-1.5 bg-amber-400 animate-ping"></span>
-                                    <span>Mengetik...</span>
+                                    <span x-show="locale === 'en'">Typing...</span>
+                                    <span x-show="locale !== 'en'">Mengetik...</span>
                                 </span>
                             </template>
                             <template x-if="scaffoldSaveStatus === 'saving'">
                                 <span class="flex items-center gap-1 text-sky-400 animate-pulse">
                                     <svg class="w-2.5 h-2.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                                    <span>Menyimpan otomatis...</span>
+                                    <span x-show="locale === 'en'">Auto-saving...</span>
+                                    <span x-show="locale !== 'en'">Menyimpan otomatis...</span>
                                 </span>
                             </template>
                             <template x-if="scaffoldSaveStatus === 'saved'">
                                 <span class="flex items-center gap-1 text-emerald-400">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                    <span x-text="'Tersimpan ' + scaffoldLastSaved"></span>
+                                    <span x-text="(locale === 'en' ? 'Saved ' : 'Tersimpan ') + scaffoldLastSaved"></span>
                                 </span>
                             </template>
                             <template x-if="scaffoldSaveStatus === 'error'">
                                 <span class="flex items-center gap-1 text-rose-400">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                    <span>Gagal simpan</span>
+                                    <span x-show="locale === 'en'">Save failed</span>
+                                    <span x-show="locale !== 'en'">Gagal simpan</span>
                                 </span>
                             </template>
                             <template x-if="scaffoldSaveStatus === 'idle'">
-                                <span class="text-zinc-500">Auto-Save Siap</span>
+                                <span class="text-zinc-500">
+                                    <span x-show="locale === 'en'">Auto-Save Ready</span>
+                                    <span x-show="locale !== 'en'">Auto-Save Siap</span>
+                                </span>
                             </template>
                         </div>
 
@@ -245,7 +257,10 @@
                             </button>
                             <button type="button" @click="scaffoldFiles[scaffoldActiveTab] = getScaffoldCode(scaffoldActiveTab); scaffoldMode = 'edit'" :class="scaffoldMode === 'edit' ? 'bg-emerald-500 text-black font-black' : 'text-zinc-500 hover:text-zinc-300'" class="px-2 py-0.5 transition cursor-pointer flex items-center gap-1">
                                 <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                <span>EDIT &amp; ELABORASI</span>
+                                <span>
+                                    <span x-show="locale === 'en'">EDIT &amp; ELABORATE</span>
+                                    <span x-show="locale !== 'en'">EDIT &amp; ELABORASI</span>
+                                </span>
                             </button>
                         </div>
 
@@ -255,10 +270,13 @@
                             @click="scaffoldAiPanelOpen = !scaffoldAiPanelOpen" 
                             class="px-2 py-0.5 transition cursor-pointer flex items-center gap-1 font-mono text-[10px] font-black border"
                             :class="scaffoldAiPanelOpen ? 'bg-emerald-500 text-black border-emerald-400' : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/40'"
-                            title="{{ $isEn ? 'Toggle In-Place AI Scaffold Co-Pilot' : 'Buka/Tutup Studio AI Elaborasi Berkas Scaffold' }}"
+                            :title="locale === 'en' ? 'Toggle In-Place AI Scaffold Co-Pilot' : 'Buka/Tutup Studio AI Elaborasi Berkas Scaffold'"
                         >
                             <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                            <span>{{ $isEn ? 'AI CO-PILOT' : 'STUDIO AI SCAFFOLD' }}</span>
+                            <span>
+                                <span x-show="locale === 'en'">AI CO-PILOT</span>
+                                <span x-show="locale !== 'en'">STUDIO AI SCAFFOLD</span>
+                            </span>
                         </button>
 
                         <!-- AI Grounded Deepener Modal Trigger -->
@@ -266,14 +284,17 @@
                             type="button" 
                             @click="openTweakModal('scaffold_file', 'Scaffold // ' + scaffoldActiveTab, getScaffoldCode(scaffoldActiveTab))" 
                             class="px-2 py-0.5 bg-zinc-900 hover:bg-zinc-800 text-emerald-300 border border-emerald-500/40 transition cursor-pointer flex items-center gap-1 font-mono text-[10px] font-bold"
-                            title="{{ $isEn ? 'Open Full Grounded Spec Deepener Modal for this file' : 'Buka Modal Penajaman Berbasis Dokumen Acuan Penuh' }}"
+                            :title="locale === 'en' ? 'Open Full Grounded Spec Deepener Modal for this file' : 'Buka Modal Penajaman Berbasis Dokumen Acuan Penuh'"
                         >
-                            <span>{{ $isEn ? 'FULL AI MODAL' : 'MODAL ACUAN' }}</span>
+                            <span>
+                                <span x-show="locale === 'en'">FULL AI MODAL</span>
+                                <span x-show="locale !== 'en'">MODAL ACUAN</span>
+                            </span>
                         </button>
 
                         <!-- Reset to AI default button (if customized) -->
                         <template x-if="scaffoldCustomizedFiles.includes(scaffoldActiveTab)">
-                            <button type="button" @click="resetActiveScaffoldFile()" class="px-2 py-0.5 border border-zinc-800 hover:border-amber-500/50 hover:bg-zinc-900 text-zinc-400 hover:text-amber-400 transition cursor-pointer flex items-center gap-1" title="Kembalikan file ini ke sintesis default AI">
+                            <button type="button" @click="resetActiveScaffoldFile()" class="px-2 py-0.5 border border-zinc-800 hover:border-amber-500/50 hover:bg-zinc-900 text-zinc-400 hover:text-amber-400 transition cursor-pointer flex items-center gap-1" :title="locale === 'en' ? 'Reset this file to default AI synthesis' : 'Kembalikan file ini ke sintesis default AI'">
                                 <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                 <span>RESET AI</span>
                             </button>
@@ -291,7 +312,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                         <div class="flex items-center gap-2 flex-wrap">
                             <span class="px-1.5 py-0.5 bg-emerald-500 text-black text-[9px] font-black uppercase tracking-wider">
-                                ⚡ {{ $isEn ? 'AI SCAFFOLD DEEPENER' : 'ELABORASI AI SCAFFOLDING' }}
+                                ⚡ <span x-show="locale === 'en'">AI SCAFFOLD DEEPENER</span><span x-show="locale !== 'en'">ELABORASI AI SCAFFOLDING</span>
                             </span>
                             <span class="text-[10px] text-zinc-300 font-bold" x-text="scaffoldActiveTab"></span>
 
@@ -299,8 +320,8 @@
                             <template x-if="scaffoldTelemetry && scaffoldTelemetry[scaffoldActiveTab]">
                                 <span class="px-1.5 py-0.5 text-[9px] font-black uppercase border"
                                       :class="scaffoldTelemetry[scaffoldActiveTab].is_maximal ? 'bg-emerald-950 text-emerald-200 border-emerald-500' : 'bg-cyan-950 text-cyan-200 border-cyan-600'">
-                                    <span x-text="scaffoldTelemetry[scaffoldActiveTab].is_maximal ? '{{ $isEn ? '✓ 100% OPTIMAL / MAXIMAL' : '✓ 100% OPTIMAL / MAKSIMAL' }}' : ('{{ $isEn ? 'MATURITY: ' : 'KEMATANGAN: ' }}' + scaffoldTelemetry[scaffoldActiveTab].maturity_score + '%')"></span>
-                                    <span x-show="scaffoldTelemetry[scaffoldActiveTab].added_lines > 0" class="ml-1 text-emerald-300" x-text="'(+' + scaffoldTelemetry[scaffoldActiveTab].added_lines + ' {{ $isEn ? 'lines' : 'baris' }})'"></span>
+                                    <span x-text="scaffoldTelemetry[scaffoldActiveTab].is_maximal ? (locale === 'en' ? '✓ 100% OPTIMAL / MAXIMAL' : '✓ 100% OPTIMAL / MAKSIMAL') : ((locale === 'en' ? 'MATURITY: ' : 'KEMATANGAN: ') + scaffoldTelemetry[scaffoldActiveTab].maturity_score + '%')"></span>
+                                    <span x-show="scaffoldTelemetry[scaffoldActiveTab].added_lines > 0" class="ml-1 text-emerald-300" x-text="'(+' + scaffoldTelemetry[scaffoldActiveTab].added_lines + ' ' + (locale === 'en' ? 'lines' : 'baris') + ')'"></span>
                                 </span>
                             </template>
                         </div>
@@ -312,15 +333,24 @@
                                 :disabled="scaffoldElaboratingDirective || scaffoldAiLoading"
                                 class="px-2 py-1 bg-zinc-950 hover:bg-zinc-800 text-amber-300 border border-amber-500/50 text-[9px] font-black uppercase transition cursor-pointer disabled:opacity-50 flex items-center gap-1"
                             >
-                                <span x-show="!scaffoldElaboratingDirective">✨ {{ $isEn ? 'AUTO-DRAFT FILE DIRECTIVE' : 'RUMUSKAN INSTRUKSI AI FILE INI' }}</span>
-                                <span x-show="scaffoldElaboratingDirective">{{ $isEn ? 'ANALYZING FILE...' : 'MENGANALISIS BERKAS...' }}</span>
+                                <span x-show="!scaffoldElaboratingDirective">
+                                    <span x-show="locale === 'en'">✨ AUTO-DRAFT FILE DIRECTIVE</span>
+                                    <span x-show="locale !== 'en'">✨ RUMUSKAN INSTRUKSI AI FILE INI</span>
+                                </span>
+                                <span x-show="scaffoldElaboratingDirective">
+                                    <span x-show="locale === 'en'">ANALYZING FILE...</span>
+                                    <span x-show="locale !== 'en'">MENGANALISIS BERKAS...</span>
+                                </span>
                             </button>
                         </div>
                     </div>
 
                     <!-- File-Specific 1-Click Preset Chips -->
                     <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                        <span class="text-[9px] text-zinc-400 uppercase font-bold">{{ $isEn ? 'Presets:' : 'Preset Cepat:' }}</span>
+                        <span class="text-[9px] text-zinc-400 uppercase font-bold">
+                            <span x-show="locale === 'en'">Presets:</span>
+                            <span x-show="locale !== 'en'">Preset Cepat:</span>
+                        </span>
                         <template x-for="(chip, cIdx) in getScaffoldPresetChips(scaffoldActiveTab)" :key="cIdx">
                             <button
                                 type="button"
@@ -338,6 +368,7 @@
                                 type="text"
                                 x-model="scaffoldAiPrompt"
                                 @keydown.enter.prevent="refineActiveScaffoldFileInPlace()"
+                                :placeholder="locale === 'en' ? 'Write custom AI architectural instruction for this file (or leave blank to auto-deepen from Source Corpus & ERD)...' : 'Ketik instruksi spesifik untuk berkas ini (atau kosongkan agar AI otomatis memperdalam dari Dokumen Acuan & ERD)...'"
                                 placeholder="{{ $isEn ? 'Write custom AI architectural instruction for this file (or leave blank to auto-deepen from Source Corpus & ERD)...' : 'Ketik instruksi spesifik untuk berkas ini (atau kosongkan agar AI otomatis memperdalam dari Dokumen Acuan & ERD)...' }}"
                                 class="w-full bg-zinc-950 border border-zinc-700 focus:border-emerald-400 text-zinc-100 text-[11px] px-2.5 py-1.5 pr-7 focus:outline-none"
                             />
@@ -346,6 +377,7 @@
                                 x-show="scaffoldAiPrompt && scaffoldAiPrompt.length > 0"
                                 @click="scaffoldAiPrompt = ''"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white text-xs font-black cursor-pointer"
+                                :title="locale === 'en' ? 'Clear instruction' : 'Hapus instruksi'"
                                 title="{{ $isEn ? 'Clear instruction' : 'Hapus instruksi' }}"
                             >&times;</button>
                         </div>
@@ -357,7 +389,7 @@
                         >
                             <svg x-show="!scaffoldAiLoading" class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             <svg x-show="scaffoldAiLoading" class="w-3 h-3 text-black animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                            <span x-text="scaffoldAiLoading ? '{{ $isEn ? 'DEEPENING CODE...' : 'MEMPERDALAM KODE...' }}' : '{{ $isEn ? 'ELABORATE THIS FILE (AI)' : 'ELABORASI BERKAS INI (AI)' }}'"></span>
+                            <span x-text="scaffoldAiLoading ? (locale === 'en' ? 'DEEPENING CODE...' : 'MEMPERDALAM KODE...') : (locale === 'en' ? 'ELABORATE THIS FILE (AI)' : 'ELABORASI BERKAS INI (AI)')"></span>
                         </button>
                     </div>
                 </div>
@@ -384,7 +416,8 @@
                             placeholder="{{ $isEn ? 'Write or elaborate scaffold code specifications here... Changes auto-save within 1 second.' : 'Tulis atau elaborasi spesifikasi scaffold kode di sini... Perubahan akan otomatis tersimpan dalam 1 detik.' }}"
                         ></textarea>
                         <div class="absolute bottom-2 right-4 pointer-events-none text-[9px] text-zinc-500 bg-zinc-950/90 px-2 py-0.5 border border-zinc-800">
-                            TAB = 4 SPASI &bull; AUTO-SAVE 1000ms
+                            <span x-show="locale === 'en'">TAB = 4 SPACES &bull; AUTO-SAVE 1000ms</span>
+                            <span x-show="locale !== 'en'">TAB = 4 SPASI &bull; AUTO-SAVE 1000ms</span>
                         </div>
                     </div>
                 </div>

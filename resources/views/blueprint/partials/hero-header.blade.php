@@ -82,8 +82,10 @@
                         $retailTierMeta = $blueprint->user_metadata['retail_tier'] ?? $blueprint->user_metadata['package_tier'] ?? null;
                         $selectedVelocityMeta = $blueprint->user_metadata['selected_velocity_tier'] ?? null;
                         
-                        $pkgTitle = $isEn ? 'Studio MVP Turnkey Project (Standard Velocity)' : 'Proyek Studio MVP Turnkey (Standard Velocity)';
-                        $pkgBadge = 'STUDIO CONTRACT';
+                        $pkgTitleEn = 'Studio MVP Turnkey Project (Standard Velocity)';
+                        $pkgTitleId = 'Proyek Studio MVP Turnkey (Standard Velocity)';
+                        $pkgBadgeEn = 'STUDIO CONTRACT';
+                        $pkgBadgeId = 'KONTRAK STUDIO';
                         
                         $sparkPrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_spark_price', '0');
                         $litePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_lite_price', '99.000');
@@ -93,25 +95,37 @@
                         if ($retailTierMeta) {
                             $cleanRt = strtolower(str_replace('retail_', '', $retailTierMeta));
                             if ($cleanRt === 'spark') {
-                                $pkgTitle = $isEn ? "Tier 01: Spark Free Idea Audit (Rp {$sparkPrice} - Initial Validation)" : "Paket 1: Spark Free Idea Audit (Rp {$sparkPrice} - Validasi Ide Awal)";
-                                $pkgBadge = 'SPARK FREE AUDIT';
+                                $pkgTitleEn = "Tier 01: Spark Free Idea Audit (Rp {$sparkPrice} - Initial Validation)";
+                                $pkgTitleId = "Paket 1: Spark Free Idea Audit (Rp {$sparkPrice} - Validasi Ide Awal)";
+                                $pkgBadgeEn = 'SPARK FREE AUDIT';
+                                $pkgBadgeId = 'AUDIT IDE GRATIS SPARK';
                             } elseif ($cleanRt === 'lite') {
-                                $pkgTitle = $isEn ? "Tier 02: Starter AI Architect (Rp {$litePrice} - System Blueprint)" : "Paket 2: Starter AI Architect (Rp {$litePrice} - Cetak Biru Sistem)";
-                                $pkgBadge = 'STARTER AI ARCHITECT';
+                                $pkgTitleEn = "Tier 02: Starter AI Architect (Rp {$litePrice} - System Blueprint)";
+                                $pkgTitleId = "Paket 2: Starter AI Architect (Rp {$litePrice} - Cetak Biru Sistem)";
+                                $pkgBadgeEn = 'STARTER AI ARCHITECT';
+                                $pkgBadgeId = 'ARSITEK AI PEMULA';
                             } elseif ($cleanRt === 'pro') {
-                                $pkgTitle = $isEn ? "Tier 03: Pro Agentic Blueprint (Rp {$proPrice} - Ready to Code)" : "Paket 3: Pro Agentic Blueprint (Rp {$proPrice} - Siap Koding)";
-                                $pkgBadge = 'PRO AGENTIC BLUEPRINT';
+                                $pkgTitleEn = "Tier 03: Pro Agentic Blueprint (Rp {$proPrice} - Ready to Code)";
+                                $pkgTitleId = "Paket 3: Pro Agentic Blueprint (Rp {$proPrice} - Siap Koding)";
+                                $pkgBadgeEn = 'PRO AGENTIC BLUEPRINT';
+                                $pkgBadgeId = 'CETAK BIRU PRO AGENTIC';
                             } elseif ($cleanRt === 'ultimate' || $cleanRt === 'enterprise') {
-                                $pkgTitle = $isEn ? "Tier 04: Ultimate Architecture OS (Rp {$ultimatePrice} - Complete 10 Pillars)" : "Paket 4: Ultimate Architecture OS (Rp {$ultimatePrice} - Lengkap 10 Pilar)";
-                                $pkgBadge = 'ULTIMATE ARCHITECTURE OS';
+                                $pkgTitleEn = "Tier 04: Ultimate Software Factory OS (Rp {$ultimatePrice} - Complete 10 Pillars)";
+                                $pkgTitleId = "Paket 4: Ultimate Software Factory OS (Rp {$ultimatePrice} - Lengkap 10 Pilar)";
+                                $pkgBadgeEn = 'ULTIMATE SOFTWARE FACTORY OS';
+                                $pkgBadgeId = 'ARSITEKTUR OS ULTIMATE';
                             }
                         } elseif ($selectedVelocityMeta) {
                             if ($selectedVelocityMeta === 'fast_track' || str_contains($selectedVelocityMeta, 'fast') || str_contains($selectedVelocityMeta, 'swarm')) {
-                                $pkgTitle = $isEn ? 'Studio MVP: Accelerated Dedicated Squad (14 Business Days)' : 'Studio MVP: Accelerated Dedicated Squad (14 Hari Kerja)';
-                                $pkgBadge = 'DEDICATED SENIOR SQUAD';
+                                $pkgTitleEn = 'Studio MVP: Accelerated Dedicated Squad (14 Business Days)';
+                                $pkgTitleId = 'Studio MVP: Accelerated Dedicated Squad (14 Hari Kerja)';
+                                $pkgBadgeEn = 'DEDICATED SENIOR SQUAD';
+                                $pkgBadgeId = 'SQUAD SENIOR BERDEDIKASI';
                             } elseif ($selectedVelocityMeta === 'emergency') {
-                                $pkgTitle = $isEn ? 'Studio MVP: Emergency War Room Squad (7 Calendar Days)' : 'Studio MVP: Emergency War Room Squad (7 Hari Kalender)';
-                                $pkgBadge = 'EMERGENCY TOP SPEED';
+                                $pkgTitleEn = 'Studio MVP: Emergency War Room Squad (7 Calendar Days)';
+                                $pkgTitleId = 'Studio MVP: Emergency War Room Squad (7 Hari Kalender)';
+                                $pkgBadgeEn = 'EMERGENCY TOP SPEED';
+                                $pkgBadgeId = 'KECEPATAN DARURAT WAR ROOM';
                             }
                         }
                     @endphp
@@ -120,62 +134,69 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 mb-3">
                             <div class="flex items-center gap-2 flex-wrap">
                                 <span class="w-2.5 h-2.5 bg-emerald-500 rounded-none animate-pulse"></span>
-                                <span class="text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px]">{{ $isEn ? 'SOFTWARE FACTORY OS PACKAGE & LICENSE:' : 'PAKET & LISENSI SOFTWARE FACTORY OS:' }}</span>
-                                <span class="font-black text-sm text-zinc-900 dark:text-zinc-100">{{ $pkgTitle }}</span>
+                                <span class="text-zinc-500 dark:text-zinc-400 font-bold uppercase text-[10px]">
+                                    <span x-show="locale === 'en'">SOFTWARE FACTORY OS PACKAGE &amp; LICENSE:</span>
+                                    <span x-show="locale !== 'en'">PAKET &amp; LISENSI SOFTWARE FACTORY OS:</span>
+                                </span>
+                                <span class="font-black text-sm text-zinc-900 dark:text-zinc-100">
+                                    <span x-show="locale === 'en'">{{ $pkgTitleEn }}</span>
+                                    <span x-show="locale !== 'en'">{{ $pkgTitleId }}</span>
+                                </span>
                             </div>
                             <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase w-fit">
-                                {{ $pkgBadge }}
+                                <span x-show="locale === 'en'">{{ $pkgBadgeEn }}</span>
+                                <span x-show="locale !== 'en'">{{ $pkgBadgeId }}</span>
                             </span>
                         </div>
                         <div class="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2 text-[10px]">
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 1' : 'PILAR 1' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'PRD & ERD' : 'PRD & ERD' }}</span>
-                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? 'Strict ULID' : 'Skema ULID' }}</span>
+                                <span class="text-emerald-500 font-bold block">&check; <span x-show="locale === 'en'">PILLAR 1</span><span x-show="locale !== 'en'">PILAR 1</span></span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">PRD &amp; ERD</span>
+                                <span class="text-[9px] text-zinc-400 block"><span x-show="locale === 'en'">Strict ULID</span><span x-show="locale !== 'en'">Skema ULID</span></span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 2' : 'PILAR 2' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'UI Tokens' : 'Token UI' }}</span>
-                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? 'Design System' : 'Sistem Desain' }}</span>
+                                <span class="text-emerald-500 font-bold block">&check; <span x-show="locale === 'en'">PILLAR 2</span><span x-show="locale !== 'en'">PILAR 2</span></span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold"><span x-show="locale === 'en'">UI Tokens</span><span x-show="locale !== 'en'">Token UI</span></span>
+                                <span class="text-[9px] text-zinc-400 block"><span x-show="locale === 'en'">Design System</span><span x-show="locale !== 'en'">Sistem Desain</span></span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 3' : 'PILAR 3' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Scaffold Code' : 'Rangka Kode' }}</span>
-                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? 'Docker & Routes' : 'Docker & Rute' }}</span>
+                                <span class="text-emerald-500 font-bold block">&check; <span x-show="locale === 'en'">PILLAR 3</span><span x-show="locale !== 'en'">PILAR 3</span></span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold"><span x-show="locale === 'en'">Scaffold Code</span><span x-show="locale !== 'en'">Rangka Kode</span></span>
+                                <span class="text-[9px] text-zinc-400 block"><span x-show="locale === 'en'">Docker &amp; Routes</span><span x-show="locale !== 'en'">Docker &amp; Rute</span></span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 4' : 'PILAR 4' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Mock Seeder' : 'Data Awal' }}</span>
-                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? '100+ Records' : '100+ Data' }}</span>
+                                <span class="text-emerald-500 font-bold block">&check; <span x-show="locale === 'en'">PILLAR 4</span><span x-show="locale !== 'en'">PILAR 4</span></span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold"><span x-show="locale === 'en'">Mock Seeder</span><span x-show="locale !== 'en'">Data Awal</span></span>
+                                <span class="text-[9px] text-zinc-400 block"><span x-show="locale === 'en'">100+ Records</span><span x-show="locale !== 'en'">100+ Data</span></span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 5' : 'PILAR 5' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'AI & ECC' : 'AI & ECC' }}</span>
+                                <span class="text-emerald-500 font-bold block">&check; <span x-show="locale === 'en'">PILLAR 5</span><span x-show="locale !== 'en'">PILAR 5</span></span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">AI &amp; ECC</span>
                                 <span class="text-[9px] text-zinc-400 block">.cursorrules</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 6' : 'PILAR 6' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Contract & E2E' : 'Uji Kontrak' }}</span>
+                                <span class="text-emerald-500 font-bold block">&check; <span x-show="locale === 'en'">PILLAR 6</span><span x-show="locale !== 'en'">PILAR 6</span></span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold"><span x-show="locale === 'en'">Contract &amp; E2E</span><span x-show="locale !== 'en'">Uji Kontrak</span></span>
                                 <span class="text-[9px] text-zinc-400 block">Pest/E2E</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 7' : 'PILAR 7' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Cloud CI/CD' : 'CI/CD Cloud' }}</span>
-                                <span class="text-[9px] text-zinc-400 block">{{ $isEn ? 'deploy.sh' : 'deploy.sh' }}</span>
+                                <span class="text-emerald-500 font-bold block">&check; <span x-show="locale === 'en'">PILLAR 7</span><span x-show="locale !== 'en'">PILAR 7</span></span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold"><span x-show="locale === 'en'">Cloud CI/CD</span><span x-show="locale !== 'en'">CI/CD Cloud</span></span>
+                                <span class="text-[9px] text-zinc-400 block">deploy.sh</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 8' : 'PILAR 8' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Telemetry' : 'Telemetri' }}</span>
+                                <span class="text-emerald-500 font-bold block">&check; <span x-show="locale === 'en'">PILLAR 8</span><span x-show="locale !== 'en'">PILAR 8</span></span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold"><span x-show="locale === 'en'">Telemetry</span><span x-show="locale !== 'en'">Telemetri</span></span>
                                 <span class="text-[9px] text-zinc-400 block">/healthz</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 9' : 'PILAR 9' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Recovery' : 'Pemulihan' }}</span>
+                                <span class="text-emerald-500 font-bold block">&check; <span x-show="locale === 'en'">PILLAR 9</span><span x-show="locale !== 'en'">PILAR 9</span></span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold"><span x-show="locale === 'en'">Recovery</span><span x-show="locale !== 'en'">Pemulihan</span></span>
                                 <span class="text-[9px] text-zinc-400 block">backup.sh</span>
                             </div>
                             <div class="p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                <span class="text-emerald-500 font-bold block">&check; {{ $isEn ? 'PILLAR 10' : 'PILAR 10' }}</span>
-                                <span class="text-zinc-800 dark:text-zinc-200 font-bold">{{ $isEn ? 'Living Docs' : 'Dokumen API' }}</span>
+                                <span class="text-emerald-500 font-bold block">&check; <span x-show="locale === 'en'">PILLAR 10</span><span x-show="locale !== 'en'">PILAR 10</span></span>
+                                <span class="text-zinc-800 dark:text-zinc-200 font-bold"><span x-show="locale === 'en'">Living Docs</span><span x-show="locale !== 'en'">Dokumen API</span></span>
                                 <span class="text-[9px] text-zinc-400 block">Scalar API</span>
                             </div>
                         </div>
@@ -271,7 +292,7 @@
                             type="button" 
                             @click="expandAllGroups()" 
                             class="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 transition"
-                            title="Buka Semua Grup"
+                            :title="locale === 'en' ? 'Expand All Groups' : 'Buka Semua Grup'"
                         >
                             <span x-show="locale === 'en'">Expand All</span>
                             <span x-show="locale !== 'en'">Buka Semua</span>
@@ -280,7 +301,7 @@
                             type="button" 
                             @click="collapseAllGroups()" 
                             class="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 transition"
-                            title="Tutup Semua Grup"
+                            :title="locale === 'en' ? 'Collapse All Groups' : 'Tutup Semua Grup'"
                         >
                             <span x-show="locale === 'en'">Collapse</span>
                             <span x-show="locale !== 'en'">Tutup Semua</span>
@@ -290,7 +311,9 @@
                             @click="toggleAutoSync()" 
                             :class="autoSyncAccordion ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-300 dark:border-zinc-700'"
                             class="px-2.5 py-1.5 text-xs font-mono font-bold border transition flex items-center gap-1.5"
-                            :title="autoSyncAccordion ? 'Auto-Collapse Aktif: Mengikuti scroll bagian PRD' : 'Auto-Collapse Nonaktif: Klik untuk aktifkan mode spy'"
+                            :title="autoSyncAccordion 
+                                ? (locale === 'en' ? 'Auto-Collapse Active: Follows PRD scroll position' : 'Auto-Collapse Aktif: Mengikuti scroll bagian PRD') 
+                                : (locale === 'en' ? 'Auto-Collapse Disabled: Click to enable spy mode' : 'Auto-Collapse Nonaktif: Klik untuk aktifkan mode spy')"
                         >
                             <span class="w-1.5 h-1.5 rounded-none" :class="autoSyncAccordion ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'"></span>
                             <span x-show="autoSyncAccordion">SPY AUTO</span>

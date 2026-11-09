@@ -41,7 +41,10 @@
                     <h3 class="text-base sm:text-lg font-mono font-black uppercase text-white tracking-wider flex items-center gap-2">
                         <span x-show="locale === 'en'">DEVELOPER ROADMAP &amp; EXECUTION PLAYBOOK</span>
                         <span x-show="locale !== 'en'">PETA JALAN &amp; PANDUAN EKSEKUSI DEVELOPER</span>
-                        <span class="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">WORLD-CLASS OS</span>
+                        <span class="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">
+                            <span x-show="locale === 'en'">WORLD-CLASS OS</span>
+                            <span x-show="locale !== 'en'">OS KELAS DUNIA</span>
+                        </span>
                     </h3>
                     <p class="text-xs text-zinc-400 font-mono mt-0.5">
                         <span x-show="locale === 'en'">Guardrails, 3 Ways to Start, Docker Setup, and Execution via ECC (.agents/)</span>
@@ -89,7 +92,8 @@
                 :class="executionGuideTab === 'docker' ? 'bg-sky-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" 
                 class="px-3 py-1.5 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 rounded-none"
             >
-                <span>🐳 Docker Quickstart</span>
+                <span x-show="locale === 'en'">🐳 Docker Quickstart</span>
+                <span x-show="locale !== 'en'">🐳 Panduan Cepat Docker</span>
             </button>
             <button 
                 type="button" 
@@ -97,7 +101,8 @@
                 :class="executionGuideTab === 'coolify' ? 'bg-purple-600 text-white font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" 
                 class="px-3 py-1.5 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 rounded-none"
             >
-                <span>🚀 Coolify PaaS Setup</span>
+                <span x-show="locale === 'en'">🚀 Coolify PaaS Setup</span>
+                <span x-show="locale !== 'en'">🚀 Setup Coolify PaaS</span>
             </button>
             <button 
                 type="button" 
@@ -347,7 +352,10 @@
                                 <span x-show="locale === 'en'">Local Workspace Directory / Folder:</span>
                                 <span x-show="locale !== 'en'">Nama Folder / Direktori Kerja Lokal:</span>
                             </span>
-                            <span class="text-[9px] font-mono px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">CUSTOMIZABLE</span>
+                            <span class="text-[9px] font-mono px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">
+                                <span x-show="locale === 'en'">CUSTOMIZABLE</span>
+                                <span x-show="locale !== 'en'">DAPAT DISESUAIKAN</span>
+                            </span>
                         </div>
                         <p class="text-[11px] text-zinc-400 font-sans">
                             <span x-show="locale === 'en'">Customize this folder name to match your local extracted directory (e.g. <code>my-app-workspace</code>). All terminal commands below will auto-update!</span>
@@ -373,6 +381,7 @@
                                 type="button" 
                                 x-show="workspaceDir" 
                                 @click="setWorkspaceDir('')" 
+                                :title="locale === 'en' ? 'Clear (return to default)' : 'Kosongkan (kembali ke default)'"
                                 title="Kosongkan (kembali ke default)"
                                 style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 20; display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: transparent; border: none; line-height: 1;"
                                 class="text-zinc-400 hover:text-emerald-400 text-base cursor-pointer font-black transition-colors select-none"
@@ -383,6 +392,7 @@
                         <button 
                             type="button" 
                             @click="setWorkspaceDir('')"
+                            :title="locale === 'en' ? 'Reset to short default' : 'Reset ke default pendek'"
                             title="Reset ke default pendek"
                             class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-[10px] font-mono rounded-none cursor-pointer"
                         >
@@ -395,7 +405,8 @@
                 <div x-show="dockerOsTab === 'windows'" class="space-y-4 font-mono text-xs">
                     <div class="p-3 bg-zinc-900 border border-zinc-800 text-zinc-300">
                         <div class="font-bold text-sky-400 mb-1 flex items-center gap-2">
-                            <span>🪟 Panduan Lengkap Docker Desktop di Windows (WSL 2 Backend)</span>
+                            <span x-show="locale === 'en'">🪟 Complete Docker Desktop Guide on Windows (WSL 2 Backend)</span>
+                            <span x-show="locale !== 'en'">🪟 Panduan Lengkap Docker Desktop di Windows (WSL 2 Backend)</span>
                             <span class="px-1.5 py-0.2 bg-sky-500/20 text-sky-300 text-[10px] uppercase font-bold">100% REPRODUCIBLE</span>
                         </div>
                         <p class="font-sans leading-relaxed text-xs text-zinc-400">
@@ -415,8 +426,14 @@
                             <span class="text-[10px] text-zinc-500 font-mono">POWERSHELL ADMIN</span>
                         </div>
                         <ol class="space-y-1.5 text-zinc-300 font-sans text-xs leading-relaxed list-decimal list-inside">
-                            <li><strong>Virtualisasi BIOS:</strong> Buka Task Manager (<kbd class="px-1 bg-zinc-800 text-zinc-300">Ctrl+Shift+Esc</kbd>) &rarr; Tab <em>Performance</em> &rarr; <em>CPU</em> &rarr; Pastikan <code class="text-emerald-400">Virtualization: Enabled</code>.</li>
-                            <li><strong>Aktifkan WSL 2:</strong> Buka PowerShell sebagai Administrator, jalankan perintah di bawah:</li>
+                            <li>
+                                <span x-show="locale === 'en'"><strong>BIOS Virtualization:</strong> Open Task Manager (<kbd class="px-1 bg-zinc-800 text-zinc-300">Ctrl+Shift+Esc</kbd>) &rarr; <em>Performance</em> tab &rarr; <em>CPU</em> &rarr; Ensure <code class="text-emerald-400">Virtualization: Enabled</code>.</span>
+                                <span x-show="locale !== 'en'"><strong>Virtualisasi BIOS:</strong> Buka Task Manager (<kbd class="px-1 bg-zinc-800 text-zinc-300">Ctrl+Shift+Esc</kbd>) &rarr; Tab <em>Performance</em> &rarr; <em>CPU</em> &rarr; Pastikan <code class="text-emerald-400">Virtualization: Enabled</code>.</span>
+                            </li>
+                            <li>
+                                <span x-show="locale === 'en'"><strong>Enable WSL 2:</strong> Open PowerShell as Administrator and run the command below:</span>
+                                <span x-show="locale !== 'en'"><strong>Aktifkan WSL 2:</strong> Buka PowerShell sebagai Administrator, jalankan perintah di bawah:</span>
+                            </li>
                         </ol>
                         <div class="relative">
                             <pre class="p-2.5 bg-zinc-950 border border-zinc-800 text-sky-300 select-all overflow-x-auto text-[11px] leading-relaxed">wsl --install
@@ -431,7 +448,8 @@ wsl --update</pre>
                             </button>
                         </div>
                         <p class="text-[11px] text-zinc-400 font-sans">
-                            3. Unduh &amp; install Docker Desktop dari <a href="https://www.docker.com/products/docker-desktop/" target="_blank" class="text-sky-400 underline font-bold">docker.com</a>. Saat wizard instalasi, pastikan centang <strong>"Use the WSL 2 based engine"</strong>. Setelah restart, buka Docker Desktop &rarr; <em>Settings</em> &rarr; <em>General</em> &rarr; pastikan opsi WSL 2 aktif.
+                            <span x-show="locale === 'en'">3. Download &amp; install Docker Desktop from <a href="https://www.docker.com/products/docker-desktop/" target="_blank" class="text-sky-400 underline font-bold">docker.com</a>. During the setup wizard, ensure <strong>"Use the WSL 2 based engine"</strong> is checked. After restarting, open Docker Desktop &rarr; <em>Settings</em> &rarr; <em>General</em> &rarr; verify the WSL 2 option is enabled.</span>
+                            <span x-show="locale !== 'en'">3. Unduh &amp; install Docker Desktop dari <a href="https://www.docker.com/products/docker-desktop/" target="_blank" class="text-sky-400 underline font-bold">docker.com</a>. Saat wizard instalasi, pastikan centang <strong>"Use the WSL 2 based engine"</strong>. Setelah restart, buka Docker Desktop &rarr; <em>Settings</em> &rarr; <em>General</em> &rarr; pastikan opsi WSL 2 aktif.</span>
                         </p>
                     </div>
 
@@ -446,15 +464,16 @@ wsl --update</pre>
                             <span class="text-[10px] text-emerald-400 font-mono font-bold">STARTER KIT .ZIP</span>
                         </div>
                         <p class="text-zinc-300 font-sans text-xs leading-relaxed">
-                            Unduh arsip scaffold melalui tombol <strong>DOWNLOAD FULL ZIP (.ZIP)</strong>. Ekstrak isi ZIP tersebut ke folder kerja di Windows (disarankan path tanpa spasi, misal: <code class="text-amber-400" x-text="`C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">C:\projects\{{ $shortSlugVal }}</code> atau <code class="text-amber-400" x-text="`C:\\xampp\\htdocs\\${workspaceDir || '{{ $shortSlugVal }}'}`">C:\xampp\htdocs\{{ $shortSlugVal }}</code>).
+                            <span x-show="locale === 'en'">Download the scaffold archive via the <strong>DOWNLOAD FULL ZIP (.ZIP)</strong> button. Extract the ZIP contents to your local Windows folder (recommended path without spaces, e.g.: <code class="text-amber-400" x-text="`C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">C:\projects\{{ $shortSlugVal }}</code> or <code class="text-amber-400" x-text="`C:\\xampp\\htdocs\\${workspaceDir || '{{ $shortSlugVal }}'}`">C:\xampp\htdocs\{{ $shortSlugVal }}</code>).</span>
+                            <span x-show="locale !== 'en'">Unduh arsip scaffold melalui tombol <strong>DOWNLOAD FULL ZIP (.ZIP)</strong>. Ekstrak isi ZIP tersebut ke folder kerja di Windows (disarankan path tanpa spasi, misal: <code class="text-amber-400" x-text="`C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">C:\projects\{{ $shortSlugVal }}</code> atau <code class="text-amber-400" x-text="`C:\\xampp\\htdocs\\${workspaceDir || '{{ $shortSlugVal }}'}`">C:\xampp\htdocs\{{ $shortSlugVal }}</code>).</span>
                         </p>
                         <div class="p-2 bg-zinc-950 border border-zinc-800 text-[11px] text-zinc-400 font-mono space-y-1">
-                            <div class="text-zinc-200 font-bold">&bull; Berkas Kunci yang Siap Digunakan di Dalam Folder:</div>
-                            <div class="pl-2">&rarr; <code>Dockerfile</code> (PHP 8.5 FPM Alpine — tanpa ekstensi)</div>
+                            <div class="text-zinc-200 font-bold">&bull; <span x-show="locale === 'en'">Key Pre-Wired Files Inside the Folder:</span><span x-show="locale !== 'en'">Berkas Kunci yang Siap Digunakan di Dalam Folder:</span></div>
+                            <div class="pl-2">&rarr; <code>Dockerfile</code> (<span x-show="locale === 'en'">PHP 8.5 FPM Alpine — extensionless</span><span x-show="locale !== 'en'">PHP 8.5 FPM Alpine — tanpa ekstensi</span>)</div>
                             <div class="pl-2">&rarr; <code>docker-compose.yml</code> (PHP 8.5+, PostgreSQL 16 Strict, Redis 7, Nginx)</div>
-                            <div class="pl-2">&rarr; <code>.env.blueprint</code> (Konfigurasi environment siap pakai)</div>
-                            <div class="pl-2">&rarr; <code>.agents/AGENTS.md</code> &amp; <code>.cursorrules</code> (SOP &amp; Guardrails ECC)</div>
-                            <div class="pl-2">&rarr; <code>schema_complete.sql</code> (Skema DDL PostgreSQL Strict ULID)</div>
+                            <div class="pl-2">&rarr; <code>.env.blueprint</code> (<span x-show="locale === 'en'">Ready-to-use environment configuration</span><span x-show="locale !== 'en'">Konfigurasi environment siap pakai</span>)</div>
+                            <div class="pl-2">&rarr; <code>.agents/AGENTS.md</code> &amp; <code>.cursorrules</code> (<span x-show="locale === 'en'">ECC SOP &amp; Architectural Guardrails</span><span x-show="locale !== 'en'">SOP &amp; Guardrails ECC</span>)</div>
+                            <div class="pl-2">&rarr; <code>schema_complete.sql</code> (<span x-show="locale === 'en'">PostgreSQL Strict ULID DDL Schema</span><span x-show="locale !== 'en'">Skema DDL PostgreSQL Strict ULID</span>)</div>
                             <div class="pl-2">&rarr; <code>SyntheticDataSeeder.php</code> &amp; <code>ApiContractTest.php</code></div>
                         </div>
                     </div>
@@ -470,7 +489,8 @@ wsl --update</pre>
                             <span class="text-[10px] text-zinc-500 font-mono">TERMINAL WINDOWS</span>
                         </div>
                         <p class="text-zinc-300 font-sans text-xs leading-relaxed">
-                            Buka File Explorer Windows di folder hasil ekstrak. Tahan tombol <kbd class="px-1 bg-zinc-800 text-zinc-300">Shift</kbd> lalu <strong>Klik Kanan</strong> di area kosong &rarr; pilih <strong>"Open in Terminal"</strong> (atau buka PowerShell biasa lalu <code class="text-sky-300" x-text="`cd C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">cd C:\projects\{{ $shortSlugVal }}</code>). Salin environment template:
+                            <span x-show="locale === 'en'">Open Windows File Explorer inside the extracted folder. Hold <kbd class="px-1 bg-zinc-800 text-zinc-300">Shift</kbd> and <strong>Right-Click</strong> in an empty area &rarr; select <strong>"Open in Terminal"</strong> (or open PowerShell normally then <code class="text-sky-300" x-text="`cd C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">cd C:\projects\{{ $shortSlugVal }}</code>). Copy the environment template:</span>
+                            <span x-show="locale !== 'en'">Buka File Explorer Windows di folder hasil ekstrak. Tahan tombol <kbd class="px-1 bg-zinc-800 text-zinc-300">Shift</kbd> lalu <strong>Klik Kanan</strong> di area kosong &rarr; pilih <strong>"Open in Terminal"</strong> (atau buka PowerShell biasa lalu <code class="text-sky-300" x-text="`cd C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">cd C:\projects\{{ $shortSlugVal }}</code>). Salin environment template:</span>
                         </p>
                         <div class="relative">
                             <pre class="p-2.5 bg-zinc-950 border border-zinc-800 text-sky-300 select-all overflow-x-auto text-[11px] leading-relaxed">Copy-Item .env.blueprint .env</pre>
@@ -503,38 +523,39 @@ wsl --update</pre>
                             </button>
                         </div>
                         <p class="text-zinc-300 font-sans text-xs leading-relaxed">
-                            Jalankan perintah-perintah berikut di PowerShell untuk menyalakan container, menginstall dependencies, menjalankan migrasi database PostgreSQL Strict ULID, dan mengisi data sintetis:
+                            <span x-show="locale === 'en'">Run the following commands in PowerShell to spin up containers, install backend dependencies, execute PostgreSQL 16 Strict ULID database migrations, and seed realistic data:</span>
+                            <span x-show="locale !== 'en'">Jalankan perintah-perintah berikut di PowerShell untuk menyalakan container, menginstall dependencies, menjalankan migrasi database PostgreSQL Strict ULID, dan mengisi data sintetis:</span>
                         </p>
-                        <pre class="p-3.5 bg-zinc-950 border border-zinc-800 text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre text-xs"># 0. Pindah ke direktori kerja lokal
+                        <pre class="p-3.5 bg-zinc-950 border border-zinc-800 text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre text-xs"><span x-show="locale === 'en'"># 0. Change directory to local workspace</span><span x-show="locale !== 'en'"># 0. Pindah ke direktori kerja lokal</span>
 <span x-text="`cd C:\\projects\\${workspaceDir || '{{ $shortSlugVal }}'}`">cd C:\projects\{{ $shortSlugVal }}</span>
 
-# 1. Nyalakan seluruh container service di latar belakang (build lokal PHP 8.5)
+<span x-show="locale === 'en'"># 1. Spin up all container services in background (local build PHP 8.5)</span><span x-show="locale !== 'en'"># 1. Nyalakan seluruh container service di latar belakang (build lokal PHP 8.5)</span>
 docker compose up --build -d
 
-# 2. Install dependency backend PHP 8.5+ via Composer
+<span x-show="locale === 'en'"># 2. Install backend PHP 8.5+ dependencies via Composer</span><span x-show="locale !== 'en'"># 2. Install dependency backend PHP 8.5+ via Composer</span>
 docker compose exec app composer install
 
-# 3. Generate Application Key Laravel
+<span x-show="locale === 'en'"># 3. Generate Laravel Application Key</span><span x-show="locale !== 'en'"># 3. Generate Application Key Laravel</span>
 docker compose exec app php artisan key:generate
 
-# 4. Jalankan migrasi database PostgreSQL 16 Strict ULID
+<span x-show="locale === 'en'"># 4. Run PostgreSQL 16 Strict ULID database migrations</span><span x-show="locale !== 'en'"># 4. Jalankan migrasi database PostgreSQL 16 Strict ULID</span>
 docker compose exec app php artisan migrate
 
-# 5. Isi data sintetis realistis 100+ baris
+<span x-show="locale === 'en'"># 5. Seed realistic synthetic data (100+ rows)</span><span x-show="locale !== 'en'"># 5. Isi data sintetis realistis 100+ baris</span>
 docker compose exec app php artisan db:seed --class=SyntheticDataSeeder
 
-# 6. Install frontend packages & compile bundle
+<span x-show="locale === 'en'"># 6. Install frontend packages & compile bundle</span><span x-show="locale !== 'en'"># 6. Install frontend packages & compile bundle</span>
 docker compose exec app npm install
 docker compose exec app npm run build
 
-# 7. Verifikasi health check probe
+<span x-show="locale === 'en'"># 7. Verify health check probe</span><span x-show="locale !== 'en'"># 7. Verifikasi health check probe</span>
 curl http://localhost:8000/api/health</pre>
 
                         <div class="p-2.5 bg-zinc-900 border border-zinc-800 text-zinc-300 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                            <div>&bull; <strong>Aplikasi Web:</strong> <a href="http://localhost:8000" target="_blank" class="text-sky-400 underline">http://localhost:8000</a></div>
+                            <div>&bull; <strong><span x-show="locale === 'en'">Web App:</span><span x-show="locale !== 'en'">Aplikasi Web:</span></strong> <a href="http://localhost:8000" target="_blank" class="text-sky-400 underline">http://localhost:8000</a></div>
                             <div>&bull; <strong>PostgreSQL 16:</strong> <code>localhost:5432</code> (DB: <code x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_db`">{{ $shortSlugVal }}_db</code>)</div>
                             <div>&bull; <strong>Redis Cache:</strong> <code>localhost:6379</code></div>
-                            <div>&bull; <strong>Living API Docs:</strong> <a href="http://localhost:8000/api/docs" target="_blank" class="text-emerald-400 underline">http://localhost:8000/api/docs</a></div>
+                            <div>&bull; <strong><span x-show="locale === 'en'">Living API Docs:</span><span x-show="locale !== 'en'">Dokumentasi API:</span></strong> <a href="http://localhost:8000/api/docs" target="_blank" class="text-emerald-400 underline">http://localhost:8000/api/docs</a></div>
                         </div>
                     </div>
 
@@ -556,7 +577,8 @@ curl http://localhost:8000/api/health</pre>
                             </button>
                         </div>
                         <p class="text-zinc-300 font-sans text-xs leading-relaxed">
-                            Buka Antigravity IDE atau Cursor di Windows &rarr; <strong>File &rarr; Open Folder</strong> &rarr; pilih folder hasil ekstrak. Buka jendela chat AI dan tempelkan prompt berikut:
+                            <span x-show="locale === 'en'">Open Antigravity IDE or Cursor in Windows &rarr; <strong>File &rarr; Open Folder</strong> &rarr; select the extracted workspace folder. Open AI chat and paste the following prompt:</span>
+                            <span x-show="locale !== 'en'">Buka Antigravity IDE atau Cursor di Windows &rarr; <strong>File &rarr; Open Folder</strong> &rarr; pilih folder hasil ekstrak. Buka jendela chat AI dan tempelkan prompt berikut:</span>
                         </p>
                         <pre class="p-3 bg-zinc-950 border border-zinc-800 text-emerald-400 overflow-x-auto select-all leading-relaxed whitespace-pre-wrap text-xs"><span x-show="locale === 'en'">Antigravity, inspect AGENTS.md, PRODUCT-BRIEF.md, and schema_complete.sql in this new workspace. Spin up containers with docker compose up -d, run PostgreSQL Strict ULID database migrations, and begin MVP Phase 1 implementation.</span><span x-show="locale !== 'en'">Antigravity, pelajari AGENTS.md, PRODUCT-BRIEF.md, dan schema_complete.sql di workspace baru ini. Setup database menggunakan Docker Compose dan mulai implementasi MVP Fase 1.</span></pre>
                     </div>
@@ -654,42 +676,46 @@ curl http://localhost:8000/api/health</pre>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                         <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
                             <div class="text-[11px] font-bold text-purple-300 font-mono flex items-center justify-between">
-                                <span>🌐 WEB SERVER</span>
+                                <span>🌐 <span x-show="locale === 'en'">WEB SERVER</span><span x-show="locale !== 'en'">WEB SERVER</span></span>
                                 <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">HTTP/2</span>
                             </div>
                             <div class="text-xs font-bold text-white">Nginx Alpine</div>
                             <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                                Reverse proxy berkinerja tinggi, gzip/brotli compression, asset caching, dan mitigasi DDoS edge.
+                                <span x-show="locale === 'en'">High-performance reverse proxy, gzip/brotli compression, asset caching, and edge DDoS mitigation.</span>
+                                <span x-show="locale !== 'en'">Reverse proxy berkinerja tinggi, gzip/brotli compression, asset caching, dan mitigasi DDoS edge.</span>
                             </p>
                         </div>
                         <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
                             <div class="text-[11px] font-bold text-emerald-400 font-mono flex items-center justify-between">
-                                <span>⚡ APP RUNTIME</span>
+                                <span>⚡ <span x-show="locale === 'en'">APP RUNTIME</span><span x-show="locale !== 'en'">RUNTIME APLIKASI</span></span>
                                 <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">PHP 8.4+</span>
                             </div>
                             <div class="text-xs font-bold text-white">Laravel 13 (PHP-FPM)</div>
                             <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                                OPcache + JIT aktif, Livewire 4, Filament v5 Enterprise, ekstensi <code>pdo_pgsql</code>, <code>redis</code>, <code>pcntl</code>.
+                                <span x-show="locale === 'en'">OPcache + JIT enabled, Livewire 4, Filament v5 Enterprise, <code>pdo_pgsql</code>, <code>redis</code>, <code>pcntl</code> extensions.</span>
+                                <span x-show="locale !== 'en'">OPcache + JIT aktif, Livewire 4, Filament v5 Enterprise, ekstensi <code>pdo_pgsql</code>, <code>redis</code>, <code>pcntl</code>.</span>
                             </p>
                         </div>
                         <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
                             <div class="text-[11px] font-bold text-sky-400 font-mono flex items-center justify-between">
-                                <span>🗄️ DATABASE</span>
+                                <span>🗄️ <span x-show="locale === 'en'">DATABASE</span><span x-show="locale !== 'en'">DATABASE</span></span>
                                 <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">PG 16</span>
                             </div>
                             <div class="text-xs font-bold text-white">PostgreSQL 16 ULID</div>
                             <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                                Primary Key ULID 26 karakter, Keyset Cursor Pagination O(1), volume terisolasi anti-data loss.
+                                <span x-show="locale === 'en'">26-character ULID Primary Keys, Keyset Cursor Pagination O(1), isolated volume anti-data loss.</span>
+                                <span x-show="locale !== 'en'">Primary Key ULID 26 karakter, Keyset Cursor Pagination O(1), volume terisolasi anti-data loss.</span>
                             </p>
                         </div>
                         <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
                             <div class="text-[11px] font-bold text-rose-400 font-mono flex items-center justify-between">
-                                <span>🚀 CACHE &amp; QUEUE</span>
+                                <span>🚀 <span x-show="locale === 'en'">CACHE &amp; QUEUE</span><span x-show="locale !== 'en'">CACHE &amp; ANTRIAN</span></span>
                                 <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">IN-MEMORY</span>
                             </div>
                             <div class="text-xs font-bold text-white">Redis 7 Alpine</div>
                             <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                                Penyimpanan session kilat, cache tag dinamis, dan pemrosesan antrean asinkron (background jobs).
+                                <span x-show="locale === 'en'">Sub-millisecond session store, dynamic tag caching, and asynchronous queue processing (background jobs).</span>
+                                <span x-show="locale !== 'en'">Penyimpanan session kilat, cache tag dinamis, dan pemrosesan antrean asinkron (background jobs).</span>
                             </p>
                         </div>
                     </div>
@@ -728,7 +754,8 @@ curl http://localhost:8000/api/health</pre>
                         </p>
                         <pre class="p-2.5 bg-black border border-zinc-800 text-purple-300 font-mono text-xs select-all overflow-x-auto">curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash</pre>
                         <p class="text-[10px] text-zinc-500 font-mono">
-                            &bull; Port VPS wajib terbuka: <code>22</code> (SSH), <code>80</code> (HTTP), <code>443</code> (HTTPS), <code>8000</code> (Coolify Dashboard awal).
+                            <span x-show="locale === 'en'">&bull; VPS ports required: <code>22</code> (SSH), <code>80</code> (HTTP), <code>443</code> (HTTPS), <code>8000</code> (initial Coolify Dashboard).</span>
+                            <span x-show="locale !== 'en'">&bull; Port VPS wajib terbuka: <code>22</code> (SSH), <code>80</code> (HTTP), <code>443</code> (HTTPS), <code>8000</code> (Coolify Dashboard awal).</span>
                         </p>
                     </div>
 
@@ -742,8 +769,8 @@ curl http://localhost:8000/api/health</pre>
                             </span>
                         </div>
                         <div class="text-[11px] text-zinc-400 font-sans space-y-1 leading-relaxed">
-                            <div>&bull; Buka browser ke <code>http://&lt;IP-VPS-ANDA&gt;:8000</code> dan buat akun admin pertama.</div>
-                            <div>&bull; Masuk ke menu <strong>Sources</strong> &rarr; Hubungkan akun <strong>GitHub / GitLab</strong> tempat Anda menyimpan source code starter kit ini.</div>
+                            <div>&bull; <span x-show="locale === 'en'">Open browser to <code>http://&lt;YOUR-VPS-IP&gt;:8000</code> and create your first administrator account.</span><span x-show="locale !== 'en'">Buka browser ke <code>http://&lt;IP-VPS-ANDA&gt;:8000</code> dan buat akun admin pertama.</span></div>
+                            <div>&bull; <span x-show="locale === 'en'">Navigate to <strong>Sources</strong> &rarr; Connect your <strong>GitHub / GitLab</strong> account where you pushed this starter kit code.</span><span x-show="locale !== 'en'">Masuk ke menu <strong>Sources</strong> &rarr; Hubungkan akun <strong>GitHub / GitLab</strong> tempat Anda menyimpan source code starter kit ini.</span></div>
                         </div>
                     </div>
 
@@ -760,10 +787,10 @@ curl http://localhost:8000/api/health</pre>
                             <span class="text-[10px] font-mono text-emerald-400 font-bold">docker-compose.coolify.yml</span>
                         </div>
                         <div class="text-[11px] text-zinc-400 font-sans space-y-1 leading-relaxed">
-                            <div>1. Di Coolify, klik <strong>Projects</strong> &rarr; <strong>Production</strong> &rarr; <strong>+ New Resource</strong> &rarr; <strong>Docker Compose</strong>.</div>
-                            <div>2. Pilih Git repository proyek Anda dan branch target (misal: <code>main</code>).</div>
-                            <div>3. Pada input <strong>Docker Compose File</strong>, ketik: <code>docker-compose.coolify.yml</code> (berkas ini sudah tersedia di root starter kit).</div>
-                            <div>4. Di kolom <strong>Domains</strong>, masukkan domain Anda: <code>https://app.domainanda.com</code>. Traefik otomatis menerbitkan SSL Let's Encrypt!</div>
+                            <div>1. <span x-show="locale === 'en'">In Coolify, click <strong>Projects</strong> &rarr; <strong>Production</strong> &rarr; <strong>+ New Resource</strong> &rarr; <strong>Docker Compose</strong>.</span><span x-show="locale !== 'en'">Di Coolify, klik <strong>Projects</strong> &rarr; <strong>Production</strong> &rarr; <strong>+ New Resource</strong> &rarr; <strong>Docker Compose</strong>.</span></div>
+                            <div>2. <span x-show="locale === 'en'">Select your Git repository and target branch (e.g. <code>main</code>).</span><span x-show="locale !== 'en'">Pilih Git repository proyek Anda dan branch target (misal: <code>main</code>).</span></div>
+                            <div>3. <span x-show="locale === 'en'">In the <strong>Docker Compose File</strong> field, enter: <code>docker-compose.coolify.yml</code> (included in starter kit root).</span><span x-show="locale !== 'en'">Pada input <strong>Docker Compose File</strong>, ketik: <code>docker-compose.coolify.yml</code> (berkas ini sudah tersedia di root starter kit).</span></div>
+                            <div>4. <span x-show="locale === 'en'">In the <strong>Domains</strong> field, enter your domain: <code>https://app.yourdomain.com</code>. Traefik automatically issues Let's Encrypt SSL!</span><span x-show="locale !== 'en'">Di kolom <strong>Domains</strong>, masukkan domain Anda: <code>https://app.domainanda.com</code>. Traefik otomatis menerbitkan SSL Let's Encrypt!</span></div>
                         </div>
                     </div>
 
@@ -823,11 +850,13 @@ AI_THREAT_SHIELD_ENABLED=true</pre>
                         </div>
                         <div class="text-[11px] text-zinc-400 font-sans space-y-1.5 leading-relaxed">
                             <p>
-                                Setelah proses <strong>Deploy</strong> di Coolify selesai, buka tab <strong>Terminal</strong> atau jalankan di container <code>app</code>:
+                                <span x-show="locale === 'en'">Once the <strong>Deploy</strong> process in Coolify finishes, open the <strong>Terminal</strong> tab or execute inside the <code>app</code> container:</span>
+                                <span x-show="locale !== 'en'">Setelah proses <strong>Deploy</strong> di Coolify selesai, buka tab <strong>Terminal</strong> atau jalankan di container <code>app</code>:</span>
                             </p>
                             <pre class="p-2 bg-black border border-zinc-800 text-purple-300 font-mono text-xs select-all overflow-x-auto">php artisan migrate --force && php artisan db:seed --class=SyntheticDataSeeder --force && php artisan storage:link</pre>
                             <p class="text-zinc-500 font-mono text-[10px]">
-                                &bull; Endpoint Health Check: <code>https://app.domainanda.com/api/health</code> (status: OK).
+                                <span x-show="locale === 'en'">&bull; Health Check Endpoint: <code>https://app.yourdomain.com/api/health</code> (status: OK).</span>
+                                <span x-show="locale !== 'en'">&bull; Endpoint Health Check: <code>https://app.domainanda.com/api/health</code> (status: OK).</span>
                             </p>
                         </div>
                     </div>
@@ -1006,7 +1035,8 @@ AI_THREAT_SHIELD_ENABLED=true</pre>
         <!-- Modal Footer -->
         <div class="border-t border-zinc-800 pt-3 mt-4 flex items-center justify-between text-xs font-mono text-zinc-500 shrink-0">
             <div>
-                STANDAR SOFTWARE FACTORY OS &bull; 100% REPRODUCIBLE
+                <span x-show="locale === 'en'">SOFTWARE FACTORY OS STANDARD &bull; 100% REPRODUCIBLE</span>
+                <span x-show="locale !== 'en'">STANDAR SOFTWARE FACTORY OS &bull; 100% REPRODUCIBLE</span>
             </div>
             <button 
                 type="button" 

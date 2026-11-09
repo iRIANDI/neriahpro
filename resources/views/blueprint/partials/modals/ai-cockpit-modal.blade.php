@@ -17,8 +17,12 @@
                     </span>
                     <div>
                         <h3 class="text-base sm:text-lg font-black uppercase text-white tracking-tight flex items-center gap-2">
-                            <span>AI AGENT INGESTION COCKPIT</span>
-                            <span class="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">ORCHESTRATOR</span>
+                            <span x-show="locale === 'en'">AI AGENT INGESTION COCKPIT</span>
+                            <span x-show="locale !== 'en'">COCKPIT INGESTI AI AGENT</span>
+                            <span class="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold">
+                                <span x-show="locale === 'en'">ORCHESTRATOR</span>
+                                <span x-show="locale !== 'en'">ORKESTRATOR</span>
+                            </span>
                         </h3>
                         <p class="text-xs text-zinc-400 font-mono mt-0.5">
                             <span x-show="locale === 'en'">Select AI Coding Agent &amp; Sprint Stages to feed PRD iteratively without context-rot.</span>

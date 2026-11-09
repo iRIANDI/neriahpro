@@ -30,7 +30,7 @@
                 <div class="flex flex-wrap items-center gap-2 mb-2">
                     <span class="px-2.5 py-0.5 text-xs font-mono font-black uppercase tracking-wider bg-emerald-500 text-black rounded-none">
                         <span x-show="locale === 'en'">WORLD-CLASS ROADMAP &amp; GUARDRAILS</span>
-                        <span x-show="locale !== 'en'">WORLD-CLASS PETA JALAN &amp; GUARDRAILS</span>
+                        <span x-show="locale !== 'en'">PETA JALAN KELAS DUNIA &amp; GUARDRAILS</span>
                     </span>
                     <span class="px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 rounded-none">
                         DOCKER PHP 8.5+ &bull; PG 16 ULID &bull; ECC HARNESS
@@ -63,7 +63,8 @@
                     class="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-xs rounded-none border border-purple-400 transition cursor-pointer flex items-center gap-1.5 shadow-sm"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    <span>COOLIFY PAAS GUIDE &rarr;</span>
+                    <span x-show="locale === 'en'">COOLIFY PAAS GUIDE &rarr;</span>
+                    <span x-show="locale !== 'en'">PANDUAN COOLIFY PAAS &rarr;</span>
                 </button>
                 <button 
                     type="button" 
@@ -164,7 +165,10 @@
                             <span x-show="locale !== 'en'">🚀 Pilihan A: Eksekusi Langsung di Sesi Chat Antigravity Ini (Paling Cepat &amp; Praktis)</span>
                         </h3>
                     </div>
-                    <span class="text-xs font-mono text-zinc-500 dark:text-zinc-400">Zero Setup Required</span>
+                    <span class="text-xs font-mono text-zinc-500 dark:text-zinc-400">
+                        <span x-show="locale === 'en'">Zero Setup Required</span>
+                        <span x-show="locale !== 'en'">Tanpa Perlu Setup</span>
+                    </span>
                 </div>
 
                 <p class="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans">
@@ -233,7 +237,10 @@
             <div x-show="activeGuideCard === 'choice-b'" x-cloak class="p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 bg-blue-500 text-white font-mono text-[10px] font-black uppercase">STANDALONE REPO</span>
+                        <span class="px-2 py-0.5 bg-blue-500 text-white font-mono text-[10px] font-black uppercase">
+                            <span x-show="locale === 'en'">STANDALONE REPO</span>
+                            <span x-show="locale !== 'en'">REPO MANDIRI</span>
+                        </span>
                         <h3 class="font-mono font-black text-sm text-zinc-950 dark:text-zinc-100 uppercase">
                             <span x-show="locale === 'en'">📦 Option B: Build Fresh Clean Project from Scratch (Standalone App)</span>
                             <span x-show="locale !== 'en'">📦 Pilihan B: Bikin Proyek Baru Bersih dari Awal (Standalone App)</span>
@@ -346,7 +353,10 @@
             <div x-show="activeGuideCard === 'choice-c'" x-cloak class="p-5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-4">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 bg-purple-500 text-white font-mono text-[10px] font-black uppercase">ANTI CONTEXT-ROT</span>
+                        <span class="px-2 py-0.5 bg-purple-500 text-white font-mono text-[10px] font-black uppercase">
+                            <span x-show="locale === 'en'">ANTI CONTEXT-ROT</span>
+                            <span x-show="locale !== 'en'">PENCEGAH CONTEXT-ROT</span>
+                        </span>
                         <h3 class="font-mono font-black text-sm text-zinc-950 dark:text-zinc-100 uppercase">
                             <span x-show="locale === 'en'">🎯 Option C: Step-by-Step Execution via AI Cockpit (Vertical Slice Prompting)</span>
                             <span x-show="locale !== 'en'">🎯 Pilihan C: Eksekusi Bertahap Menggunakan AI Cockpit (Vertical Slice Prompting)</span>
@@ -416,7 +426,10 @@
                         <span x-show="locale !== 'en'">URUTAN EKSEKUSI STANDAR // BEST PRACTICE VERTICAL SLICE</span>
                     </h3>
                 </div>
-                <span class="text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase">5 Sprint Turnkey Roadmap</span>
+                <span class="text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase">
+                    <span x-show="locale === 'en'">5 Sprint Turnkey Roadmap</span>
+                    <span x-show="locale !== 'en'">Roadmap 5 Sprint Turnkey</span>
+                </span>
             </div>
 
             <p class="text-xs text-zinc-600 dark:text-zinc-400 font-sans">
@@ -518,7 +531,10 @@
                 <div class="flex flex-wrap items-center justify-between border-b border-zinc-800 pb-2 gap-2">
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 bg-sky-400 rounded-none"></span>
-                        <span class="font-black text-white uppercase text-xs">🐳 DOCKER STACK QUICKSTART</span>
+                        <span class="font-black text-white uppercase text-xs">
+                            <span x-show="locale === 'en'">🐳 DOCKER STACK QUICKSTART</span>
+                            <span x-show="locale !== 'en'">🐳 PANDUAN CEPAT DOCKER STACK</span>
+                        </span>
                     </div>
                     <div class="flex items-center gap-1 text-[10px]">
                         <button 
@@ -556,16 +572,16 @@
                             <span x-show="locale !== 'en'">SALIN POWERSHELL</span>
                         </button>
                     </div>
-                    <pre class="p-3 bg-black border border-zinc-800 text-[11px] text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre font-mono"># 1. Jalankan container di latar belakang
+                    <pre class="p-3 bg-black border border-zinc-800 text-[11px] text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre font-mono"><span x-show="locale === 'en'"># 1. Spin up containers in background</span><span x-show="locale !== 'en'"># 1. Jalankan container di latar belakang</span>
 docker compose up -d
 
-# 2. Install dependencies & migrate PostgreSQL Strict ULID
+<span x-show="locale === 'en'"># 2. Install dependencies & migrate PostgreSQL Strict ULID</span><span x-show="locale !== 'en'"># 2. Install dependencies & migrate PostgreSQL Strict ULID</span>
 docker compose exec app composer install
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate
 docker compose exec app php artisan db:seed --class=SyntheticDataSeeder
 
-# 3. Build frontend assets & tes health probe
+<span x-show="locale === 'en'"># 3. Build frontend assets & test health probe</span><span x-show="locale !== 'en'"># 3. Build frontend assets & tes health probe</span>
 docker compose exec app npm install && docker compose exec app npm run build
 curl http://localhost:8000/api/health</pre>
                     <div class="flex items-center justify-between pt-1">
@@ -597,17 +613,17 @@ curl http://localhost:8000/api/health</pre>
                             <span x-show="locale !== 'en'">SALIN BASH</span>
                         </button>
                     </div>
-                    <pre class="p-3 bg-black border border-zinc-800 text-[11px] text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre font-mono"># 1. Setup env & start containers
+                    <pre class="p-3 bg-black border border-zinc-800 text-[11px] text-sky-300 overflow-x-auto select-all leading-relaxed whitespace-pre font-mono"><span x-show="locale === 'en'"># 1. Setup env & start containers</span><span x-show="locale !== 'en'"># 1. Setup env & nyalakan container</span>
 cp .env.blueprint .env
 docker compose up -d
 
-# 2. Dependencies, key & migrations
+<span x-show="locale === 'en'"># 2. Dependencies, key & migrations</span><span x-show="locale !== 'en'"># 2. Dependencies, key & migrasi</span>
 docker compose exec app composer install
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate
 docker compose exec app php artisan db:seed --class=SyntheticDataSeeder
 
-# 3. Build frontend & health probe
+<span x-show="locale === 'en'"># 3. Build frontend & health probe</span><span x-show="locale !== 'en'"># 3. Build frontend & health probe</span>
 docker compose exec app npm install && docker compose exec app npm run build
 curl http://localhost:8000/api/health</pre>
                 </div>
@@ -618,7 +634,10 @@ curl http://localhost:8000/api/health</pre>
                 <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 bg-emerald-400 rounded-none"></span>
-                        <span class="font-black text-white uppercase text-xs">🧠 ECC HARNESS (.agents/) &amp; AI IDE</span>
+                        <span class="font-black text-white uppercase text-xs">
+                            <span x-show="locale === 'en'">🧠 ECC HARNESS (.agents/) &amp; AI IDE</span>
+                            <span x-show="locale !== 'en'">🧠 HARNESS ECC (.agents/) &amp; AI IDE</span>
+                        </span>
                     </div>
                     <span class="text-[10px] text-emerald-400 font-bold uppercase">
                         <span x-show="locale === 'en'">ZERO DEVIATION</span>

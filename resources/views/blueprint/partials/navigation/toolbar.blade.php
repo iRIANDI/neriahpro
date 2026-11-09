@@ -50,9 +50,12 @@
                 </div>
 
                 <!-- One-Click Scaffold & Boilerplate Exporter Modal Button -->
-                <button type="button" @click="openScaffoldModal()" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap" title="Ekspor Docker Compose, SQL Migrasi, & Struktur Route">
+                <button type="button" @click="openScaffoldModal()" class="px-2.5 sm:px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-mono uppercase font-black rounded-none flex items-center gap-1.5 transition cursor-pointer shadow-none shrink-0 whitespace-nowrap" :title="locale === 'en' ? 'Export Docker Compose, SQL Migrations, &amp; Route Structure' : 'Ekspor Docker Compose, SQL Migrasi, &amp; Struktur Route'">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    <span class="hidden sm:inline">EXPORT SCAFFOLD</span>
+                    <span class="hidden sm:inline">
+                        <span x-show="locale === 'en'">EXPORT SCAFFOLD</span>
+                        <span x-show="locale !== 'en'">EKSPOR SCAFFOLD</span>
+                    </span>
                     <span class="sm:hidden">SCAFFOLD</span>
                 </button>
 
@@ -122,7 +125,10 @@
                 <div class="inline-flex rounded-none border border-zinc-300 dark:border-zinc-700 divide-x divide-zinc-300 dark:divide-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-xs font-mono font-bold shrink-0 whitespace-nowrap">
                     <button type="button" onclick="window.printPrdDocument()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" :title="locale === 'en' ? 'Print PRD Document' : 'Cetak PRD (Print)'">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                        <span class="hidden md:inline">PRINT</span>
+                        <span class="hidden md:inline">
+                            <span x-show="locale === 'en'">PRINT</span>
+                            <span x-show="locale !== 'en'">CETAK</span>
+                        </span>
                     </button>
                     <button type="button" @click="triggerPdfDownload()" class="px-2.5 py-1 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition flex items-center gap-1 cursor-pointer" :title="locale === 'en' ? 'Download Official PDF Document (Background Job)' : 'Unduh Dokumen PDF Resmi (Background Job Tanpa Timeout)'">
                         <span>PDF</span>
@@ -231,7 +237,10 @@
                     <span class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 text-xs font-mono uppercase font-bold border border-zinc-200 dark:border-zinc-700 flex items-center gap-1 cursor-not-allowed select-none shrink-0 whitespace-nowrap" 
                           :title="locale === 'en' ? 'Scope Locked: Active Partner project with confirmed DP. For feature revisions, submit an Addendum.' : 'Scope Terkunci: Proyek Mitra aktif dengan DP terverifikasi. Untuk revisi fitur, silakan ajukan Addendum / Change Request.'">
                         <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        <span class="hidden md:inline">SCOPE LOCKED</span>
+                        <span class="hidden md:inline">
+                            <span x-show="locale === 'en'">SCOPE LOCKED</span>
+                            <span x-show="locale !== 'en'">SCOPE TERKUNCI</span>
+                        </span>
                     </span>
                 @endif
 

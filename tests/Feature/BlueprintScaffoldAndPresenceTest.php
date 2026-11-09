@@ -317,5 +317,85 @@ class BlueprintScaffoldAndPresenceTest extends TestCase
         $previewAfterReset = $this->getJson(route('blueprint.scaffold.preview', $blueprint->slug));
         $this->assertNotContains('docker-compose.yml', $previewAfterReset->json('customized_files'));
     }
+
+    public function test_scaffold_generator_dynamically_adapts_to_non_laravel_and_mysql_tech_stacks(): void
+    {
+        $dummyErd = [
+            'erd_schema' => [
+                'tables' => [
+                    [
+                        'name' => 'records',
+                        'columns' => [
+                            ['name' => 'id', 'type' => 'ulid'],
+                            ['name' => 'title', 'type' => 'string'],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        // 1. Next.js Stack (M3) with PostgreSQL
+        $nextJsBlueprint = VisionBlueprint::create([
+            'client_name' => 'NextGen Corp',
+            'email' => 'nextgen@example.com',
+            'nama_bisnis' => 'NextGen Web Portal',
+            'tipe_aplikasi' => 'Next.js 15 Monolith',
+            'masalah_utama' => 'Need unified TypeScript end-to-end with Drizzle ORM and tRPC',
+            'is_published' => true,
+            'prd_content' => $dummyErd,
+            'user_metadata' => [
+                'selected_stack_preset' => 'M3',
+            ],
+        ]);
+
+        $nextFiles = ScaffoldGeneratorService::generateFiles($nextJsBlueprint);
+        $this->assertStringContainsString('node:22-alpine', $nextFiles['Dockerfile']);
+        $this->assertStringContainsString('COOLIFY_APP_PORT: "3000"', $nextFiles['docker-compose.coolify.yml']);
+        $this->assertStringContainsString('npx drizzle-kit migrate', $nextFiles['docs/COOLIFY.md']);
+        $this->assertStringContainsString('PORT=3000', $nextFiles['.env.example']);
+
+        // 2. Go Stack (D2) with PostgreSQL
+        $goBlueprint = VisionBlueprint::create([
+            'client_name' => 'Fintech Speed',
+            'email' => 'fintech@example.com',
+            'nama_bisnis' => 'Fintech High Speed Engine',
+            'tipe_aplikasi' => 'High Concurrency Ledger',
+            'masalah_utama' => 'Need ultra-low memory footprint with Go Fiber and sqlc',
+            'is_published' => true,
+            'prd_content' => $dummyErd,
+            'user_metadata' => [
+                'selected_stack_preset' => 'D2',
+            ],
+        ]);
+
+        $goFiles = ScaffoldGeneratorService::generateFiles($goBlueprint);
+        $this->assertStringContainsString('golang:1.24-alpine', $goFiles['Dockerfile']);
+        $this->assertStringContainsString('COOLIFY_APP_PORT: "8080"', $goFiles['docker-compose.coolify.yml']);
+        $this->assertStringContainsString('/app/server --migrate', $goFiles['docs/COOLIFY.md']);
+
+        // 3. Django Stack (M4) with MySQL
+        $djangoBlueprint = VisionBlueprint::create([
+            'client_name' => 'Data Science Labs',
+            'email' => 'ai@example.com',
+            'nama_bisnis' => 'AI Clinical Analytics',
+            'tipe_aplikasi' => 'Python Machine Learning Portal',
+            'masalah_utama' => 'Heavy Python data science and machine learning with MySQL database',
+            'is_published' => true,
+            'prd_content' => $dummyErd,
+            'user_metadata' => [
+                'selected_stack_preset' => 'M4',
+                'preferensi_database' => 'mysql',
+            ],
+        ]);
+
+        $djangoFiles = ScaffoldGeneratorService::generateFiles($djangoBlueprint);
+        $this->assertStringContainsString('python:3.12-slim', $djangoFiles['Dockerfile']);
+        $this->assertStringContainsString('mysql:8.4', $djangoFiles['docker-compose.yml']);
+        $this->assertStringContainsString('mysql:8.4', $djangoFiles['docker-compose.coolify.yml']);
+        $this->assertStringContainsString('COOLIFY_APP_PORT: "8000"', $djangoFiles['docker-compose.coolify.yml']);
+        $this->assertStringContainsString('python manage.py migrate', $djangoFiles['docs/COOLIFY.md']);
+        $this->assertStringContainsString('DB_CONNECTION=mysql', $djangoFiles['.env.example']);
+        $this->assertStringContainsString('DB_PORT=3306', $djangoFiles['.env.example']);
+    }
 }
 

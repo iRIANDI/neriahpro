@@ -2428,7 +2428,24 @@
                 copyCoolifyEnv() {
                     const ws = (this.workspaceDir && this.workspaceDir.trim()) || '{{ \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? "app", $blueprint) }}';
                     const biz = '{{ addslashes($blueprint->nama_bisnis ?: ($blueprint->client_name ?? "Enterprise App")) }}';
-                    const envText = `APP_NAME="${biz}"\nAPP_ENV=production\nAPP_KEY=base64:GENERATE_KEY_VIA_ARTISAN\nAPP_DEBUG=false\nAPP_URL=https://app.domainanda.com\nCOOLIFY_URL=https://app.domainanda.com\n\nDB_CONNECTION=pgsql\nDB_HOST=postgres\nDB_PORT=5432\nDB_DATABASE=${ws}_db\nDB_USERNAME=${ws}_user\nDB_PASSWORD=GantiDenganPasswordSangatKuat123!\n\nCACHE_STORE=redis\nSESSION_DRIVER=redis\nQUEUE_CONNECTION=redis\nREDIS_HOST=redis\nREDIS_PORT=6379\n\nAI_THREAT_SHIELD_ENABLED=true`;
+                    const stackCat = '{{ $stackProfile["category"] ?? "laravel" }}';
+                    const dbEngine = '{{ $stackProfile["db_engine"] ?? "pgsql" }}';
+                    const dbHost = dbEngine === 'mysql' ? 'mysql' : 'postgres';
+                    const dbPort = '{{ $stackProfile["db_port"] ?? 5432 }}';
+
+                    let envText = '';
+                    if (stackCat === 'nextjs') {
+                        envText = `NODE_ENV=production\nDATABASE_URL="${dbEngine}://${ws}_user:GantiDenganPasswordSangatKuat123!@${dbHost}:${dbPort}/${ws}_db"\nREDIS_URL="redis://redis:6379"\nPORT=3000\nCOOLIFY_URL=https://app.domainanda.com\nAI_THREAT_SHIELD_ENABLED=true`;
+                    } else if (stackCat === 'go') {
+                        envText = `APP_ENV=production\nPORT=8080\nDATABASE_URL="${dbEngine}://${ws}_user:GantiDenganPasswordSangatKuat123!@${dbHost}:${dbPort}/${ws}_db"\nREDIS_ADDR="redis:6379"\nCOOLIFY_URL=https://app.domainanda.com\nAI_THREAT_SHIELD_ENABLED=true`;
+                    } else if (stackCat === 'django') {
+                        envText = `DJANGO_SETTINGS_MODULE=config.settings\nDATABASE_URL="${dbEngine}://${ws}_user:GantiDenganPasswordSangatKuat123!@${dbHost}:${dbPort}/${ws}_db"\nREDIS_URL="redis://redis:6379/1"\nPORT=8000\nCOOLIFY_URL=https://app.domainanda.com\nAI_THREAT_SHIELD_ENABLED=true`;
+                    } else if (stackCat === 'fastapi') {
+                        envText = `PORT=8000\nDATABASE_URL="${dbEngine}+asyncpg://${ws}_user:GantiDenganPasswordSangatKuat123!@${dbHost}:${dbPort}/${ws}_db"\nREDIS_URL="redis://redis:6379"\nCOOLIFY_URL=https://app.domainanda.com\nAI_THREAT_SHIELD_ENABLED=true`;
+                    } else {
+                        envText = `APP_NAME="${biz}"\nAPP_ENV=production\nAPP_KEY=base64:GENERATE_KEY_VIA_ARTISAN\nAPP_DEBUG=false\nAPP_URL=https://app.domainanda.com\nCOOLIFY_URL=https://app.domainanda.com\n\nDB_CONNECTION=${dbEngine}\nDB_HOST=${dbHost}\nDB_PORT=${dbPort}\nDB_DATABASE=${ws}_db\nDB_USERNAME=${ws}_user\nDB_PASSWORD=GantiDenganPasswordSangatKuat123!\n\nCACHE_STORE=redis\nSESSION_DRIVER=redis\nQUEUE_CONNECTION=redis\nREDIS_HOST=redis\nREDIS_PORT=6379\n\nAI_THREAT_SHIELD_ENABLED=true`;
+                    }
+
                     navigator.clipboard.writeText(envText);
                     if (window.showToast) {
                         window.showToast({

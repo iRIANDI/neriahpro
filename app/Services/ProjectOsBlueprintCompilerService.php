@@ -627,7 +627,8 @@ class ProjectOsBlueprintCompilerService
         $rawRequestedPreset = $options['stack_preset']
             ?? $options['stack_preset_code']
             ?? ($meta['composable_matrix']['stack_preset_code'] ?? null)
-            ?? ($meta['stack_preset'] ?? null);
+            ?? ($meta['stack_preset'] ?? null)
+            ?? ($meta['selected_stack_preset'] ?? null);
         $stackPresetModel = self::resolveStackPreset(
             is_string($rawRequestedPreset) ? $rawRequestedPreset : null,
             $corpus

@@ -8,6 +8,7 @@ use App\Support\PosDualZoneFrontendAndSaasCatalog;
 use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
 use App\Support\PosRealWorldRuntimeCatalog;
+use App\Support\PosStackPresetCatalog;
 use Illuminate\Support\Str;
 use ZipArchive;
 
@@ -191,18 +192,18 @@ class ScaffoldGeneratorService
             'design/wireframes/screens.md' => self::generateWireframeBlueprints($blueprint, $erdTables),
 
             // Pillar 3: Infrastructure, Containerization, Health Probes & Routing
-            'Dockerfile' => self::generateDockerfile($blueprint, $slug),
-            'docker-compose.yml' => self::generateDockerCompose($blueprint, $slug),
-            'docker-compose.coolify.yml' => self::generateDockerComposeCoolify($blueprint, $slug),
-            'nixpacks.toml' => self::generateNixpacksToml(),
-            'coolify.yaml' => self::generateCoolifyYaml($blueprint, $slug),
-            'docs/deployment/DOCKER.md' => self::generateDockerGuide($blueprint, $slug),
-            'docs/DOCKER.md' => self::generateDockerGuide($blueprint, $slug),
-            'docs/deployment/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug),
-            'docs/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug),
-            '.env.example' => self::generateEnvExample($blueprint, $slug),
+            'Dockerfile' => self::generateDockerfile($blueprint, $slug, $universalSchema),
+            'docker-compose.yml' => self::generateDockerCompose($blueprint, $slug, $universalSchema),
+            'docker-compose.coolify.yml' => self::generateDockerComposeCoolify($blueprint, $slug, $universalSchema),
+            'nixpacks.toml' => self::generateNixpacksToml($universalSchema),
+            'coolify.yaml' => self::generateCoolifyYaml($blueprint, $slug, $universalSchema),
+            'docs/deployment/DOCKER.md' => self::generateDockerGuide($blueprint, $slug, $universalSchema),
+            'docs/DOCKER.md' => self::generateDockerGuide($blueprint, $slug, $universalSchema),
+            'docs/deployment/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug, $universalSchema),
+            'docs/COOLIFY.md' => self::generateCoolifyGuide($blueprint, $slug, $universalSchema),
+            '.env.example' => self::generateEnvExample($blueprint, $slug, $universalSchema),
             'README.md' => self::generateReadme($blueprint, $projectName, $slug),
-            'docker/nginx/default.conf' => self::generateNginxConf($slug),
+            'docker/nginx/default.conf' => self::generateNginxConf($slug, $universalSchema),
             'app/Http/Controllers/HealthProbeController.php' => self::generateHealthProbeController($slug),
             'routes/web.php' => self::generateLaravelRoutes($blueprint, $erdTables),
             'routes/api.php' => self::generateLaravelApiRoutes($blueprint, $erdTables),
@@ -432,120 +433,1409 @@ class ScaffoldGeneratorService
     }
 
     /**
-     * Generate production & development Dockerfile.
+     * Resolve the dynamic tech stack and database profile for containerization & Coolify deployment.
      */
-    public static function generateDockerfile(VisionBlueprint $blueprint, string $slug): string
+    public static function resolveStackProfile(VisionBlueprint $blueprint, ?array $universalSchema = null): array
     {
-        $shortSlug = self::deriveShortSlug($slug);
+        if ($universalSchema === null) {
+            $prd = $blueprint->prd_content ?? [];
+            $universalSchema = $prd['universal_blueprint_schema'] ?? null;
+            if (!is_array($universalSchema)) {
+                try {
+                    $universalSchema = ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
+                } catch (\Throwable) {
+                    $universalSchema = [];
+                }
+            }
+        }
 
+        $techStack = $universalSchema['tech_stack_contract'] ?? [];
+        $explicitPreset = $blueprint->user_metadata['selected_stack_preset']
+            ?? ($blueprint->user_metadata['stack_preset']
+            ?? ($blueprint->user_metadata['composable_matrix']['stack_preset_code'] ?? null));
+
+        if (!empty($explicitPreset)) {
+            $normalized = PosStackPresetCatalog::normalizePresetCode((string)$explicitPreset);
+            $shortCode = strtoupper(substr((string)$explicitPreset, 0, 2));
+            if (preg_match('/STACK_([MSD][1-4])_/', $normalized, $m)) {
+                $shortCode = $m[1];
+            }
+            $presetCode = $normalized;
+        } else {
+            $shortCode = strtoupper((string)($techStack['short_code'] ?? 'M1'));
+            $presetCode = (string)($techStack['preset_code'] ?? PosStackPresetCatalog::DEFAULT_PRESET_CODE);
+        }
+
+        $topology = (string)($techStack['topology'] ?? (str_starts_with($shortCode, 'D') ? 'DECOUPLED_HEADLESS' : (str_starts_with($shortCode, 'S') ? 'MICROSERVICES' : 'MONOLITH')));
+
+        // 1. Resolve Database Engine (PostgreSQL 16 vs MySQL 8.4)
+        $dbChoice = strtolower((string)(
+            $blueprint->user_metadata['preferensi_database'] 
+            ?? ($blueprint->user_metadata['database_engine'] 
+            ?? ($blueprint->service_options['database'] ?? ''))
+        ));
+        $corpus = strtolower(implode(' ', [
+            $blueprint->nama_bisnis ?? '',
+            $blueprint->tipe_aplikasi ?? '',
+            $blueprint->masalah_utama ?? '',
+            $blueprint->solusi_diinginkan ?? '',
+            is_array($blueprint->fitur_wajib) ? implode(' ', $blueprint->fitur_wajib) : (string)($blueprint->fitur_wajib ?? ''),
+            is_array($blueprint->fitur_tambahan) ? implode(' ', $blueprint->fitur_tambahan) : (string)($blueprint->fitur_tambahan ?? ''),
+        ]));
+
+        $isMysql = str_contains($dbChoice, 'mysql') 
+            || str_contains($dbChoice, 'mariadb') 
+            || (!str_contains($dbChoice, 'pgsql') && !str_contains($dbChoice, 'postgres') && (str_contains($corpus, 'mysql') || str_contains($corpus, 'mariadb')));
+
+        $dbEngine = $isMysql ? 'mysql' : 'pgsql';
+        $dbPort = $isMysql ? 3306 : 5432;
+        $dbImage = $isMysql ? 'mysql:8.4' : 'postgres:16-alpine';
+        $dbLabel = $isMysql ? 'MySQL 8.4 LTS' : 'PostgreSQL 16';
+
+        // 2. Classify Stack Category
+        $category = match ($shortCode) {
+            'M3', 'S2' => 'nextjs',
+            'M4' => 'django',
+            'D2' => 'go',
+            'D3' => 'fastapi',
+            'D1' => 'decoupled_laravel',
+            'S1' => 'polyglot',
+            'M2' => 'laravel_inertia',
+            default => 'laravel',
+        };
+
+        return match ($category) {
+            'nextjs' => [
+                'short_code' => $shortCode,
+                'preset_code' => $presetCode,
+                'topology' => $topology,
+                'category' => 'nextjs',
+                'primary_language' => 'TypeScript (Node 22 / Bun)',
+                'app_runtime_label' => 'Next.js 15/16 App Router (Node.js 22 LTS / Standalone)',
+                'web_server_label' => 'Next.js Built-in Edge Server',
+                'main_port' => 3000,
+                'db_engine' => $dbEngine,
+                'db_port' => $dbPort,
+                'db_image' => $dbImage,
+                'db_label' => $dbLabel . ' (Strict ULID + Drizzle ORM)',
+                'cache_label' => 'Redis 7 / Upstash (ioredis)',
+                'install_cmd' => 'npm ci || pnpm install',
+                'build_cmd' => 'npm run build',
+                'migrate_cmd' => 'npx drizzle-kit migrate',
+                'health_url' => 'http://localhost:3000/api/health',
+                'health_path' => '/api/health',
+            ],
+            'django' => [
+                'short_code' => 'M4',
+                'preset_code' => $presetCode,
+                'topology' => $topology,
+                'category' => 'django',
+                'primary_language' => 'Python 3.12+',
+                'app_runtime_label' => 'Django 5.2 + Django Ninja (Python 3.12+ ASGI)',
+                'web_server_label' => 'Uvicorn / Granian ASGI Server',
+                'main_port' => 8000,
+                'db_engine' => $dbEngine,
+                'db_port' => $dbPort,
+                'db_image' => $dbImage,
+                'db_label' => $dbLabel . ' (Strict ULID + Django ORM)',
+                'cache_label' => 'Redis 7 Alpine + Celery Worker',
+                'install_cmd' => 'pip install --no-cache-dir -r requirements.txt',
+                'build_cmd' => 'python manage.py collectstatic --noinput',
+                'migrate_cmd' => 'python manage.py migrate --noinput',
+                'health_url' => 'http://localhost:8000/api/health',
+                'health_path' => '/api/health',
+            ],
+            'go' => [
+                'short_code' => 'D2',
+                'preset_code' => $presetCode,
+                'topology' => $topology,
+                'category' => 'go',
+                'primary_language' => 'Golang 1.24 + TypeScript',
+                'app_runtime_label' => 'Go 1.24 Binary (Fiber/Chi + sqlc, ~15MB RAM)',
+                'web_server_label' => 'Go Native High-Performance Server',
+                'main_port' => 8080,
+                'db_engine' => $dbEngine,
+                'db_port' => $dbPort,
+                'db_image' => $dbImage,
+                'db_label' => $dbLabel . ' (Strict ULID + sqlc Type-Safe SQL)',
+                'cache_label' => 'Redis 7 Alpine (go-redis)',
+                'install_cmd' => 'go mod download',
+                'build_cmd' => 'CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/server .',
+                'migrate_cmd' => '/app/server --migrate',
+                'health_url' => 'http://localhost:8080/healthz',
+                'health_path' => '/healthz',
+            ],
+            'fastapi' => [
+                'short_code' => 'D3',
+                'preset_code' => $presetCode,
+                'topology' => $topology,
+                'category' => 'fastapi',
+                'primary_language' => 'Python 3.12 + TypeScript',
+                'app_runtime_label' => 'FastAPI + Pydantic v2 (Python 3.12+ Async)',
+                'web_server_label' => 'Uvicorn ASGI Server',
+                'main_port' => 8000,
+                'db_engine' => $dbEngine,
+                'db_port' => $dbPort,
+                'db_image' => $dbImage,
+                'db_label' => $dbLabel . ' (SQLAlchemy 2.0 Async + Strict ULID)',
+                'cache_label' => 'Redis 7 Alpine',
+                'install_cmd' => 'pip install --no-cache-dir -r requirements.txt',
+                'build_cmd' => 'python -m compileall app/',
+                'migrate_cmd' => 'alembic upgrade head',
+                'health_url' => 'http://localhost:8000/health',
+                'health_path' => '/health',
+            ],
+            'decoupled_laravel' => [
+                'short_code' => 'D1',
+                'preset_code' => $presetCode,
+                'topology' => $topology,
+                'category' => 'decoupled_laravel',
+                'primary_language' => 'PHP 8.5 + TypeScript (Next.js 15)',
+                'app_runtime_label' => 'Laravel 13 API (PHP 8.5) + Next.js 15 Web',
+                'web_server_label' => 'Nginx Reverse Proxy + Next.js SSR',
+                'main_port' => 80,
+                'db_engine' => $dbEngine,
+                'db_port' => $dbPort,
+                'db_image' => $dbImage,
+                'db_label' => $dbLabel . ' (Strict ULID + Scramble OpenAPI 3.1)',
+                'cache_label' => 'Redis 7 Alpine',
+                'install_cmd' => 'composer install --no-interaction && npm ci',
+                'build_cmd' => 'php artisan config:cache && npm run build',
+                'migrate_cmd' => 'php artisan migrate --force && php artisan db:seed --class=SyntheticDataSeeder --force',
+                'health_url' => 'http://localhost:8000/api/health',
+                'health_path' => '/api/health',
+            ],
+            'polyglot' => [
+                'short_code' => 'S1',
+                'preset_code' => $presetCode,
+                'topology' => $topology,
+                'category' => 'polyglot',
+                'primary_language' => 'Go + PHP + Python',
+                'app_runtime_label' => 'Polyglot Mesh (Go Core + Laravel API + Temporal)',
+                'web_server_label' => 'Traefik v3.2 API Gateway',
+                'main_port' => 8080,
+                'db_engine' => $dbEngine,
+                'db_port' => $dbPort,
+                'db_image' => $dbImage,
+                'db_label' => $dbLabel . ' (Distributed ULID + Temporal Saga)',
+                'cache_label' => 'NATS JetStream + Redis 7',
+                'install_cmd' => 'go mod download && composer install',
+                'build_cmd' => 'go build -o /app/engine ./services/core-engine-go',
+                'migrate_cmd' => '/app/engine --migrate',
+                'health_url' => 'http://localhost:8080/health',
+                'health_path' => '/health',
+            ],
+            'laravel_inertia' => [
+                'short_code' => 'M2',
+                'preset_code' => $presetCode,
+                'topology' => $topology,
+                'category' => 'laravel_inertia',
+                'primary_language' => 'PHP 8.5 + TypeScript (React 19)',
+                'app_runtime_label' => 'Laravel 13 + Inertia v2 + React 19 (PHP 8.5+)',
+                'web_server_label' => 'Nginx Alpine / FrankenPHP Caddyfile',
+                'main_port' => 80,
+                'db_engine' => $dbEngine,
+                'db_port' => $dbPort,
+                'db_image' => $dbImage,
+                'db_label' => $dbLabel . ' (Strict ULID + Spatie Data Types)',
+                'cache_label' => 'Redis 7 Alpine',
+                'install_cmd' => 'composer install && npm ci',
+                'build_cmd' => 'php artisan typescript:transform && npm run build',
+                'migrate_cmd' => 'php artisan migrate --force && php artisan db:seed --class=SyntheticDataSeeder --force',
+                'health_url' => 'http://localhost:8000/api/health',
+                'health_path' => '/api/health',
+            ],
+            default => [
+                'short_code' => 'M1',
+                'preset_code' => $presetCode,
+                'topology' => 'MONOLITH',
+                'category' => 'laravel',
+                'primary_language' => 'PHP 8.4/8.5',
+                'app_runtime_label' => 'Laravel 13 (PHP 8.5 FPM / FrankenPHP)',
+                'web_server_label' => 'Nginx Alpine (HTTP/2 Reverse Proxy)',
+                'main_port' => 80,
+                'db_engine' => $dbEngine,
+                'db_port' => $dbPort,
+                'db_image' => $dbImage,
+                'db_label' => $dbLabel . ' (Strict ULID Standard)',
+                'cache_label' => 'Redis 7 Alpine',
+                'install_cmd' => 'composer install && php artisan key:generate',
+                'build_cmd' => 'php artisan config:cache && npm run build',
+                'migrate_cmd' => 'php artisan migrate --force && php artisan db:seed --class=SyntheticDataSeeder --force',
+                'health_url' => 'http://localhost:8000/api/health',
+                'health_path' => '/api/health',
+            ],
+        };
+    }
+
+    /**
+     * Generate production & development Dockerfile dynamically adapted to the active tech stack.
+     */
+    public static function generateDockerfile(VisionBlueprint $blueprint, string $slug, ?array $universalSchema = null): string
+    {
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $appName = $blueprint->nama_bisnis ?: 'Enterprise App';
+        $stack = self::resolveStackProfile($blueprint, $universalSchema);
+
+        if ($stack['category'] === 'nextjs') {
+            return <<<DOCKERFILE
+# ==============================================================================
+# PROJECT OS // PRODUCTION-READY DOCKERFILE (NODE.JS 22 ALPINE STANDALONE)
+# Architecture: High-Concurrency, Next.js App Router, {$stack['db_label']}, Redis
+# Project: {$appName}
+# ==============================================================================
+
+FROM node:22-alpine AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+COPY package.json pnpm-lock.yaml* package-lock.json* yarn.lock* ./
+RUN \
+  if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
+  elif [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  else npm i; \
+  fi
+
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+RUN npm run build || true
+
+FROM node:22-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+EXPOSE 3000
+
+CMD ["node", "server.js"]
+DOCKERFILE;
+        }
+
+        if ($stack['category'] === 'go') {
+            return <<<DOCKERFILE
+# ==============================================================================
+# PROJECT OS // PRODUCTION-READY DOCKERFILE (GOLANG 1.24 MULTI-STAGE ALPINE)
+# Architecture: Ultra-Low Footprint (~15MB RAM), High-Concurrency, {$stack['db_label']}
+# Project: {$appName}
+# ==============================================================================
+
+FROM golang:1.24-alpine AS builder
+RUN apk add --no-cache git ca-certificates tzdata
+WORKDIR /src
+COPY go.mod go.sum* ./
+RUN go mod download || true
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/server .
+
+FROM alpine:3.20 AS runner
+RUN apk add --no-cache ca-certificates tzdata curl && \
+    addgroup -g 1000 appgroup && adduser -u 1000 -G appgroup -s /bin/sh -D appuser
+WORKDIR /app
+COPY --from=builder /app/server /app/server
+USER appuser
+EXPOSE 8080
+
+HEALTHCHECK --interval=15s --timeout=3s --retries=3 \
+  CMD curl -f http://localhost:8080/healthz || exit 1
+
+ENTRYPOINT ["/app/server"]
+DOCKERFILE;
+        }
+
+        if ($stack['category'] === 'django') {
+            return <<<DOCKERFILE
+# ==============================================================================
+# PROJECT OS // PRODUCTION-READY DOCKERFILE (PYTHON 3.12 SLIM ASGI)
+# Architecture: Django Ninja, Pydantic v2, {$stack['db_label']}, Redis Celery
+# Project: {$appName}
+# ==============================================================================
+
+FROM python:3.12-slim AS base
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libpq-dev default-libmysqlclient-dev pkg-config curl git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+RUN useradd -m -u 1000 appuser
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt || true
+
+COPY . .
+RUN chown -R appuser:appuser /app
+USER appuser
+EXPOSE 8000
+
+CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "config.asgi:application", "--bind", "0.0.0.0:8000"]
+DOCKERFILE;
+        }
+
+        if ($stack['category'] === 'fastapi') {
+            return <<<DOCKERFILE
+# ==============================================================================
+# PROJECT OS // PRODUCTION-READY DOCKERFILE (FASTAPI PYTHON 3.12 SLIM)
+# Architecture: FastAPI, Pydantic v2, SQLAlchemy 2.0, {$stack['db_label']}, Redis
+# Project: {$appName}
+# ==============================================================================
+
+FROM python:3.12-slim AS base
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc libpq-dev default-libmysqlclient-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+RUN useradd -m -u 1000 appuser
+
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt || true
+
+COPY . .
+RUN chown -R appuser:appuser /app
+USER appuser
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+DOCKERFILE;
+        }
+
+        // Default PHP 8.5 FPM with dynamic DB extension
         return StubLoader::load('scaffold/Dockerfile.stub', [
-            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ APP_NAME }}' => $appName,
             '{{ SLUG }}' => $slug,
             '{{ SHORT_SLUG }}' => $shortSlug,
         ]);
     }
 
     /**
-     * Generate production & development docker-compose.yml.
+     * Generate production & development docker-compose.yml dynamically adapted to the stack & database.
      */
-    public static function generateDockerCompose(VisionBlueprint $blueprint, string $slug): string
+    public static function generateDockerCompose(VisionBlueprint $blueprint, string $slug, ?array $universalSchema = null): string
     {
         $cleanSlug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
-        $shortSlug = self::deriveShortSlug($slug);
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $appName = $blueprint->nama_bisnis ?: 'Enterprise App';
+        $stack = self::resolveStackProfile($blueprint, $universalSchema);
+
+        $dbService = $stack['db_engine'] === 'mysql' ? 'mysql' : 'postgres';
+        $dbPort = $stack['db_port'];
+        $dbImage = $stack['db_image'];
+
+        if ($stack['db_engine'] === 'mysql') {
+            $dbBlock = <<<YAML
+  # 3. Database Engine (MySQL 8.4 LTS with Strict ULID CHAR(26) & UTF8MB4)
+  mysql:
+    image: {$dbImage}
+    container_name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}_mysql
+    restart: unless-stopped
+    ports:
+      - "\${DB_FORWARD_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "\${DB_PASSWORD:-secret_production_change_me}"
+      MYSQL_DATABASE: "\${DB_DATABASE:-{$shortSlug}_db}"
+      MYSQL_USER: "\${DB_USERNAME:-{$shortSlug}_user}"
+      MYSQL_PASSWORD: "\${DB_PASSWORD:-secret_production_change_me}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/migrations/schema_complete_mysql.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+YAML;
+            $dbVolume = "  mysql_data:\n    driver: local";
+        } else {
+            $dbBlock = <<<YAML
+  # 3. Database Engine (PostgreSQL 16 with Strict ULID & UTF-8)
+  postgres:
+    image: {$dbImage}
+    container_name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}_postgres
+    restart: unless-stopped
+    ports:
+      - "\${DB_FORWARD_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: "\${DB_DATABASE:-{$shortSlug}_db}"
+      POSTGRES_USER: "\${DB_USERNAME:-{$shortSlug}_user}"
+      POSTGRES_PASSWORD: "\${DB_PASSWORD:-secret_production_change_me}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations/schema_complete_postgresql.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \${DB_USERNAME:-{$shortSlug}_user} -d \${DB_DATABASE:-{$shortSlug}_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+YAML;
+            $dbVolume = "  postgres_data:\n    driver: local";
+        }
+
+        if ($stack['category'] === 'nextjs') {
+            return <<<YAML
+# ==============================================================================
+# PROJECT OS // LOCAL & PRODUCTION CONTAINER ARCHITECTURE (NEXT.JS 15+ / NODE 22)
+# Project: {$appName}
+# Stack: {$stack['preset_code']} ({$stack['topology']})
+# ==============================================================================
+
+name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}
+
+services:
+  # 1. Main Application Container (Next.js 15+ Standalone)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}_app
+    restart: unless-stopped
+    ports:
+      - "\${APP_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: \${NODE_ENV:-development}
+      DATABASE_URL: "\${DATABASE_URL:-{$stack['db_engine']}://\${DB_USERNAME:-{$shortSlug}_user}:\${DB_PASSWORD:-secret_production_change_me}@{$dbService}:{$dbPort}/\${DB_DATABASE:-{$shortSlug}_db}}"
+      REDIS_URL: "redis://redis:6379"
+      PORT: "3000"
+    depends_on:
+      {$dbService}:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+{$dbBlock}
+
+  # 4. Redis Cache & Job Broker
+  redis:
+    image: redis:7-alpine
+    container_name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}_redis
+    restart: unless-stopped
+    ports:
+      - "\${REDIS_FORWARD_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+{$dbVolume}
+  redis_data:
+    driver: local
+YAML;
+        }
+
+        if ($stack['category'] === 'go') {
+            return <<<YAML
+# ==============================================================================
+# PROJECT OS // LOCAL & PRODUCTION CONTAINER ARCHITECTURE (GOLANG 1.24 + NEXT.JS)
+# Project: {$appName}
+# Stack: {$stack['preset_code']} ({$stack['topology']})
+# ==============================================================================
+
+name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}
+
+services:
+  # 1. High-Performance Go Backend Engine
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}_api
+    restart: unless-stopped
+    ports:
+      - "\${API_PORT:-8080}:8080"
+    environment:
+      APP_ENV: \${APP_ENV:-local}
+      PORT: "8080"
+      DATABASE_URL: "\${DATABASE_URL:-{$stack['db_engine']}://\${DB_USERNAME:-{$shortSlug}_user}:\${DB_PASSWORD:-secret_production_change_me}@{$dbService}:{$dbPort}/\${DB_DATABASE:-{$shortSlug}_db}}"
+      REDIS_ADDR: "redis:6379"
+    depends_on:
+      {$dbService}:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # 2. Next.js Frontend Web
+  web:
+    image: node:22-alpine
+    container_name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}_web
+    working_dir: /app
+    ports:
+      - "\${APP_PORT:-3000}:3000"
+    command: ["sh", "-c", "npm install && npm run dev"]
+    volumes:
+      - ./frontend-web:/app
+    depends_on:
+      - api
+
+{$dbBlock}
+
+  # 4. Redis Cache & In-Memory Store
+  redis:
+    image: redis:7-alpine
+    container_name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}_redis
+    restart: unless-stopped
+    ports:
+      - "\${REDIS_FORWARD_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+{$dbVolume}
+  redis_data:
+    driver: local
+YAML;
+        }
+
+        if ($stack['category'] === 'django') {
+            return <<<YAML
+# ==============================================================================
+# PROJECT OS // LOCAL & PRODUCTION CONTAINER ARCHITECTURE (DJANGO 5.2 + HTMX)
+# Project: {$appName}
+# Stack: {$stack['preset_code']} ({$stack['topology']})
+# ==============================================================================
+
+name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}
+
+services:
+  # 1. Django Ninja ASGI Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}_app
+    restart: unless-stopped
+    ports:
+      - "\${APP_PORT:-8000}:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DATABASE_URL: "\${DATABASE_URL:-{$stack['db_engine']}://\${DB_USERNAME:-{$shortSlug}_user}:\${DB_PASSWORD:-secret_production_change_me}@{$dbService}:{$dbPort}/\${DB_DATABASE:-{$shortSlug}_db}}"
+      REDIS_URL: "redis://redis:6379/1"
+    depends_on:
+      {$dbService}:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # 2. Celery Asynchronous Queue Worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}_worker
+    restart: unless-stopped
+    command: ["celery", "-A", "config", "worker", "-l", "INFO"]
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DATABASE_URL: "\${DATABASE_URL:-{$stack['db_engine']}://\${DB_USERNAME:-{$shortSlug}_user}:\${DB_PASSWORD:-secret_production_change_me}@{$dbService}:{$dbPort}/\${DB_DATABASE:-{$shortSlug}_db}}"
+      REDIS_URL: "redis://redis:6379/1"
+    depends_on:
+      - app
+
+{$dbBlock}
+
+  # 4. Redis Cache & Broker
+  redis:
+    image: redis:7-alpine
+    container_name: \${COMPOSE_PROJECT_NAME:-{$shortSlug}}_redis
+    restart: unless-stopped
+    ports:
+      - "\${REDIS_FORWARD_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+{$dbVolume}
+  redis_data:
+    driver: local
+YAML;
+        }
+
+        // Standard Laravel / Monolith Docker Compose
+        if ($stack['db_engine'] === 'mysql') {
+            return StubLoader::load('scaffold/docker-compose.yml.stub', [
+                '{{ APP_NAME }}' => $appName,
+                '{{ SLUG }}' => $cleanSlug,
+                '{{ SHORT_SLUG }}' => $shortSlug,
+                'postgres:16-alpine' => 'mysql:8.4',
+                'postgres' => 'mysql',
+                '5432' => '3306',
+                'DB_CONNECTION: pgsql' => 'DB_CONNECTION: mysql',
+                'POSTGRES_DB:' => 'MYSQL_DATABASE:',
+                'POSTGRES_USER:' => 'MYSQL_USER:',
+                'POSTGRES_PASSWORD:' => 'MYSQL_PASSWORD:',
+                'postgres_data:' => 'mysql_data:',
+                '/var/lib/postgresql/data' => '/var/lib/mysql',
+                'schema_complete_postgresql.sql' => 'schema_complete_mysql.sql',
+                'pg_isready -U ${DB_USERNAME:-' . $shortSlug . '_user} -d ${DB_DATABASE:-' . $shortSlug . '_db}' => 'mysqladmin ping -h localhost',
+            ]);
+        }
 
         return StubLoader::load('scaffold/docker-compose.yml.stub', [
-            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ APP_NAME }}' => $appName,
             '{{ SLUG }}' => $cleanSlug,
             '{{ SHORT_SLUG }}' => $shortSlug,
         ]);
     }
 
     /**
-     * Generate Coolify production docker-compose.coolify.yml.
+     * Generate Coolify production docker-compose.coolify.yml dynamically adapted to the stack & database.
      */
-    public static function generateDockerComposeCoolify(VisionBlueprint $blueprint, string $slug): string
+    public static function generateDockerComposeCoolify(VisionBlueprint $blueprint, string $slug, ?array $universalSchema = null): string
     {
         $cleanSlug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
-        $shortSlug = self::deriveShortSlug($slug);
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $appName = $blueprint->nama_bisnis ?: 'Enterprise App';
+        $stack = self::resolveStackProfile($blueprint, $universalSchema);
+
+        $dbService = $stack['db_engine'] === 'mysql' ? 'mysql' : 'postgres';
+        $dbPort = $stack['db_port'];
+        $dbImage = $stack['db_image'];
+
+        if ($stack['db_engine'] === 'mysql') {
+            $dbBlock = <<<YAML
+  # Database Service (MySQL 8.4 LTS)
+  mysql:
+    image: {$dbImage}
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "\${DB_PASSWORD:-secret_coolify_change_me}"
+      MYSQL_DATABASE: "\${DB_DATABASE:-{$shortSlug}_db}"
+      MYSQL_USER: "\${DB_USERNAME:-{$shortSlug}_user}"
+      MYSQL_PASSWORD: "\${DB_PASSWORD:-secret_coolify_change_me}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+YAML;
+            $dbVolume = "  mysql_data:\n    driver: local";
+        } else {
+            $dbBlock = <<<YAML
+  # Database Service (PostgreSQL 16 Strict ULID)
+  postgres:
+    image: {$dbImage}
+    restart: always
+    environment:
+      POSTGRES_DB: "\${DB_DATABASE:-{$shortSlug}_db}"
+      POSTGRES_USER: "\${DB_USERNAME:-{$shortSlug}_user}"
+      POSTGRES_PASSWORD: "\${DB_PASSWORD:-secret_coolify_change_me}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \${DB_USERNAME:-{$shortSlug}_user} -d \${DB_DATABASE:-{$shortSlug}_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+YAML;
+            $dbVolume = "  postgres_data:\n    driver: local";
+        }
+
+        if ($stack['category'] === 'nextjs') {
+            return <<<YAML
+# ==============================================================================
+# PROJECT OS // COOLIFY PRODUCTION DEPLOYMENT STACK (NEXT.JS 15+ / NODE 22)
+# Project: {$appName}
+# Generated: Coolify 1-Click Turnkey Architecture
+# ==============================================================================
+
+services:
+  # Main Next.js Standalone Service (Exposed via Coolify Traefik SSL)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "\${DATABASE_URL:-{$stack['db_engine']}://\${DB_USERNAME:-{$shortSlug}_user}:\${DB_PASSWORD:-secret_coolify_change_me}@{$dbService}:{$dbPort}/\${DB_DATABASE:-{$shortSlug}_db}}"
+      REDIS_URL: "redis://redis:6379"
+      COOLIFY_APP_PORT: "3000"
+    labels:
+      - "coolify.managed=true"
+    depends_on:
+      {$dbService}:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+{$dbBlock}
+
+  # Redis Cache & Queue
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+{$dbVolume}
+  redis_data:
+    driver: local
+YAML;
+        }
+
+        if ($stack['category'] === 'go') {
+            return <<<YAML
+# ==============================================================================
+# PROJECT OS // COOLIFY PRODUCTION DEPLOYMENT STACK (GOLANG 1.24 ENGINE)
+# Project: {$appName}
+# Generated: Coolify 1-Click Turnkey Architecture
+# ==============================================================================
+
+services:
+  # Go High-Performance Server (Exposed via Coolify Traefik SSL)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      APP_ENV: production
+      PORT: "8080"
+      DATABASE_URL: "\${DATABASE_URL:-{$stack['db_engine']}://\${DB_USERNAME:-{$shortSlug}_user}:\${DB_PASSWORD:-secret_coolify_change_me}@{$dbService}:{$dbPort}/\${DB_DATABASE:-{$shortSlug}_db}}"
+      REDIS_ADDR: "redis:6379"
+      COOLIFY_APP_PORT: "8080"
+    labels:
+      - "coolify.managed=true"
+    depends_on:
+      {$dbService}:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+{$dbBlock}
+
+  # Redis In-Memory Cache
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+{$dbVolume}
+  redis_data:
+    driver: local
+YAML;
+        }
+
+        if ($stack['category'] === 'django') {
+            return <<<YAML
+# ==============================================================================
+# PROJECT OS // COOLIFY PRODUCTION DEPLOYMENT STACK (DJANGO 5.2 ASGI)
+# Project: {$appName}
+# Generated: Coolify 1-Click Turnkey Architecture
+# ==============================================================================
+
+services:
+  # Django Ninja Application (Exposed via Coolify Traefik SSL)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DATABASE_URL: "\${DATABASE_URL:-{$stack['db_engine']}://\${DB_USERNAME:-{$shortSlug}_user}:\${DB_PASSWORD:-secret_coolify_change_me}@{$dbService}:{$dbPort}/\${DB_DATABASE:-{$shortSlug}_db}}"
+      REDIS_URL: "redis://redis:6379/1"
+      COOLIFY_APP_PORT: "8000"
+    labels:
+      - "coolify.managed=true"
+    depends_on:
+      {$dbService}:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Celery Asynchronous Background Worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    command: ["celery", "-A", "config", "worker", "-l", "INFO"]
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DATABASE_URL: "\${DATABASE_URL:-{$stack['db_engine']}://\${DB_USERNAME:-{$shortSlug}_user}:\${DB_PASSWORD:-secret_coolify_change_me}@{$dbService}:{$dbPort}/\${DB_DATABASE:-{$shortSlug}_db}}"
+      REDIS_URL: "redis://redis:6379/1"
+    depends_on:
+      - app
+
+{$dbBlock}
+
+  # Redis Cache & Message Broker
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+{$dbVolume}
+  redis_data:
+    driver: local
+YAML;
+        }
+
+        // Standard Laravel / PHP Monolith for Coolify
+        if ($stack['db_engine'] === 'mysql') {
+            return StubLoader::load('scaffold/docker-compose.coolify.yml.stub', [
+                '{{ APP_NAME }}' => $appName,
+                '{{ SLUG }}' => $cleanSlug,
+                '{{ SHORT_SLUG }}' => $shortSlug,
+                'postgres:16-alpine' => 'mysql:8.4',
+                'postgres' => 'mysql',
+                '5432' => '3306',
+                'DB_CONNECTION: pgsql' => 'DB_CONNECTION: mysql',
+                'POSTGRES_DB:' => 'MYSQL_DATABASE:',
+                'POSTGRES_USER:' => 'MYSQL_USER:',
+                'POSTGRES_PASSWORD:' => 'MYSQL_PASSWORD:',
+                'postgres_data:' => 'mysql_data:',
+                '/var/lib/postgresql/data' => '/var/lib/mysql',
+                'pg_isready -U ${DB_USERNAME:-' . $shortSlug . '_user} -d ${DB_DATABASE:-' . $shortSlug . '_db}' => 'mysqladmin ping -h localhost',
+            ]);
+        }
 
         return StubLoader::load('scaffold/docker-compose.coolify.yml.stub', [
-            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ APP_NAME }}' => $appName,
             '{{ SLUG }}' => $cleanSlug,
             '{{ SHORT_SLUG }}' => $shortSlug,
         ]);
     }
 
     /**
-     * Generate Coolify Nixpacks configuration.
+     * Generate Coolify Nixpacks configuration dynamically adapted to runtime.
      */
-    public static function generateNixpacksToml(): string
+    public static function generateNixpacksToml(?array $universalSchema = null): string
     {
+        $techStack = $universalSchema['tech_stack_contract'] ?? [];
+        $shortCode = strtoupper((string)($techStack['short_code'] ?? 'M1'));
+
+        if (in_array($shortCode, ['M3', 'S2'], true)) {
+            return <<<TOML
+# ==============================================================================
+# PROJECT OS // COOLIFY NIXPACKS RUNTIME CONFIGURATION (NODE.JS / NEXT.JS)
+# ==============================================================================
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "pnpm"]
+
+[phases.install]
+cmds = ["npm ci || pnpm install"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "node server.js"
+TOML;
+        }
+
+        if (in_array($shortCode, ['D2', 'S1'], true)) {
+            return <<<TOML
+# ==============================================================================
+# PROJECT OS // COOLIFY NIXPACKS RUNTIME CONFIGURATION (GOLANG)
+# ==============================================================================
+
+[phases.setup]
+nixPkgs = ["go_1_24"]
+
+[phases.install]
+cmds = ["go mod download"]
+
+[phases.build]
+cmds = ["CGO_ENABLED=0 go build -ldflags=\"-w -s\" -o server ."]
+
+[start]
+cmd = "./server"
+TOML;
+        }
+
+        if ($shortCode === 'M4') {
+            return <<<TOML
+# ==============================================================================
+# PROJECT OS // COOLIFY NIXPACKS RUNTIME CONFIGURATION (PYTHON / DJANGO)
+# ==============================================================================
+
+[phases.setup]
+nixPkgs = ["python312"]
+
+[phases.install]
+cmds = ["pip install --no-cache-dir -r requirements.txt"]
+
+[phases.build]
+cmds = ["python manage.py collectstatic --noinput"]
+
+[start]
+cmd = "gunicorn config.asgi:application -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:\$PORT"
+TOML;
+        }
+
         return StubLoader::load('scaffold/nixpacks.toml.stub', []);
     }
 
     /**
      * Generate Coolify service descriptor yaml.
      */
-    public static function generateCoolifyYaml(VisionBlueprint $blueprint, string $slug): string
+    public static function generateCoolifyYaml(VisionBlueprint $blueprint, string $slug, ?array $universalSchema = null): string
     {
-        $shortSlug = self::deriveShortSlug($slug);
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $stack = self::resolveStackProfile($blueprint, $universalSchema);
 
         return StubLoader::load('scaffold/coolify.yaml.stub', [
             '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
             '{{ SLUG }}' => $slug,
             '{{ SHORT_SLUG }}' => $shortSlug,
+            'pgsql' => $stack['db_engine'],
+            'postgres' => $stack['db_engine'] === 'mysql' ? 'mysql' : 'postgres',
+            '5432' => (string)$stack['db_port'],
         ]);
     }
 
     /**
-     * Generate Coolify step-by-step deployment guide markdown.
+     * Generate Coolify step-by-step deployment guide markdown dynamically adapted to the stack & database.
      */
-    public static function generateCoolifyGuide(VisionBlueprint $blueprint, string $slug): string
+    public static function generateCoolifyGuide(VisionBlueprint $blueprint, string $slug, ?array $universalSchema = null): string
     {
-        $shortSlug = self::deriveShortSlug($slug);
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $appName = $blueprint->nama_bisnis ?: 'Enterprise App';
+        $stack = self::resolveStackProfile($blueprint, $universalSchema);
 
-        return StubLoader::load('scaffold/COOLIFY.md.stub', [
-            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
-            '{{ SLUG }}' => $slug,
-            '{{ SHORT_SLUG }}' => $shortSlug,
-        ]);
+        $dbEngine = $stack['db_engine'];
+        $dbHost = $dbEngine === 'mysql' ? 'mysql' : 'postgres';
+        $dbPort = $stack['db_port'];
+        $dbLabel = $stack['db_label'];
+        $appLabel = $stack['app_runtime_label'];
+        $webLabel = $stack['web_server_label'];
+        $cacheLabel = $stack['cache_label'];
+        $healthUrl = $stack['health_url'];
+
+        // Build Environment variables block
+        if ($stack['category'] === 'nextjs') {
+            $envBlock = <<<ENV
+NODE_ENV=production
+DATABASE_URL="{$dbEngine}://{$shortSlug}_user:buat_password_database_yang_sangat_kuat_disini@{$dbHost}:{$dbPort}/{$shortSlug}_db"
+REDIS_URL="redis://redis:6379"
+PORT=3000
+COOLIFY_URL=https://app.domainanda.com
+AI_THREAT_SHIELD_ENABLED=true
+ENV;
+            $postDeployCmds = <<<BASH
+# 1. Eksekusi Migrasi Skema Database Drizzle ORM
+npx drizzle-kit migrate
+
+# 2. Uji Endpoint Health Check
+curl -I http://localhost:3000/api/health
+BASH;
+        } elseif ($stack['category'] === 'go') {
+            $envBlock = <<<ENV
+APP_ENV=production
+PORT=8080
+DATABASE_URL="{$dbEngine}://{$shortSlug}_user:buat_password_database_yang_sangat_kuat_disini@{$dbHost}:{$dbPort}/{$shortSlug}_db"
+REDIS_ADDR="redis:6379"
+COOLIFY_URL=https://app.domainanda.com
+AI_THREAT_SHIELD_ENABLED=true
+ENV;
+            $postDeployCmds = <<<BASH
+# 1. Jalankan Migrasi Skema Basis Data Go
+/app/server --migrate
+
+# 2. Uji Endpoint Health Check
+curl -I http://localhost:8080/healthz
+BASH;
+        } elseif ($stack['category'] === 'django') {
+            $envBlock = <<<ENV
+DJANGO_SETTINGS_MODULE=config.settings
+DATABASE_URL="{$dbEngine}://{$shortSlug}_user:buat_password_database_yang_sangat_kuat_disini@{$dbHost}:{$dbPort}/{$shortSlug}_db"
+REDIS_URL="redis://redis:6379/1"
+PORT=8000
+COOLIFY_URL=https://app.domainanda.com
+AI_THREAT_SHIELD_ENABLED=true
+ENV;
+            $postDeployCmds = <<<BASH
+# 1. Eksekusi Migrasi Database Django
+python manage.py migrate --noinput
+
+# 2. Kumpulkan Aset Statis
+python manage.py collectstatic --noinput
+
+# 3. Uji Endpoint Health Check
+curl -I http://localhost:8000/api/health
+BASH;
+        } elseif ($stack['category'] === 'fastapi') {
+            $envBlock = <<<ENV
+PORT=8000
+DATABASE_URL="{$dbEngine}+asyncpg://{$shortSlug}_user:buat_password_database_yang_sangat_kuat_disini@{$dbHost}:{$dbPort}/{$shortSlug}_db"
+REDIS_URL="redis://redis:6379"
+COOLIFY_URL=https://app.domainanda.com
+AI_THREAT_SHIELD_ENABLED=true
+ENV;
+            $postDeployCmds = <<<BASH
+# 1. Eksekusi Migrasi Skema Basis Data Alembic
+alembic upgrade head
+
+# 2. Uji Endpoint Health Check
+curl -I http://localhost:8000/health
+BASH;
+        } else {
+            $envBlock = <<<ENV
+APP_NAME="{$appName}"
+APP_ENV=production
+APP_KEY=base64:GENERATE_KEY_DENGAN_PHP_ARTISAN_KEY_GENERATE
+APP_DEBUG=false
+COOLIFY_URL=https://app.domainanda.com
+APP_URL=https://app.domainanda.com
+
+# Konfigurasi Database ({$dbLabel})
+DB_CONNECTION={$dbEngine}
+DB_HOST={$dbHost}
+DB_PORT={$dbPort}
+DB_DATABASE={$shortSlug}_db
+DB_USERNAME={$shortSlug}_user
+DB_PASSWORD=buat_password_database_yang_sangat_kuat_disini
+
+# Konfigurasi Cache & Queue Redis
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+# AI Threat Shield Protection
+AI_THREAT_SHIELD_ENABLED=true
+ENV;
+            $postDeployCmds = <<<BASH
+# 1. Pastikan Application Key Terpasang
+php artisan key:generate --force
+
+# 2. Eksekusi Migrasi Database Produksi
+php artisan migrate --force
+
+# 3. Eksekusi Seeder Data Awal (Opsional)
+php artisan db:seed --class=SyntheticDataSeeder --force
+
+# 4. Optimasi Cache Produksi (Route, Config, View & Events)
+php artisan optimize
+
+# 5. Buat Symlink Storage Publik
+php artisan storage:link
+
+# 6. Uji Endpoint Health Check
+curl -I http://localhost:80/api/health
+BASH;
+        }
+
+        return <<<MD
+# 🚀 Panduan Lengkap Instalasi & Setup Coolify — {$appName}
+
+Repositori ini telah dikonfigurasi penuh untuk **Coolify** (PaaS Mandiri / Self-Hosted PaaS modern berbasis Docker & Traefik sebagai alternatif mandiri Vercel, Heroku, dan Render).
+
+Arsitektur produksi ini otomatis mengemas **{$appLabel}**, **{$webLabel}**, **{$dbLabel}**, dan **{$cacheLabel}** dalam satu jaringan terisolasi dengan **Sertifikat SSL Let's Encrypt otomatis**.
+
+---
+
+## 🖥️ 1. Persyaratan Server VPS & Firewall
+
+### Rekomendasi Spesifikasi Server
+* **Sistem Operasi**: Ubuntu 22.04 LTS, Ubuntu 24.04 LTS, atau Debian 12 (Instalasi bersih / *clean install*).
+* **Hardware**: Minimal 2 Core vCPU, 2GB - 4GB RAM, 30GB+ SSD.
+* **Akses**: Akses root SSH (`ssh root@ip-vps-anda`).
+
+### Pengaturan Port Firewall (Security Group / UFW)
+Pastikan port-port berikut terbuka di firewall VPS Anda:
+* **Port `22`**: Akses SSH Terminal.
+* **Port `80`**: HTTP Publik (dikelola Traefik untuk verifikasi Let's Encrypt).
+* **Port `443`**: HTTPS Publik (Lalu lintas SSL aplikasi).
+* **Port `8000`**: Coolify Dashboard UI (dapat ditutup setelah domain dashboard diset).
+
+---
+
+## ⚡ 2. Instalasi Coolify di Server VPS (1 Perintah)
+
+Login ke server VPS Anda melalui SSH, lalu jalankan perintah instalasi resmi Coolify:
+
+```bash
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+```
+
+Setelah instalasi selesai (biasanya 2–3 menit), buka browser Anda ke:
+```text
+http://<IP-VPS-ANDA>:8000
+```
+
+---
+
+## 🎛️ 3. Setup Awal Dashboard Coolify
+
+1. **Registrasi Akun Root**: Buat akun administrator pertama Anda.
+2. **Koneksi Git Source**:
+   * Masuk menu **Sources** $\rightarrow$ Hubungkan akun **GitHub / GitLab**.
+   * Pilih repositori **{$appName}** ini.
+
+---
+
+## 🚢 4. Deployment Aplikasi via `docker-compose.coolify.yml` (Rekomendasi Utama)
+
+Metode ini mengisolasi seluruh stack (runtime, database, dan in-memory cache) dalam satu private bridge network.
+
+### Langkah-langkah:
+1. Di Dashboard Coolify, masuk ke menu **Projects** $\rightarrow$ **Production** $\rightarrow$ **+ New Resource** $\rightarrow$ **Docker Compose**.
+2. Pilih repositori Git proyek ini dan tentukan branch target (misal: `main`).
+3. Pada kolom **Docker Compose File**, arahkan ke: `docker-compose.coolify.yml`.
+4. Di tab **General**, isi kolom **Domains** dengan domain Anda: `https://app.domainanda.com`.
+5. Di tab **Environment Variables**, salin dan tempel blok variabel berikut:
+
+```env
+{$envBlock}
+```
+
+6. Klik tombol **Deploy**! Coolify otomatis mem-build container, mengonfigurasi Traefik, dan menyalakan SSL.
+
+---
+
+## 🛠️ 5. Perintah Pasca-Deployment (Via Web Terminal Coolify)
+
+Setelah status container berubah menjadi **Running / Healthy**, buka tab **Terminal** pada service aplikasi di dashboard Coolify untuk inisialisasi:
+
+```bash
+{$postDeployCmds}
+```
+
+---
+
+## ⚙️ 6. Monitoring & Health Probes
+Aplikasi ini dilengkapi health probe mandiri pada URL:
+`{$healthUrl}` yang mengembalikan status `200 OK` jika database dan cache sehat.
+MD;
     }
 
     /**
-     * Generate Docker & Docker Compose setup guide markdown.
+     * Generate Docker & Docker Compose setup guide markdown dynamically adapted to stack & database.
      */
-    public static function generateDockerGuide(VisionBlueprint $blueprint, string $slug): string
+    public static function generateDockerGuide(VisionBlueprint $blueprint, string $slug, ?array $universalSchema = null): string
     {
-        $shortSlug = self::deriveShortSlug($slug);
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $appName = $blueprint->nama_bisnis ?: 'Enterprise App';
+        $stack = self::resolveStackProfile($blueprint, $universalSchema);
 
         return StubLoader::load('scaffold/DOCKER.md.stub', [
-            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ APP_NAME }}' => $appName,
             '{{ SLUG }}' => $slug,
             '{{ SHORT_SLUG }}' => $shortSlug,
+            'PostgreSQL 16' => $stack['db_label'],
+            'Laravel 13' => $stack['app_runtime_label'],
         ]);
     }
 
     /**
-     * Generate .env.example with security policies.
+     * Generate .env.example with security policies dynamically adapted to stack & database.
      */
-    public static function generateEnvExample(VisionBlueprint $blueprint, string $slug): string
+    public static function generateEnvExample(VisionBlueprint $blueprint, string $slug, ?array $universalSchema = null): string
     {
         $cleanSlug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
-        $shortSlug = self::deriveShortSlug($slug);
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $appName = $blueprint->nama_bisnis ?: 'Enterprise App';
+        $stack = self::resolveStackProfile($blueprint, $universalSchema);
 
+        $dbEngine = $stack['db_engine'];
+        $dbPort = $stack['db_port'];
+
+        if ($stack['category'] === 'nextjs') {
+            return <<<ENV
+APP_NAME="{$appName}"
+NODE_ENV=development
+PORT=3000
+
+# Docker Compose Settings
+COMPOSE_PROJECT_NAME={$shortSlug}
+APP_PORT=3000
+DB_FORWARD_PORT={$dbPort}
+REDIS_FORWARD_PORT=6379
+
+# Database Connection ({$stack['db_label']})
+DATABASE_URL="{$dbEngine}://{$shortSlug}_user:secret_production_change_me@127.0.0.1:{$dbPort}/{$shortSlug}_db"
+DB_CONNECTION={$dbEngine}
+DB_HOST=127.0.0.1
+DB_PORT={$dbPort}
+DB_DATABASE={$shortSlug}_db
+DB_USERNAME={$shortSlug}_user
+DB_PASSWORD=secret_production_change_me
+
+# Redis In-Memory Cache
+REDIS_URL="redis://127.0.0.1:6379"
+
+# Security & AI Threat Shield
+AI_SHIELD_ENABLED=true
+AI_SHIELD_STRIKE_LIMIT=3
+SECURE_DATASET_SANDBOX=true
+ENV;
+        }
+
+        if ($stack['category'] === 'go') {
+            return <<<ENV
+APP_NAME="{$appName}"
+APP_ENV=local
+PORT=8080
+
+# Docker Compose Settings
+COMPOSE_PROJECT_NAME={$shortSlug}
+API_PORT=8080
+APP_PORT=3000
+DB_FORWARD_PORT={$dbPort}
+REDIS_FORWARD_PORT=6379
+
+# Database Connection ({$stack['db_label']})
+DATABASE_URL="{$dbEngine}://{$shortSlug}_user:secret_production_change_me@127.0.0.1:{$dbPort}/{$shortSlug}_db"
+DB_CONNECTION={$dbEngine}
+DB_HOST=127.0.0.1
+DB_PORT={$dbPort}
+DB_DATABASE={$shortSlug}_db
+DB_USERNAME={$shortSlug}_user
+DB_PASSWORD=secret_production_change_me
+
+# Redis
+REDIS_ADDR="127.0.0.1:6379"
+
+# Security & AI Threat Shield
+AI_SHIELD_ENABLED=true
+ENV;
+        }
+
+        if ($stack['category'] === 'django') {
+            return <<<ENV
+APP_NAME="{$appName}"
+DJANGO_SETTINGS_MODULE=config.settings
+DEBUG=True
+PORT=8000
+
+# Docker Compose Settings
+COMPOSE_PROJECT_NAME={$shortSlug}
+APP_PORT=8000
+DB_FORWARD_PORT={$dbPort}
+REDIS_FORWARD_PORT=6379
+
+# Database Connection ({$stack['db_label']})
+DATABASE_URL="{$dbEngine}://{$shortSlug}_user:secret_production_change_me@127.0.0.1:{$dbPort}/{$shortSlug}_db"
+DB_CONNECTION={$dbEngine}
+DB_HOST=127.0.0.1
+DB_PORT={$dbPort}
+DB_DATABASE={$shortSlug}_db
+DB_USERNAME={$shortSlug}_user
+DB_PASSWORD=secret_production_change_me
+
+# Redis
+REDIS_URL="redis://127.0.0.1:6379/1"
+
+# Security & AI Threat Shield
+AI_SHIELD_ENABLED=true
+ENV;
+        }
+
+        // Standard Laravel .env.example with dynamic DB
         return StubLoader::load('scaffold/env.example.stub', [
-            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ APP_NAME }}' => $appName,
             '{{ SLUG }}' => $cleanSlug,
             '{{ SHORT_SLUG }}' => $shortSlug,
+            'DB_CONNECTION=pgsql' => 'DB_CONNECTION=' . $dbEngine,
+            'DB_PORT=5432' => 'DB_PORT=' . $dbPort,
+            'DB_FORWARD_PORT=5432' => 'DB_FORWARD_PORT=' . $dbPort,
         ]);
     }
 
     /**
-     * Generate Nginx configuration.
+     * Generate Nginx configuration dynamically adapted to upstream proxying.
      */
-    public static function generateNginxConf(string $slug): string
+    public static function generateNginxConf(string $slug, ?array $universalSchema = null): string
     {
         $cleanSlug = preg_replace('/[^a-z0-9_-]/', '', strtolower($slug));
+        $techStack = $universalSchema['tech_stack_contract'] ?? [];
+        $shortCode = strtoupper((string)($techStack['short_code'] ?? 'M1'));
+
+        if (in_array($shortCode, ['M3', 'S2'], true)) {
+            return <<<CONF
+server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        proxy_pass http://app:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+}
+CONF;
+        }
+
+        if (in_array($shortCode, ['D2', 'S1'], true)) {
+            return <<<CONF
+server {
+    listen 80;
+    server_name localhost;
+
+    location / {
+        proxy_pass http://api:8080;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+CONF;
+        }
 
         return StubLoader::load('scaffold/nginx.conf.stub', [
             '{{ SLUG }}' => $cleanSlug,

@@ -1,7 +1,8 @@
 @php
     $bizTitle = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Aplikasi Proyek');
     $slugVal = $blueprint->slug ?: 'app';
-    $shortSlugVal = \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? 'app');
+    $shortSlugVal = \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?? 'app', $blueprint);
+    $stackProfile = $stackProfile ?? \App\Services\ScaffoldGeneratorService::resolveStackProfile($blueprint, $prd['universal_blueprint_schema'] ?? null);
     $firstModule = 'Modul Utama';
     $firstTables = 'Tabel Database';
     if (!empty($prd['features']['mvp_phase1'][0]['title'])) {
@@ -469,11 +470,11 @@ wsl --update</pre>
                         </p>
                         <div class="p-2 bg-zinc-950 border border-zinc-800 text-[11px] text-zinc-400 font-mono space-y-1">
                             <div class="text-zinc-200 font-bold">&bull; <span x-show="locale === 'en'">Key Pre-Wired Files Inside the Folder:</span><span x-show="locale !== 'en'">Berkas Kunci yang Siap Digunakan di Dalam Folder:</span></div>
-                            <div class="pl-2">&rarr; <code>Dockerfile</code> (<span x-show="locale === 'en'">PHP 8.5 FPM Alpine — extensionless</span><span x-show="locale !== 'en'">PHP 8.5 FPM Alpine — tanpa ekstensi</span>)</div>
-                            <div class="pl-2">&rarr; <code>docker-compose.yml</code> (PHP 8.5+, PostgreSQL 16 Strict, Redis 7, Nginx)</div>
+                            <div class="pl-2">&rarr; <code>Dockerfile</code> ({{ $stackProfile['app_runtime_label'] }})</div>
+                            <div class="pl-2">&rarr; <code>docker-compose.yml</code> ({{ $stackProfile['app_runtime_label'] }}, {{ $stackProfile['db_label'] }}, {{ $stackProfile['cache_label'] }})</div>
                             <div class="pl-2">&rarr; <code>.env.blueprint</code> (<span x-show="locale === 'en'">Ready-to-use environment configuration</span><span x-show="locale !== 'en'">Konfigurasi environment siap pakai</span>)</div>
                             <div class="pl-2">&rarr; <code>.agents/AGENTS.md</code> &amp; <code>.cursorrules</code> (<span x-show="locale === 'en'">ECC SOP &amp; Architectural Guardrails</span><span x-show="locale !== 'en'">SOP &amp; Guardrails ECC</span>)</div>
-                            <div class="pl-2">&rarr; <code>schema_complete.sql</code> (<span x-show="locale === 'en'">PostgreSQL Strict ULID DDL Schema</span><span x-show="locale !== 'en'">Skema DDL PostgreSQL Strict ULID</span>)</div>
+                            <div class="pl-2">&rarr; <code>schema_complete.sql</code> ({{ $stackProfile['db_label'] }} DDL Schema)</div>
                             <div class="pl-2">&rarr; <code>SyntheticDataSeeder.php</code> &amp; <code>ApiContractTest.php</code></div>
                         </div>
                     </div>
@@ -676,35 +677,35 @@ curl http://localhost:8000/api/health</pre>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                         <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
                             <div class="text-[11px] font-bold text-purple-300 font-mono flex items-center justify-between">
-                                <span>🌐 <span x-show="locale === 'en'">WEB SERVER</span><span x-show="locale !== 'en'">WEB SERVER</span></span>
-                                <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">HTTP/2</span>
+                                <span>🌐 <span x-show="locale === 'en'">WEB SERVER / PROXY</span><span x-show="locale !== 'en'">WEB SERVER / PROXY</span></span>
+                                <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">EDGE</span>
                             </div>
-                            <div class="text-xs font-bold text-white">Nginx Alpine</div>
+                            <div class="text-xs font-bold text-white">{{ $stackProfile['web_server_label'] }}</div>
                             <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                                <span x-show="locale === 'en'">High-performance reverse proxy, gzip/brotli compression, asset caching, and edge DDoS mitigation.</span>
-                                <span x-show="locale !== 'en'">Reverse proxy berkinerja tinggi, gzip/brotli compression, asset caching, dan mitigasi DDoS edge.</span>
+                                <span x-show="locale === 'en'">High-performance reverse proxy, gzip/brotli compression, SSL auto-termination, and zero-downtime routing.</span>
+                                <span x-show="locale !== 'en'">Reverse proxy berkinerja tinggi, kompresi gzip/brotli, terminasi SSL otomatis, dan routing zero-downtime.</span>
                             </p>
                         </div>
                         <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
                             <div class="text-[11px] font-bold text-emerald-400 font-mono flex items-center justify-between">
                                 <span>⚡ <span x-show="locale === 'en'">APP RUNTIME</span><span x-show="locale !== 'en'">RUNTIME APLIKASI</span></span>
-                                <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">PHP 8.4+</span>
+                                <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400 font-mono font-bold">{{ $stackProfile['short_code'] }}</span>
                             </div>
-                            <div class="text-xs font-bold text-white">Laravel 13 (PHP-FPM)</div>
+                            <div class="text-xs font-bold text-white">{{ $stackProfile['app_runtime_label'] }}</div>
                             <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                                <span x-show="locale === 'en'">OPcache + JIT enabled, Livewire 4, Filament v5 Enterprise, <code>pdo_pgsql</code>, <code>redis</code>, <code>pcntl</code> extensions.</span>
-                                <span x-show="locale !== 'en'">OPcache + JIT aktif, Livewire 4, Filament v5 Enterprise, ekstensi <code>pdo_pgsql</code>, <code>redis</code>, <code>pcntl</code>.</span>
+                                <span x-show="locale === 'en'">Optimized runtime, native dependency management, high-concurrency event loop, and strict contracts.</span>
+                                <span x-show="locale !== 'en'">Runtime teroptimasi, manajemen dependensi native, event loop konkurensi tinggi, dan kontrak arsitektur ketat.</span>
                             </p>
                         </div>
                         <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
                             <div class="text-[11px] font-bold text-sky-400 font-mono flex items-center justify-between">
                                 <span>🗄️ <span x-show="locale === 'en'">DATABASE</span><span x-show="locale !== 'en'">DATABASE</span></span>
-                                <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">PG 16</span>
+                                <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400 font-mono uppercase">{{ $stackProfile['db_engine'] }}</span>
                             </div>
-                            <div class="text-xs font-bold text-white">PostgreSQL 16 ULID</div>
+                            <div class="text-xs font-bold text-white">{{ $stackProfile['db_label'] }}</div>
                             <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                                <span x-show="locale === 'en'">26-character ULID Primary Keys, Keyset Cursor Pagination O(1), isolated volume anti-data loss.</span>
-                                <span x-show="locale !== 'en'">Primary Key ULID 26 karakter, Keyset Cursor Pagination O(1), volume terisolasi anti-data loss.</span>
+                                <span x-show="locale === 'en'">26-character ULID Primary Keys, Keyset Cursor Pagination O(1), isolated persistent volume anti-data loss.</span>
+                                <span x-show="locale !== 'en'">Primary Key ULID 26 karakter, Keyset Cursor Pagination O(1), volume persisten terisolasi anti-data loss.</span>
                             </p>
                         </div>
                         <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
@@ -712,7 +713,7 @@ curl http://localhost:8000/api/health</pre>
                                 <span>🚀 <span x-show="locale === 'en'">CACHE &amp; QUEUE</span><span x-show="locale !== 'en'">CACHE &amp; ANTRIAN</span></span>
                                 <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">IN-MEMORY</span>
                             </div>
-                            <div class="text-xs font-bold text-white">Redis 7 Alpine</div>
+                            <div class="text-xs font-bold text-white">{{ $stackProfile['cache_label'] }}</div>
                             <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
                                 <span x-show="locale === 'en'">Sub-millisecond session store, dynamic tag caching, and asynchronous queue processing (background jobs).</span>
                                 <span x-show="locale !== 'en'">Penyimpanan session kilat, cache tag dinamis, dan pemrosesan antrean asinkron (background jobs).</span>
@@ -813,15 +814,40 @@ curl http://localhost:8000/api/health</pre>
                                 <span>COPY ENV BLOCK</span>
                             </button>
                         </div>
-                        <pre class="p-3 bg-black border border-zinc-800 text-emerald-300 font-mono text-xs select-all overflow-x-auto leading-relaxed whitespace-pre">APP_NAME="{{ $bizTitle }}"
+                        <pre class="p-3 bg-black border border-zinc-800 text-emerald-300 font-mono text-xs select-all overflow-x-auto leading-relaxed whitespace-pre">@if($stackProfile['category'] === 'nextjs')NODE_ENV=production
+DATABASE_URL={{ $stackProfile['db_engine'] }}://<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_user`">{{ $shortSlugVal }}_user</span>:GantiDenganPasswordSangatKuat123!@{{ $stackProfile['db_engine'] === 'mysql' ? 'mysql' : 'postgres' }}:{{ $stackProfile['db_port'] }}/<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_db`">{{ $shortSlugVal }}_db</span>
+REDIS_URL=redis://redis:6379
+PORT=3000
+COOLIFY_URL=https://app.domainanda.com
+AI_THREAT_SHIELD_ENABLED=true
+@elseif($stackProfile['category'] === 'go')APP_ENV=production
+PORT=8080
+DATABASE_URL={{ $stackProfile['db_engine'] }}://<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_user`">{{ $shortSlugVal }}_user</span>:GantiDenganPasswordSangatKuat123!@{{ $stackProfile['db_engine'] === 'mysql' ? 'mysql' : 'postgres' }}:{{ $stackProfile['db_port'] }}/<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_db`">{{ $shortSlugVal }}_db</span>
+REDIS_ADDR=redis:6379
+COOLIFY_URL=https://app.domainanda.com
+AI_THREAT_SHIELD_ENABLED=true
+@elseif($stackProfile['category'] === 'django')DJANGO_SETTINGS_MODULE=config.settings
+DATABASE_URL={{ $stackProfile['db_engine'] }}://<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_user`">{{ $shortSlugVal }}_user</span>:GantiDenganPasswordSangatKuat123!@{{ $stackProfile['db_engine'] === 'mysql' ? 'mysql' : 'postgres' }}:{{ $stackProfile['db_port'] }}/<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_db`">{{ $shortSlugVal }}_db</span>
+REDIS_URL=redis://redis:6379/1
+PORT=8000
+COOLIFY_URL=https://app.domainanda.com
+AI_THREAT_SHIELD_ENABLED=true
+@elseif($stackProfile['category'] === 'fastapi')PORT=8000
+DATABASE_URL={{ $stackProfile['db_engine'] }}+asyncpg://<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_user`">{{ $shortSlugVal }}_user</span>:GantiDenganPasswordSangatKuat123!@{{ $stackProfile['db_engine'] === 'mysql' ? 'mysql' : 'postgres' }}:{{ $stackProfile['db_port'] }}/<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_db`">{{ $shortSlugVal }}_db</span>
+REDIS_URL=redis://redis:6379
+COOLIFY_URL=https://app.domainanda.com
+AI_THREAT_SHIELD_ENABLED=true
+@else
+APP_NAME="{{ $bizTitle }}"
 APP_ENV=production
 APP_KEY=base64:GENERATE_KEY_VIA_ARTISAN
 APP_DEBUG=false
 APP_URL=https://app.domainanda.com
+COOLIFY_URL=https://app.domainanda.com
 
-DB_CONNECTION=pgsql
-DB_HOST=postgres
-DB_PORT=5432
+DB_CONNECTION={{ $stackProfile['db_engine'] }}
+DB_HOST={{ $stackProfile['db_engine'] === 'mysql' ? 'mysql' : 'postgres' }}
+DB_PORT={{ $stackProfile['db_port'] }}
 DB_DATABASE=<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_db`">{{ $shortSlugVal }}_db</span>
 DB_USERNAME=<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_user`">{{ $shortSlugVal }}_user</span>
 DB_PASSWORD=GantiDenganPasswordSangatKuat123!
@@ -832,7 +858,8 @@ QUEUE_CONNECTION=redis
 REDIS_HOST=redis
 REDIS_PORT=6379
 
-AI_THREAT_SHIELD_ENABLED=true</pre>
+AI_THREAT_SHIELD_ENABLED=true
+@endif</pre>
                     </div>
 
                     <!-- Step 5: Post-Deployment Verification -->
@@ -846,13 +873,13 @@ AI_THREAT_SHIELD_ENABLED=true</pre>
                         </div>
                         <div class="text-[11px] text-zinc-400 font-sans space-y-1.5 leading-relaxed">
                             <p>
-                                <span x-show="locale === 'en'">Once the <strong>Deploy</strong> process in Coolify finishes, open the <strong>Terminal</strong> tab or execute inside the <code>app</code> container:</span>
-                                <span x-show="locale !== 'en'">Setelah proses <strong>Deploy</strong> di Coolify selesai, buka tab <strong>Terminal</strong> atau jalankan di container <code>app</code>:</span>
+                                <span x-show="locale === 'en'">Once the <strong>Deploy</strong> process in Coolify finishes, open the <strong>Terminal</strong> tab or execute inside the application container:</span>
+                                <span x-show="locale !== 'en'">Setelah proses <strong>Deploy</strong> di Coolify selesai, buka tab <strong>Terminal</strong> atau jalankan di container aplikasi:</span>
                             </p>
-                            <pre class="p-2 bg-black border border-zinc-800 text-purple-300 font-mono text-xs select-all overflow-x-auto">php artisan migrate --force && php artisan db:seed --class=SyntheticDataSeeder --force && php artisan storage:link</pre>
+                            <pre class="p-2 bg-black border border-zinc-800 text-purple-300 font-mono text-xs select-all overflow-x-auto">{{ $stackProfile['migrate_cmd'] }}</pre>
                             <p class="text-zinc-500 font-mono text-[10px]">
-                                <span x-show="locale === 'en'">&bull; Health Check Endpoint: <code>https://app.yourdomain.com/api/health</code> (status: OK).</span>
-                                <span x-show="locale !== 'en'">&bull; Endpoint Health Check: <code>https://app.domainanda.com/api/health</code> (status: OK).</span>
+                                <span x-show="locale === 'en'">&bull; Health Check Endpoint: <code>{{ $stackProfile['health_url'] }}</code> (status: OK).</span>
+                                <span x-show="locale !== 'en'">&bull; Endpoint Health Check: <code>{{ $stackProfile['health_url'] }}</code> (status: OK).</span>
                             </p>
                         </div>
                     </div>

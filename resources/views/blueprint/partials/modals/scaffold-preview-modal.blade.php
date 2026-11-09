@@ -108,7 +108,7 @@
             <div class="mb-3 p-3 bg-zinc-900 border border-zinc-800 text-xs font-mono text-zinc-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                 <div class="space-y-1">
                     <div>
-                        <span class="text-emerald-400 font-bold"><span x-show="locale === 'en'">Target Stack:</span><span x-show="locale !== 'en'">Target Framework:</span></span> Laravel 13 (PHP 8.5+) &bull; PostgreSQL 16 Strict ULID &bull; Redis 7 &bull; Next.js App Router
+                        <span class="text-emerald-400 font-bold"><span x-show="locale === 'en'">Target Stack:</span><span x-show="locale !== 'en'">Target Framework:</span></span> {{ $stackProfile['app_runtime_label'] }} &bull; {{ $stackProfile['db_label'] }} &bull; {{ $stackProfile['cache_label'] }}
                     </div>
                     <div class="flex items-center gap-2 text-[11px]">
                         <button type="button" @click="showExecutionGuideModal = true" class="text-emerald-400 hover:text-emerald-300 underline font-bold cursor-pointer">

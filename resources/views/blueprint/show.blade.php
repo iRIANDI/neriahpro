@@ -73,6 +73,7 @@
 
     // Engineering Specs & Dev Steps
     $mvpEngineeringSpecs = $prd['features']['mvp_phase1'] ?? ($prd['engineering_specs']['mvp_specs'] ?? []);
+    $stackProfile = \App\Services\ScaffoldGeneratorService::resolveStackProfile($blueprint, $prd['universal_blueprint_schema'] ?? null);
     $totalDevSteps = count($mvpEngineeringSpecs) + 2;
 
     // ERD Tables & Prompt

@@ -8,8 +8,9 @@
     $clientPic = $document->signer_name ?: ($blueprint?->client_name ?: 'Alexander Wijaya');
     $clientEmail = $document->signer_email ?: ($blueprint?->email ?: 'client@neriahpro.com');
     $contractAmount = $document->contract_amount ?: 50000000;
-    $dpAmount = $document->dp_amount ?: ($contractAmount * 0.50);
-    $pelunasanAmount = $contractAmount - $dpAmount;
+    $retailCredit = $blueprint?->getPaidRetailAmount() ?: 0.0;
+    $dpAmount = $document->dp_amount ?: max(0, ($contractAmount * 0.50) - $retailCredit);
+    $pelunasanAmount = max(0, $contractAmount - ($contractAmount * 0.50));
     $targetTimeline = $blueprint?->target_waktu ?: '30 Hari Kerja';
     $docHash = $document->document_hash ?: ($blueprint?->document_sha256 ?: hash('sha256', $document->id . $document->created_at));
 @endphp
@@ -296,6 +297,16 @@
                         </span>
                         <span class="text-[10px] text-zinc-500 dark:text-zinc-400 print:text-zinc-600" x-text="locale === 'en' ? 'Upon UAT Sign-off &amp; Handover' : 'Saat Serah Terima Kunci / UAT'">Saat Serah Terima Kunci / UAT</span>
                     </div>
+                    @if($retailCredit > 0)
+                        <div class="col-span-1 sm:col-span-3 p-3 bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-500/40 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <span class="text-emerald-800 dark:text-emerald-300 font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                <span>🚀 KREDIT LISENSI RETAIL DITERAPKAN (100% ZERO-LOSS):</span>
+                            </span>
+                            <span class="font-mono font-bold text-emerald-900 dark:text-emerald-200">
+                                -Rp {{ number_format($retailCredit, 0, ',', '.') }} (Otomatis memotong tagihan Uang Muka DP Kickoff)
+                            </span>
+                        </div>
+                    @endif
                 </div>
             </section>
 
@@ -310,39 +321,75 @@
                 </div>
 
                 <template x-for="(clause, key) in activeClauses" :key="key">
-                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-800/80 rounded-none space-y-2 print-avoid-break print-bg-soft print-border">
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950/70 border border-zinc-200 dark:border-zinc-800/80 rounded-none space-y-3 print-avoid-break print-bg-soft print-border">
                         <h3 class="font-mono font-bold text-zinc-900 dark:text-white print:text-black text-xs uppercase tracking-wide flex items-center gap-2">
                             <span class="w-1.5 h-1.5 bg-emerald-500 shrink-0"></span>
                             <span x-text="clause.title"></span>
                         </h3>
 
                         <template x-if="clause.sections && clause.sections.length > 0">
-                            <div class="space-y-3 pl-3.5 text-xs text-zinc-700 dark:text-zinc-300 print:text-zinc-900 font-sans">
+                            <div class="space-y-4 pl-1 sm:pl-3 text-xs text-zinc-700 dark:text-zinc-300 print:text-zinc-900 font-sans">
                                 <template x-if="clause.lead">
                                     <p class="leading-relaxed text-justify font-medium text-zinc-900 dark:text-zinc-200" x-text="clause.lead"></p>
                                 </template>
                                 <template x-for="(sec, sIdx) in clause.sections" :key="sIdx">
-                                    <div class="space-y-1.5">
-                                        <div class="font-bold text-emerald-800 dark:text-emerald-400 font-mono text-[11px] uppercase tracking-wide" x-text="sec.heading"></div>
+                                    <div class="space-y-2 pt-2 border-t border-zinc-200/60 dark:border-zinc-800/60 first:border-t-0 first:pt-0">
+                                        <div class="font-bold text-emerald-800 dark:text-emerald-400 font-mono text-[11px] uppercase tracking-wide flex items-center gap-1.5" x-text="sec.heading"></div>
+
                                         <template x-if="sec.items && sec.items.length > 0">
-                                            <ul class="list-disc pl-4 space-y-1">
+                                            <div class="space-y-3">
                                                 <template x-for="(item, iIdx) in sec.items" :key="iIdx">
-                                                    <li class="leading-relaxed text-justify">
-                                                        <template x-if="item.includes(':') && !item.includes('://')">
-                                                            <span>
-                                                                <strong class="font-bold text-zinc-950 dark:text-zinc-100" x-text="item.split(':')[0] + ':'"></strong>
-                                                                <span x-text="' ' + item.split(':').slice(1).join(':').trim()"></span>
-                                                            </span>
-                                                        </template>
-                                                        <template x-if="!item.includes(':') || item.includes('://')">
-                                                            <span x-text="item"></span>
-                                                        </template>
-                                                    </li>
+                                                    <div class="space-y-1.5">
+                                                        <!-- Level 1: Point Utama (Angka / Numbered Item) -->
+                                                        <div class="flex items-start gap-2.5 text-justify leading-relaxed">
+                                                            <span class="font-mono font-black text-emerald-700 dark:text-emerald-400 shrink-0 text-xs min-w-[20px]" x-text="item.number || ((iIdx + 1) + '.')"></span>
+                                                            <div class="flex-1">
+                                                                <template x-if="(item.title || item.text || (typeof item === 'string' ? item : '')).includes(':') && !(item.title || item.text || (typeof item === 'string' ? item : '')).includes('://')">
+                                                                    <span>
+                                                                        <strong class="font-bold text-zinc-950 dark:text-zinc-100" x-text="(item.title || item.text || item).split(':')[0] + ':'"></strong>
+                                                                        <span class="text-zinc-800 dark:text-zinc-200" x-text="' ' + (item.title || item.text || item).split(':').slice(1).join(':').trim()"></span>
+                                                                    </span>
+                                                                </template>
+                                                                <template x-if="!((item.title || item.text || (typeof item === 'string' ? item : '')).includes(':')) || (item.title || item.text || (typeof item === 'string' ? item : '')).includes('://')">
+                                                                    <span class="font-bold text-zinc-950 dark:text-zinc-100" x-text="item.title || item.text || item"></span>
+                                                                </template>
+
+                                                                <!-- Level 2: Menjorok ke Dalam (Child Bullet Points) -->
+                                                                <template x-if="item.bullets && item.bullets.length > 0">
+                                                                    <ul class="list-disc ml-6 sm:ml-8 pl-1 mt-1.5 space-y-1.5 text-zinc-800 dark:text-zinc-200">
+                                                                        <template x-for="(b, bIdx) in item.bullets" :key="bIdx">
+                                                                            <li class="leading-relaxed text-justify">
+                                                                                <template x-if="(b.text || (typeof b === 'string' ? b : '')).includes(':') && !(b.text || (typeof b === 'string' ? b : '')).includes('://')">
+                                                                                    <span>
+                                                                                        <strong class="font-semibold text-zinc-950 dark:text-zinc-100" x-text="(b.text || b).split(':')[0] + ':'"></strong>
+                                                                                        <span x-text="' ' + (b.text || b).split(':').slice(1).join(':').trim()"></span>
+                                                                                    </span>
+                                                                                </template>
+                                                                                <template x-if="!((b.text || (typeof b === 'string' ? b : '')).includes(':')) || (b.text || (typeof b === 'string' ? b : '')).includes('://')">
+                                                                                    <span x-text="b.text || b"></span>
+                                                                                </template>
+
+                                                                                <!-- Level 3: Menjorok Lebih Dalam Lagi (Child Sub-Bullet Points) -->
+                                                                                <template x-if="b.subbullets && b.subbullets.length > 0">
+                                                                                    <ul class="list-[circle] ml-6 sm:ml-8 pl-1 mt-1 space-y-1 text-zinc-600 dark:text-zinc-400">
+                                                                                        <template x-for="(sb, sbIdx) in b.subbullets" :key="sbIdx">
+                                                                                            <li class="leading-relaxed text-justify" x-text="sb"></li>
+                                                                                        </template>
+                                                                                    </ul>
+                                                                                </template>
+                                                                            </li>
+                                                                        </template>
+                                                                    </ul>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </template>
-                                            </ul>
+                                            </div>
                                         </template>
+
                                         <template x-if="sec.text">
-                                            <p class="leading-relaxed text-justify" x-text="sec.text"></p>
+                                            <p class="leading-relaxed text-justify pl-6 text-xs text-zinc-700 dark:text-zinc-300" x-text="sec.text"></p>
                                         </template>
                                     </div>
                                 </template>

@@ -144,6 +144,186 @@ class ContractLegalHelper
     }
 
     /**
+     * Parse multi-line and structured inputs into a 3-tier hierarchical structure:
+     * - Level 1: Numbered Main Point (1., 2., ...)
+     * - Level 2: Child Bullet Point indented inward (•, -, *)
+     * - Level 3: Child Sub-Bullet Point indented further inward (◦, --, **)
+     */
+    public static function parseHierarchicalItems(mixed $input): array
+    {
+        if (empty($input)) {
+            return [];
+        }
+
+        // If JSON string, decode first
+        if (is_string($input)) {
+            $trimmed = trim($input);
+            if ((str_starts_with($trimmed, '[') && str_ends_with($trimmed, ']')) ||
+                (str_starts_with($trimmed, '{') && str_ends_with($trimmed, '}'))) {
+                $decoded = json_decode($trimmed, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $input = $decoded;
+                }
+            }
+        }
+
+        $lines = [];
+        if (is_array($input)) {
+            foreach ($input as $entry) {
+                if (is_array($entry)) {
+                    if (isset($entry['title']) || isset($entry['text'])) {
+                        return $input; // Already hierarchical array
+                    }
+                    $subItems = self::parseHierarchicalItems($entry);
+                    foreach ($subItems as $si) {
+                        $lines[] = $si;
+                    }
+                } elseif (is_string($entry) && trim($entry) !== '') {
+                    $entryLines = preg_split('/\r?\n/', trim($entry));
+                    foreach ($entryLines as $el) {
+                        $lines[] = $el;
+                    }
+                }
+            }
+        } elseif (is_string($input)) {
+            $lines = preg_split('/\r?\n/', trim($input));
+        }
+
+        if (empty($lines)) {
+            return [];
+        }
+
+        $structured = [];
+        $currentLevel1Idx = null;
+        $currentLevel2Idx = null;
+
+        foreach ($lines as $line) {
+            if (is_array($line)) {
+                $structured[] = $line;
+                $currentLevel1Idx = count($structured) - 1;
+                $currentLevel2Idx = null;
+                continue;
+            }
+
+            $rawLine = rtrim((string) $line);
+            if (trim($rawLine) === '') {
+                continue;
+            }
+
+            $leadingSpaces = strlen($rawLine) - strlen(ltrim($rawLine));
+            $trimmedLine = trim($rawLine);
+
+            // Level 3: Sub-bullet indicators (starts with '◦', '--', '**', or indented 4+ spaces before bullet)
+            $isLevel3 = false;
+            $subBulletText = '';
+            if (preg_match('/^(?:◦|--|\*\*)\s*(.+)$/u', $trimmedLine, $m3)) {
+                $isLevel3 = true;
+                $subBulletText = trim($m3[1]);
+            } elseif ($leadingSpaces >= 4 && preg_match('/^(?:[-*•+–])\s*(.+)$/u', $trimmedLine, $m3)) {
+                $isLevel3 = true;
+                $subBulletText = trim($m3[1]);
+            }
+
+            if ($isLevel3) {
+                if ($currentLevel1Idx !== null && $currentLevel2Idx !== null && isset($structured[$currentLevel1Idx]['bullets'][$currentLevel2Idx])) {
+                    $structured[$currentLevel1Idx]['bullets'][$currentLevel2Idx]['subbullets'][] = $subBulletText;
+                } elseif ($currentLevel1Idx !== null) {
+                    $structured[$currentLevel1Idx]['bullets'][] = [
+                        'text' => $subBulletText,
+                        'subbullets' => [],
+                    ];
+                    $currentLevel2Idx = count($structured[$currentLevel1Idx]['bullets']) - 1;
+                } else {
+                    $structured[] = [
+                        'number' => null,
+                        'title' => $subBulletText,
+                        'bullets' => [],
+                    ];
+                    $currentLevel1Idx = count($structured) - 1;
+                    $currentLevel2Idx = null;
+                }
+                continue;
+            }
+
+            // Level 2: Child Bullet (starts with '-', '*', '•', '+' or indented 2-3 spaces)
+            $isLevel2 = false;
+            $bulletText = '';
+            if (preg_match('/^(?:[-*•+–])\s*(.+)$/u', $trimmedLine, $m2)) {
+                $isLevel2 = true;
+                $bulletText = trim($m2[1]);
+            } elseif ($leadingSpaces >= 2 && ! preg_match('/^\d+[\.\)]/u', $trimmedLine)) {
+                $isLevel2 = true;
+                $bulletText = $trimmedLine;
+            }
+
+            if ($isLevel2) {
+                if ($currentLevel1Idx !== null) {
+                    $structured[$currentLevel1Idx]['bullets'][] = [
+                        'text' => $bulletText,
+                        'subbullets' => [],
+                    ];
+                    $currentLevel2Idx = count($structured[$currentLevel1Idx]['bullets']) - 1;
+                } else {
+                    $structured[] = [
+                        'number' => null,
+                        'title' => $bulletText,
+                        'bullets' => [],
+                    ];
+                    $currentLevel1Idx = count($structured) - 1;
+                    $currentLevel2Idx = null;
+                }
+                continue;
+            }
+
+            // Level 1: Numbered / Main Point
+            $number = null;
+            $mainText = $trimmedLine;
+            if (preg_match('/^(\d+[\.\)]|\([0-9]+\))\s*(.+)$/u', $trimmedLine, $m1)) {
+                $number = trim($m1[1]);
+                $mainText = trim($m1[2]);
+            }
+
+            // Check if mainText has inline colon with semicolon sub-items
+            $inlineBullets = [];
+            if (str_contains($mainText, ':') && ! str_contains($mainText, '://')) {
+                $parts = explode(':', $mainText, 2);
+                $headingPart = trim($parts[0]);
+                $bodyPart = trim($parts[1]);
+
+                if (str_contains($bodyPart, ';')) {
+                    $semiParts = array_filter(array_map('trim', explode(';', $bodyPart)));
+                    if (count($semiParts) > 1) {
+                        $mainText = $headingPart . ':';
+                        foreach ($semiParts as $sp) {
+                            $inlineBullets[] = [
+                                'text' => trim($sp, " .;"),
+                                'subbullets' => [],
+                            ];
+                        }
+                    }
+                }
+            }
+
+            $structured[] = [
+                'number' => $number,
+                'title' => $mainText,
+                'bullets' => $inlineBullets,
+            ];
+            $currentLevel1Idx = count($structured) - 1;
+            $currentLevel2Idx = ! empty($inlineBullets) ? (count($inlineBullets) - 1) : null;
+        }
+
+        // Auto-assign numbers if missing
+        foreach ($structured as $idx => &$item) {
+            if (empty($item['number'])) {
+                $item['number'] = ($idx + 1) . '.';
+            }
+        }
+
+        return $structured;
+    }
+
+    /**
      * Generate dynamic, dispute-proof contract clauses in Dual-Locale (ID & EN)
      * derived strictly from the Project OS Vision Blueprint specification.
      */
@@ -158,8 +338,9 @@ class ContractLegalHelper
         $targetTimelineEn = str_ireplace(['hari kerja', 'pekan', 'bulan'], ['Working Days', 'Weeks', 'Months'], $targetWaktu);
 
         $contractAmount = $document->contract_amount ?: 50000000;
-        $dpAmount = $document->dp_amount ?: ($contractAmount * 0.50);
-        $pelunasanAmount = $contractAmount - $dpAmount;
+        $retailCredit = $blueprint?->getPaidRetailAmount() ?: 0.0;
+        $dpAmount = $document->dp_amount ?: max(0, ($contractAmount * 0.50) - $retailCredit);
+        $pelunasanAmount = max(0, $contractAmount - ($contractAmount * 0.50));
 
         $devInfo = self::getDeveloperInfo();
         $devEntity = $devInfo['entity_name'];
@@ -170,10 +351,10 @@ class ContractLegalHelper
         $masalah = $blueprint?->masalah_utama ?: 'Digitalisasi dan modernisasi alur operasional bisnis.';
         $tujuan = $blueprint?->tujuan_utama ?: 'Meningkatkan efisiensi kerja dan skalabilitas sistem.';
 
-        $mvpItems = self::parseListItems($fiturMvp);
-        $integrasiItems = self::parseListItems($integrasi);
-        $masalahItems = self::parseListItems($masalah);
-        $tujuanItems = self::parseListItems($tujuan);
+        $mvpItems = self::parseHierarchicalItems($fiturMvp);
+        $integrasiItems = self::parseHierarchicalItems($integrasi);
+        $masalahItems = self::parseHierarchicalItems($masalah);
+        $tujuanItems = self::parseHierarchicalItems($tujuan);
 
         if ($locale === 'en') {
             $leadEn = "Party Two ({$devEntity}) agrees to architect, develop, and deliver a production-grade software system for Party One ({$projectName}) strictly in accordance with the features, engineering architecture, and milestones defined in Ultimate PRD Document (SPEC_ID: {$docId}), with the detailed scope outlined below:";
@@ -209,13 +390,26 @@ class ContractLegalHelper
                 if (!empty($sec['items'])) {
                     $descLinesEn[] = "";
                     $descLinesEn[] = $sec['heading'] . ":";
-                    $isBullet = str_contains(strtolower($sec['heading']), 'integration');
-                    foreach ($sec['items'] as $idx => $it) {
-                        $prefix = $isBullet ? "  • " : ("  " . ($idx + 1) . ". ");
-                        $descLinesEn[] = $prefix . $it;
+                    foreach ($sec['items'] as $it) {
+                        $prefix = !empty($it['number']) ? "  {$it['number']} " : "  • ";
+                        $descLinesEn[] = $prefix . ($it['title'] ?? $it['text'] ?? '');
+                        if (!empty($it['bullets'])) {
+                            foreach ($it['bullets'] as $b) {
+                                $descLinesEn[] = "      • " . ($b['text'] ?? (is_string($b) ? $b : ''));
+                                if (!empty($b['subbullets'])) {
+                                    foreach ($b['subbullets'] as $sb) {
+                                        $descLinesEn[] = "          ◦ " . $sb;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
+
+            $dpDescEn = $retailCredit > 0
+                ? "Milestone 1: 50% Down Payment (DP) less paid retail license credit of IDR " . number_format($retailCredit, 0, ',', '.') . " totaling IDR " . number_format($dpAmount, 0, ',', '.') . " payable prior to development kickoff;"
+                : "Milestone 1: 50% Down Payment (DP) of IDR " . number_format($dpAmount, 0, ',', '.') . " payable prior to development kickoff;";
 
             return [
                 'pasal_1_ruang_lingkup' => [
@@ -230,7 +424,7 @@ class ContractLegalHelper
                 ],
                 'pasal_3_biaya_dan_dp' => [
                     'title' => 'Article 3: Contract Value & Payment Milestones',
-                    'description' => "The total investment value for this development agreement is IDR " . number_format($contractAmount, 0, ',', '.') . " with two payment milestones: Milestone 1: 50% Down Payment (DP) of IDR " . number_format($dpAmount, 0, ',', '.') . " payable prior to development kickoff; Milestone 2: Remaining 50% balance of IDR " . number_format($pelunasanAmount, 0, ',', '.') . " payable upon User Acceptance Testing (UAT) sign-off and repository/key handover.",
+                    'description' => "The total investment value for this development agreement is IDR " . number_format($contractAmount, 0, ',', '.') . " with two payment milestones: {$dpDescEn} Milestone 2: Remaining 50% balance of IDR " . number_format($pelunasanAmount, 0, ',', '.') . " payable upon User Acceptance Testing (UAT) sign-off and repository/key handover.",
                 ],
                 'pasal_4_penguncian_scope' => [
                     'title' => 'Article 4: Scope Freeze & Change Request (CR) Protocol',
@@ -281,13 +475,26 @@ class ContractLegalHelper
             if (!empty($sec['items'])) {
                 $descLinesId[] = "";
                 $descLinesId[] = $sec['heading'] . ":";
-                $isBullet = str_contains(strtolower($sec['heading']), 'integrasi');
-                foreach ($sec['items'] as $idx => $it) {
-                    $prefix = $isBullet ? "  • " : ("  " . ($idx + 1) . ". ");
-                    $descLinesId[] = $prefix . $it;
+                foreach ($sec['items'] as $it) {
+                    $prefix = !empty($it['number']) ? "  {$it['number']} " : "  • ";
+                    $descLinesId[] = $prefix . ($it['title'] ?? $it['text'] ?? '');
+                    if (!empty($it['bullets'])) {
+                        foreach ($it['bullets'] as $b) {
+                            $descLinesId[] = "      • " . ($b['text'] ?? (is_string($b) ? $b : ''));
+                            if (!empty($b['subbullets'])) {
+                                foreach ($b['subbullets'] as $sb) {
+                                    $descLinesId[] = "          ◦ " . $sb;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+
+        $dpDescId = $retailCredit > 0
+            ? "Termin 1: Uang Muka (DP 50% setelah dipotong kredit lisensi retail sebesar Rp " . number_format($retailCredit, 0, ',', '.') . ") sebesar Rp " . number_format($dpAmount, 0, ',', '.') . " dibayarkan sebelum pekerjaan dimulai;"
+            : "Termin 1: Uang Muka (DP 50%) sebesar Rp " . number_format($dpAmount, 0, ',', '.') . " dibayarkan sebelum pekerjaan dimulai;";
 
         return [
             'pasal_1_ruang_lingkup' => [
@@ -302,7 +509,7 @@ class ContractLegalHelper
             ],
             'pasal_3_biaya_dan_dp' => [
                 'title' => 'Pasal 3: Nilai Kontrak & Ketentuan Pembayaran Uang Muka (DP)',
-                'description' => "Total nilai investasi proyek adalah Rp " . number_format($contractAmount, 0, ',', '.') . " dengan 2 termin pembayaran: Termin 1: Uang Muka (DP 50%) sebesar Rp " . number_format($dpAmount, 0, ',', '.') . " dibayarkan sebelum pekerjaan dimulai; Termin 2: Pelunasan sisa 50% sebesar Rp " . number_format($pelunasanAmount, 0, ',', '.') . " dibayarkan setelah lolos UAT (User Acceptance Testing) dan serah terima akses penuh sistem.",
+                'description' => "Total nilai investasi proyek adalah Rp " . number_format($contractAmount, 0, ',', '.') . " dengan 2 termin pembayaran: {$dpDescId} Termin 2: Pelunasan sisa 50% sebesar Rp " . number_format($pelunasanAmount, 0, ',', '.') . " dibayarkan setelah lolos UAT (User Acceptance Testing) dan serah terima akses penuh sistem.",
             ],
             'pasal_4_penguncian_scope' => [
                 'title' => 'Pasal 4: Penguncian Ruang Lingkup (Scope Freeze & Protokol CR)',

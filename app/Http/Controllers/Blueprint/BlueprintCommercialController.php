@@ -65,11 +65,6 @@ class BlueprintCommercialController extends Controller
     {
         $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
 
-        $existingContract = $blueprint->getContractDocument();
-        if ($existingContract && ($blueprint->isContractSigned() || $blueprint->isDpConfirmed())) {
-            return redirect()->route('document.sign', ['document' => $existingContract->id]);
-        }
-
         // Ensure PRD with itemized estimation is populated
         if (empty($blueprint->prd_content) || ! isset($blueprint->prd_content['itemized_cost_breakdown'])) {
             $blueprint->generateAndSavePrd();
@@ -79,6 +74,17 @@ class BlueprintCommercialController extends Controller
         $tier = request('tier', 'standard');
         $matchedTier = PrdGeneratorService::resolveVelocityTier($blueprint, $tier);
         $contractAmount = (float) $matchedTier['contract_amount'];
+        $retailCredit = $blueprint->getPaidRetailAmount();
+        $rawDp = (float) round($contractAmount * 0.50);
+        $dpAmount = max(0, $rawDp - $retailCredit);
+
+        $isUpgradeFromRetail = $blueprint->hasPaidRetailLicense();
+        $existingContract = $blueprint->getContractDocument();
+
+        // If existing contract is already signed for this EXACT amount and tier, redirect directly to signed view
+        if ($existingContract && $existingContract->status === 'signed' && (float) $existingContract->contract_amount === $contractAmount && (float) $existingContract->dp_amount === $dpAmount) {
+            return redirect()->route('document.sign', ['document' => $existingContract->id]);
+        }
 
         // Check if voucher applied
         $voucherCode = strtoupper(trim((string) request('voucher', request('voucher_code', ''))));
@@ -89,22 +95,38 @@ class BlueprintCommercialController extends Controller
                 $appliedVoucher = $voucher;
                 if ($voucher->discount_type === 'free_bypass' || ($voucher->discount_type === 'percent' && (float) $voucher->discount_value >= 100)) {
                     $contractAmount = 0.00;
+                    $dpAmount = 0.00;
                 } elseif ($voucher->discount_type === 'percent') {
                     $contractAmount = max(0, $contractAmount - round($contractAmount * ((float) $voucher->discount_value / 100)));
+                    $dpAmount = max(0, round($contractAmount * 0.50) - $retailCredit);
                 } elseif ($voucher->discount_type === 'fixed') {
                     $contractAmount = max(0, $contractAmount - (float) $voucher->discount_value);
+                    $dpAmount = max(0, round($contractAmount * 0.50) - $retailCredit);
                 }
             }
         }
 
-        $dpAmount = (float) round($contractAmount * 0.50);
-
         $overrides = [
             'contract_amount' => $contractAmount,
             'dp_amount' => $dpAmount,
+            'status' => 'pending_signature',
+            'signed_at' => null,
+            'signer_ip_address' => null,
+            'digital_signature_image' => null,
+            'document_hash' => null,
+            'title' => 'Perjanjian Kerja Sama Turnkey Studio - ' . ($blueprint->nama_bisnis ?: $blueprint->client_name) . ' (' . ($matchedTier['name'] ?? 'Velocity') . ')',
         ];
         if ($appliedVoucher) {
             $overrides['voucher_code'] = $appliedVoucher->code;
+        }
+
+        // Reset signed agreement on blueprint if upgrading to turnkey studio
+        if ($isUpgradeFromRetail && ! $blueprint->isDpConfirmed()) {
+            $blueprint->update([
+                'signed_agreement' => false,
+                'signed_at' => null,
+                'document_sha256' => null,
+            ]);
         }
 
         $document = $blueprint->documents()->where('document_type', 'contract')->first();
@@ -112,8 +134,14 @@ class BlueprintCommercialController extends Controller
             $document = $blueprint->convertToDigitalContract($overrides);
         } else {
             $document->update([
+                'title' => $overrides['title'],
+                'status' => 'pending_signature',
                 'contract_amount' => $overrides['contract_amount'],
                 'dp_amount' => $overrides['dp_amount'],
+                'signed_at' => null,
+                'signer_ip_address' => null,
+                'digital_signature_image' => null,
+                'document_hash' => null,
             ]);
         }
 
@@ -173,13 +201,15 @@ class BlueprintCommercialController extends Controller
             }
         }
 
+        $retailCredit = (int) $blueprint->getPaidRetailAmount();
         $finalContractAmount = max(0, $contractAmount - $discountAmount);
-        $finalDpAmount = (int) round($finalContractAmount * 0.50);
+        $rawDpAmount = (int) round($finalContractAmount * 0.50);
+        $finalDpAmount = max(0, $rawDpAmount - $retailCredit);
 
         if ($finalDpAmount <= 0) {
             return response()->json([
                 'success' => false,
-                'message' => 'Voucher ini memberikan akses 100% Gratis (Rp 0). Silakan gunakan tombol Klaim Voucher Pelayanan untuk mengaktifkan proyek tanpa pembayaran.',
+                'message' => 'Tagihan DP telah 100% tertutupi oleh kredit lisensi retail atau voucher. Silakan hubungi admin atau tanda tangani kontrak untuk konfirmasi.',
             ], 400);
         }
 
@@ -187,7 +217,9 @@ class BlueprintCommercialController extends Controller
         $orderId = 'NPRO-DP-'.$blueprint->id.'-'.time();
 
         $itemName = 'DP (50%) - '.($blueprint->nama_bisnis ?: 'Proyek');
-        if ($voucher) {
+        if ($retailCredit > 0) {
+            $itemName .= ' (Kredit -Rp '.number_format($retailCredit, 0, ',', '.').')';
+        } elseif ($voucher) {
             $itemName .= ' (Disc '.$voucher->code.')';
         }
 

@@ -59,6 +59,14 @@
                 </button>
                 <button 
                     type="button" 
+                    @click="executionGuideTab = 'coolify'; showExecutionGuideModal = true"
+                    class="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black uppercase text-xs rounded-none border border-purple-400 transition cursor-pointer flex items-center gap-1.5 shadow-sm"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <span>COOLIFY PAAS GUIDE &rarr;</span>
+                </button>
+                <button 
+                    type="button" 
                     @click="openScaffoldModal()" 
                     class="px-3 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-white font-black uppercase text-xs rounded-none border border-zinc-900 dark:border-zinc-100 transition cursor-pointer flex items-center gap-1.5"
                 >

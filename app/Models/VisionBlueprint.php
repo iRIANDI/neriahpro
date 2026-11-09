@@ -7,6 +7,7 @@ use App\Services\MidtransSnapService;
 use App\Services\PrdGeneratorService;
 use App\Services\ProjectOsBlueprintCompilerService;
 use App\Support\PosEnterpriseGuaranteeCatalog;
+use App\Support\PricingRegistry;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -330,9 +331,15 @@ class VisionBlueprint extends Model
 
     /**
      * Auto-provision staging sandbox subdomain.
+     * Strictly reserved for dedicated turnkey studio projects with live container deployments.
+     * Never provisions fake URLs for self-service digital retail licenses.
      */
     public function provisionStagingUrl(): string
     {
+        if ($this->isRetailLicense() || $this->hasPaidRetailLicense()) {
+            return '';
+        }
+
         if (! empty($this->staging_url)) {
             return $this->staging_url;
         }
@@ -351,16 +358,102 @@ class VisionBlueprint extends Model
     }
 
     /**
+     * Get the paid amount for a retail software license (used for 100% Zero-Loss Turnkey upgrade credit).
+     */
+    public function getPaidRetailAmount(): float
+    {
+        if (! $this->hasPaidRetailLicense()) {
+            return 0.0;
+        }
+
+        // 1. Explicitly recorded amount in metadata
+        if (! empty($this->user_metadata['retail_paid_amount'])) {
+            return (float) $this->user_metadata['retail_paid_amount'];
+        }
+
+        // 2. Concrete transaction lookup
+        $orderId = $this->user_metadata['order_id'] ?? null;
+        if ($orderId) {
+            $tx = Transaction::where('midtrans_order_id', $orderId)
+                ->whereIn('status', ['settlement', 'capture', 'success'])
+                ->first();
+            if ($tx && (float) $tx->gross_amount > 0) {
+                return (float) $tx->gross_amount;
+            }
+        }
+
+        // 3. Resolve by retail package tier
+        if ($this->isUltimateRetail()) {
+            $default = (float) (PricingRegistry::PACKAGES[PricingRegistry::TIER_RETAIL_ULTIMATE]['default_price'] ?? 1490000);
+            $custom = (float) str_replace('.', '', CmsGlobalSetting::getVal('pricing_retail_ultimate_price', '1.490.000'));
+            return $custom > 0 ? $custom : $default;
+        }
+
+        $tier = strtolower((string) ($this->user_metadata['retail_tier'] ?? $this->user_metadata['package_tier'] ?? ''));
+        if (in_array($tier, ['retail_pro', 'pro'], true)) {
+            $default = (float) (PricingRegistry::PACKAGES[PricingRegistry::TIER_RETAIL_PRO]['default_price'] ?? 399000);
+            $custom = (float) str_replace('.', '', CmsGlobalSetting::getVal('pricing_retail_pro_price', '399.000'));
+            return $custom > 0 ? $custom : $default;
+        }
+
+        if (in_array($tier, ['retail_lite', 'lite'], true)) {
+            $default = (float) (PricingRegistry::PACKAGES[PricingRegistry::TIER_RETAIL_LITE]['default_price'] ?? 99000);
+            $custom = (float) str_replace('.', '', CmsGlobalSetting::getVal('pricing_retail_lite_price', '99.000'));
+            return $custom > 0 ? $custom : $default;
+        }
+
+        // Fallback matching slug pattern
+        if (str_contains(strtolower($this->slug ?? ''), '-retail-ultimate')) {
+            return 1490000.0;
+        }
+
+        return 0.0;
+    }
+
+    /**
      * Check if DP payment has been confirmed, settled, or granted for this blueprint.
      */
     public function isDpConfirmed(): bool
     {
-        // 1. Free grant voucher bypass
+        // 1. Digital Retail License is self-service (Koding Mandiri), NOT a confirmed Turnkey Studio DP!
+        // When viewed in Studio mode or upgrading, DP is only confirmed if an actual Studio transaction exists.
+        if ($this->hasPaidRetailLicense()) {
+            $hasStudioTx = Transaction::whereIn('status', ['settlement', 'capture', 'success'])
+                ->where(function ($q) {
+                    $q->where('midtrans_order_id', 'LIKE', 'NPRO-DP-'.$this->id.'-%')
+                        ->orWhere('midtrans_order_id', 'LIKE', 'NP-BP-'.$this->id.'-%');
+                })
+                ->exists();
+
+            if ($hasStudioTx) {
+                return true;
+            }
+
+            $docOrderIds = $this->documents()
+                ->where('document_type', 'contract')
+                ->whereNotNull('midtrans_order_id')
+                ->pluck('midtrans_order_id')
+                ->filter()
+                ->toArray();
+
+            if (! empty($docOrderIds)) {
+                $hasDocTx = Transaction::whereIn('midtrans_order_id', $docOrderIds)
+                    ->whereIn('status', ['settlement', 'capture', 'success'])
+                    ->exists();
+                if ($hasDocTx) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // 2. Free grant voucher bypass (strictly for non-retail)
         if ($this->is_free_grant) {
             return true;
         }
 
-        // 2. Active project statuses indicating DP has been settled/verified
+        // 3. Active project statuses indicating DP has been settled/verified
         $confirmedStatuses = [
             'In Development (DP Paid)',
             'In Development (Free Grant)',
@@ -369,11 +462,6 @@ class VisionBlueprint extends Model
             'In Review',
         ];
         if (in_array($this->project_status, $confirmedStatuses, true)) {
-            return true;
-        }
-
-        // 3. Staging sandbox already provisioned with signed agreement
-        if (! empty($this->staging_url) && $this->signed_agreement) {
             return true;
         }
 
@@ -413,6 +501,19 @@ class VisionBlueprint extends Model
      */
     public function isContractSigned(): bool
     {
+        // For retail license upgrading to turnkey studio, require an actual signed contract with contract_amount > 0
+        if ($this->hasPaidRetailLicense()) {
+            try {
+                if ($this->exists && $this->documents()->where('document_type', 'contract')->where('status', 'signed')->where('contract_amount', '>', 0)->exists()) {
+                    return true;
+                }
+            } catch (\Throwable $e) {
+                // Safe fallback
+            }
+
+            return false;
+        }
+
         if ($this->signed_agreement) {
             return true;
         }

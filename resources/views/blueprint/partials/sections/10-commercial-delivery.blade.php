@@ -69,8 +69,8 @@
 
                 <div x-show="!sectionCollapses['section-10']" x-transition class="accordion-body">
 
-                <!-- Staging Sandbox Environment Banner (If Provisioned) -->
-                @if($blueprint->staging_url)
+                <!-- Staging Sandbox Environment Banner (Strictly for Genuine Dedicated Studio Turnkey with Live Deployments, NEVER on Retail Licenses) -->
+                @if($blueprint->staging_url && ! $hasPaidRetail && $isStudioExplicit)
                     <div class="mb-6 p-4 sm:p-5 bg-emerald-500/10 dark:bg-zinc-950 border border-emerald-500/40 text-zinc-800 dark:text-zinc-200">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div class="space-y-1">
@@ -505,51 +505,72 @@
                         </p>
                     </div>
                     <div class="text-left sm:text-right font-mono">
-                        <span class="text-zinc-500 dark:text-zinc-400 text-xs block">
-                            @if($blueprint->isDpConfirmed())
-                                TERMIN TERVERIFIKASI:
-                            @elseif(($contractDoc = $contractDocument ?? $blueprint->getContractDocument()) && $contractDoc->status === 'signed' && (float)$contractDoc->contract_amount > 0)
-                                TERMIN KONTRAK SAH:
-                            @else
-                                TERMIN TERPILIH:
-                            @endif
-                            <span class="text-zinc-900 dark:text-white font-bold" x-text="tierAmounts[selectedTier]?.name || 'Standard Velocity'"></span>
-                        </span>
-                        @if($blueprint->is_free_grant)
-                            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-block mb-1">
-                                ✓ SUBSIDI KASIH (RP 0)
-                            </span>
-                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">RP 0 (PELAYANAN KASIH)</span>
-                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">VOUCHER: {{ $blueprint->voucher_code }}</span>
-                        @elseif($blueprint->isDpConfirmed())
-                            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1 mb-1">
-                                <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                                <span>DP TERKONFIRMASI // SPRINT AKTIF</span>
-                            </span>
+                        @if($hasPaidRetail)
                             @php
-                                $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
-                                $paidDp = $contractDoc?->dp_amount;
+                                $paidRetailAmount = $blueprint->getPaidRetailAmount();
                             @endphp
-                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">
-                                {{ $paidDp ? 'Rp ' . number_format($paidDp, 0, ',', '.') : 'LUNAS (DP 50%)' }}
-                            </span>
-                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">
-                                {{ $contractDoc?->contract_amount ? 'Total Kontrak: Rp ' . number_format($contractDoc->contract_amount, 0, ',', '.') : 'Kontrak Terkunci' }} &bull; SPRINT 1 IN PROGRESS
-                            </span>
-                        @elseif(($contractDoc = $contractDocument ?? $blueprint->getContractDocument()) && $contractDoc->status === 'signed' && (float)$contractDoc->contract_amount > 0)
-                            <span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1 mb-1">
-                                <svg class="w-3 h-3 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                <span>KONTRAK TERTANDATANGANI // MENUNGGU DP</span>
-                            </span>
-                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">
-                                DP (50%): Rp {{ number_format($contractDoc->dp_amount ?: ($contractDoc->contract_amount * 0.50), 0, ',', '.') }}
-                            </span>
-                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">
-                                Total Kontrak: Rp {{ number_format($contractDoc->contract_amount, 0, ',', '.') }} &bull; KONTRAK SAH MENGIKAT
-                            </span>
+                            <div class="space-y-1">
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1">
+                                    <span>🚀 UPGRADE KE TURNKEY // KREDIT LISENSI RETAIL -Rp {{ number_format($paidRetailAmount, 0, ',', '.') }}</span>
+                                </span>
+                                <div class="text-xl font-black text-emerald-700 dark:text-emerald-400">
+                                    <span x-text="'Sisa Tagihan DP: Rp ' + Math.max(0, (tierAmounts[selectedTier]?.dp || 0) - {{ (int)$paidRetailAmount }}).toLocaleString('id-ID')"></span>
+                                </div>
+                                <div class="text-[10px] text-zinc-500 dark:text-zinc-400 flex flex-wrap justify-end gap-x-2">
+                                    <span x-text="'Base DP (50%): Rp ' + (tierAmounts[selectedTier]?.dp || 0).toLocaleString('id-ID')"></span>
+                                    <span>&bull;</span>
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-bold">Kredit Retail: -Rp {{ number_format($paidRetailAmount, 0, ',', '.') }}</span>
+                                    <span>&bull;</span>
+                                    <span x-text="'Total Kontrak: Rp ' + (tierAmounts[selectedTier]?.contract || 0).toLocaleString('id-ID')"></span>
+                                </div>
+                            </div>
                         @else
-                            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400" x-text="'DP (50%): Rp ' + (tierAmounts[selectedTier]?.dp || 0).toLocaleString('id-ID')"></span>
-                            <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block" x-text="'Total Kontrak: Rp ' + (tierAmounts[selectedTier]?.contract || 0).toLocaleString('id-ID')"></span>
+                            <span class="text-zinc-500 dark:text-zinc-400 text-xs block">
+                                @if($blueprint->isDpConfirmed())
+                                    TERMIN TERVERIFIKASI:
+                                @elseif(($contractDoc = $contractDocument ?? $blueprint->getContractDocument()) && $contractDoc->status === 'signed' && (float)$contractDoc->contract_amount > 0)
+                                    TERMIN KONTRAK SAH:
+                                @else
+                                    TERMIN TERPILIH:
+                                @endif
+                                <span class="text-zinc-900 dark:text-white font-bold" x-text="tierAmounts[selectedTier]?.name || 'Standard Velocity'"></span>
+                            </span>
+                            @if($blueprint->is_free_grant)
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-block mb-1">
+                                    ✓ SUBSIDI KASIH (RP 0)
+                                </span>
+                                <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">RP 0 (PELAYANAN KASIH)</span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">VOUCHER: {{ $blueprint->voucher_code }}</span>
+                            @elseif($blueprint->isDpConfirmed())
+                                <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1 mb-1">
+                                    <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                    <span>DP TERKONFIRMASI // SPRINT AKTIF</span>
+                                </span>
+                                @php
+                                    $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
+                                    $paidDp = $contractDoc?->dp_amount;
+                                @endphp
+                                <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">
+                                    {{ $paidDp ? 'Rp ' . number_format($paidDp, 0, ',', '.') : 'LUNAS (DP 50%)' }}
+                                </span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">
+                                    {{ $contractDoc?->contract_amount ? 'Total Kontrak: Rp ' . number_format($contractDoc->contract_amount, 0, ',', '.') : 'Kontrak Terkunci' }} &bull; SPRINT 1 IN PROGRESS
+                                </span>
+                            @elseif(($contractDoc = $contractDocument ?? $blueprint->getContractDocument()) && $contractDoc->status === 'signed' && (float)$contractDoc->contract_amount > 0)
+                                <span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 text-[10px] font-bold uppercase inline-flex items-center gap-1 mb-1">
+                                    <svg class="w-3 h-3 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span>KONTRAK TERTANDATANGANI // MENUNGGU DP</span>
+                                </span>
+                                <span class="text-xl font-black text-emerald-600 dark:text-emerald-400 block">
+                                    DP (50%): Rp {{ number_format($contractDoc->dp_amount ?: ($contractDoc->contract_amount * 0.50), 0, ',', '.') }}
+                                </span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block">
+                                    Total Kontrak: Rp {{ number_format($contractDoc->contract_amount, 0, ',', '.') }} &bull; KONTRAK SAH MENGIKAT
+                                </span>
+                            @else
+                                <span class="text-xl font-black text-emerald-600 dark:text-emerald-400" x-text="'DP (50%): Rp ' + (tierAmounts[selectedTier]?.dp || 0).toLocaleString('id-ID')"></span>
+                                <span class="text-[10px] text-zinc-500 dark:text-zinc-400 block" x-text="'Total Kontrak: Rp ' + (tierAmounts[selectedTier]?.contract || 0).toLocaleString('id-ID')"></span>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -567,7 +588,7 @@
                                     <svg class="w-3 h-3 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                                     SCOPE FROZEN &amp; DP CONFIRMED
                                 </span>
-                            @elseif($blueprint->isContractSigned())
+                            @elseif($blueprint->isContractSigned() && ! $hasPaidRetail)
                                 <span class="px-2 py-0.5 bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 text-[10px] font-bold inline-flex items-center gap-1">
                                     <svg class="w-3 h-3 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     CONTRACT SIGNED &amp; SCOPE LOCKED
@@ -599,7 +620,7 @@
                         </code>
                         @php
                             $contractDoc = $contractDocument ?? $blueprint->getContractDocument();
-                            $hasAudit = ($blueprint->signed_agreement && $blueprint->signed_at) || ($contractDoc && $contractDoc->signed_at);
+                            $hasAudit = ! $hasPaidRetail && (($blueprint->signed_agreement && $blueprint->signed_at) || ($contractDoc && $contractDoc->signed_at && (float)$contractDoc->contract_amount > 0));
                         @endphp
                         @if($hasAudit)
                             <div class="mt-2 pt-2 border-t border-zinc-200 dark:border-zinc-800/80 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-zinc-600 dark:text-zinc-400">
@@ -619,7 +640,7 @@
                 </div>
 
                 <!-- Action State Engine: Active Sprint Cockpit vs Sign & Pay Actions -->
-                @if($blueprint->isDpConfirmed())
+                @if($blueprint->isDpConfirmed() && ! $hasPaidRetail)
                     <!-- PROYEK SUDAH BAYAR DP / AKTIF: Tampilkan Cockpit Kontrak & Status Sprint (Bukan Tombol Bayar / Cart) -->
                     <div class="p-5 bg-emerald-500/10 dark:bg-emerald-950/20 border-2 border-emerald-500/50 rounded-none space-y-4">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -697,7 +718,7 @@
                             </button>
                         </div>
                     </div>
-                @elseif($blueprint->isContractSigned())
+                @elseif($blueprint->isContractSigned() && ! $hasPaidRetail)
                     <!-- KONTRAK SUDAH DITANDATANGANI TAPI BELUM BAYAR DP -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 no-print">
                         @php
@@ -743,9 +764,13 @@
                             <input type="hidden" name="tier" :value="selectedTier">
                             <button 
                                 type="submit"
-                                class="w-full h-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none transition flex items-center justify-center gap-2 cursor-pointer"
+                                class="w-full h-full bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-wider py-4 px-4 text-center rounded-none transition flex items-center justify-center gap-2 cursor-pointer shadow-md"
                             >
-                                <span>Tanda Tangani Kontrak &amp; Kunci Scope</span>
+                                @if($hasPaidRetail)
+                                    <span>Tanda Tangani Kontrak Turnkey (Potongan Kredit Retail Aktif) &rarr;</span>
+                                @else
+                                    <span>Tanda Tangani Kontrak &amp; Kunci Scope</span>
+                                @endif
                                 <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                             </button>
                         </form>

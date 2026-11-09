@@ -93,6 +93,14 @@
             </button>
             <button 
                 type="button" 
+                @click="executionGuideTab = 'coolify'" 
+                :class="executionGuideTab === 'coolify' ? 'bg-purple-600 text-white font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" 
+                class="px-3 py-1.5 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 rounded-none"
+            >
+                <span>🚀 Coolify PaaS Setup</span>
+            </button>
+            <button 
+                type="button" 
                 @click="executionGuideTab = 'sprints'" 
                 :class="executionGuideTab === 'sprints' ? 'bg-amber-500 text-black font-black' : 'bg-zinc-900 text-zinc-400 hover:text-white'" 
                 class="px-3 py-1.5 transition cursor-pointer whitespace-nowrap flex items-center gap-1.5 rounded-none"
@@ -618,7 +626,215 @@ curl http://localhost:8000/api/health</pre>
                 </div>
             </div>
 
-            <!-- TAB 5: URUTAN 5 SPRINT -->
+            <!-- TAB 5: COOLIFY PAAS SETUP (ONE-STOP VPS PRODUCTION SETUP) -->
+            <div x-show="executionGuideTab === 'coolify'" class="space-y-4">
+                <!-- Coolify Header Banner -->
+                <div class="p-3.5 bg-gradient-to-r from-purple-950/60 to-zinc-950 border border-purple-500/40 text-zinc-200">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-2 h-2 bg-purple-400 rounded-none animate-ping"></span>
+                        <span class="font-mono font-bold text-xs uppercase text-purple-300">
+                            <span x-show="locale === 'en'">🚀 ONE-STOP COOLIFY SELF-HOSTED PAAS PLAYBOOK</span>
+                            <span x-show="locale !== 'en'">🚀 PANDUAN LENGKAP SETUP &amp; DEPLOYMENT COOLIFY PAAS</span>
+                        </span>
+                        <span class="px-2 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/40 font-mono text-[9px] font-bold">ZERO-DEV-OPS</span>
+                    </div>
+                    <p class="font-sans leading-relaxed text-xs text-zinc-300">
+                        <span x-show="locale === 'en'">Coolify is an open-source, self-hosted Heroku/Vercel/Render alternative. This starter kit includes a production-grade <code>docker-compose.coolify.yml</code> file pre-configured with Traefik auto-SSL, PostgreSQL 16 Strict ULID, and Redis 7.</span>
+                        <span x-show="locale !== 'en'">Coolify adalah platform PaaS mandiri (alternatif Heroku/Vercel) berbasis Docker &amp; Traefik. Starter kit ini sudah menyertakan berkas <code>docker-compose.coolify.yml</code> siap pakai lengkap dengan otomatisasi SSL Let's Encrypt, PostgreSQL 16 Strict ULID, dan Redis 7.</span>
+                    </p>
+                </div>
+
+                <!-- Complete Tech Stack on Coolify (Grid of Components) -->
+                <div class="space-y-2">
+                    <div class="font-mono font-bold text-xs uppercase text-zinc-300 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-purple-400"></span>
+                        <span x-show="locale === 'en'">1. PRODUCTION TECH STACK ON COOLIFY (ISOLATED CONTAINERS):</span>
+                        <span x-show="locale !== 'en'">1. ARSITEKTUR TECH STACK PRODUKSI DI COOLIFY (CONTAINER TERISOLASI):</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                        <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
+                            <div class="text-[11px] font-bold text-purple-300 font-mono flex items-center justify-between">
+                                <span>🌐 WEB SERVER</span>
+                                <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">HTTP/2</span>
+                            </div>
+                            <div class="text-xs font-bold text-white">Nginx Alpine</div>
+                            <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
+                                Reverse proxy berkinerja tinggi, gzip/brotli compression, asset caching, dan mitigasi DDoS edge.
+                            </p>
+                        </div>
+                        <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
+                            <div class="text-[11px] font-bold text-emerald-400 font-mono flex items-center justify-between">
+                                <span>⚡ APP RUNTIME</span>
+                                <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">PHP 8.4+</span>
+                            </div>
+                            <div class="text-xs font-bold text-white">Laravel 13 (PHP-FPM)</div>
+                            <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
+                                OPcache + JIT aktif, Livewire 4, Filament v5 Enterprise, ekstensi <code>pdo_pgsql</code>, <code>redis</code>, <code>pcntl</code>.
+                            </p>
+                        </div>
+                        <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
+                            <div class="text-[11px] font-bold text-sky-400 font-mono flex items-center justify-between">
+                                <span>🗄️ DATABASE</span>
+                                <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">PG 16</span>
+                            </div>
+                            <div class="text-xs font-bold text-white">PostgreSQL 16 ULID</div>
+                            <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
+                                Primary Key ULID 26 karakter, Keyset Cursor Pagination O(1), volume terisolasi anti-data loss.
+                            </p>
+                        </div>
+                        <div class="p-3 bg-zinc-900 border border-zinc-800 space-y-1">
+                            <div class="text-[11px] font-bold text-rose-400 font-mono flex items-center justify-between">
+                                <span>🚀 CACHE &amp; QUEUE</span>
+                                <span class="text-[9px] px-1 bg-zinc-800 text-zinc-400">IN-MEMORY</span>
+                            </div>
+                            <div class="text-xs font-bold text-white">Redis 7 Alpine</div>
+                            <p class="text-[11px] text-zinc-400 font-sans leading-relaxed">
+                                Penyimpanan session kilat, cache tag dinamis, dan pemrosesan antrean asinkron (background jobs).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step-by-Step Playbook -->
+                <div class="space-y-3 pt-2">
+                    <div class="font-mono font-bold text-xs uppercase text-zinc-300 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-purple-400"></span>
+                        <span x-show="locale === 'en'">2. STEP-BY-STEP COOLIFY INSTALLATION &amp; DEPLOYMENT:</span>
+                        <span x-show="locale !== 'en'">2. LANGKAH-LANGKAH INSTALASI VPS &amp; DEPLOYMENT DI COOLIFY:</span>
+                    </div>
+
+                    <!-- Step 1: Install Coolify on VPS -->
+                    <div class="p-3.5 bg-zinc-900 border border-zinc-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-5 h-5 bg-purple-600 text-white font-mono font-bold text-xs flex items-center justify-center">1</span>
+                                <span class="font-bold text-white uppercase text-xs">
+                                    <span x-show="locale === 'en'">Install Coolify on VPS (Ubuntu 22.04 / 24.04 / Debian 12)</span>
+                                    <span x-show="locale !== 'en'">Install Coolify di Server VPS (Ubuntu 22.04 / 24.04 / Debian 12)</span>
+                                </span>
+                            </div>
+                            <button 
+                                type="button" 
+                                @click="navigator.clipboard.writeText('curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash'); if(window.showToast) window.showToast({ type: 'success', title: 'PERINTAH DISALIN', message: 'Perintah install Coolify telah disalin ke clipboard.' })"
+                                class="px-2 py-0.5 bg-purple-600 hover:bg-purple-500 text-white font-mono font-bold text-[10px] uppercase rounded-none cursor-pointer flex items-center gap-1"
+                            >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                <span>COPY</span>
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-zinc-400 font-sans">
+                            <span x-show="locale === 'en'">Login to your VPS via SSH as root (<code>ssh root@ip-vps</code>), then run this official one-liner script:</span>
+                            <span x-show="locale !== 'en'">Login ke terminal VPS Anda sebagai root (<code>ssh root@ip-vps</code>), lalu jalankan perintah instalasi resmi Coolify:</span>
+                        </p>
+                        <pre class="p-2.5 bg-black border border-zinc-800 text-purple-300 font-mono text-xs select-all overflow-x-auto">curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash</pre>
+                        <p class="text-[10px] text-zinc-500 font-mono">
+                            &bull; Port VPS wajib terbuka: <code>22</code> (SSH), <code>80</code> (HTTP), <code>443</code> (HTTPS), <code>8000</code> (Coolify Dashboard awal).
+                        </p>
+                    </div>
+
+                    <!-- Step 2: Access Dashboard & Add Git Source -->
+                    <div class="p-3.5 bg-zinc-900 border border-zinc-800 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 bg-purple-600 text-white font-mono font-bold text-xs flex items-center justify-center">2</span>
+                            <span class="font-bold text-white uppercase text-xs">
+                                <span x-show="locale === 'en'">Access Coolify Dashboard &amp; Connect Git Repository</span>
+                                <span x-show="locale !== 'en'">Buka Dashboard Coolify &amp; Hubungkan Repositori Git</span>
+                            </span>
+                        </div>
+                        <div class="text-[11px] text-zinc-400 font-sans space-y-1 leading-relaxed">
+                            <div>&bull; Buka browser ke <code>http://&lt;IP-VPS-ANDA&gt;:8000</code> dan buat akun admin pertama.</div>
+                            <div>&bull; Masuk ke menu <strong>Sources</strong> &rarr; Hubungkan akun <strong>GitHub / GitLab</strong> tempat Anda menyimpan source code starter kit ini.</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Deploy via docker-compose.coolify.yml -->
+                    <div class="p-3.5 bg-zinc-900 border border-zinc-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-5 h-5 bg-purple-600 text-white font-mono font-bold text-xs flex items-center justify-center">3</span>
+                                <span class="font-bold text-white uppercase text-xs">
+                                    <span x-show="locale === 'en'">Create New Resource &rarr; Docker Compose</span>
+                                    <span x-show="locale !== 'en'">Buat Resource Baru &rarr; Pilih Docker Compose</span>
+                                </span>
+                            </div>
+                            <span class="text-[10px] font-mono text-emerald-400 font-bold">docker-compose.coolify.yml</span>
+                        </div>
+                        <div class="text-[11px] text-zinc-400 font-sans space-y-1 leading-relaxed">
+                            <div>1. Di Coolify, klik <strong>Projects</strong> &rarr; <strong>Production</strong> &rarr; <strong>+ New Resource</strong> &rarr; <strong>Docker Compose</strong>.</div>
+                            <div>2. Pilih Git repository proyek Anda dan branch target (misal: <code>main</code>).</div>
+                            <div>3. Pada input <strong>Docker Compose File</strong>, ketik: <code>docker-compose.coolify.yml</code> (berkas ini sudah tersedia di root starter kit).</div>
+                            <div>4. Di kolom <strong>Domains</strong>, masukkan domain Anda: <code>https://app.domainanda.com</code>. Traefik otomatis menerbitkan SSL Let's Encrypt!</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Environment Variables Template -->
+                    <div class="p-3.5 bg-zinc-900 border border-zinc-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="w-5 h-5 bg-purple-600 text-white font-mono font-bold text-xs flex items-center justify-center">4</span>
+                                <span class="font-bold text-white uppercase text-xs">
+                                    <span x-show="locale === 'en'">Copy Environment Variables to Coolify Tab:</span>
+                                    <span x-show="locale !== 'en'">Salin Variabel Environment ke Tab Coolify:</span>
+                                </span>
+                            </div>
+                            <button 
+                                type="button" 
+                                @click="
+                                    const envText = `APP_NAME=\"${bizTitle}\"\nAPP_ENV=production\nAPP_KEY=base64:GENERATE_KEY_VIA_ARTISAN\nAPP_DEBUG=false\nAPP_URL=https://app.domainanda.com\nCOOLIFY_URL=https://app.domainanda.com\n\nDB_CONNECTION=pgsql\nDB_HOST=postgres\nDB_PORT=5432\nDB_DATABASE=${(workspaceDir || '{{ $shortSlugVal }}')}_db\nDB_USERNAME=${(workspaceDir || '{{ $shortSlugVal }}')}_user\nDB_PASSWORD=GantiDenganPasswordSangatKuat123!\n\nCACHE_STORE=redis\nSESSION_DRIVER=redis\nQUEUE_CONNECTION=redis\nREDIS_HOST=redis\nREDIS_PORT=6379\n\nAI_THREAT_SHIELD_ENABLED=true`;
+                                    navigator.clipboard.writeText(envText);
+                                    if(window.showToast) window.showToast({ type: 'success', title: 'ENV COOLIFY DISALIN', message: 'Environment variables siap dipaste ke dashboard Coolify.' });
+                                "
+                                class="px-2 py-0.5 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-[10px] uppercase rounded-none cursor-pointer flex items-center gap-1"
+                            >
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                <span>COPY ENV BLOCK</span>
+                            </button>
+                        </div>
+                        <pre class="p-3 bg-black border border-zinc-800 text-emerald-300 font-mono text-xs select-all overflow-x-auto leading-relaxed whitespace-pre">APP_NAME="{{ $bizTitle }}"
+APP_ENV=production
+APP_KEY=base64:GENERATE_KEY_VIA_ARTISAN
+APP_DEBUG=false
+APP_URL=https://app.domainanda.com
+
+DB_CONNECTION=pgsql
+DB_HOST=postgres
+DB_PORT=5432
+DB_DATABASE=<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_db`">{{ $shortSlugVal }}_db</span>
+DB_USERNAME=<span x-text="`${workspaceDir || '{{ $shortSlugVal }}'}_user`">{{ $shortSlugVal }}_user</span>
+DB_PASSWORD=GantiDenganPasswordSangatKuat123!
+
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+AI_THREAT_SHIELD_ENABLED=true</pre>
+                    </div>
+
+                    <!-- Step 5: Post-Deployment Verification -->
+                    <div class="p-3.5 bg-zinc-900 border border-zinc-800 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 bg-purple-600 text-white font-mono font-bold text-xs flex items-center justify-center">5</span>
+                            <span class="font-bold text-white uppercase text-xs">
+                                <span x-show="locale === 'en'">Post-Deploy Migration &amp; Health Check</span>
+                                <span x-show="locale !== 'en'">Verifikasi Migrasi Database &amp; Health Probe</span>
+                            </span>
+                        </div>
+                        <div class="text-[11px] text-zinc-400 font-sans space-y-1.5 leading-relaxed">
+                            <p>
+                                Setelah proses <strong>Deploy</strong> di Coolify selesai, buka tab <strong>Terminal</strong> atau jalankan di container <code>app</code>:
+                            </p>
+                            <pre class="p-2 bg-black border border-zinc-800 text-purple-300 font-mono text-xs select-all overflow-x-auto">php artisan migrate --force && php artisan db:seed --class=SyntheticDataSeeder --force && php artisan storage:link</pre>
+                            <p class="text-zinc-500 font-mono text-[10px]">
+                                &bull; Endpoint Health Check: <code>https://app.domainanda.com/api/health</code> (status: OK).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 6: URUTAN 5 SPRINT -->
             <div x-show="executionGuideTab === 'sprints'" class="space-y-3">
                 <p class="text-xs text-zinc-400 font-sans leading-relaxed">
                     <span x-show="locale === 'en'">The following execution sequence is the industry standard to minimize deviation and guarantee zero technical debt:</span>

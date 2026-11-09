@@ -88,9 +88,17 @@
     $proPrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_pro_price', '490.000');
     $ultimatePrice = \App\Models\CmsGlobalSetting::getVal('pricing_retail_ultimate_price', '1.490.000');
 
-    // Determine explicit track context
-    $isStudioExplicit = (! $isRetailLicense) && (($blueprint->user_metadata['track'] ?? '') === 'studio' || request('track') === 'studio' || request('mode') === 'mitra' || $blueprint->project_status !== 'Retail License');
-    $isRetailExplicit = $isRetailLicense || ($blueprint->user_metadata['track'] ?? '') === 'retail' || request('track') === 'retail';
+    // Determine concrete retail status & explicit track context
+    $hasPaidRetail = ($isPurchased ?? false)
+        || $blueprint->project_status === 'Retail License'
+        || (method_exists($blueprint, 'hasPaidRetailLicense') && $blueprint->hasPaidRetailLicense())
+        || !empty($blueprint->user_metadata['paid'])
+        || !empty($blueprint->user_metadata['retail_tier'])
+        || !empty($blueprint->user_metadata['package_tier'])
+        || str_contains(strtolower($blueprint->slug ?? ''), '-retail-');
+
+    $isRetailExplicit = $hasPaidRetail || ($blueprint->user_metadata['track'] ?? '') === 'retail' || request('track') === 'retail';
+    $isStudioExplicit = (! $isRetailExplicit) && (($blueprint->user_metadata['track'] ?? '') === 'studio' || request('track') === 'studio' || request('mode') === 'mitra' || in_array($blueprint->project_status, ['Active Sprint', 'In Development (DP Paid)', 'Awaiting DP Payment', 'Completed & Fully Settled'], true));
 @endphp
 
                 @if($isStudioExplicit)
@@ -229,9 +237,22 @@
 
                     <!-- TRACK CONTENT A: JALUR MANDIRI RETAIL CARDS & INSTANT SNAP CHECKOUT -->
                     <div x-show="executionTrack === 'retail'" x-cloak class="space-y-6 pt-2">
-                        @if($blueprint->project_status === 'Retail License')
+                        @php
+                            $activeRetailTierSlug = $blueprint->user_metadata['retail_tier']
+                                ?? $blueprint->user_metadata['package_tier']
+                                ?? ($blueprint->isUltimateRetail() ? 'retail_ultimate' : 'retail_pro');
+
+                            $retailTierName = match(strtolower((string) $activeRetailTierSlug)) {
+                                'retail_lite', 'lite' => 'Tier 02 // Lite Specification',
+                                'retail_pro', 'pro' => 'Tier 03 // Pro Engineering Directives',
+                                'retail_ultimate', 'ultimate', 'agency_partner' => 'Tier 04 // Ultimate Software Factory OS',
+                                default => 'Lisensi Digital Retail (Self-Service)',
+                            };
+                        @endphp
+
+                        @if($hasPaidRetail)
                             <!-- RETAIL LICENSE ACTIVE -->
-                            <div class="p-5 bg-emerald-500/10 dark:bg-emerald-950/20 border-2 border-emerald-500/50 rounded-none space-y-4">
+                            <div class="p-5 bg-emerald-500/10 dark:bg-emerald-950/20 border-2 border-emerald-500 rounded-none space-y-4">
                                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                     <div class="flex items-center gap-3">
                                         <span class="w-10 h-10 bg-emerald-500 text-black flex items-center justify-center font-bold text-lg flex-shrink-0">
@@ -243,20 +264,25 @@
                                                 <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                                             </div>
                                             <h4 class="text-sm font-bold text-zinc-900 dark:text-white font-sans mt-0.5">
-                                                Lisensi Berhasil Diverifikasi
+                                                {{ $retailTierName }} &bull; Lisensi Resmi Terverifikasi
                                             </h4>
                                             <p class="text-xs text-zinc-600 dark:text-zinc-300 font-sans mt-0.5">
-                                                Pembayaran lisensi mandiri Anda telah sukses. Anda dapat mengunduh berkas lengkap di bawah ini, atau menuju portal pelanggan.
+                                                Pembayaran lisensi mandiri Anda telah sukses dan tercatat seumur hidup. Seluruh berkas arsitektur, DDL SQL Strict ULID, Docker container, dan starter kit repository siap diunduh langsung di bawah ini.
                                             </p>
                                         </div>
                                     </div>
+                                    <div class="shrink-0">
+                                        <span class="px-2.5 py-1 bg-emerald-500 text-black font-mono font-black text-xs uppercase tracking-wider">
+                                            LIFETIME ACCESS
+                                        </span>
+                                    </div>
                                 </div>
                                 
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-emerald-500/20 no-print">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-emerald-500/20 no-print">
                                     <button 
                                         type="button"
                                         @click.prevent="$dispatch('open-raw-md-warning', { action: 'download' })"
-                                        class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                                        class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 font-mono font-bold text-xs uppercase tracking-wider py-3 px-3 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
                                         title="Unduh File Asli Markdown (.MD) untuk AI Coding Agent"
                                     >
                                         <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -265,7 +291,7 @@
 
                                     <a 
                                         href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}"
-                                        class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/50 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                        class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/50 font-mono font-bold text-xs uppercase tracking-wider py-3 px-3 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
                                         title="Unduh .cursorrules / CLAUDE.md untuk AI Coding Agent"
                                     >
                                         <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
@@ -273,8 +299,17 @@
                                     </a>
 
                                     <a 
-                                        href="/customer/dashboard"
-                                        class="bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                        href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}"
+                                        class="bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-black text-xs uppercase tracking-wider py-3 px-3 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
+                                        title="Unduh Master Starter Kit ZIP Lengkap (Laravel 13, Filament v5, Docker)"
+                                    >
+                                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        <span>Unduh Starter Kit (.ZIP)</span>
+                                    </a>
+
+                                    <a 
+                                        href="/customer/dashboard#licenses"
+                                        class="bg-zinc-900 hover:bg-black dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-mono font-bold text-xs uppercase tracking-wider py-3 px-3 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
                                     >
                                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                         <span>Portal Klien</span>

@@ -98,12 +98,18 @@ class BlueprintViewController extends Controller
 
         $isEn = $this->resolveIsEn($blueprint);
 
-        // Auto-heal: If this is a Retail License (or has a retail tier / paid order) but is_published is false, publish it immediately!
-        if ($blueprint->isRetailLicense() && ! $blueprint->is_published) {
+        // Auto-heal Retail License: If the blueprint is designated as a retail license (by slug, metadata, or purchased status),
+        // ensure project_status is synchronized to 'Retail License' (unless it has advanced to a dedicated Studio sprint/contract status).
+        $isRetail = $blueprint->isRetailLicense() || $blueprint->hasPaidRetailLicense();
+        $isDedicatedStudio = in_array($blueprint->project_status, ['Active Sprint', 'In Development (DP Paid)', 'Completed & Fully Settled'], true);
+        if ($isRetail && ! $isDedicatedStudio && $blueprint->project_status !== 'Retail License') {
             $blueprint->update([
                 'is_published' => true,
                 'project_status' => 'Retail License',
             ]);
+            $blueprint->refresh();
+        } elseif ($isRetail && ! $blueprint->is_published) {
+            $blueprint->update(['is_published' => true]);
             $blueprint->refresh();
         }
 

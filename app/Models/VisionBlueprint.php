@@ -441,6 +441,51 @@ class VisionBlueprint extends Model
     }
 
     /**
+     * Check if this blueprint has a paid/verified retail license.
+     */
+    public function hasPaidRetailLicense(): bool
+    {
+        if ($this->project_status === 'Retail License') {
+            return true;
+        }
+
+        if (! empty($this->user_metadata['paid']) && ($this->user_metadata['track'] ?? '') !== 'studio') {
+            return true;
+        }
+
+        $orderId = $this->user_metadata['order_id'] ?? null;
+        if ($orderId) {
+            $hasTx = Transaction::where('midtrans_order_id', $orderId)
+                ->whereIn('status', ['settlement', 'capture', 'success'])
+                ->exists();
+            if ($hasTx) {
+                return true;
+            }
+        }
+
+        if (str_contains(strtolower($this->slug ?? ''), '-retail-') && ! empty($this->user_metadata['retail_tier'])) {
+            return true;
+        }
+
+        try {
+            $tier = app(\App\Services\Entitlement\BlueprintEntitlementGateService::class)->resolveUserTier(auth()->user(), $this->slug);
+            return in_array($tier, ['SINGLE_APP_PASS', 'PRO_RETAIL', 'AGENCY_PARTNER'], true);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Check if this blueprint is an Ultimate Software Factory OS Retail tier.
+     */
+    public function isUltimateRetail(): bool
+    {
+        $tier = strtolower((string) ($this->user_metadata['retail_tier'] ?? $this->user_metadata['package_tier'] ?? ''));
+        return in_array($tier, ['retail_ultimate', 'ultimate', 'agency_partner'], true)
+            || str_contains(strtolower($this->slug ?? ''), '-retail-ultimate');
+    }
+
+    /**
      * Check whether blueprint is an active paid/purchased package (Retail Paid / Mitra DP Confirmed)
      * with zero-leak server-side gate against free demo/spark sandboxes.
      */

@@ -901,6 +901,7 @@ class BlueprintCommercialController extends Controller
                 'display_package' => $displayPackage,
                 'gross_amount' => $finalAmount,
                 'voucher_code' => $voucher?->code,
+                'blueprint_slug' => $blueprintSlug,
                 'created_at' => now()->toIso8601String(),
             ], now()->addDays(3));
 
@@ -921,9 +922,26 @@ class BlueprintCommercialController extends Controller
                     'display_package' => $displayPackage,
                     'is_retail' => $isRetail,
                     'lead_id' => $lead->id,
+                    'blueprint_slug' => $blueprintSlug,
                     'snap_token' => $snapResponse['token'],
                 ],
             ]);
+
+            // Link pending order to existing blueprint to guarantee zero orphan blueprints
+            if ($blueprintSlug) {
+                try {
+                    $existingBp = VisionBlueprint::where('slug', $blueprintSlug)->first();
+                    if ($existingBp) {
+                        $meta = $existingBp->user_metadata ?? [];
+                        $meta['pending_order_id'] = $orderId;
+                        $meta['pending_package_tier'] = $packageName;
+                        $meta['selected_track'] = $isRetail ? 'retail' : 'studio';
+                        $existingBp->update(['user_metadata' => $meta]);
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Failed to link pending order {$orderId} to blueprint {$blueprintSlug}: " . $e->getMessage());
+                }
+            }
         }
 
         // Generate pre-filled WhatsApp direct message as optional secondary support

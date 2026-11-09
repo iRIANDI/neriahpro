@@ -363,8 +363,19 @@ class MidtransWebhookController extends Controller
                     $user->assignRole($roleToAssign);
                 }
 
-                // Check for existing blueprint to prevent duplicate creation
-                $blueprint = VisionBlueprint::where('user_metadata->order_id', $orderId)->first();
+                // Check for existing blueprint by explicit slug, order_id, or pending_order_id to prevent duplicate creation
+                $targetSlug = $cachedOrder['blueprint_slug'] ?? $txDetails['blueprint_slug'] ?? $lead?->metadata['blueprint_slug'] ?? null;
+                $blueprint = null;
+
+                if (! empty($targetSlug)) {
+                    $blueprint = VisionBlueprint::where('slug', $targetSlug)->first();
+                }
+
+                if (! $blueprint) {
+                    $blueprint = VisionBlueprint::where('user_metadata->order_id', $orderId)
+                        ->orWhere('user_metadata->pending_order_id', $orderId)
+                        ->first();
+                }
 
                 if (!$blueprint) {
                     $slug = \Illuminate\Support\Str::slug($company . '-' . $packageTier . '-' . \Illuminate\Support\Str::random(5));
@@ -382,16 +393,32 @@ class MidtransWebhookController extends Controller
                             'retail_tier' => $packageTier,
                             'package_tier' => $packageTier,
                             'order_id' => $orderId,
+                            'paid' => true,
                             'gross_amount' => $grossAmount,
                             'purchased_at' => now()->toIso8601String(),
                             'lead_id' => $leadId,
+                            'track' => $isRetail ? 'retail' : 'studio',
                         ],
                     ]);
                     $blueprint->generateAndSavePrd();
                 } else {
+                    $meta = $blueprint->user_metadata ?? [];
+                    $meta['user_id'] = $meta['user_id'] ?? $user->id;
+                    $meta['retail_tier'] = $packageTier;
+                    $meta['package_tier'] = $packageTier;
+                    $meta['order_id'] = $orderId;
+                    $meta['paid'] = true;
+                    $meta['gross_amount'] = $grossAmount;
+                    $meta['purchased_at'] = now()->toIso8601String();
+                    $meta['track'] = $isRetail ? 'retail' : 'studio';
+                    if ($leadId) {
+                        $meta['lead_id'] = $leadId;
+                    }
+
                     $blueprint->update([
                         'is_published' => true,
                         'project_status' => $isRetail ? 'Retail License' : 'In Development (DP Paid)',
+                        'user_metadata' => $meta,
                     ]);
                 }
 

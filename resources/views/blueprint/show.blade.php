@@ -26,7 +26,13 @@
     $isEn = $currentLang === 'en';
 
     // Lock & Entitlement Status
-    $isRetailLicense = ($blueprint->project_status === 'Retail License' || !empty($blueprint->user_metadata['retail_tier']) || !empty($blueprint->user_metadata['package_tier']) || str_contains(strtolower($blueprint->slug ?? ''), '-retail-'));
+    $isRetailLicense = ($blueprint->project_status === 'Retail License'
+        || ($isPurchased ?? false)
+        || (method_exists($blueprint, 'hasPaidRetailLicense') && $blueprint->hasPaidRetailLicense())
+        || !empty($blueprint->user_metadata['paid'])
+        || !empty($blueprint->user_metadata['retail_tier'])
+        || !empty($blueprint->user_metadata['package_tier'])
+        || str_contains(strtolower($blueprint->slug ?? ''), '-retail-'));
     $isDpPaid = $blueprint->isDpConfirmed();
     $isScopeFrozen = $blueprint->isScopeFrozen();
     $isSuperAdmin = auth()->check() && auth()->user()->isSuperAdmin();

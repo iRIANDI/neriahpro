@@ -715,7 +715,7 @@ class PosCommercialBridgeService
 
         // 1. Reset status pada VisionBlueprint
         $blueprint->forceFill([
-            'project_status' => in_array($blueprint->project_status, ['Scope Locked', 'Signed Agreement', 'Ready for DP']) ? 'Draft' : $blueprint->project_status,
+            'project_status' => in_array($blueprint->project_status, ['Scope Locked', 'Signed Agreement', 'Ready for DP', 'Contract Created', 'Awaiting DP Payment']) ? 'Draft' : $blueprint->project_status,
             'signed_agreement' => false,
             'document_sha256' => null,
             'signed_at' => null,
@@ -723,12 +723,16 @@ class PosCommercialBridgeService
             'signer_user_agent' => null,
         ])->saveQuietly();
 
-        // 2. Buka kunci dokumen SPK/kontrak terkait
+        // 2. Buka kunci dokumen SPK/kontrak terkait & bersihkan draft kontrak belum bertandatangan
         try {
             $blueprint->documents()->where('scope_locked', true)->update([
                 'scope_locked' => false,
                 'status' => 'pending_signature',
             ]);
+            $blueprint->documents()
+                ->where('document_type', 'contract')
+                ->where('status', 'pending_signature')
+                ->delete();
         } catch (\Throwable) {
             // Ignore if documents table has temporary schema difference
         }

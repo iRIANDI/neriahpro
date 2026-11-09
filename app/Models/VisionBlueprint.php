@@ -243,13 +243,15 @@ class VisionBlueprint extends Model
             $paymentUrl = null;
         }
 
+        $isSigned = ($overrides['status'] ?? 'pending_signature') === 'signed';
+
         $document = Document::create([
             'title' => 'Perjanjian Kerja Sama Pengembangan Sistem - '.($this->nama_bisnis ?: $this->client_name),
             'document_type' => 'contract',
             'related_type' => self::class,
             'related_id' => $this->id,
             'status' => $overrides['status'] ?? 'pending_signature',
-            'scope_locked' => true,
+            'scope_locked' => $isSigned ? true : ($overrides['scope_locked'] ?? false),
             'contract_amount' => $contractAmount,
             'dp_amount' => $dpAmount,
             'midtrans_order_id' => $orderId,
@@ -495,16 +497,31 @@ class VisionBlueprint extends Model
     }
 
     /**
-     * Check if project scope is locked/frozen (anti-dispute).
+     * Check if project scope is legally and technically locked/frozen (anti-dispute).
+     * Scope is ONLY frozen if:
+     * 1. The client has legally completed the digital sign-off (signed_agreement = true with signed_at timestamp), OR
+     * 2. The client has settled/confirmed the DP payment (isDpConfirmed() = true), OR
+     * 3. A legally binding contract document is officially signed (status = 'signed' and scope_locked = true).
+     *
+     * An unsigned draft contract (pending_signature) or an integrity hash calculation
+     * MUST NEVER freeze or lock the blueprint from editing.
      */
     public function isScopeFrozen(): bool
     {
-        if ($this->signed_agreement || $this->isDpConfirmed() || ! empty($this->document_sha256)) {
+        if ($this->signed_agreement && ! empty($this->signed_at)) {
+            return true;
+        }
+
+        if ($this->isDpConfirmed()) {
             return true;
         }
 
         try {
-            if ($this->exists && $this->documents()->where('scope_locked', true)->exists()) {
+            if ($this->exists && $this->documents()
+                ->where('document_type', 'contract')
+                ->where('status', 'signed')
+                ->where('scope_locked', true)
+                ->exists()) {
                 return true;
             }
         } catch (\Throwable $e) {

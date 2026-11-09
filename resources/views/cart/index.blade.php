@@ -255,11 +255,16 @@
                                     <a href="{{ route('blueprint.show', $item['slug']) }}" class="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-bold">
                                         <span>&larr; Lihat Dokumen PRD</span>
                                     </a>
+                                    <a href="{{ route('blueprint.create', ['slug' => $item['slug']]) }}" class="text-zinc-600 dark:text-zinc-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline flex items-center gap-1 font-bold border-l border-zinc-300 dark:border-zinc-700 pl-3">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        <span>Edit Spesifikasi</span>
+                                    </a>
                                     <span class="text-[10px] text-zinc-400 flex items-center gap-1">
                                         <svg class="w-3 h-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         <span>Exp: <span class="item-countdown font-bold text-zinc-700 dark:text-zinc-300">--:--:--</span></span>
                                     </span>
-                                                               <div class="flex items-center gap-2">
+                                </div>
+                                <div class="flex items-center gap-2">
                                     <form method="POST" action="{{ route('blueprint.generate-contract', $item['slug']) }}" class="m-0">
                                         @csrf
                                         <input type="hidden" name="tier" value="{{ $tierKey }}">

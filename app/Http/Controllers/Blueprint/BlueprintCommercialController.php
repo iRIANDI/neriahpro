@@ -1163,6 +1163,11 @@ class BlueprintCommercialController extends Controller
                 ->with('error', $result['message']);
         }
 
+        if ($request->query('edit') || $request->input('edit')) {
+            return redirect()->route('blueprint.create', ['slug' => $blueprint->slug])
+                ->with('status', 'Scope berhasil dibuka. Silakan sesuaikan spesifikasi proyek Anda.');
+        }
+
         return redirect()->route('blueprint.show', $blueprint->slug)
             ->with('status', $result['message']);
     }

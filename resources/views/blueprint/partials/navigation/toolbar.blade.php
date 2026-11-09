@@ -217,6 +217,7 @@
                 @elseif($canUnlock)
                     <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0 shrink-0">
                         @csrf
+                        <input type="hidden" name="edit" value="1">
                         <button type="submit" class="px-2.5 py-1 {{ $isSuperAdmin ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-700' : 'bg-amber-500 hover:bg-amber-400 text-black border-amber-600' }} text-xs font-mono uppercase font-black rounded-none border transition flex items-center gap-1 shrink-0 whitespace-nowrap cursor-pointer shadow-none" :title="locale === 'en' ? ($isSuperAdmin ? 'Super Admin: Instantly unlock scope' : 'Unlock scope to continue specification elaboration') : ($isSuperAdmin ? 'Super Admin: Buka kunci scope secara instan' : 'Buka kunci scope untuk melanjutkan elaborasi spesifikasi')">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
                             <span class="hidden md:inline">

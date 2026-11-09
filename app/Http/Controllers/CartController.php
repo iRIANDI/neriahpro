@@ -40,6 +40,15 @@ class CartController extends Controller
             
             // Check Ghost Hold expiration
             if (Carbon::now()->greaterThanOrEqualTo($expiresAt)) {
+                $bp = VisionBlueprint::where('slug', $slug)->first();
+                if ($bp && ! $bp->isDpConfirmed() && ! $bp->signed_agreement) {
+                    app(\App\Services\PosCommercialBridgeService::class)->unlockScope($bp, auth()->user(), 'Ghost Hold Expired');
+                    Document::where('related_type', VisionBlueprint::class)
+                        ->where('related_id', $bp->id)
+                        ->where('document_type', 'contract')
+                        ->where('status', 'pending_signature')
+                        ->delete();
+                }
                 unset($cart[$slug]);
                 $hasExpired = true;
                 continue;
@@ -325,6 +334,17 @@ class CartController extends Controller
             session()->put('neriah_cart', $cart);
         }
 
+        // Clean up blueprint state and unlock scope if DP is not confirmed
+        $blueprint = VisionBlueprint::where('slug', $slug)->first();
+        if ($blueprint && ! $blueprint->isDpConfirmed() && ! $blueprint->signed_agreement) {
+            app(\App\Services\PosCommercialBridgeService::class)->unlockScope($blueprint, auth()->user(), 'Dihapus dari Cart');
+            Document::where('related_type', VisionBlueprint::class)
+                ->where('related_id', $blueprint->id)
+                ->where('document_type', 'contract')
+                ->where('status', 'pending_signature')
+                ->delete();
+        }
+
         if (session()->has('neriah_cart_pending_order')) {
             $oldPending = session()->get('neriah_cart_pending_order');
             if (!empty($oldPending['order_id'])) {
@@ -335,7 +355,7 @@ class CartController extends Controller
             session()->forget('neriah_cart_pending_order');
         }
 
-        return redirect()->route('cart.index')->with('success', 'Item berhasil dihapus dari Cart.');
+        return redirect()->route('cart.index')->with('success', 'Item berhasil dihapus dari Cart dan spesifikasi proyek telah dibuka kembali untuk diedit.');
     }
 
     /**
@@ -343,6 +363,19 @@ class CartController extends Controller
      */
     public function clear(): RedirectResponse
     {
+        $cart = session()->get('neriah_cart', []);
+        foreach (array_keys($cart) as $cSlug) {
+            $bp = VisionBlueprint::where('slug', $cSlug)->first();
+            if ($bp && ! $bp->isDpConfirmed() && ! $bp->signed_agreement) {
+                app(\App\Services\PosCommercialBridgeService::class)->unlockScope($bp, auth()->user(), 'Cart Dikosongkan');
+                Document::where('related_type', VisionBlueprint::class)
+                    ->where('related_id', $bp->id)
+                    ->where('document_type', 'contract')
+                    ->where('status', 'pending_signature')
+                    ->delete();
+            }
+        }
+
         if (session()->has('neriah_cart_pending_order')) {
             $oldPending = session()->get('neriah_cart_pending_order');
             if (!empty($oldPending['order_id'])) {
@@ -355,7 +388,7 @@ class CartController extends Controller
 
         session()->forget('neriah_cart');
         session()->forget('neriah_cart_voucher');
-        return redirect()->route('cart.index')->with('success', 'Cart berhasil dikosongkan.');
+        return redirect()->route('cart.index')->with('success', 'Cart berhasil dikosongkan dan seluruh spesifikasi proyek telah dibuka kembali untuk diedit.');
     }
 
     /**
@@ -611,6 +644,19 @@ class CartController extends Controller
                 ->update(['status' => 'cancel']);
         }
         session()->forget('neriah_cart_pending_order');
+
+        $cart = session()->get('neriah_cart', []);
+        foreach (array_keys($cart) as $cSlug) {
+            $bp = VisionBlueprint::where('slug', $cSlug)->first();
+            if ($bp && ! $bp->isDpConfirmed() && ! $bp->signed_agreement) {
+                app(\App\Services\PosCommercialBridgeService::class)->unlockScope($bp, auth()->user(), 'Sesi Tagihan Dibatalkan');
+                Document::where('related_type', VisionBlueprint::class)
+                    ->where('related_id', $bp->id)
+                    ->where('document_type', 'contract')
+                    ->where('status', 'pending_signature')
+                    ->delete();
+            }
+        }
 
         return redirect()->route('cart.index')->with('info', 'Sesi tagihan pembayaran sebelumnya telah dibatalkan. Anda dapat mengubah pilihan item atau memilih metode pembayaran baru.');
     }

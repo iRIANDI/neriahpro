@@ -132,8 +132,19 @@ class BlueprintDiscoveryController extends Controller
                     || ! empty($existingBp->user_metadata['paid'])
                     || str_contains(strtolower($existingBp->slug ?? ''), '-retail-'));
 
-                if ($existingBp->isScopeFrozen() && ! $isExistingRetail && ! auth()->user()?->isSuperAdmin()) {
-                    return redirect()->route('blueprint.show', $existingBp->slug);
+                // Auto-unlock draft blueprint for editing if DP has not been paid and agreement is not signed
+                if (! $existingBp->isDpConfirmed() && ! $existingBp->signed_agreement && $existingBp->isScopeFrozen()) {
+                    try {
+                        app(\App\Services\PosCommercialBridgeService::class)->unlockScope($existingBp, $user, 'Auto-unlock for draft editing');
+                        $existingBp->refresh();
+                    } catch (\Throwable $e) {
+                        // Safe fallback
+                    }
+                }
+
+                if ($existingBp->isDpConfirmed() && ! $isExistingRetail && ! auth()->user()?->isSuperAdmin()) {
+                    return redirect()->route('blueprint.show', $existingBp->slug)
+                        ->with('info', 'Proyek ini telah memiliki pembayaran DP terkonfirmasi.');
                 }
 
                 $existingTier = $existingBp->user_metadata['package_tier'] ?? $existingBp->user_metadata['retail_tier'] ?? ($isExistingRetail ? 'lite' : null);

@@ -75,7 +75,8 @@ class GenerateBlueprintScaffoldJob implements ShouldQueue
 
             // Step 2: Package files into permanent ZIP Archive
             $updateStatus('processing', 70, 'Mengemas berkas ke dalam arsip ZIP Starter Kit (.ZIP) berstandar Project OS...');
-            $zipPath = ScaffoldGeneratorService::createZipArchive($blueprint);
+            $customFolder = $blueprint->user_metadata['short_slug'] ?? null;
+            $zipPath = ScaffoldGeneratorService::createZipArchive($blueprint, $customFolder);
 
             // Step 3: Update blueprint metadata and mark ready
             $updateStatus('processing', 90, 'Menyelaraskan metadata arsip cetak biru dan izin entitas...');
@@ -106,9 +107,13 @@ class GenerateBlueprintScaffoldJob implements ShouldQueue
                 Log::warning('GenerateBlueprintScaffoldJob audit log failed: ' . $auditEx->getMessage());
             }
 
+            $effectiveSlug = !empty($customFolder)
+                ? $customFolder
+                : ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?: 'project', $blueprint);
+
             $updateStatus('completed', 100, 'Arsip Scaffold Starter Kit berhasil dibuat dan siap diunduh!', [
                 'file_count' => count($files),
-                'zip_filename' => ($blueprint->slug ?: 'project') . '-starter-kit.zip',
+                'zip_filename' => $effectiveSlug . '.zip',
                 'download_url' => route('blueprint.export-scaffold', $blueprint->slug),
                 'completed_at' => now()->format('Y-m-d H:i:s') . ' WIB',
             ]);

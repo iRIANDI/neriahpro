@@ -222,6 +222,28 @@ class BlueprintExportController extends Controller
                     'FREE_SANDBOX'
                 );
             }
+            if (! empty($schema['phased_prompt_sequencer']) && is_array($schema['phased_prompt_sequencer'])) {
+                $sector = (string) ($schema['project_metadata']['primary_sector'] ?? 'SECTOR_01_COMMERCE_OMNICHANNEL');
+                $schema['phased_prompt_sequencer'] = $gateService->filterPhasedPromptsForTier(
+                    $schema['phased_prompt_sequencer'],
+                    $tier,
+                    $sector,
+                    app()->getLocale()
+                );
+            }
+            if (! empty($schema['sub_chunked_prompts']) && is_array($schema['sub_chunked_prompts'])) {
+                $filteredSub = [];
+                foreach ($schema['sub_chunked_prompts'] as $sp) {
+                    $code = (string) ($sp['part_code'] ?? '');
+                    if (str_starts_with($code, '1.')) {
+                        $filteredSub[] = $sp;
+                    } else {
+                        $sp['prompt'] = "// [LOCKED IN FREE SANDBOX — PART {$code}]\n// Upgrade license to unlock this DAG subpart.";
+                        $filteredSub[] = $sp;
+                    }
+                }
+                $schema['sub_chunked_prompts'] = $filteredSub;
+            }
         }
 
         return response(

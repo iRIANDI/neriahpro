@@ -327,5 +327,35 @@ After completing any task, you MUST always suggest which deployment script numbe
 - **Initial Database Seeding Dependency**:
   - In `deploy.sh` Skenario 2 (Migrate Safe), always chain essential configuration seeders (`php artisan db:seed --class=CmsSeeder --force`) so global settings tables (`cms_global_settings`) are populated immediately after migration without manual intervention.
 
+# Mandatory Rule: Strict Clean Code & Software Engineering Excellence (Strict Clean Code Standard)
+All AI agents and developers operating in this codebase MUST strictly adhere to Clean Code engineering standards:
+1. **SOLID Principles & Clean Architectural Boundaries**:
+   - **Single Responsibility Principle (SRP)**: Each class, controller, and service must have one, and only one, reason to change. Business domains are segregated into dedicated controllers (`BlueprintScaffoldController`, `BlueprintArtifactController`, `BlueprintExportController`, `BlueprintCommercialController`).
+   - **Open/Closed Principle (OCP)**: Code is open for extension via contracts and pipelines, but closed for modification. Use strategy patterns and service registries rather than sprawling switch/if-else ladders.
+   - **Liskov Substitution Principle (LSP)**: Derived classes and implementations must honor parent type contracts without violating method signatures or throwing unexpected runtime exceptions.
+   - **Interface Segregation Principle (ISP)**: Build lean, focused interfaces. Never force consumers to depend on methods they do not use.
+   - **Dependency Inversion Principle (DIP)**: Depend on domain abstractions and service interfaces (`App\Contracts\...`), resolving dependencies through Laravel's Service Container (`app(...)`), never hardcoded instantiations of global dependencies.
+2. **DRY (Don't Repeat Yourself) & Single Source of Truth**:
+   - Centralize repetitive logic (e.g. workspace folder sanitization, short slug derivation, entitlement verification) into dedicated, unit-testable service methods (`ScaffoldGeneratorService::deriveShortSlug`, `BlueprintEntitlementGateService`).
+   - NEVER duplicate regex sanitizers, authorization rules, or discount formulas across views and controllers.
+3. **KISS & Guard Clauses (Early Return Standard)**:
+   - Prefer simple, intention-revealing, readable code over clever one-liners or unnecessary layers of indirection.
+   - Eliminate deeply nested `if/else` ladders by using guard clauses (`if (! $authorized) return ...;` or `abort(403)`).
+4. **Strict Typing & Null-Safety**:
+   - Explicitly type all method parameters and return types (`: string`, `: int`, `: JsonResponse`, `: bool`).
+   - Strictly prevent type coercion bugs by casting computed numbers to exact integer types (e.g. `(int) max(0, (int) $diff)`).
+5. **Zero Tolerance for Magic Numbers & Magic Strings**:
+   - NEVER sprinkle raw status strings or numbers in queries or comparisons.
+   - ALWAYS define and reference explicit Class Constants or PHP Enums (e.g. `BlueprintDownloadArtifact::TYPE_PDF`, `BlueprintDownloadArtifact::STATUS_COMPLETED`, `BlueprintDownloadArtifact::RETENTION_HOURS`).
+6. **Zero-Leak Server-Side Entitlement Gate Mandate**:
+   - Free sandbox/spark tiers MUST NEVER receive proprietary code, DAG prompts > 1.x, Phase 2–7 prompts, symbol manifests, or production deployment scripts.
+   - Entitlement checks MUST occur strictly on the server before data is sent to the Blade DOM, API JSON response, or Livewire state serialization.
+   - Defense-in-depth: Every download action (`downloadArtifact`, `exportScaffold`, `downloadSchemaJson`) must independently re-validate user tier entitlements before streaming files.
+7. **Clean Error Handling, Resiliency & Idempotency**:
+   - Never suppress or swallow exceptions silently without structured logging (`Log::error(...)` with context array).
+   - Wrap multi-table database state mutations in `DB::transaction()`.
+   - Implement deterministic auto-rescue mechanisms for background queue operations when queue daemons are offline.
+
+
 
 

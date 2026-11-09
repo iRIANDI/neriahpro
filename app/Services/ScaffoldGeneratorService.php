@@ -935,7 +935,7 @@ class ScaffoldGeneratorService
             $effectiveSlug = self::deriveShortSlug($blueprint->slug ?: 'project', $blueprint);
         }
 
-        $zipPath = $tempDir.'/'.$effectiveSlug.'-starter-kit.zip';
+        $zipPath = $tempDir.'/'.$effectiveSlug.'.zip';
 
         if (class_exists(ZipArchive::class)) {
             $zip = new ZipArchive;

@@ -127,6 +127,13 @@ class BlueprintArtifactController extends Controller
             }
         }
 
+        $rawFolder = (string) $request->input('folder', $blueprint->user_metadata['short_slug'] ?? '');
+        $customFolder = preg_replace('/[^a-z0-9_-]/', '', strtolower(str_replace(' ', '-', $rawFolder)));
+        $customFolder = trim($customFolder, '-_');
+        $effectiveScaffoldSlug = !empty($customFolder)
+            ? $customFolder
+            : \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?: 'project', $blueprint);
+
         // Determine title and filename
         $prefix = $isEn ? 'PRD_EN_' : 'PRD_';
         [$title, $filename] = match ($type) {
@@ -140,7 +147,7 @@ class BlueprintArtifactController extends Controller
             ],
             BlueprintDownloadArtifact::TYPE_SCAFFOLD => [
                 $isEn ? 'Scaffold Starter Kit Boilerplate (.ZIP)' : 'Paket Starter Kit Boilerplate Scaffold (.ZIP)',
-                \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?: 'project') . '-starter-kit.zip',
+                $effectiveScaffoldSlug . '.zip',
             ],
         };
 
@@ -219,6 +226,23 @@ class BlueprintArtifactController extends Controller
         }
 
         $artifacts = $query->orderBy('created_at', 'desc')->limit(40)->get();
+
+        // Auto-rescue stalled queued/processing artifacts if background worker is offline
+        foreach ($artifacts as $art) {
+            $isQueuedStalled = ($art->status === BlueprintDownloadArtifact::STATUS_QUEUED)
+                && ($art->created_at && Carbon::now()->diffInSeconds($art->created_at) >= 2);
+            $isProcessingStalled = ($art->status === BlueprintDownloadArtifact::STATUS_PROCESSING)
+                && ($art->updated_at && Carbon::now()->diffInSeconds($art->updated_at) >= 20);
+
+            if ($isQueuedStalled || $isProcessingStalled) {
+                try {
+                    GenerateBlueprintArtifactJob::dispatchSync($art->id);
+                    $art->refresh();
+                } catch (\Throwable $e) {
+                    Log::warning('Auto-rescue in listArtifacts failed: ' . $e->getMessage());
+                }
+            }
+        }
 
         $formatted = $artifacts->map(fn (BlueprintDownloadArtifact $art) => $this->formatArtifactPayload($art, $locale, $isSuperAdmin));
 
@@ -315,6 +339,15 @@ class BlueprintArtifactController extends Controller
             $isOwner = ($user && $artifact->user_id === $user->id) || ($artifact->client_identifier === $clientIdentifier);
             if (! $isOwner) {
                 abort(403, 'Akses Ditolak: Berkas unduhan ini bersifat terisolasi dan hanya dapat diunduh oleh ID klien pemiliknya.');
+            }
+        }
+
+        // Defense-in-depth Entitlement Gate check for scaffold ZIP
+        if ($artifact->artifact_type === BlueprintDownloadArtifact::TYPE_SCAFFOLD) {
+            $gateService = app(BlueprintEntitlementGateService::class);
+            $tier = $gateService->resolveUserTier(Auth::user(), $blueprint->slug);
+            if (! $gateService->isArtifactEntitled($tier, 'scaffold_zip')) {
+                abort(403, 'Akses Ditolak: Unduhan Starter Kit Scaffold eksklusif untuk lisensi berbayar (Retail Pro/Ultimate atau Mitra Turnkey).');
             }
         }
 

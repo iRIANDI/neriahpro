@@ -967,12 +967,26 @@ class BlueprintArchitectStudio extends Component
 
         $selectedPhaseObj = $phases[max(0, $this->activePhase - 1)] ?? ($phases[0] ?? []);
         $subParts = $schema['sub_chunked_prompts'] ?? [];
+        if ($this->entitlementTier === 'FREE_SANDBOX') {
+            $filteredSubParts = [];
+            foreach ($subParts as $sp) {
+                $code = (string) ($sp['part_code'] ?? '');
+                if (! str_starts_with($code, '1.')) {
+                    $sp['prompt'] = "# [TERKUNCI PADA SANDBOX GRATIS — SUB-PART {$code}]\n# Server-Side Entitlement Gate: Upgrade ke lisensi berbayar untuk membuka prompt sub-part ini.";
+                }
+                $filteredSubParts[] = $sp;
+            }
+            $subParts = $filteredSubParts;
+            $schema['sub_chunked_prompts'] = $filteredSubParts;
+        }
         $selectedSubPartObj = collect($subParts)->firstWhere('part_code', $this->activeSubPartCode) ?? ($subParts[0] ?? []);
         $vibeCoderGuidedSteps = $gateService->buildVibeCoderGuidedSteps($phases, $this->entitlementTier, $this->outputLocale);
 
         if ($this->entitlementTier === 'FREE_SANDBOX' && ($this->rightDockMode !== 'phases' || $this->activePhase > 1)) {
             if ($this->rightDockMode === 'symbol_manifest') {
                 $compiledRightContent = (string) json_encode($schema['symbol_manifest'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            } elseif ($this->rightDockMode === 'dag_subparts') {
+                $compiledRightContent = (string) ($selectedSubPartObj['prompt'] ?? '# [LOCKED IN FREE SANDBOX — SERVER GATE ACTIVE]');
             } else {
                 $compiledRightContent = (string) ($selectedPhaseObj['prompt'] ?? '# [LOCKED IN FREE SANDBOX — SERVER GATE ACTIVE]');
             }

@@ -2008,6 +2008,24 @@ MD;
 2. **Separation of Read (RAG) and Write (Native Tool Calling)**:
    - Pembacaan pengetahuan menggunakan PostgreSQL `pgvector` (768-dimensi HNSW `<=>` + Reciprocal Rank Fusion).
    - Penulisan database WAJIB melalui `functionDeclarations` resmi dengan `Validator::make()`, Idempotency Guard 120 detik, `DB::transaction()`, dan rantai hash `SHA-256` pada `audit_logs`.
+
+## 4. Strict Clean Code & Architecture Integrity Standards
+1. **SOLID Principles**:
+   - Single Responsibility (SRP): Pisahkan controller dan service ke domain mandiri (Scaffold, Export, Artifact, Commerce, Audit). Dilarang membuat *God Class* 2000 baris.
+   - Open/Closed (OCP): Sistem terbuka untuk ekstensi (Contract, Strategy Pattern, Event Listener) dan tertutup untuk modifikasi yang memecah kompatibilitas.
+   - Liskov Substitution (LSP) & Interface Segregation (ISP): Hormati interface kontrak yang ramping tanpa memaksakan method tak terpakai.
+   - Dependency Inversion (DIP): Bergantung pada abstraksi/kontrak service (`App\Contracts\...`), resolusi melalui Laravel Container (`app(...)`), bukan instansiasi objek kaku langsung.
+2. **DRY & Single Source of Truth**:
+   - Dilarang menduplikasi formula diskon, pola regex sanitasi folder/slug, atau query otorisasi di berbagai tempat. Sentralisasikan pada service domain terisolasi.
+3. **KISS & Guard Clauses (Early Return Standard)**:
+   - Hindari nested if-else bertingkat tinggi ("Arrow Anti-pattern"). Gunakan guard clauses di awal method (`if (! $authorized) return ...;`).
+4. **Strict Typing & Null-Safety**:
+   - Terapkan typehint parameter dan return type eksplisit pada setiap method. Lakukan casting angka yang ketat (e.g. `(int) max(0, (int) $diff)`).
+5. **Zero Magic Strings & Zero Magic Numbers**:
+   - Gunakan Class Constants atau Backed Enums untuk setiap status, tipe artefak, atau batas waktu retensi.
+6. **Zero Dead Code & Exception Hygiene**:
+   - Hapus unused imports (`use`), blok kode mati/berkomentar, dan dump debugging (`dd()`, `dump()`, `console.log()`).
+   - Dilarang menelan exception secara diam-diam. Selalu catat via `Log::error()` dengan konteks array terstruktur.
 MD;
     }
 

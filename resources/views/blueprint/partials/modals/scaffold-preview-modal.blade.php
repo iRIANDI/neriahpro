@@ -115,7 +115,7 @@
                     <a 
                         :href="getScaffoldDownloadUrl()" 
                         class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[11px] flex items-center gap-1.5 transition cursor-pointer w-fit shadow-xs rounded-none"
-                        :title="locale === 'en' ? `Download ${getEffectiveFolder()}-starter-kit.zip` : `Unduh ${getEffectiveFolder()}-starter-kit.zip`"
+                        :title="locale === 'en' ? `Download ${getEffectiveFolder()}.zip` : `Unduh ${getEffectiveFolder()}.zip`"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         <span>

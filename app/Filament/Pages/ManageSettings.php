@@ -146,6 +146,9 @@ class ManageSettings extends Page implements HasForms
             'pricing_impact_grant_price' => '0',
             'pricing_single_app_pass_price' => '299.000',
             'pricing_agency_whitelabel_price' => '990.000',
+            'pricing_impact_grant_limit' => '1 Proyek CSR / Yayasan (Wajib Akta Notaris / SK Kemenkumham, Gratis Rp 0)',
+            'pricing_single_app_pass_limit' => '1 Aplikasi UMKM (Lisensi Komersial Tunggal, Kunci Blueprint & DDL SQL)',
+            'pricing_agency_whitelabel_limit' => '5 Kursi Proyek / Agensi (Ekspor PDF White-Label Merek Sendiri & Multi-Seat)',
             'pricing_retail_spark_limit' => '2x Audit Ide / Bulan (Reset tiap tanggal 1)',
             'pricing_retail_lite_limit' => '1 Proyek PRD (Revisi Form 30 Hari & Unduh Selamanya)',
             'pricing_retail_pro_limit' => '1 Proyek PRD (Unlimited AI Regen & Revisi 6 Bulan)',
@@ -1252,6 +1255,21 @@ class ManageSettings extends Page implements HasForms
                                             ->helperText('Contoh: 1 Proyek Enterprise (1 Tahun Prioritas & 1-on-1 Call)')
                                             ->default('1 Proyek Enterprise (1 Tahun Prioritas & 1-on-1 Call 60 Menit)')
                                             ->required(),
+                                        TextInput::make('pricing_impact_grant_limit')
+                                            ->label('Batasan & Syarat Hibah CSR Yayasan')
+                                            ->helperText('Contoh: 1 Proyek CSR / Yayasan (Wajib Akta Notaris / SK Kemenkumham, Gratis Rp 0)')
+                                            ->default('1 Proyek CSR / Yayasan (Wajib Akta Notaris / SK Kemenkumham, Gratis Rp 0)')
+                                            ->required(),
+                                        TextInput::make('pricing_single_app_pass_limit')
+                                            ->label('Batasan Single-App UMKM Pass')
+                                            ->helperText('Contoh: 1 Aplikasi UMKM (Lisensi Komersial Tunggal, Kunci Blueprint & DDL SQL)')
+                                            ->default('1 Aplikasi UMKM (Lisensi Komersial Tunggal, Kunci Blueprint & DDL SQL)')
+                                            ->required(),
+                                        TextInput::make('pricing_agency_whitelabel_limit')
+                                            ->label('Batasan Agency Partner White-Label')
+                                            ->helperText('Contoh: 5 Kursi Proyek / Agensi (Ekspor PDF White-Label Merek Sendiri & Multi-Seat)')
+                                            ->default('5 Kursi Proyek / Agensi (Ekspor PDF White-Label Merek Sendiri & Multi-Seat)')
+                                            ->required(),
 
                                         TextInput::make('pricing_retail_login_policy')
                                             ->label('Kebijakan Login & Kepemilikan Akun')
@@ -1472,6 +1490,20 @@ class ManageSettings extends Page implements HasForms
         \Illuminate\Support\Facades\Cache::forget('seo_schema_pricing_faq');
         \Illuminate\Support\Facades\Cache::forget('cms_page_data_pricing');
         \Illuminate\Support\Facades\Cache::forget('cms_page_pricing');
+
+        if (class_exists(\App\Models\AuditLog::class)) {
+            \App\Models\AuditLog::record(
+                action: 'update_global_pricing_and_system_settings',
+                model: null,
+                oldValues: null,
+                newValues: [
+                    'updated_keys_count' => count($data),
+                    'timestamp' => now()->toIso8601String(),
+                ],
+                description: 'Super Admin memperbarui konfigurasi sistem global, 7 SaaS Tiers V12.0, escrow rules, dan schema.org cache.',
+                eventCategory: 'configuration_update'
+            );
+        }
 
         Notification::make()
             ->title('Pengaturan & Schema.org Berhasil Disimpan')

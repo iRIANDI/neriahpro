@@ -550,7 +550,7 @@
                         @else
                             <tr>
                                 <td colspan="4" class="py-8 text-center text-zinc-500 italic">
-                                    Tidak ada dokumen vektor yang ditemukan. Klik 'Sinkronkan 10 Pilar RAG' untuk mengindeks dokumen.
+                                    Tidak ada dokumen vektor yang ditemukan. Klik 'Sinkronkan 20 Pilar RAG V12.0' untuk mengindeks dokumen.
                                 </td>
                             </tr>
                         @endif

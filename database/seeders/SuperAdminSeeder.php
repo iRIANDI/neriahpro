@@ -73,6 +73,10 @@ class SuperAdminSeeder extends Seeder
         $manageUuPdpPrivacyPerm = Permission::firstOrCreate(['name' => 'manage_uu_pdp_privacy_vault', 'guard_name' => 'web']);
         $manageSlaWarrantyPerm = Permission::firstOrCreate(['name' => 'manage_sla_warranty_tickets', 'guard_name' => 'web']);
         $runSandboxWebhookPerm = Permission::firstOrCreate(['name' => 'run_sandbox_webhook_simulator', 'guard_name' => 'web']);
+        $manage20PillarsPerm = Permission::firstOrCreate(['name' => 'manage_20_architecture_pillars', 'guard_name' => 'web']);
+        $manageAiKnowledgePerm = Permission::firstOrCreate(['name' => 'manage_ai_knowledge_cag_rag_kag', 'guard_name' => 'web']);
+        $manageScaffoldWorkspacesPerm = Permission::firstOrCreate(['name' => 'manage_scaffold_workspaces', 'guard_name' => 'web']);
+        $managePricingTiersPerm = Permission::firstOrCreate(['name' => 'manage_pricing_tiers', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
@@ -124,6 +128,10 @@ class SuperAdminSeeder extends Seeder
             $manageUuPdpPrivacyPerm,
             $manageSlaWarrantyPerm,
             $runSandboxWebhookPerm,
+            $manage20PillarsPerm,
+            $manageAiKnowledgePerm,
+            $manageScaffoldWorkspacesPerm,
+            $managePricingTiersPerm,
         ]);
 
         $developerRole->givePermissionTo([
@@ -163,6 +171,10 @@ class SuperAdminSeeder extends Seeder
             $manageUuPdpPrivacyPerm,
             $manageSlaWarrantyPerm,
             $runSandboxWebhookPerm,
+            $manage20PillarsPerm,
+            $manageAiKnowledgePerm,
+            $manageScaffoldWorkspacesPerm,
+            $managePricingTiersPerm,
         ]);
 
         // Grant Due Diligence Read-Only permissions to Investor & Superadmin

@@ -342,6 +342,9 @@
             <a href="#sec-v13-multilang-and-domain-standards" @click.prevent="scrollTo('sec-v13-multilang-and-domain-standards')" :class="activeSection === 'sec-v13-multilang-and-domain-standards' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 20. <span x-text="t[lang].nav_v13_multilang"></span>
             </a>
+            <a href="#sec-v14-technologies-v12" @click.prevent="scrollTo('sec-v14-technologies-v12')" :class="activeSection === 'sec-v14-technologies-v12' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                21. <span x-text="t[lang].nav_v14_tech"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -2003,6 +2006,109 @@
         </div>
     </div>
 
+    <!-- 21. Section V14: 7 SaaS Tiers, Turnkey Escrow, 36 UI + 6 Scroll, 20 Pillars, 26 FAQs, Tri-Hybrid AI & Scaffolding Auto-Save -->
+    <div id="sec-v14-technologies-v12" class="sg-card" x-show="matchesSearch('v12.0 v14 teknologi 7 saas tiers turnkey escrow 36 ui 6 scroll presets 20 pilar 26 faqs tri-hybrid cag rag kag 49 native tools scaffolding auto-save custom workspace')">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <div class="sg-badge-confidential">
+                    🚀 ARSITEKTUR REKAYASA MUTAKHIR // PROJECT OS V12.0
+                </div>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 6px 0 0 0;">
+                    21. Ekosistem Paripurna V12.0: 7 SaaS Tiers, Turnkey Escrow, 36 UI + 6 Scroll, 20 Pilar, 26 FAQs, Tri-Hybrid AI &amp; Auto-Save Workspace
+                </h3>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+                <span class="sg-badge-active">20/20 PILAR TERKUNCI</span>
+                <span class="sg-badge-active">49 NATIVE TOOLS</span>
+            </div>
+        </div>
+
+        <p style="font-size: 12px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;">
+            Pembaruan teknologi v12.0 menyempurnakan seluruh spektrum rekayasa Project OS dari sisi komersial (7 SaaS Tiers &amp; Turnkey Escrow 50/50), desain antarmuka industri (36 Cockpit Operasional + 6 Preset Scrollytelling), fondasi 20 Pilar Paripurna, 26 FAQ teruji, Tri-Hybrid AI Memory (CAG O(1), RAG Dense/Sparse RRF, KAG Graph Rules), hingga auto-save folder scaffolding kustom per-proyek yang terisolasi di cloud.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px;">
+            <!-- Subcard 1: 7 SaaS Tiers -->
+            <div class="sg-subcard" style="border-left: 3px solid #10b981;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="color: #059669; font-size: 12px; text-transform: uppercase;">01. 7 SAAS TIERS V12.0</strong>
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3);">COMMERCIAL</span>
+                </div>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    <div>• <strong>4 Core Self-Service</strong>: Spark (Free Audit), Starter (Rp 99K), Pro (Rp 399K), Ultimate (Rp 1.49M).</div>
+                    <div>• <strong>3 Hybrid Value-Metric</strong>: CSR Grant Yayasan (Rp 0, Akta Check), Single-App UMKM Pass (Rp 299K), Agency White-Label (Rp 990K, 5-Seat).</div>
+                    <div>• <strong>Zero Unpaid Bypass</strong>: Entitlement guard server-side di <code>BlueprintController::create()</code>.</div>
+                </div>
+            </div>
+
+            <!-- Subcard 2: Turnkey Escrow -->
+            <div class="sg-subcard" style="border-left: 3px solid #f59e0b;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="color: #d97706; font-size: 12px; text-transform: uppercase;">02. TURNKEY ESCROW V12.0</strong>
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3);">MIDTRANS SNAP</span>
+                </div>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    <div>• <strong>Termin 50/50 &amp; 3-Milestone</strong>: 50% DP Kickoff, 50% Pelunasan via UAT Sign-off atau Escrow 30%/50%/20%.</div>
+                    <div>• <strong>Scope Lock SHA-256</strong>: Mencegah sengketa scope-creep dengan segel hash digital.</div>
+                    <div>• <strong>Managed Capacity</strong>: Dibatasi ketat 2–3 proyek paralel/batch (Anti-Collision).</div>
+                    <div>• <strong>Garansi SLA 90 Hari</strong>: Bug-warranty pasca-BAST langsung ditangani Lead Architect.</div>
+                </div>
+            </div>
+
+            <!-- Subcard 3: 36 UI + 6 Scroll -->
+            <div class="sg-subcard" style="border-left: 3px solid #06b6d4;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="color: #0891b2; font-size: 12px; text-transform: uppercase;">03. 36 UI + 6 SCROLL V12.0</strong>
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(6, 182, 212, 0.1); color: #0891b2; border: 1px solid rgba(6, 182, 212, 0.3);">DUAL-ZONE UI</span>
+                </div>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    <div>• <strong>Zona A (36 Cockpit Operasional)</strong>: Back-stage padat, multi-panel spesifik profesi, keyboard-first shortcuts, bebas AI slop.</div>
+                    <div>• <strong>Zona B (6 Preset Scrollytelling 60fps)</strong>: Front-stage elegan (Aniwall, Spatial 360°, Lookbook, Trust Simulator, Pathway).</div>
+                    <div>• <strong>Aksesibilitas Penuh</strong>: Standar WCAG AAA, 100% Dark/Light mode fidelity, reduced-motion friendly.</div>
+                </div>
+            </div>
+
+            <!-- Subcard 4: 20 Pillars & 26 FAQs -->
+            <div class="sg-subcard" style="border-left: 3px solid #8b5cf6;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="color: #7c3aed; font-size: 12px; text-transform: uppercase;">04. 20 PILLARS &amp; 26 FAQS V12.0</strong>
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(139, 92, 246, 0.1); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.3);">GOVERNANCE</span>
+                </div>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    <div>• <strong>20 Pilar Paripurna (P01–P20)</strong>: Meliputi Core Spec, DDL ULID, Dual-Zone UI, Tri-Hybrid AI, Security Vault, SaaS Gate, SEO/GEO, hingga DevOps pg_dump Guard.</div>
+                    <div>• <strong>26 FAQ Teknis Lengkap</strong>: Memberikan transparansi 100% kepada founder, CTO, dan tim auditor tanpa keraguan.</div>
+                </div>
+            </div>
+
+            <!-- Subcard 5: Tri-Hybrid AI & 49 Tools -->
+            <div class="sg-subcard" style="border-left: 3px solid #3b82f6;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="color: #2563eb; font-size: 12px; text-transform: uppercase;">05. TRI-HYBRID AI CONTEXT ENGINE</strong>
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(59, 130, 246, 0.1); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3);">CAG • RAG • KAG</span>
+                </div>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    <div>• <strong>CAG (Cache-Augmented Generation)</strong>: Prompt caching O(1) via Redis &amp; Anthropic headers (hemat 70%+ token, respons &lt;100ms).</div>
+                    <div>• <strong>RAG (Retrieval-Augmented)</strong>: Vektor 768-dim pgvector + BM25 sparse lexical search dengan Reciprocal Rank Fusion (RRF).</div>
+                    <div>• <strong>KAG (Knowledge-Augmented)</strong>: Graphify deterministic architectural knowledge graph menjaga invarian arsitektur.</div>
+                    <div>• <strong>49 Native AI Tools</strong>: Terhubung langsung via <code>.mcp.json</code> ke Claude Code, Cursor, Windsurf, dan Antigravity.</div>
+                </div>
+            </div>
+
+            <!-- Subcard 6: Scaffolding Auto-Save & Download Center -->
+            <div class="sg-subcard" style="border-left: 3px solid #ec4899;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="color: #db2777; font-size: 12px; text-transform: uppercase;">06. ISOLATED WORKSPACE AUTO-SAVE</strong>
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(236, 72, 153, 0.1); color: #db2777; border: 1px solid rgba(236, 72, 153, 0.3);">CLOUD SYNC</span>
+                </div>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    <div>• <strong>Per-Project Isolation</strong>: Nama folder kustom (misal: <code>htctranslator</code>) disimpan pada kolom <code>scaffold_workspace_folder</code> di database.</div>
+                    <div>• <strong>Zero Cross-Project Collision</strong>: Beralih antar-proyek tidak akan menimpa nama folder proyek lain.</div>
+                    <div>• <strong>24h Asynchronous Artifact Center</strong>: Antrean berkas latar belakang (ZIP Starter Kit 22+ file, PDF, MD) ber-ticker retensi.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -2035,6 +2141,7 @@ function smartGuideApp() {
                 nav_v11_paripurna: 'SEO/GEO /llms.txt, UU PDP & 20 Pilar (v11.0)',
                 nav_v12_disclosure: 'Progressive Disclosure, Zero-Leak Gate & Anti-Over-Planning (v12.0)',
                 nav_v13_multilang: 'Multi-Bahasa Tier 1 & Normalisasi Domain (v13.0)',
+                nav_v14_tech: 'Teknologi V12: 7 Tiers, Escrow, 36 UI, 20 Pilar & AI (v12.0)',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -2174,6 +2281,7 @@ function smartGuideApp() {
                 nav_v11_paripurna: 'SEO/GEO /llms.txt, UU PDP & 20 Pillars (v11.0)',
                 nav_v12_disclosure: 'Progressive Disclosure, Zero-Leak Gate & Anti-Over-Planning (v12.0)',
                 nav_v13_multilang: 'Multi-Language Tier 1 & Domain Standards (v13.0)',
+                nav_v14_tech: 'V12 Tech: 7 Tiers, Escrow, 36 UI, 20 Pillars & AI (v12.0)',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',

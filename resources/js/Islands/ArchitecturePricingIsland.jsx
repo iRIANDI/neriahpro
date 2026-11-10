@@ -281,10 +281,10 @@ export default function ArchitecturePricingIsland({
 
   const formatPillar = (text) => {
     if (typeof text !== 'string') return text;
-    return text.split(/(Pilar \d+|Pillar \d+|10 Pilar|10 Pillars)/i).map((part, i) => {
-      const match = part.match(/(?:Pil[l]?ar (\d+)|(10) Pil[l]?ars?)/i);
+    return text.split(/(Pilar \d+|Pillar \d+|P\d+|20 Pilar|20 Pillars|10 Pilar|10 Pillars)/i).map((part, i) => {
+      const match = part.match(/(?:Pil[l]?ar (\d+)|P(\d+)|(20) Pil[l]?ars?|(10) Pil[l]?ars?)/i);
       if (match) {
-        const pillarNum = match[1] || match[2] || '10';
+        const pillarNum = match[1] || match[2] || match[3] || match[4] || '20';
         const colors = {
           '1': 'text-blue-600 dark:text-blue-400 font-black px-1.5 py-0.5 bg-blue-500/10 rounded-xs border border-blue-500/20',
           '2': 'text-purple-600 dark:text-purple-400 font-black px-1.5 py-0.5 bg-purple-500/10 rounded-xs border border-purple-500/20',
@@ -296,6 +296,16 @@ export default function ArchitecturePricingIsland({
           '8': 'text-cyan-600 dark:text-cyan-400 font-black px-1.5 py-0.5 bg-cyan-500/10 rounded-xs border border-cyan-500/20',
           '9': 'text-indigo-600 dark:text-indigo-400 font-black px-1.5 py-0.5 bg-indigo-500/10 rounded-xs border border-indigo-500/20',
           '10': 'text-teal-600 dark:text-teal-400 font-black px-1.5 py-0.5 bg-teal-500/10 rounded-xs border border-teal-500/20',
+          '11': 'text-sky-600 dark:text-sky-400 font-black px-1.5 py-0.5 bg-sky-500/10 rounded-xs border border-sky-500/20',
+          '12': 'text-lime-600 dark:text-lime-400 font-black px-1.5 py-0.5 bg-lime-500/10 rounded-xs border border-lime-500/20',
+          '13': 'text-amber-600 dark:text-amber-400 font-black px-1.5 py-0.5 bg-amber-500/10 rounded-xs border border-amber-500/20',
+          '14': 'text-fuchsia-600 dark:text-fuchsia-400 font-black px-1.5 py-0.5 bg-fuchsia-500/10 rounded-xs border border-fuchsia-500/20',
+          '15': 'text-violet-600 dark:text-violet-400 font-black px-1.5 py-0.5 bg-violet-500/10 rounded-xs border border-violet-500/20',
+          '16': 'text-emerald-700 dark:text-emerald-300 font-black px-1.5 py-0.5 bg-emerald-500/15 rounded-xs border border-emerald-500/30',
+          '17': 'text-blue-700 dark:text-blue-300 font-black px-1.5 py-0.5 bg-blue-500/15 rounded-xs border border-blue-500/30',
+          '18': 'text-teal-700 dark:text-teal-300 font-black px-1.5 py-0.5 bg-teal-500/15 rounded-xs border border-teal-500/30',
+          '19': 'text-rose-700 dark:text-rose-300 font-black px-1.5 py-0.5 bg-rose-500/15 rounded-xs border border-rose-500/30',
+          '20': 'text-emerald-800 dark:text-emerald-200 font-black px-1.5 py-0.5 bg-emerald-500/20 rounded-xs border border-emerald-500/40',
         };
         return <span key={i} className={colors[pillarNum] || 'text-zinc-600 dark:text-zinc-400 font-black px-1.5 py-0.5 bg-zinc-500/10 rounded-xs'}>{part}</span>;
       }
@@ -686,7 +696,7 @@ export default function ArchitecturePricingIsland({
         : 'Bagaimana NeriahPro AgentShield, Living CVE Autopatch, Canary IP Watermark, dan Audit Log Kriptografi SHA-256 melindungi sistem enterprise kami?',
       a: isEn
         ? 'Project OS v9–v11 embeds military-grade governance: (1) AgentShield 3-Gate Firewall sanitizes RAG inputs against prompt injection, blocks unauthorized tool execution, and verifies Composer/NPM lockfiles against typosquatting; (2) Living CVE Autopatch monitors stack advisories and generates non-breaking upgrade playbooks; (3) Zero-Width Canary IP Watermark embeds invisible cryptographic provenance into generated artifacts to deter blueprint piracy; and (4) Every AI tool call, payment settlement, and PII erasure is recorded in an immutable SHA-256 hash-chained Audit Log exportable to 3-sheet CPA Excel (.xlsx).'
-        : 'Project OS v9–v11 menanamkan tata kelola keamanan berlapis: (1) Firewall 3-Gerbang AgentShield menyaring input RAG dari serangan Prompt Injection, mengunci izin eksekusi 44 tool AI, dan memvalidasi paket Composer/NPM dari bahaya typosquatting; (2) Living CVE Autopatch memantau celah keamanan stack dan menyiapkan panduan patch otomatis; (3) Zero-Width Canary IP Watermark menyisipkan tanda air kriptografi tak kasat mata untuk melacak kebocoran dokumen; serta (4) Seluruh aksi AI, pembayaran, dan penghapusan data tercatat dalam rantai hash Audit Log SHA-256 yang dapat diekspor ke Excel (.xlsx) 3-Sheet standar akuntan publik.'
+        : 'Project OS v9–v12 menanamkan tata kelola keamanan berlapis: (1) Firewall 3-Gerbang AgentShield menyaring input RAG dari serangan Prompt Injection, mengunci izin eksekusi 49 tool AI, dan memvalidasi paket Composer/NPM dari bahaya typosquatting; (2) Living CVE Autopatch memantau celah keamanan stack dan menyiapkan panduan patch otomatis; (3) Zero-Width Canary IP Watermark menyisipkan tanda air kriptografi tak kasat mata untuk melacak kebocoran dokumen; serta (4) Seluruh aksi AI, pembayaran, dan penghapusan data tercatat dalam rantai hash Audit Log SHA-256 yang dapat diekspor ke Excel (.xlsx) 3-Sheet standar akuntan publik.'
     },
     {
       category: 'UI_UX_12_SEKTOR',
@@ -2204,12 +2214,16 @@ export default function ArchitecturePricingIsland({
                           'Pillar 1 (Core Spec): Full 26-Parameter PRD Document (Chapters 1-6)',
                           'Pillar 3 (Database Schema): PostgreSQL Strict ULID DDL SQL (Ready-to-import)',
                           'Performance Standard: O(1) Keyset & Cursor Pagination Directives',
+                          '6 AI Agent Rules (.cursorrules, CLAUDE.md, AGENTS.md, Codex, Windsurf, Copilot)',
+                          'One-Command Workspace Bootstrapper: curl -sL /init/{ulid} | bash',
                           'Execution Roadmap: 2 Sprints Work Breakdown Structure (Linear / Jira ready)',
                           'Official Deliverable: Licensed PDF & Markdown Export with SHA-256 Hash',
                         ] : [
                           'Pilar 1 (Spesifikasi Inti): Dokumen PRD lengkap 26 parameter (Bab 1–6)',
                           'Pilar 3 (Skema Database): SQL PostgreSQL ULID presisi (Siap diimpor)',
                           'Standar Kinerja: Panduan kueri cepat Keyset & Cursor Pagination O(1)',
+                          'Aturan 6 Agen AI Koding (.cursorrules, CLAUDE.md, AGENTS.md, Codex, Windsurf, Copilot)',
+                          'Bootstrapper 1-Perintah Terminal: curl -sL /init/{ulid} | bash',
                           'Peta Kerja Eksekusi: Rencana kerja 2 sprint terstruktur (Linear / Jira ready)',
                           'Ekspor Dokumen Resmi: Berkas PDF & Markdown berlisensi hash SHA-256',
                         ]).map((f, i) => (
@@ -2284,17 +2298,25 @@ export default function ArchitecturePricingIsland({
                           ⭐ {isEn ? 'Includes all Starter AI Architect features, plus:' : 'Mencakup seluruh fitur Starter AI Architect, ditambah:'}
                         </div>
                         {(isEn ? [
-                          'Pillar 3 (Scaffold): Container Stack (docker-compose.yml, PHP 8.4, PG 16, Redis, Nginx)',
+                          'Pillar 3 (Scaffold): Production Docker Compose Starter Kit (22+ Files, PG16 ULID, Redis, Nginx)',
                           'Pillar 4 (Seeder): Synthetic Mock Data Seeder Engine (100+ Realistic Records)',
-                          'Pillar 5 (AI Agent): AI Coding Agent Directives (.cursorrules, CLAUDE.md, AGENTS.md)',
+                          'Pillar 5 (AI Agent): Full 6-Engine AI Coding Agent Directives (Antigravity, Claude, Codex, Cursor)',
+                          'Workspace Auto-Save: Isolated Custom Folder Name with Cloud Auto-Sync per Project',
+                          'Download Center: 24-Hour Asynchronous Artifact Queue (ZIP, PDF, MD) with Countdown Ticker',
+                          'Context Architecture: Tri-Hybrid Memory (CAG Prompt Caching O(1) + RAG Dense Retrieval)',
+                          'ECC Universal v2.2.3 Ecosystem: Multi-Agent Council & Continuous Learning Harness',
                           'Visual System Blueprint: 6 Complete Diagrams (Architecture, ERD, Data Flow, Sequence)',
                           'Change Request (CR) / Addendum Module: Integrated form for scope updates',
                           'API Foundation: Pre-built RESTful API Routes (Laravel 13 & Next.js App Router)',
                           'White-Label License: Full rights to re-brand and deliver directly to your clients',
                         ] : [
-                          'Pilar 3 (Rangka Koding): File kontainer Docker siap jalan (PHP 8.4, PostgreSQL 16, Redis, Nginx)',
+                          'Pilar 3 (Rangka Koding): Starter Kit Docker Compose 22+ Berkas Lengkap & Ekspor ZIP Instan',
                           'Pilar 4 (Data Awal): Generator data awal sintetis (Synthetic Data Seeder 100+ baris)',
-                          'Pilar 5 (Panduan AI): Aturan koding untuk agen AI (.cursorrules, CLAUDE.md, AGENTS.md)',
+                          'Pilar 5 (Panduan AI): Aturan 6 Agen AI Koding Lengkap (Antigravity IDE, Claude, Codex, Cursor)',
+                          'Auto-Save Workspace: Nama Folder Kustom Terisolasi dengan Auto-Save Cloud Per Proyek',
+                          'Download Center: Antrean Berkas Asinkron 24 Jam (ZIP, PDF, MD) dengan Countdown Ticker',
+                          'Arsitektur Konteks: Memori Tri-Hybrid (CAG Prompt Caching O(1) + RAG Vektor Dense)',
+                          'Ekosistem ECC v2.2.3: Multi-Agent Council, Continuous Learning & Eval Harness',
                           'Cetak Biru Visual: 6 Diagram sistem lengkap (Arsitektur, ERD, Alur Data, Sequence)',
                           'Modul Change Request (CR) / Addendum: Formulir resmi pengajuan revisi scope',
                           'Fondasi API: Rute API RESTful siap pakai (Laravel 13 & Next.js App Router)',
@@ -2331,7 +2353,7 @@ export default function ArchitecturePricingIsland({
                           TIER 04 // ULTIMATE ARCHITECTURE
                         </span>
                         <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[9px] font-black">
-                          {formatPillar(isEn ? 'COMPLETE 10-PILLAR OS' : 'LENGKAP 10 PILAR OS')}
+                          {formatPillar(isEn ? 'PARIPURNA 20-PILLAR OS V12.0' : 'PARIPURNA 20 PILAR OS V12.0')}
                         </span>
                       </div>
 
@@ -2341,8 +2363,8 @@ export default function ArchitecturePricingIsland({
 
                       <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-4">
                         {isEn
-                          ? 'Complete 10-pillar architecture with Pest & Playwright automated testing, GitHub Actions CI/CD, Health Probes, and 1-on-1 Architect session.'
-                          : 'Arsitektur lengkap 10-pilar dengan pengujian Pest & Playwright otomatis, GitHub Actions CI/CD, Health Probes, dan sesi konsultasi 1-on-1 dengan Arsitek.'}
+                          ? 'Complete 20-pillar architecture with Pest & Playwright automated testing, GitHub Actions CI/CD, KAG Knowledge Graph, Health Probes, and 1-on-1 Architect session.'
+                          : 'Arsitektur lengkap 20-pilar dengan pengujian Pest & Playwright otomatis, GitHub Actions CI/CD, KAG Knowledge Graph, Health Probes, dan sesi konsultasi 1-on-1 dengan Arsitek.'}
                       </p>
 
                       {/* Compact Price Box */}
@@ -2367,22 +2389,24 @@ export default function ArchitecturePricingIsland({
                           ⭐ {isEn ? 'Includes all Pro Blueprint features, plus:' : 'Mencakup seluruh fitur Pro Blueprint, ditambah:'}
                         </div>
                         {(isEn ? [
-                          'Pillar 2 (UI/UX Design): Design Tokens JSON, 4 Core Screens Wireframe & WCAG AAA States',
-                          'Pillar 6 (QA & E2E Testing): Automated Pest Contract-First Tests & Playwright Browser Automation',
-                          'Pillar 7 (DevOps CI/CD): 1-Click Cloud Deployment Pipeline (GitHub Actions & deploy.sh)',
-                          'Pillar 8 (Telemetry): Health Probes (/healthz, /livez, /readyz) & Service Monitoring',
-                          'Pillar 9 (Disaster Recovery): Automated Encrypted Backups & Zero-Data-Loss RPO Runbooks',
-                          'Pillar 10 (Living API Docs): Scalar Interactive API Playground & Contract Drift Sentinel',
-                          'Executive Call: 1 Scheduled 60-Minute 1-on-1 Session with Principal Architect',
-                          'Legal Security: Official Corporate Non-Disclosure Agreement (NDA)',
+                          'Pillars P01–P03 (Core): 12 Sectors, 9 Stacks, Strict ULID & Keyset Cursor O(1)',
+                          'Pillars P04–P06 (UI/UX): 36 Operational Cockpits + 6 60fps Scrollytelling Presets (Zone A + B)',
+                          'Pillars P07–P08 (AI Engine): KAG Knowledge Graph + CAG Prompt Caching + 49 Native Tools Calling',
+                          'Pillars P09–P11 (Security): AgentShield Red-Team, SHA-256 Audit Trail Chain & UU PDP Vault',
+                          'Pillars P12–P15 (SaaS): Satu Pintu Commercial Gate, Escrow Midtrans Snap & 90-Day SLA Warranty',
+                          'Pillars P16–P17 (Authority): 12-Sector Schema.org JSON-LD & Native /llms.txt AI Citation Engine',
+                          'Pillars P18–P20 (DevOps): Offline PWA Outbox, Pre-Migration pg_dump Guard & 1-Click Rollback',
+                          'Executive 1-on-1 Call: 60-Minute Direct Strategic Session with Principal Architect',
+                          'Legal Security: Official Corporate Non-Disclosure Agreement (NDA) with Digital Signature',
                         ] : [
-                          'Pilar 2 (Desain UI/UX): Cetak biru wireframe 4 layar utama, Token Desain (JSON) & Status WCAG AAA',
-                          'Pilar 6 (Uji Kualitas & E2E): Paket pengujian otomatis ApiContractTest Pest & Otomasi Browser Playwright',
-                          'Pilar 7 (Otomasi Server): Jalur deployment otomatis cloud (GitHub Actions & deploy.sh)',
-                          'Pilar 8 (Telemetri): Health Probes (/healthz, /livez, /readyz) & Pemantauan Performa',
-                          'Pilar 9 (Disaster Recovery): Skrip Backup Terenkripsi & SOP Pemulihan Bencana',
-                          'Pilar 10 (Dokumen API Hidup): Scalar Interactive API Playground & Contract Drift Sentinel',
-                          'Sesi Konsultasi: 1 Sesi 60 Menit 1-on-1 bersama Principal Architect',
+                          'Pilar P01–P03 (Arsitektur Inti): 12 Sektor, 9 Stack, Strict ULID & Keyset Cursor O(1)',
+                          'Pilar P04–P06 (Desain UI/UX): 36 Cockpit Operasional + 6 Preset Scrollytelling 60fps (Zona A & B)',
+                          'Pilar P07–P08 (Mesin AI): KAG Knowledge Graph + CAG Prompt Caching + 49 Native Tool Calling',
+                          'Pilar P09–P11 (Keamanan): AgentShield Red-Team, Rantai Audit SHA-256 & Brankas UU PDP PII',
+                          'Pilar P12–P15 (Komersial): Gerbang Satu Pintu, Escrow Midtrans Snap & Garansi SLA 90 Hari',
+                          'Pilar P16–P17 (Otoritas): Schema.org Multi-Graph JSON-LD & Mesin Sitasi AI /llms.txt',
+                          'Pilar P18–P20 (DevOps & Ops): Offline PWA Outbox, Guard pg_dump Pra-Migrasi & 1-Click Rollback',
+                          'Sesi Eksekutif 1-on-1: 60 Menit Konsultasi Strategis Langsung bersama Principal Architect',
                           'Perlindungan Hukum: Surat Perjanjian Kerahasiaan (NDA) resmi bertanda tangan digital',
                         ]).map((f, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs text-zinc-700 dark:text-zinc-300">
@@ -2596,8 +2620,8 @@ export default function ArchitecturePricingIsland({
                   </h2>
                   <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed max-w-2xl mx-auto mb-4">
                     {isEn
-                      ? 'Full turnkey production development across all 10 Pillars of Software Factory OS. Includes dedicated VPS hardening, isolated sprint batches (Anti-Collision), and a full 3-month bug warranty.'
-                      : 'Pengerjaan kode produksi turnkey (10 Pilar Software Factory OS) langsung oleh tim Senior Architect Neriah Pro. Dilengkapi kapasitas sprint terisolasi (Anti-Collision), dedicated cloud VPS, dan garansi bug 3 bulan penuh.'}
+                      ? 'Full turnkey production development across all 20 Pillars of Software Factory OS v12.0. Includes Midtrans Snap Escrow (50/50 & 3-Milestone), SHA-256 Scope Lock, dedicated VPS hardening, isolated sprint batches (Anti-Collision), and a full 90-day SLA bug warranty.'
+                      : 'Pengerjaan kode produksi turnkey (20 Pilar Software Factory OS v12.0) langsung oleh tim Senior Architect Neriah Pro. Dilengkapi Escrow Midtrans Snap (50/50 & 3-Milestone), Kunci Lingkup SHA-256, kapasitas sprint terisolasi (Anti-Collision), dedicated cloud VPS, dan garansi bug SLA 90 hari penuh.'}
                   </p>
                   <div className="inline-flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300">
                     <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
@@ -2760,41 +2784,41 @@ export default function ArchitecturePricingIsland({
                       {/* Inclusive Header & Features */}
                       <div className="space-y-2.5 mb-6">
                         <div className="p-2 mb-2 bg-emerald-100 dark:bg-emerald-950/80 border-l-2 border-emerald-600 dark:border-emerald-400 text-emerald-950 dark:text-emerald-200 font-mono text-[10px] font-black">
-                          ⭐ {formatPillar(isEn ? 'Includes all Blueprint Advisory deliverables + Complete 10 Pillars of Software Factory OS:' : 'Mencakup seluruh hasil Blueprint Advisory + Lengkap 10 Pilar Software Factory OS:')}
+                          ⭐ {formatPillar(isEn ? 'Includes all Blueprint Advisory deliverables + Complete 20 Pillars of Software Factory OS v12.0:' : 'Mencakup seluruh hasil Blueprint Advisory + Lengkap 20 Pilar Software Factory OS v12.0:')}
                         </div>
                         {(isEn ? [
-                          'Pillar 1 (Brain & Contract): 26-Parameter PRD, OpenAPI 3.1 Spec & WBS 5 Sprints Roadmap',
-                          'Pillar 2 (Clean Brutalist UI): Design Tokens JSON, 4 Core Wireframes & WCAG AAA States',
-                          'Pillar 3 (Scaffold & Engine): Laravel 13, Filament v5, PostgreSQL 16 Strict ULID & Keyset O(1)',
+                          'Pillars P01–P03 (Core Engine): 26-Parameter PRD, PostgreSQL 16 Strict ULID & Keyset O(1), Docker Stack (PHP 8.4, PG16, Redis)',
+                          'Pillars P04–P06 (UI/UX & Logic): 36 Operational Cockpits + 6 60fps Scrollytelling Presets, Dual-Persona Studio, match() ACID Ledger',
+                          'Pillars P07–P08 (AI Context): KAG Knowledge Graph + CAG Prompt Caching + 49 Native Tool Calling Functions & Live MCP Bridge',
+                          'Pillars P09–P11 (Security): AgentShield Red-Team, Tamper-Evident SHA-256 Audit Trail Chain, UU PDP PII Vault & Blind Index',
+                          'Pillars P12–P15 (SaaS & Escrow): Satu Pintu Gate, Turnkey Escrow Midtrans Snap (50/50 & 3-Milestone), SHA-256 Scope Lock, 90-Day SLA Bug-Warranty',
+                          'Pillars P16–P17 (Authority): 12-Sector Multi-Graph Schema.org JSON-LD & Native /llms.txt AI Citation GEO Engine',
+                          'Pillars P18–P20 (DevOps & SOP): Offline PWA Outbox Sync, Pre-Migration pg_dump Guard & 1-Click Rollback, Role Onboarding & Client A4 SOP',
                           'Pillar 4 (Realistic Data): Synthetic Mock Data Seeder Engine (100+ records for instant staging)',
-                          'Pillar 5 (AI Coding Directives): Repository-tailored Agent Directives (.cursorrules, CLAUDE.md, AGENTS.md)',
                           'Pillar 6 (Automated Testing): ApiContractTest Pest & Playwright Browser Automation Suite (100% Green)',
                           'Pillar 7 (DevOps CI/CD): 1-Click Cloud Deployment Pipeline (GitHub Actions & deploy.sh 6 scenarios)',
-                          'Pillar 8 (Telemetry & Probes): Health Probes (/healthz, /livez, /readyz) & Dedicated Observability',
-                          'Pillar 9 (Disaster Recovery): Automated Encrypted Backups (AES-256), RPO < 1 Hour & Drill Runbooks',
-                          'Pillar 10 (Living API Docs): Scalar Interactive API Playground & Contract Drift Sentinel Live',
                           'Managed Sprint Capacity: Reserved slot in Batch 1, 2, or Q1 with Anti-Collision Engine',
                           'Automated Payments: Midtrans Snap (QRIS, VA, Cards) with Idempotent Anti-Duplicate Webhook',
                           'Master Gantt Timeline Real-Time & Milestone Transparency in Customer Portal',
                           '100% Private GitHub Repo & Dedicated VPS Credentials Handover (Zero Vendor Lock-in)',
-                          '3-Month Full Priority SLA Bug Warranty & Maintenance by Lead Architect',
+                          '90-Day Full Priority SLA Bug Warranty & Maintenance by Lead Architect',
                           'Official Change Request (CR) / Addendum Module via Customer Portal Dashboard',
                         ] : [
-                          'Pilar 1 (Otak & Kontrak): Dokumen PRD 26 parameter, OpenAPI 3.1 & WBS 5 Sprint Roadmap',
-                          'Pilar 2 (UI/UX Clean Brutalist): Design Tokens JSON, Wireframe 4 Layar Inti & Status WCAG AAA',
-                          'Pilar 3 (Rangka & Engine): Laravel 13, Filament v5, PostgreSQL 16 Strict ULID & Keyset O(1)',
+                          'Pilar P01–P03 (Arsitektur Inti): PRD 26 Parameter, PostgreSQL 16 Strict ULID & Keyset O(1), Docker Stack (PHP 8.4, PG16, Redis)',
+                          'Pilar P04–P06 (UI/UX & Logika): 36 Kokpit Operasional + 6 Preset Scrollytelling 60fps, Dual-Persona Studio, match() ACID Ledger',
+                          'Pilar P07–P08 (Konteks AI): KAG Knowledge Graph + CAG Prompt Caching + 49 Native Tool Calling Function & Jembatan Live MCP',
+                          'Pilar P09–P11 (Keamanan): AgentShield Red-Team, Rantai Audit SHA-256 Kriptografis, Brankas Privasi UU PDP & Blind Index O(1)',
+                          'Pilar P12–P15 (SaaS & Escrow): Gerbang Satu Pintu, Escrow Midtrans Snap (50/50 & 3-Milestone), Segel Scope SHA-256, Garansi SLA 90 Hari',
+                          'Pilar P16–P17 (Otoritas): Multi-Graph Schema.org JSON-LD 12 Sektor & Mesin Sitasi GEO /llms.txt',
+                          'Pilar P18–P20 (DevOps & SOP): Offline PWA Outbox Sync, Guard pg_dump Pra-Migrasi & 1-Click Rollback, Panduan Peran & Buku SOP A4',
                           'Pilar 4 (Data Nyata): Synthetic Mock Data Seeder Engine (100+ baris data realistis staging)',
-                          'Pilar 5 (Panduan AI): Aturan koding AI Agen (.cursorrules, CLAUDE.md, AGENTS.md)',
                           'Pilar 6 (Uji Mutu Otomatis): ApiContractTest Pest & Otomasi Browser Playwright E2E (100% Lolos)',
                           'Pilar 7 (Jalur CI/CD Cloud): GitHub Actions & deploy.sh 6 skenario deploy zero-downtime',
-                          'Pilar 8 (Telemetri & Observabilitas): Health Probes (/healthz, /livez, /readyz) & Pemantauan Performa',
-                          'Pilar 9 (Ketahanan & Backup): Disaster Recovery RPO < 1 jam, Snapshot & Backup Terenkripsi AES-256',
-                          'Pilar 10 (Dokumentasi API Hidup): Scalar Interactive API Playground & Contract Drift Sentinel',
                           'Managed Sprint Capacity: Slot terisolasi di Batch 1, 2, atau Q1 dengan Anti-Collision Engine',
                           'Integrasi Pembayaran Otomatis: Midtrans Snap (QRIS/VA/Kartu) & Webhook Idempoten Anti-Duplikasi',
                           'Master Gantt Timeline Real-Time & Transparansi Milestone di Customer Portal',
                           '100% Penyerahan Source Code Repo GitHub Privat & Kredensial Server VPS (No Lock-in)',
-                          'Garansi SLA Prioritas 3 Bulan Penuh & Maintenance Terjadwal Langsung oleh Lead Architect',
+                          'Garansi SLA Prioritas 90 Hari Penuh & Maintenance Terjadwal Langsung oleh Lead Architect',
                           'Modul Change Request (CR) / Addendum Resmi terintegrasi di Customer Portal',
                         ]).map((feat, idx) => (
                           <div key={idx} className="flex items-start gap-2 text-xs text-zinc-800 dark:text-zinc-200 font-medium">
@@ -3060,12 +3084,12 @@ export default function ArchitecturePricingIsland({
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                       <div className="space-y-2 max-w-3xl">
                         <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
-                          <span>PROJECT OS V2.5 // ZERO-TO-PRODUCTION INDUSTRIAL UX</span>
+                          <span>PROJECT OS V12.0 // 36 UI + 6 SCROLL COCKPITS</span>
                         </div>
                         <h2 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight text-zinc-950 dark:text-white font-sans">
                           {isEn
-                            ? '12 Sectoral Industrial UI Cockpits & 6 Killer Orchestration Engines'
-                            : '12 Arketipe UI/UX Spesifik Industri & 6 Mesin Orkestrasi Anti-Slop'}
+                            ? '12 Sectoral Industrial UI Cockpits (36 Visuals + 6 Scroll Presets) & 6 Killer Engines V12.0'
+                            : '12 Arketipe UI/UX Industri (36 Visual + 6 Preset Scroll) & 6 Mesin Orkestrasi Anti-Slop V12.0'}
                         </h2>
                         <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans">
                           {isEn
@@ -3184,7 +3208,7 @@ export default function ArchitecturePricingIsland({
                                     {isEn ? 'Choose Your Visual Frontend UI/UX Variant (3 Blueprints per Sector)' : 'Pilih Varian Visual Frontend UI/UX Proyek Anda (3 Opsi per Sektor)'}
                                   </span>
                                   <span className="font-mono text-[10px] font-bold text-emerald-900 dark:text-emerald-300">
-                                    36 VISUAL BLUEPRINTS V8.0
+                                    36 OPERATIONAL COCKPITS V12.0 // DUAL-ZONE UI
                                   </span>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -3383,10 +3407,10 @@ export default function ArchitecturePricingIsland({
                       <div>
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase mb-2">
                           <Code2 className="w-3 h-3" />
-                          <span>{isEn ? 'SCREEN 4 • SIDE-BY-SIDE ANTI-SLOP DIFF & DAY-30+ LIFECYCLE V4.0' : 'BUKTI ARSITEKTUR • PERBANDINGAN NYATA KODE AI SLOP VS PROJECT OS V4.0'}</span>
+                          <span>{isEn ? 'SCREEN 4 • SIDE-BY-SIDE ANTI-SLOP DIFF & DAY-30+ LIFECYCLE V12.0' : 'BUKTI ARSITEKTUR • PERBANDINGAN NYATA KODE AI SLOP VS PROJECT OS V12.0'}</span>
                         </div>
                         <h3 className="text-lg sm:text-xl font-black uppercase text-zinc-950 dark:text-white font-mono">
-                          {isEn ? 'Raw AI Prompt Slop vs NeriahPro Deterministic Engineering' : 'Tanpa NeriahPro (Raw AI Prompt) vs Dengan Project OS v4.0'}
+                          {isEn ? 'Raw AI Prompt Slop vs NeriahPro Deterministic Engineering' : 'Tanpa NeriahPro (Raw AI Prompt) vs Dengan Project OS v12.0'}
                         </h3>
                       </div>
                       <button
@@ -3412,7 +3436,7 @@ $product = Product::find($request->id);
 if ($product->stock >= $qty) {
     $product->update(['stock' => $product->stock - $qty]);
 }`,
-                          posTitle: isEn ? '✅ WITH PROJECT OS V4.0: ULID + FOR UPDATE + DECIMAL(19,4)' : '✅ DENGAN PROJECT OS V4.0: ULID + Kunci Atomik + DECIMAL(19,4)',
+                          posTitle: isEn ? '✅ WITH PROJECT OS V12.0: ULID + FOR UPDATE + DECIMAL(19,4)' : '✅ DENGAN PROJECT OS V12.0: ULID + Kunci Atomik + DECIMAL(19,4)',
                           posCode: `// Deterministic Contract: 26-char ULID + Pessimistic Lock + Movement Ledger
 $table->ulid('id')->primary();
 $table->decimal('unit_price_snapshot', 19, 4);
@@ -3431,7 +3455,7 @@ if ($tier == 'vip') {
         if ($coupon != '') { $disc = $total * 0.25; }
     }
 } else if ($tier == 'reseller') { /* ... 80 lines ... */ }`,
-                          posTitle: isEn ? '✅ WITH PROJECT OS V4.0: Spreadsheet Decision Matrix -> match()' : '✅ DENGAN PROJECT OS V4.0: Tabel Keputusan -> PHP 8.4+ match()',
+                          posTitle: isEn ? '✅ WITH PROJECT OS V12.0: Spreadsheet Decision Matrix -> match()' : '✅ DENGAN PROJECT OS V12.0: Tabel Keputusan -> PHP 8.4+ match()',
                           posCode: `// Compiled from Studio Decision Matrix (Zero Nested If-Else Slop)
 return match (true) {
     $ctx->tier === 'DISTRIBUTOR_VIP' && $ctx->qty >= 100
@@ -3448,7 +3472,7 @@ return match (true) {
 "Add loyalty points to checkout"
 # Result: AI runs migrate:fresh, drops v1.0 columns,
 # forgets organization_id tenant isolation, breaks checkout.`,
-                          posTitle: isEn ? '✅ WITH PROJECT OS V4.0: Surgical Delta v1.1 + Live MCP Bridge' : '✅ DENGAN PROJECT OS V4.0: Delta Aditif v1.1 + Live MCP Server',
+                          posTitle: isEn ? '✅ WITH PROJECT OS V12.0: Surgical Delta v1.1 + Live MCP Bridge' : '✅ DENGAN PROJECT OS V12.0: Delta Aditif v1.1 + Live MCP Server',
                           posCode: `# Connected via .mcp.json (Claude Code / Cursor / Antigravity):
 > neriahpro_create_delta_cr("Add Loyalty Points Ledger")
 # Output: Additive-only ULID migration (v1.0 -> v1.1),
@@ -3620,29 +3644,34 @@ return match (true) {
                       <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800">
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                           <span className="font-mono text-[11px] font-black uppercase text-zinc-950 dark:text-zinc-100">
-                            {isEn ? '15 CANONICAL ARCHITECTURE PILLARS — 100% LOCK & FREEZE MATRIX' : 'MATRIKS 15 PILAR UTAMA PROJECT OS — 100% LOCK & FREEZE'}
+                            {isEn ? '20 CANONICAL ARCHITECTURE PILLARS — 100% LOCK & FREEZE MATRIX V12.0' : 'MATRIKS 20 PILAR UTAMA PROJECT OS V12.0 — 100% LOCK & FREEZE'}
                           </span>
                           <span className="font-mono text-[10px] font-bold text-emerald-900 dark:text-emerald-300">
-                            {isEn ? 'Unified Causal Chain: Retail Self-Dev & Mitra Turnkey' : 'Rantai Kausalitas Satu Pintu: Retail Mandiri & Mitra Turnkey'}
+                            {isEn ? 'Unified Causal Chain: 7 Retail SaaS Tiers & Turnkey Escrow' : 'Rantai Kausalitas Satu Pintu: 7 SaaS Tiers & Turnkey Escrow'}
                           </span>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                           {[
                             { no: '01', id: 'Intake Multi-Modal & Legacy SQL', en: 'Multi-Modal Intake & Legacy SQL', artifact: 'MarkItDown + Shadow ULID' },
                             { no: '02', id: '12 Sektor × 12 Primitives × 9 Stack', en: '12 Sectors × 12 Primitives × 9 Stacks', artifact: 'BLUEPRINT_SCHEMA.json' },
-                            { no: '03', id: '25 Menu L1–L4 & 5 Corporate Glue', en: '25 L1–L4 Menus & 5 Corporate Glue', artifact: 'ENTERPRISE_MENU_MATRIX.md' },
-                            { no: '04', id: 'Skema PG16 ULID, Partisi & 0% N+1', en: 'PG16 ULID, Partitioning & 0% N+1', artifact: 'pg16_range_partitioning.sql' },
-                            { no: '05', id: 'Tabel Keputusan match() & ACID Saga', en: 'match() Decision Matrix & ACID Saga', artifact: 'DeterministicDecisionMatrix.php' },
-                            { no: '06', id: 'UI/UX Industri & Zero-Slop Brutalist', en: 'Industrial UI/UX & Zero-Slop', artifact: 'UI_UX_DESIGN_CONTRACT.md' },
-                            { no: '07', id: 'Hardware IoT, QRIS Lokal & Layar 2', en: 'Hardware IoT, Local QRIS & Screen 2', artifact: 'barcode-wedge-and-dual-screen.js' },
-                            { no: '08', id: 'WebSocket Real-Time Tanpa Polling', en: 'Zero-Polling Event WebSocket', artifact: 'organization.{ulid}.{module}' },
-                            { no: '09', id: 'Kahn DAG Chunker & Symbol Lock', en: 'Kahn DAG Chunker & Symbol Lock', artifact: 'SYMBOL_MANIFEST.json' },
-                            { no: '10', id: 'Kamus Self-Healing Syntax 2026', en: 'Self-Healing Syntax Lock 2026', artifact: 'SYNTAX_LOCK_2026.md' },
-                            { no: '11', id: 'CLI /init 3 Detik & Live MCP Bridge', en: '3-Sec CLI /init & Live MCP Bridge', artifact: '/init/{ulid} + .mcp.json' },
-                            { no: '12', id: '8 Layer Day-2 Ops & Cetak Thermal/A4', en: '8 Day-2 Ops & Thermal/A4 Print', artifact: 'DAY2_OPERATIONS.md' },
-                            { no: '13', id: 'Phase 07 Red-Team & Anti-Slop CI', en: 'Phase 07 Red-Team & Anti-Slop CI', artifact: 'verify-blueprint.sh' },
-                            { no: '14', id: 'Delta v1.1 & Mitra RAB/SPK/BAST', en: 'Surgical Delta v1.1 & RAB/SPK/BAST', artifact: 'SHA-256 Scope Lock' },
-                            { no: '15', id: 'Onboarding Role & Buku SOP Klien', en: 'Role Onboarding & Client SOP Pack', artifact: 'CLIENT_SOP_MANUAL.md' },
+                            { no: '03', id: 'Skema PG16 ULID, Partisi & 0% N+1', en: 'PG16 ULID, Partitioning & 0% N+1', artifact: 'pg16_range_partitioning.sql' },
+                            { no: '04', id: 'Zona A: 36 Kokpit Operasional Sektoral', en: 'Zone A: 36 Sector Cockpits (Zero-Slop)', artifact: 'UI_UX_DESIGN_CONTRACT.md' },
+                            { no: '05', id: 'Zona B: 6 Preset Scrollytelling 60fps', en: 'Zone B: 6 60fps Scrollytelling Presets', artifact: 'scrollytelling-presets.css' },
+                            { no: '06', id: 'Tabel Keputusan match() & ACID Saga', en: 'match() Decision Matrix & ACID Saga', artifact: 'DeterministicDecisionMatrix.php' },
+                            { no: '07', id: 'Konteks AI Tri-Hybrid: KAG + CAG + RAG', en: 'Tri-Hybrid AI: KAG + CAG + RAG Engine', artifact: 'ai_memory_architecture.json' },
+                            { no: '08', id: '49 Native Tool Calling & Live MCP', en: '49 Native Tool Calling & Live MCP Bridge', artifact: '/init/{ulid} + .mcp.json' },
+                            { no: '09', id: 'AgentShield Red-Team & Anti-AI Malware', en: 'AgentShield Red-Team & Anti-Malware', artifact: 'verify-blueprint.sh' },
+                            { no: '10', id: 'Rantai Audit SHA-256 Kriptografis', en: 'Cryptographic SHA-256 Audit Trail Chain', artifact: 'AuditLog::record' },
+                            { no: '11', id: 'Brankas Privasi UU PDP & Blind Index O(1)', en: 'UU PDP Privacy Vault & Blind Index O(1)', artifact: 'HasEncryptedPiiWithBlindIndex.php' },
+                            { no: '12', id: 'Gerbang Lisensi Komersial Satu Pintu', en: 'Satu Pintu Commercial SaaS Gate', artifact: 'SatuPintuEntitlementLock.php' },
+                            { no: '13', id: 'Turnkey Escrow Midtrans Snap (50/50)', en: 'Turnkey Escrow Midtrans Snap (50/50)', artifact: 'MidtransEscrowPaymentService.php' },
+                            { no: '14', id: 'RAB Jam Kerja & Segel Lingkup SHA-256', en: 'Algorithmic Fair RAB & SHA-256 Scope Lock', artifact: 'SHA-256 Scope Lock SPK' },
+                            { no: '15', id: 'BAST Digital & Garansi Bug SLA 90 Hari', en: 'Digital BAST & 90-Day SLA Bug-Warranty', artifact: 'DigitalBastService.php' },
+                            { no: '16', id: 'Multi-Graph Schema.org JSON-LD (12 Sektor)', en: 'Multi-Graph Schema.org JSON-LD (12 Sectors)', artifact: 'MultiGraphSchemaOrgService.php' },
+                            { no: '17', id: 'Otoritas Sitasi GEO /llms.txt & IndexNow', en: 'GEO /llms.txt Citation & IndexNow Ping', artifact: '/llms.txt + /llms-full.txt' },
+                            { no: '18', id: 'Offline PWA Outbox Sync Tanpa Putus', en: 'Offline PWA Outbox & Background Sync', artifact: 'IndexedDB Outbox + SW' },
+                            { no: '19', id: 'Guard pg_dump Pra-Migrasi & Rollback', en: 'Pre-Migration pg_dump Guard & Rollback', artifact: 'pre_migrate_dump_guard.sh' },
+                            { no: '20', id: 'Panduan Peran Staf & Paket SOP A4 Klien', en: 'Role Onboarding & Client A4 SOP Pack', artifact: 'CLIENT_SOP_MANUAL.md' },
                           ].map((p) => (
                             <div key={p.no} className="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 transition flex flex-col justify-between">
                               <div>
@@ -3813,8 +3842,8 @@ return match (true) {
                 { id: 'COMMERCIAL', label: isEn ? '1. Satu Pintu & Commercial' : '1. Satu Pintu & Lisensi' },
                 { id: 'ARCHITECTURE', label: isEn ? '2. DB ULID, Stack & Scale' : '2. DB ULID, Stack & Skala' },
                 { id: 'UI_UX', label: isEn ? '3. 12-Sector 36 UI & 6 Scroll' : '3. 12 Sektor 36 UI & 6 Scroll' },
-                { id: 'AI_SECURITY', label: isEn ? '4. AI 44 Tools, MCP & Shield' : '4. AI 44 Tool, MCP & Shield' },
-                { id: 'SEO_GEO_V11', label: isEn ? '5. SEO/GEO, UU PDP, PWA & SLA' : '5. SEO/GEO, UU PDP, PWA & SLA' },
+                { id: 'AI_SECURITY', label: isEn ? '4. AI 49 Tools, KAG, CAG, RAG & Shield' : '4. AI 49 Tool, KAG, CAG, RAG & Shield' },
+                { id: 'SEO_GEO_V12', label: isEn ? '5. 20 Pillars, SEO/GEO, UU PDP & Escrow' : '5. 20 Pilar, SEO/GEO, UU PDP & Escrow' },
               ];
 
               const matrixRows = [
@@ -3955,12 +3984,12 @@ return match (true) {
                 },
                 {
                   cat: 'AI_SECURITY',
-                  param: isEn ? '16. 44 Native AI Tools (KAG + CAG + Hybrid RAG) & Live 2-Way MCP Bridge' : '16. 44 Native AI Tool Calling (KAG + CAG + RAG) & Jembatan Live MCP 2-Arah',
+                  param: isEn ? '16. 49 Native AI Tools (KAG + CAG + Hybrid RAG) & Live 2-Way MCP Bridge' : '16. 49 Native AI Tool Calling (KAG + CAG + RAG) & Jembatan Live MCP 2-Arah',
                   sparkGrant: isEn ? 'CSR Grant: Live .mcp.json Bridge for Claude Code, Cursor & Antigravity' : 'Hibah CSR: Jembatan .mcp.json Live untuk Claude Code, Cursor & Antigravity',
                   starterPass: isEn ? 'Single-App Pass: .mcp.json Bridge + SYNTAX_LOCK_2026.md Dictionary' : 'Single-App Pass: Jembatan .mcp.json + Kamus SYNTAX_LOCK_2026.md',
                   proAgencyUlt: isEn ? '✅ Full 2-Way MCP Sync (pos_get_phase_prompt / pos_mark_phase_verified)' : '✅ Sinkronisasi 2-Arah MCP (pos_get_phase_prompt / pos_mark_phase_verified)',
                   advisoryUmkm: isEn ? 'Advisory: AI Architecture Mapping | UMKM: Admin Copilot Ready' : 'Advisory: Pemetaan AI | UMKM: Siap Asisten Admin Copilot',
-                  fullMvp: isEn ? '✅ Full Backend Admin AI Agentic Engine (KAG, CAG, RAG & 44 Tools)' : '✅ Engine AI Agentic Backend Admin Penuh (KAG, CAG, RAG & 44 Tool)',
+                  fullMvp: isEn ? '✅ Full Backend Admin AI Agentic Engine (KAG, CAG, RAG & 49 Tools)' : '✅ Engine AI Agentic Backend Admin Penuh (KAG, CAG, RAG & 49 Tool)',
                 },
                 {
                   cat: 'AI_SECURITY',
@@ -3981,7 +4010,7 @@ return match (true) {
                   fullMvp: isEn ? '✅ Full Forensic Audit Log Explorer + 1-Click CPA Excel (.xlsx) in Admin' : '✅ Penjelajah Audit Log Forensik + Ekspor Excel (.xlsx) 1-Klik di Admin',
                 },
                 {
-                  cat: 'SEO_GEO_V11',
+                  cat: 'SEO_GEO_V12',
                   param: isEn ? '19. Multi-Graph Schema.org JSON-LD (@graph Across All 12 Sectors)' : '19. Multi-Graph Schema.org JSON-LD (@graph Spesifik 12 Sektor Industri)',
                   sparkGrant: isEn ? 'CSR Grant: NGO, DonateAction, Project & MonetaryGrant Schema Graph' : 'Hibah CSR: Skema JSON-LD NGO, DonateAction, Project & MonetaryGrant',
                   starterPass: isEn ? 'Single-App Pass: Organization, SoftwareApplication, FAQPage & Sector Graph' : 'Single-App Pass: Graph Organization, SoftwareApplication, FAQPage & Sektor',
@@ -3990,7 +4019,7 @@ return match (true) {
                   fullMvp: isEn ? '✅ Dynamic Admin-Editable Schema.org + Cache::rememberForever() Auto-Flush' : '✅ Schema.org Dinamis via Admin + Cache::rememberForever() Auto-Flush',
                 },
                 {
-                  cat: 'SEO_GEO_V11',
+                  cat: 'SEO_GEO_V12',
                   param: isEn ? '20. GEO Citation Authority (/llms.txt, /llms-full.txt & 50-Word Answer Capsules)' : '20. Otoritas Sitasi AI GEO (/llms.txt, /llms-full.txt & Kapsul Jawaban 50 Kata)',
                   sparkGrant: isEn ? 'CSR Grant: Public Impact Citation Feed for AI Search Engines' : 'Hibah CSR: Umpan Sitasi Dampak Sosial untuk Mesin Pencari AI',
                   starterPass: isEn ? 'Single-App Pass: Auto-Generated /llms.txt & Semantic HTML Comparison Table' : 'Single-App Pass: Generator Otomatis /llms.txt & Tabel HTML Semantik',
@@ -3999,7 +4028,7 @@ return match (true) {
                   fullMvp: isEn ? '✅ Live /llms.txt, /llms-full.txt & Semantic Answer Capsules on Production' : '✅ Endpoint /llms.txt, /llms-full.txt & Kapsul Jawaban Semantik Aktif Live',
                 },
                 {
-                  cat: 'SEO_GEO_V11',
+                  cat: 'SEO_GEO_V12',
                   param: isEn ? '21. IndexNow Instant Ping, AI Crawler robots.txt & Local 1200×630 OG Card' : '21. IndexNow Instant Ping, robots.txt Bot AI & Kartu OG 1200×630 Lokal',
                   sparkGrant: isEn ? 'CSR Grant: Local PHP GD/SVG OpenGraph & QR Verification Card' : 'Hibah CSR: Kartu OpenGraph 1200×630 & QR Lokal Berbasis PHP GD/SVG',
                   starterPass: isEn ? 'Single-App Pass: IndexNow Key + OAI-SearchBot/PerplexityBot Allowlist' : 'Single-App Pass: Kunci IndexNow + Whitelist Bot AI di robots.txt',
@@ -4008,7 +4037,7 @@ return match (true) {
                   fullMvp: isEn ? '✅ 1-Click IndexNow Trigger in Admin Health Pulse + Local OG Generator' : '✅ Tombol Ping IndexNow 1-Klik di Admin Health Pulse + Generator OG Lokal',
                 },
                 {
-                  cat: 'SEO_GEO_V11',
+                  cat: 'SEO_GEO_V12',
                   param: isEn ? '22. UU PDP No. 27/2022 Privacy Vault (AES-256 + HMAC-SHA256 Blind Index O(1))' : '22. Brankas Privasi UU PDP No. 27/2022 (AES-256 + Blind Index HMAC-SHA256 O(1))',
                   sparkGrant: isEn ? 'CSR Grant: Encrypted Donor/Patient NIK & Phone with O(1) Blind Index' : 'Hibah CSR: Enkripsi NIK/HP Donatur & Pasien dengan Blind Index O(1)',
                   starterPass: isEn ? 'Single-App Pass: HasEncryptedPiiWithBlindIndex Trait Included' : 'Single-App Pass: Disertakan Trait HasEncryptedPiiWithBlindIndex',
@@ -4017,7 +4046,7 @@ return match (true) {
                   fullMvp: isEn ? '✅ Live Self-Service Privacy Vault in /customer/dashboard (Preserves Ledger)' : '✅ Brankas Privasi Mandiri Aktif di /customer/dashboard (Jurnal Utuh)',
                 },
                 {
-                  cat: 'SEO_GEO_V11',
+                  cat: 'SEO_GEO_V12',
                   param: isEn ? '23. Bad-Signal Offline Resilience (IndexedDB ULID Outbox + PWA Background Sync)' : '23. Ketahanan Sinyal Buruk (IndexedDB ULID Outbox + Sinkronisasi Latar PWA)',
                   sparkGrant: isEn ? 'CSR Grant: Field Relief/Donation Offline Queue with X-Idempotency-Key' : 'Hibah CSR: Antrean Offline Relawan Lapangan Berproteksi X-Idempotency-Key',
                   starterPass: isEn ? 'Single-App Pass: /sw-offline-outbox.js + offlineOutboxQueue.js Bundle' : 'Single-App Pass: Paket /sw-offline-outbox.js + offlineOutboxQueue.js',
@@ -4026,7 +4055,7 @@ return match (true) {
                   fullMvp: isEn ? '✅ Zero-Duplicate Offline-First Mutation Engine Verified Under Chaos Test' : '✅ Engine Transaksi Anti-Putus & Anti-Dobel Teruji Simulasi Chaos',
                 },
                 {
-                  cat: 'SEO_GEO_V11',
+                  cat: 'SEO_GEO_V12',
                   param: isEn ? '24. Post-BAST 90-Day Contractual SLA Bug-Warranty vs Paid Delta v1.1 Triage' : '24. Triase Garansi Bug SLA 90 Hari Pasca-BAST vs Tambahan Fitur Berbayar v1.1',
                   sparkGrant: isEn ? 'Self-Service Iterative Delta Generator (v1.0 -> v1.1)' : 'Generator Delta Iteratif Mandiri (v1.0 -> v1.1)',
                   starterPass: isEn ? '30-Day Parameter Revision Window + Surgical Delta Spec' : 'Jendela Revisi Parameter 30 Hari + Spesifikasi Delta Aditif',
@@ -4035,7 +4064,7 @@ return match (true) {
                   fullMvp: isEn ? '✅ Auto 90-Day SLA Timer + Free Bugfix Prompt vs Paid CR v1.1 Triage' : '✅ Timer SLA 90 Hari Otomatis + Triase Perbaikan Bug Rp 0 vs Addendum v1.1',
                 },
                 {
-                  cat: 'SEO_GEO_V11',
+                  cat: 'SEO_GEO_V12',
                   param: isEn ? '25. Pre-Migration Atomic pg_dump Snapshot & 1-Command ./deploy.sh rollback' : '25. Snapshot Database pg_dump Pra-Migrasi & Rollback 1-Perintah (./deploy.sh rollback)',
                   sparkGrant: isEn ? 'CSR Grant: Safe Deployment & Backup Runbook' : 'Hibah CSR: Panduan Deployment Aman & Runbook Backup',
                   starterPass: isEn ? 'Single-App Pass: 7-Scenario deploy.sh Script Included' : 'Single-App Pass: Disertakan Skrip deploy.sh 7 Skenario',
@@ -4044,7 +4073,7 @@ return match (true) {
                   fullMvp: isEn ? '✅ Zero-Downtime CI/CD + Instant Atomic Code & DB Rollback Verified' : '✅ CI/CD Tanpa Downtime + Pemulihan Instan Kode & DB Terverifikasi',
                 },
                 {
-                  cat: 'SEO_GEO_V11',
+                  cat: 'SEO_GEO_V12',
                   param: isEn ? '26. Local Webhook Chaos Simulator (APP_ENV !== "production") & Idempotency' : '26. Simulator Chaos Webhook Lokal (Non-Produksi) & Idempotensi Pembayaran',
                   sparkGrant: isEn ? 'Idempotent Webhook Signature Verification Spec' : 'Spesifikasi Verifikasi Signature Webhook Idempoten',
                   starterPass: isEn ? 'Single-App Pass: QRIS/VA Webhook Simulator Script (Blocked 403 in Prod)' : 'Single-App Pass: Simulator Webhook QRIS/VA (Otomatis Diblokir 403 di Prod)',
@@ -4053,7 +4082,7 @@ return match (true) {
                   fullMvp: isEn ? '✅ Live Chaos Sandbox Console in Admin Health Pulse + Auto-Refund/Credit' : '✅ Konsol Simulasi Chaos di Admin Health Pulse + Proteksi Dobel Bayar',
                 },
                 {
-                  cat: 'SEO_GEO_V11',
+                  cat: 'SEO_GEO_V12',
                   param: isEn ? '27. Multi-Entity Holding, Subsidiary & Branch Consolidation (parent_organization_id)' : '27. Konsolidasi Holding, Anak Perusahaan & Multi-Cabang (parent_organization_id)',
                   sparkGrant: isEn ? 'CSR Grant: Central Foundation -> Regional Chapter Consolidation' : 'Hibah CSR: Konsolidasi Yayasan Pusat -> Cabang Daerah',
                   starterPass: isEn ? 'Single-Organization Workspace Isolation' : 'Isolasi Workspace Organisasi Tunggal',
@@ -4098,7 +4127,7 @@ return match (true) {
                 { no: '06', name: isEn ? 'Dual-Persona & Co-Design' : 'Dual-Persona & Co-Design', slop: isEn ? 'Clients confused by raw code/SQL' : 'Klien awam bingung melihat kode/SQL mentah', pos: isEn ? '5-Step Business Mode <-> 3-Pane Architect + Co-Design' : 'Mode Bisnis 5-Langkah <-> Arsitek 3-Pane + Co-Design' },
                 { no: '07', name: isEn ? 'Decision Matrix match()' : 'Tabel Keputusan match()', slop: isEn ? 'Spaghetti nested if/else & float bugs' : 'Kode spaghetti if-else bersarang & salah hitung koma', pos: isEn ? 'Deterministic PHP 8.4+ match() + DECIMAL(19,4) ACID' : 'Kompilasi PHP 8.4+ match() + Akuntansi DECIMAL(19,4)' },
                 { no: '08', name: isEn ? '7-Phase Prompts & /init' : '7-Fase Prompt & CLI /init', slop: isEn ? 'Single giant prompt -> AI context overflow' : 'Satu prompt raksasa -> AI halusinasi & error', pos: isEn ? '7 Kahn-Sorted Phases + 3-Sec curl /init/{ULID} | bash' : '7 Fase Terurut Kahn DAG + Inisialisasi CLI 3 Detik' },
-                { no: '09', name: isEn ? 'Live 2-Way MCP Bridge' : 'Jembatan Live MCP 2-Arah', slop: isEn ? 'Zero IDE awareness of blueprint state' : 'IDE tidak tahu status progres cetak biru', pos: isEn ? 'Live .mcp.json + 44 Native AI Tools (KAG/CAG/RAG)' : 'Sinkronisasi .mcp.json + 44 Tool AI (KAG/CAG/RAG)' },
+                { no: '09', name: isEn ? 'Live 2-Way MCP Bridge' : 'Jembatan Live MCP 2-Arah', slop: isEn ? 'Zero IDE awareness of blueprint state' : 'IDE tidak tahu status progres cetak biru', pos: isEn ? 'Live .mcp.json + 49 Native AI Tools (KAG/CAG/RAG)' : 'Sinkronisasi .mcp.json + 49 Tool AI (KAG/CAG/RAG)' },
                 { no: '10', name: isEn ? 'AgentShield & Living CVE' : 'AgentShield & Living CVE', slop: isEn ? 'Vulnerable to Prompt Injection & IDOR' : 'Rawan kebocoran IDOR & serangan Prompt Injection', pos: isEn ? '3-Gate AgentShield + Phase 7 Red-Team + CVE Autopatch' : 'Firewall AgentShield + Uji Red-Team Fase 7 + Patch CVE' },
                 { no: '11', name: isEn ? 'Canary IP & SHA-256 Audit' : 'Canary IP & Audit SHA-256', slop: isEn ? 'Mutable logs & unprotected documents' : 'Log mudah dihapus & dokumen rawan dibajak', pos: isEn ? 'Zero-Width Canary IP + SHA-256 Hash Chain (.xlsx)' : 'Tanda Air Canary IP + Rantai Hash SHA-256 (.xlsx)' },
                 { no: '12', name: isEn ? 'Satu Pintu Commercial Gate' : 'Gerbang Komersial Satu Pintu', slop: isEn ? 'Inconsistent free bypass vs pricing cards' : 'Tombol loncat gratis tidak sinkron dengan tabel harga', pos: isEn ? 'Unified Step A–F Configurator + Backend Entitlement Lock' : 'Konfigurator Terpadu Langkah A–F + Kunci Lisensi Server' },
@@ -4341,7 +4370,7 @@ return match (true) {
                 { id: 'SATU_PINTU', label: isEn ? 'Satu Pintu & CSR Rp 0' : 'Satu Pintu & Hibah CSR Rp 0' },
                 { id: 'UI_UX_12_SEKTOR', label: isEn ? '12 Sectors, 36 UI & Scrollytelling' : '12 Sektor, 36 UI & Scrollytelling' },
                 { id: 'SEO_GEO_UU_PDP', label: isEn ? 'SEO/GEO, UU PDP & Offline PWA' : 'SEO/GEO, UU PDP & Offline PWA' },
-                { id: 'AI_MCP_SECURITY', label: isEn ? 'AI 44 Tools, MCP & AgentShield' : 'AI 44 Tool, MCP & AgentShield' },
+                { id: 'AI_MCP_SECURITY', label: isEn ? 'AI 49 Tools, MCP & AgentShield' : 'AI 49 Tool, MCP & AgentShield' },
                 { id: 'SLA_GARANSI_HUKUM', label: isEn ? 'Escrow, 90-Day SLA & Rollback' : 'Escrow, Garansi SLA 90 Hari & Rollback' },
               ];
 

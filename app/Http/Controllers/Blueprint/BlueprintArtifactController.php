@@ -134,6 +134,14 @@ class BlueprintArtifactController extends Controller
             ? $customFolder
             : \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?: 'project', $blueprint);
 
+        if ($type === BlueprintDownloadArtifact::TYPE_SCAFFOLD && !empty($customFolder)) {
+            $uMeta = $blueprint->user_metadata ?? [];
+            if (($uMeta['short_slug'] ?? '') !== $customFolder) {
+                $uMeta['short_slug'] = $customFolder;
+                $blueprint->update(['user_metadata' => $uMeta]);
+            }
+        }
+
         // Determine title and filename
         $prefix = $isEn ? 'PRD_EN_' : 'PRD_';
         [$title, $filename] = match ($type) {

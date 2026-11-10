@@ -152,7 +152,8 @@ class GenerateBlueprintArtifactJob implements ShouldQueue
             } elseif ($artifact->artifact_type === BlueprintDownloadArtifact::TYPE_SCAFFOLD) {
                 // Step 1: Synthesize and package scaffold zip
                 $artifact->update(['progress' => 40]);
-                $zipAbsPath = ScaffoldGeneratorService::createZipArchive($blueprint);
+                $customFolder = $blueprint->user_metadata['short_slug'] ?? null;
+                $zipAbsPath = ScaffoldGeneratorService::createZipArchive($blueprint, $customFolder);
 
                 if (file_exists($zipAbsPath)) {
                     $zipContent = file_get_contents($zipAbsPath);

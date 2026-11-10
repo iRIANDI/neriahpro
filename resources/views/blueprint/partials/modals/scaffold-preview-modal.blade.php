@@ -68,6 +68,14 @@
                 </div>
 
                 <div class="flex items-center gap-1.5 shrink-0 font-mono text-xs">
+                    <span x-show="workspaceDirSaveStatus === 'saving'" class="text-[9px] text-amber-400 font-mono font-bold animate-pulse px-1.5 py-0.5 border border-amber-500/40 bg-amber-950/30" style="display: none;">
+                        <span x-show="locale === 'en'">SAVING...</span>
+                        <span x-show="locale !== 'en'">MENYIMPAN...</span>
+                    </span>
+                    <span x-show="workspaceDirSaveStatus === 'saved'" class="text-[9px] text-emerald-400 font-mono font-bold px-1.5 py-0.5 border border-emerald-500/40 bg-emerald-950/30" style="display: none;">
+                        <span x-show="locale === 'en'">SAVED &check;</span>
+                        <span x-show="locale !== 'en'">TERSIMPAN &check;</span>
+                    </span>
                     <span class="text-zinc-500 text-[11px] hidden md:inline">C:\projects\</span>
                     <div class="relative inline-flex items-center" style="position: relative; display: inline-flex; align-items: center;">
                         <input 
@@ -85,7 +93,7 @@
                         <button 
                             type="button" 
                             x-show="workspaceDir" 
-                            @click="setWorkspaceDir('')" 
+                            @click="setWorkspaceDir('', true)" 
                             :title="locale === 'en' ? 'Clear (revert to default)' : 'Kosongkan (kembali ke default)'"
                             style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 20; display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: transparent; border: none; line-height: 1;"
                             class="text-zinc-400 hover:text-emerald-400 text-base cursor-pointer font-black transition-colors select-none"
@@ -95,7 +103,7 @@
                     </div>
                     <button 
                         type="button" 
-                        @click="setWorkspaceDir('')"
+                        @click="setWorkspaceDir('', true)"
                         class="px-2.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-[10px] font-mono border border-zinc-700 rounded-none cursor-pointer font-bold"
                         :title="locale === 'en' ? 'Revert to system default name' : 'Kembalikan ke nama default sistem'"
                     >
@@ -135,6 +143,7 @@
                     <!-- Instant Download Button -->
                     <a 
                         :href="getScaffoldDownloadUrl()" 
+                        :download="getEffectiveFolder() + '.zip'"
                         class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase text-[11px] flex items-center gap-1.5 transition cursor-pointer w-fit shadow-xs rounded-none"
                         :title="locale === 'en' ? `Download ${getEffectiveFolder()}.zip` : `Unduh ${getEffectiveFolder()}.zip`"
                     >

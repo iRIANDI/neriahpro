@@ -364,6 +364,14 @@
                         </p>
                     </div>
                     <div class="flex items-center gap-1.5 shrink-0">
+                        <span x-show="workspaceDirSaveStatus === 'saving'" class="text-[9px] text-amber-400 font-mono font-bold animate-pulse px-1.5 py-0.5 border border-amber-500/40 bg-amber-950/30" style="display: none;">
+                            <span x-show="locale === 'en'">SAVING...</span>
+                            <span x-show="locale !== 'en'">MENYIMPAN...</span>
+                        </span>
+                        <span x-show="workspaceDirSaveStatus === 'saved'" class="text-[9px] text-emerald-400 font-mono font-bold px-1.5 py-0.5 border border-emerald-500/40 bg-emerald-950/30" style="display: none;">
+                            <span x-show="locale === 'en'">SAVED &check;</span>
+                            <span x-show="locale !== 'en'">TERSIMPAN &check;</span>
+                        </span>
                         <span class="font-mono text-xs text-zinc-400 bg-zinc-950 px-2 py-1 border border-zinc-800">C:\projects\</span>
                         <div class="relative inline-flex items-center" style="position: relative; display: inline-flex; align-items: center;">
                             <input 
@@ -381,7 +389,7 @@
                             <button 
                                 type="button" 
                                 x-show="workspaceDir" 
-                                @click="setWorkspaceDir('')" 
+                                @click="setWorkspaceDir('', true)" 
                                 :title="locale === 'en' ? 'Clear (return to default)' : 'Kosongkan (kembali ke default)'"
                                 title="Kosongkan (kembali ke default)"
                                 style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 20; display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; background: transparent; border: none; line-height: 1;"
@@ -392,7 +400,7 @@
                         </div>
                         <button 
                             type="button" 
-                            @click="setWorkspaceDir('')"
+                            @click="setWorkspaceDir('', true)"
                             :title="locale === 'en' ? 'Reset to short default' : 'Reset ke default pendek'"
                             title="Reset ke default pendek"
                             class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-[10px] font-mono rounded-none cursor-pointer"

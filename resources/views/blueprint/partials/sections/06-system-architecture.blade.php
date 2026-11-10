@@ -1946,7 +1946,7 @@ class ProcessSecureDataset implements ShouldQueue
 
                                 <!-- Group B: Primary Turnkey Repo Download -->
                                 <div class="flex items-center gap-2 shrink-0">
-                                    <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="w-full md:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer shadow-sm text-xs border border-emerald-600">
+                                    <a :href="getScaffoldDownloadUrl()" :download="getEffectiveFolder() + '.zip'" class="w-full md:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer shadow-sm text-xs border border-emerald-600">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                         <span>{{ $isEn ? 'DOWNLOAD FULL REPO (.ZIP)' : 'UNDUH FULL REPO (.ZIP)' }}</span>
                                     </a>

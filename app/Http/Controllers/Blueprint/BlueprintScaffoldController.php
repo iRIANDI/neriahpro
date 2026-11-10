@@ -114,8 +114,50 @@ class BlueprintScaffoldController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
+            if ($request->expectsJson() || $request->isXmlHttpRequest()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal membuat arsip scaffold: ' . $e->getMessage(),
+                ], 500);
+            }
+
             return back()->with('error', 'Gagal membuat arsip scaffold: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Persist custom workspace / folder name uniquely per blueprint in user_metadata.
+     */
+    public function saveCustomFolder(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $rawFolder = (string) $request->input('folder', '');
+        $customFolder = preg_replace('/[^a-z0-9_-]/', '', strtolower(str_replace(' ', '-', $rawFolder)));
+        $customFolder = trim($customFolder, '-_');
+
+        $uMeta = $blueprint->user_metadata ?? [];
+        if (!empty($customFolder)) {
+            $uMeta['short_slug'] = $customFolder;
+        } else {
+            unset($uMeta['short_slug']);
+        }
+        // Invalidate previously cached zip path since folder name changed
+        unset($uMeta['scaffold_zip_path']);
+        $uMeta['scaffold_ready'] = false;
+        $blueprint->update(['user_metadata' => $uMeta]);
+
+        $effectiveSlug = !empty($customFolder)
+            ? $customFolder
+            : ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?: 'project', $blueprint);
+
+        return response()->json([
+            'success' => true,
+            'custom_folder' => $customFolder ?: null,
+            'effective_slug' => $effectiveSlug,
+            'message' => 'Nama folder kerja kustom berhasil disimpan secara unik untuk proyek ini.',
+        ]);
     }
 
     /**

@@ -706,6 +706,16 @@ class BlueprintDiscoveryController extends Controller
                     if (! empty($blueprint['personaMode'])) {
                         $meta['persona_mode'] = PosInclusiveCommercialCatalog::normalizePersonaMode((string) $blueprint['personaMode']);
                     }
+                    if ($request->has('custom_folder') || isset($blueprint['customFolder']) || isset($blueprint['workspaceDir']) || isset($blueprint['short_slug'])) {
+                        $rawFolder = (string) ($request->input('custom_folder') ?? ($blueprint['customFolder'] ?? ($blueprint['workspaceDir'] ?? ($blueprint['short_slug'] ?? ''))));
+                        $cleanFolder = preg_replace('/[^a-z0-9_-]/', '', strtolower(str_replace(' ', '-', $rawFolder)));
+                        $cleanFolder = trim($cleanFolder, '-_');
+                        if (! empty($cleanFolder)) {
+                            $meta['short_slug'] = $cleanFolder;
+                        } else {
+                            unset($meta['short_slug']);
+                        }
+                    }
                     $meta['last_autosaved_at'] = now()->toIso8601String();
 
                     $updatePayload = [

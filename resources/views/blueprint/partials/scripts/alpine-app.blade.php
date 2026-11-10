@@ -666,9 +666,13 @@
                 aiSuiteFilter: '',
                 executionGuideTab: 'choice-a',
                 workspaceDir: (function() {
+                    var dbShortSlug = @json($blueprint->user_metadata['short_slug'] ?? '');
+                    if (dbShortSlug) return dbShortSlug;
                     var saved = localStorage.getItem('neriah_workspace_{{ $blueprint->slug }}');
                     return saved !== null ? saved : '';
                 })(),
+                workspaceDirAutoSaveTimer: null,
+                workspaceDirSaveStatus: 'idle', // 'idle' | 'saving' | 'saved'
                 sanitizeFolderName(val) {
                     if (!val) return '';
                     // 1. Replace spaces with hyphens
@@ -680,10 +684,56 @@
                     // 4. Force lowercase
                     return str.toLowerCase();
                 },
-                setWorkspaceDir(val) {
+                setWorkspaceDir(val, immediate = false) {
                     var sanitized = this.sanitizeFolderName(val);
                     this.workspaceDir = sanitized;
-                    localStorage.setItem('neriah_workspace_{{ $blueprint->slug }}', sanitized);
+                    if (sanitized) {
+                        localStorage.setItem('neriah_workspace_{{ $blueprint->slug }}', sanitized);
+                    } else {
+                        localStorage.removeItem('neriah_workspace_{{ $blueprint->slug }}');
+                    }
+                    this.triggerWorkspaceDirAutoSave(sanitized, immediate);
+                },
+                triggerWorkspaceDirAutoSave(folderName, immediate = false) {
+                    if (this.workspaceDirAutoSaveTimer) {
+                        clearTimeout(this.workspaceDirAutoSaveTimer);
+                    }
+                    this.workspaceDirSaveStatus = 'saving';
+
+                    const performSave = async () => {
+                        try {
+                            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                            const res = await fetch('{{ route('blueprint.scaffold.save-custom-folder', $blueprint->slug) }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': token || ''
+                                },
+                                body: JSON.stringify({
+                                    folder: folderName
+                                })
+                            });
+                            const data = await res.json();
+                            if (data && data.success) {
+                                this.workspaceDirSaveStatus = 'saved';
+                                setTimeout(() => {
+                                    if (this.workspaceDirSaveStatus === 'saved') {
+                                        this.workspaceDirSaveStatus = 'idle';
+                                    }
+                                }, 2000);
+                            }
+                        } catch (e) {
+                            console.warn('Failed to auto-save custom folder:', e);
+                            this.workspaceDirSaveStatus = 'idle';
+                        }
+                    };
+
+                    if (immediate) {
+                        performSave();
+                    } else {
+                        this.workspaceDirAutoSaveTimer = setTimeout(performSave, 800);
+                    }
                 },
                 handleFolderInput(e) {
                     var raw = (e && e.target) ? e.target.value : (e || '');
@@ -828,7 +878,8 @@
                             body: JSON.stringify({
                                 artifact_type: type,
                                 locale: this.locale,
-                                force: force ? 1 : 0
+                                force: force ? 1 : 0,
+                                folder: type === 'scaffold' ? this.getEffectiveFolder() : undefined
                             })
                         });
                         const data = await res.json();

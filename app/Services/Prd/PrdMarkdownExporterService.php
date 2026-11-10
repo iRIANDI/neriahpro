@@ -207,12 +207,17 @@ class PrdMarkdownExporterService
                 $md .= "\n";
             }
 
-            if (!empty($f['integration'])) {
+            if (!empty($f['integration']) && is_array($f['integration'])) {
                 $in = $f['integration'];
+                $endpoint = $in['endpoint'] ?? ('/api/v1/' . strtolower(str_replace('_', '-', (string)$fid)));
+                $reqPayload = $in['request_schema'] ?? '{}';
+                $resPayload = $in['response_schema'] ?? '{}';
+                $reqStr = is_string($reqPayload) ? $reqPayload : json_encode($reqPayload, JSON_PRETTY_PRINT);
+                $resStr = is_string($resPayload) ? $resPayload : json_encode($resPayload, JSON_PRETTY_PRINT);
                 $md .= "**API & Integration Contract**:\n";
-                $md .= "- **Endpoint**: `{$in['endpoint']}`\n";
-                $md .= "- **Request Payload**:\n```json\n" . ($in['request_schema'] ?? '{}') . "\n```\n";
-                $md .= "- **Response Payload**:\n```json\n" . ($in['response_schema'] ?? '{}') . "\n```\n\n";
+                $md .= "- **Endpoint**: `{$endpoint}`\n";
+                $md .= "- **Request Payload**:\n```json\n" . $reqStr . "\n```\n";
+                $md .= "- **Response Payload**:\n```json\n" . $resStr . "\n```\n\n";
             }
 
             if (!empty($f['code_agent_directive'])) {

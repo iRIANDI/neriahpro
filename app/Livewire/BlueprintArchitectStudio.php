@@ -456,6 +456,15 @@ class BlueprintArchitectStudio extends Component
         $this->selectedCoDesignModuleCode = '';
         $this->codesignStatusNotice = '';
         $this->selectSector('SECTOR_01_COMMERCE_OMNICHANNEL');
+
+        $isEn = ($this->outputLocale ?? 'id') === 'en';
+        $this->dispatch('show-toast', [
+            'type' => 'info',
+            'title' => $isEn ? 'WORKSPACE RESET' : 'WORKSPACE BERSIH',
+            'message' => $isEn
+                ? 'A 100% clean, isolated project canvas has been initialized with a new ULID isolation token.'
+                : 'Kanvas proyek bersih 100% terisolasi berhasil diinisialisasi dengan token isolasi ULID baru.',
+        ]);
     }
 
     public function toggleEnterpriseMenu(string $menuCode): void

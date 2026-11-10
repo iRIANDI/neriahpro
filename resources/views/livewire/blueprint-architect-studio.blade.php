@@ -108,7 +108,7 @@
                     wire:model.live.debounce.400ms="projectName"
                     aria-label="{{ $isEnLoc ? 'Project Name' : 'Nama Proyek' }}"
                     class="px-2.5 py-1 w-36 sm:w-52 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 font-black text-zinc-950 dark:text-zinc-100 rounded-none text-xs focus:ring-1 focus:ring-emerald-500"
-                    placeholder="Nama Proyek..."
+                    placeholder="{{ $isEnLoc ? 'Project Name...' : 'Nama Proyek...' }}"
                 />
                 <span class="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 text-[10px] font-mono font-bold rounded-none">
                     {{ $currentVersion }}

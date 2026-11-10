@@ -1757,7 +1757,7 @@ class ProcessSecureDataset implements ShouldQueue
                                          class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border transition flex flex-col justify-between {{ $rConcept['recommended'] ? 'border-emerald-500/50 hover:border-emerald-500' : 'border-zinc-300 dark:border-zinc-800 hover:border-zinc-600' }}">
                                         <div>
                                             <div class="flex items-center justify-between gap-1 mb-2">
-                                                <span class="w-5 h-5 flex items-center justify-center font-bold text-[10px] {{ $rConcept['recommended'] ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-zinc-300') }}">
+                                                <span class="w-5 h-5 flex items-center justify-center font-bold text-[10px] {{ $rConcept['recommended'] ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-zinc-300' }}">
                                                     #{{ $rConcept['id'] ?? $loop->iteration }}
                                                 </span>
                                                 <div class="flex items-center gap-1">

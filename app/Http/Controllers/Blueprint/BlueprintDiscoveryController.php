@@ -73,7 +73,16 @@ class BlueprintDiscoveryController extends Controller
         $tier = $request->query('tier') ?: $request->query('package_tier') ?: $request->query('package');
         $slug = $request->query('slug');
         $draftId = $request->query('draft_id');
-        $track = $request->query('track');
+        $track = $request->query('track') ?: $request->query('mode');
+        $isNew = $request->boolean('new') || $request->boolean('clean') || $request->has('new') || $request->has('clean');
+
+        // If explicitly starting a new project (e.g. from customer portal launcher or reset action),
+        // gracefully set default starter tier if not provided, avoiding redirect loops to /pricing.
+        if ($isNew && ! $tier && ! $slug && ! $draftId) {
+            $tier = ($track === 'mitra' || $track === 'studio')
+                ? \App\Support\PricingRegistry::TIER_FULL_MVP
+                : \App\Support\PricingRegistry::TIER_RETAIL_LITE;
+        }
 
         // Direct Access & Satu Pintu Commercial Gate (v11.0):
         // Wajib memilih paket SaaS terlebih dahulu dari halaman pricing (/pricing#retail atau /pricing#project).
@@ -278,11 +287,25 @@ class BlueprintDiscoveryController extends Controller
             ->exists();
         }
 
-        $isRetail = ($isExistingRetail || $userHasRetailLicense || $track === 'retail' || in_array(strtolower((string) $tier), ['spark', 'starter', 'pro', 'ultimate', 'lite', 'retail_spark', 'retail_starter', 'retail_pro', 'retail_ultimate']));
-        if ($isRetail) {
+        $normalizedTrack = ($track === 'mitra' ? 'studio' : $track);
+        $isStudioTrack = ($normalizedTrack === 'studio' || in_array(strtolower((string) $tier), ['full_mvp', 'umkm_starter', 'blueprint_advisory']));
+
+        $isRetail = ! $isStudioTrack && (
+            $isExistingRetail
+            || ($userHasRetailLicense && ! $isNew && ! $normalizedTrack)
+            || $normalizedTrack === 'retail'
+            || in_array(strtolower((string) $tier), ['spark', 'starter', 'pro', 'ultimate', 'lite', 'retail_spark', 'retail_starter', 'retail_pro', 'retail_ultimate'])
+        );
+
+        if ($isStudioTrack) {
+            $initialData['selected_track'] = 'studio';
+            $initialData['track'] = 'studio';
+            $initialData['is_retail_customer'] = false;
+            $initialData['has_paid_retail_license'] = false;
+        } elseif ($isRetail) {
             $initialData['is_retail_customer'] = true;
             $initialData['is_existing_retail'] = $isExistingRetail;
-            $initialData['has_paid_retail_license'] = $userHasRetailLicense;
+            $initialData['has_paid_retail_license'] = $isExistingRetail ? $userHasRetailLicense : false;
             $initialData['selected_track'] = 'retail';
             $initialData['track'] = 'retail';
             if ($tier) {

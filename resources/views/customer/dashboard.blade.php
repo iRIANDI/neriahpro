@@ -374,6 +374,8 @@
                 userMenuModalOpen: false,
                 isTranslating: false,
                 translatingLanguageName: '',
+                openNewProjectModal: false,
+                newProjectTrack: 'retail',
 
                 init() {
                     window.customerDashboardAppInstance = this;
@@ -758,12 +760,14 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <a 
-                        href="/pricing#retail" 
-                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider transition rounded-none shadow-xs"
+                    <button 
+                        type="button"
+                        @click="newProjectTrack = 'retail'; openNewProjectModal = true" 
+                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider transition rounded-none shadow-xs cursor-pointer flex items-center gap-1.5"
                     >
-                        + {{ $isEn ? 'NEW BLUEPRINT' : 'BUAT PROYEK BARU' }}
-                    </a>
+                        <span>+</span>
+                        <span>{{ $isEn ? 'NEW PROJECT' : 'BUAT PROYEK BARU' }}</span>
+                    </button>
                     <a 
                         href="https://wa.me/{{ $whatsappNumber }}?text={{ rawurlencode($isEn ? 'Hello Yoseph Iriandi, I would like to discuss our project progress in the customer dashboard.' : 'Halo Yoseph Iriandi, saya ingin mendiskusikan progres proyek di dashboard pelanggan kami.') }}"
                         target="_blank"
@@ -1114,9 +1118,19 @@
                             ? 'You have not reserved any Full MVP or UMKM Starter custom software engineering sprint yet.' 
                             : 'Anda belum memesan sprint pengerjaan Full MVP atau UMKM Starter. Dapatkan sistem monolit modern dengan garansi DP 50% dan kontrak hukum resmi.' }}
                     </p>
-                    <a href="/pricing" class="inline-block mt-2 px-4 py-2 bg-emerald-500 text-black font-mono text-xs font-bold uppercase tracking-wider rounded-none">
-                        {{ $isEn ? 'EXPLORE STUDIO PACKAGES →' : 'JELAJAHI PAKET STUDIO REKAYASA →' }}
-                    </a>
+                    <div class="flex flex-wrap items-center justify-center gap-2 mt-3">
+                        <button 
+                            type="button" 
+                            @click="newProjectTrack = 'studio'; openNewProjectModal = true" 
+                            class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider rounded-none cursor-pointer transition shadow-xs flex items-center gap-1.5"
+                        >
+                            <span>+</span>
+                            <span>{{ $isEn ? 'START STUDIO PROJECT →' : 'MULAI PROYEK STUDIO BARU →' }}</span>
+                        </button>
+                        <a href="/pricing" class="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 font-mono text-xs font-bold uppercase tracking-wider rounded-none transition">
+                            {{ $isEn ? 'EXPLORE PACKAGES →' : 'JELAJAHI PAKET REKAYASA →' }}
+                        </a>
+                    </div>
                 </div>
             @else
                 <div class="space-y-6">
@@ -1554,9 +1568,19 @@
                         @endif
                     </p>
                     @if(!isset($pendingRetailOrders) || $pendingRetailOrders->isEmpty())
-                        <a href="/pricing" class="inline-block mt-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-bold uppercase tracking-wider rounded-none">
-                            {{ $isEn ? 'ORDER STARTER OR PRO PACKAGES (STARTING RP 99.000) →' : 'PESAN LISENSI STARTER / PRO (MULAI RP 99RB) →' }}
-                        </a>
+                        <div class="flex flex-wrap items-center justify-center gap-2 mt-3">
+                            <button 
+                                type="button" 
+                                @click="newProjectTrack = 'retail'; openNewProjectModal = true" 
+                                class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-black uppercase tracking-wider rounded-none cursor-pointer transition shadow-xs flex items-center gap-1.5"
+                            >
+                                <span>+</span>
+                                <span>{{ $isEn ? 'START RETAIL BLUEPRINT →' : 'MULAI BLUEPRINT RETAIL BARU →' }}</span>
+                            </button>
+                            <a href="/pricing" class="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white border border-zinc-300 dark:border-zinc-700 font-mono text-xs font-bold uppercase tracking-wider rounded-none transition">
+                                {{ $isEn ? 'VIEW PRICING CATALOG →' : 'LIHAT KATALOG HARGA →' }}
+                            </a>
+                        </div>
                     @endif
                 </div>
             @else
@@ -2978,6 +3002,259 @@
                 <p class="text-[10px] text-center text-zinc-400 dark:text-zinc-500 font-mono">
                     {{ $isEn ? 'Terminates your active encrypted session on this device.' : 'Mengakhiri sesi terenkripsi aktif portal pelanggan pada perangkat ini.' }}
                 </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- GUIDED NEW PROJECT INITIATION & PACKAGE SELECTION MODAL (SOLID BRUTALIST) -->
+    <!-- =================================================================== -->
+    <div 
+        x-show="openNewProjectModal" 
+        x-cloak 
+        class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-xs overflow-y-auto"
+        x-transition:enter="transition ease-out duration-150"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-100"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        @keydown.escape.window="openNewProjectModal = false"
+    >
+        <div 
+            @click.outside="openNewProjectModal = false" 
+            class="relative w-full max-w-4xl bg-white dark:bg-zinc-950 border-2 border-zinc-900 dark:border-zinc-700 p-5 sm:p-7 rounded-none shadow-2xl space-y-6 my-auto max-h-[92vh] overflow-y-auto no-scrollbar font-sans"
+        >
+            <!-- Modal Header -->
+            <div class="flex items-start justify-between gap-4 border-b-2 border-zinc-200 dark:border-zinc-800 pb-4">
+                <div>
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-black uppercase tracking-wider mb-2 border border-emerald-500/20">
+                        <span>🚀 {{ $isEn ? 'NEW PROJECT LAUNCHPAD' : 'PORTAL INISIALISASI PROYEK BARU' }}</span>
+                    </div>
+                    <h3 class="text-xl sm:text-2xl font-black uppercase text-zinc-900 dark:text-white font-mono tracking-tight">
+                        {{ $isEn ? 'Start a New Software Engineering Project' : 'Mulai Rancang Proyek Perangkat Lunak Baru' }}
+                    </h3>
+                    <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+                        {{ $isEn 
+                            ? 'Understand our licensing policy, explore the 2 distinct execution tracks, and begin drafting your architectural blueprint with zero upfront commitment.'
+                            : 'Pahami kebijakan lisensi per entitas, pilih 2 jalur eksekusi yang sesuai dengan kebutuhan Anda, dan mulai rancang arsitektur sistem tanpa komitmen finansial di awal.' }}
+                    </p>
+                </div>
+                <button 
+                    type="button" 
+                    @click="openNewProjectModal = false"
+                    class="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-none transition cursor-pointer shrink-0 font-mono font-bold text-sm"
+                    title="{{ $isEn ? 'Close modal' : 'Tutup jendela' }}"
+                >
+                    ✕
+                </button>
+            </div>
+
+            <!-- Mandatory Educational Callout: 1 License = 1 Project Entity -->
+            <div class="p-4 bg-zinc-50 dark:bg-zinc-900/80 border-l-4 border-emerald-500 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-2">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="text-[11px] font-mono font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                        <span>🛡️</span>
+                        <span>{{ $isEn ? 'HERMETIC PROJECT ISOLATION // 1 LICENSE = 1 SOFTWARE ENTITY' : 'KEBIJAKAN ARSITEKTUR // 1 LISENSI = 1 ENTITAS PROYEK' }}</span>
+                    </span>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                        {{ $isEn ? 'ARCHITECTURAL CONTRACT' : 'KONTRAK ARSITEKTUR' }}
+                    </span>
+                </div>
+                <p class="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                    {{ $isEn
+                        ? 'Every software project operates on its own dedicated PostgreSQL Strict ULID database schema, isolated entity domain models, state machines, and AI orchestration prompts. Your previous purchase or contract remains permanently bound to that specific project. For this new project, you can freely ideate, draft specs, and generate complete architecture blueprints 100% free before choosing an execution track.'
+                        : 'Setiap sistem software memiliki skema basis data PostgreSQL Strict ULID, domain model, workflow state machine, dan prompt AI yang unik dan terisolasi secara hermetis. Lisensi atau kontrak Anda sebelumnya terikat permanen pada entitas proyek tersebut. Untuk proyek baru ini, Anda dapat merancang spesifikasi arsitektur secara bebas dan gratis terlebih dahulu di Blueprint Studio sebelum menentukan jalur eksekusi.' }}
+                </p>
+            </div>
+
+            <!-- 2-Track Selection Grid -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-white flex items-center gap-1.5">
+                        <span>⚡</span>
+                        <span>{{ $isEn ? 'CHOOSE YOUR EXECUTION TRACK' : 'PILIH JALUR EKSEKUSI PROYEK BARU' }}</span>
+                    </span>
+                    <div class="flex items-center gap-1 font-mono text-[11px]">
+                        <button 
+                            type="button" 
+                            @click="newProjectTrack = 'retail'"
+                            :class="newProjectTrack === 'retail' ? 'bg-cyan-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                            class="px-2.5 py-1 uppercase transition cursor-pointer"
+                        >
+                            {{ $isEn ? 'Retail Self-Dev' : 'Jalur Retail Mandiri' }}
+                        </button>
+                        <button 
+                            type="button" 
+                            @click="newProjectTrack = 'studio'"
+                            :class="newProjectTrack === 'studio' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'"
+                            class="px-2.5 py-1 uppercase transition cursor-pointer"
+                        >
+                            {{ $isEn ? 'Mitra Turnkey Studio' : 'Jalur Mitra Studio' }}
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Track A: Retail Self-Dev -->
+                    <div 
+                        :class="newProjectTrack === 'retail' ? 'border-2 border-cyan-500 shadow-lg bg-cyan-500/5 dark:bg-cyan-950/20' : 'border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 opacity-90'"
+                        class="p-5 rounded-none flex flex-col justify-between transition space-y-4"
+                        @click="newProjectTrack = 'retail'"
+                    >
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="px-2 py-0.5 bg-cyan-100 text-cyan-950 dark:bg-cyan-950/90 dark:text-cyan-200 font-mono text-[10px] font-black uppercase border border-cyan-400 dark:border-cyan-700">
+                                    {{ $isEn ? 'TRACK A // SELF-DEV STARTER KIT' : 'JALUR A // STARTER KIT MANDIRI' }}
+                                </span>
+                                <span class="text-xs font-mono font-bold text-zinc-500">
+                                    {{ $isEn ? 'Starting Rp 99,000' : 'Mulai Rp 99.000' }}
+                                </span>
+                            </div>
+                            
+                            <h4 class="text-base font-black text-zinc-900 dark:text-white font-mono uppercase">
+                                {{ $isEn ? 'Retail Self-Dev + AI Agent' : 'Retail Mandiri + AI Agent' }}
+                            </h4>
+                            
+                            <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
+                                {{ $isEn 
+                                    ? 'For Technical Founders, Software Engineers, or In-House Teams who code independently assisted by modern AI Agents (Cursor Composer, Claude Code CLI, Windsurf, Antigravity IDE).' 
+                                    : 'Untuk Founder Teknis, Developer, atau Tim Internal yang ingin koding mandiri dibimbing AI Agent modern (Cursor Composer, Claude Code CLI, Windsurf, Antigravity IDE).' }}
+                            </p>
+
+                            <!-- Key Deliverables List -->
+                            <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                                <div class="flex items-start gap-2 text-zinc-800 dark:text-zinc-200">
+                                    <span class="text-cyan-600 dark:text-cyan-400 font-black">✓</span>
+                                    <span>{{ $isEn ? 'PRD Fortune 500 (26 parameters complete)' : 'Dokumen PRD Fortune 500 (26 Parameter Lengkap)' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2 text-zinc-800 dark:text-zinc-200">
+                                    <span class="text-cyan-600 dark:text-cyan-400 font-black">✓</span>
+                                    <span>{{ $isEn ? 'PostgreSQL 16 Strict ULID Schema DDL (0% N+1)' : 'Skema DDL PostgreSQL 16 Strict ULID (0% N+1)' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2 text-zinc-800 dark:text-zinc-200">
+                                    <span class="text-cyan-600 dark:text-cyan-400 font-black">✓</span>
+                                    <span>{{ $isEn ? 'Docker Compose Stack (PHP 8.5+, PG16, Redis)' : 'Stack Docker Compose (PHP 8.5+, PG16, Redis)' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2 text-zinc-800 dark:text-zinc-200">
+                                    <span class="text-cyan-600 dark:text-cyan-400 font-black">✓</span>
+                                    <span>{{ $isEn ? '7-Phase Sequential AI Prompts & .cursorrules' : 'Prompt 7-Fase AI Berurutan & File .cursorrules' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Step Guide -->
+                            <div class="p-3 bg-zinc-100 dark:bg-zinc-800/80 text-[11px] font-mono text-zinc-700 dark:text-zinc-300 space-y-1">
+                                <span class="font-bold block text-zinc-900 dark:text-white uppercase">{{ $isEn ? 'HOW IT WORKS:' : 'ALUR PENGERJAAN:' }}</span>
+                                <span>1. {{ $isEn ? 'Draft idea & specs in Blueprint Studio (Free)' : 'Rancang ide & spesifikasi di Blueprint Studio (Gratis)' }}</span><br>
+                                <span>2. {{ $isEn ? 'Unlock license (Spark Free / Lite / Pro / Ultimate)' : 'Kunci lisensi (Spark Gratis / Lite / Pro / Ultimate)' }}</span><br>
+                                <span>3. {{ $isEn ? 'Download ZIP scaffold & code in your IDE' : 'Unduh ZIP scaffold & mulai koding di IDE Anda' }}</span>
+                            </div>
+                        </div>
+
+                        <a 
+                            href="{{ url('/blueprint?tier=retail_lite&track=retail&new=1') }}"
+                            class="w-full py-2.5 px-4 bg-cyan-600 hover:bg-cyan-500 text-white font-mono text-xs font-black uppercase tracking-wider text-center transition rounded-none shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <span>⚡</span>
+                            <span>{{ $isEn ? 'LAUNCH RETAIL BLUEPRINT (SELF-DEV) →' : 'MULAI BLUEPRINT RETAIL (SELF-DEV) →' }}</span>
+                        </a>
+                    </div>
+
+                    <!-- Track B: Mitra Turnkey Studio -->
+                    <div 
+                        :class="newProjectTrack === 'studio' ? 'border-2 border-emerald-500 shadow-lg bg-emerald-500/5 dark:bg-emerald-950/20' : 'border-2 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 opacity-90'"
+                        class="p-5 rounded-none flex flex-col justify-between transition space-y-4"
+                        @click="newProjectTrack = 'studio'"
+                    >
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 dark:bg-emerald-950/90 dark:text-emerald-200 font-mono text-[10px] font-black uppercase border border-emerald-400 dark:border-emerald-700">
+                                    {{ $isEn ? 'TRACK B // TURNKEY STUDIO (DONE-FOR-YOU)' : 'JALUR B // TURNKEY STUDIO (TERIMA BERES)' }}
+                                </span>
+                                <span class="text-xs font-mono font-bold text-zinc-500">
+                                    {{ $isEn ? 'Termin 50/50' : 'DP 50% & Termin 50/50' }}
+                                </span>
+                            </div>
+                            
+                            <h4 class="text-base font-black text-zinc-900 dark:text-white font-mono uppercase">
+                                {{ $isEn ? 'Mitra Turnkey Studio (Dedicated Team)' : 'Mitra Turnkey Studio (Tim Senior)' }}
+                            </h4>
+                            
+                            <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
+                                {{ $isEn 
+                                    ? 'For Business Owners, Enterprise Founders, or Non-Technical Leaders who need a production-ready, bulletproof system built and deployed by Neriah Pro senior engineers.' 
+                                    : 'Untuk Pemilik Bisnis, Perusahaan, atau Founder yang membutuhkan sistem aplikasi siap pakai (production ready) yang dibangun dan di-deploy langsung oleh tim senior engineer Neriah Pro.' }}
+                            </p>
+
+                            <!-- Key Deliverables List -->
+                            <div class="space-y-1.5 pt-2 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                                <div class="flex items-start gap-2 text-zinc-800 dark:text-zinc-200">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-black">✓</span>
+                                    <span>{{ $isEn ? 'Full-cycle engineering by Senior Engineers' : 'Pengerjaan penuh oleh Tim Senior Engineer Neriah Pro' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2 text-zinc-800 dark:text-zinc-200">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-black">✓</span>
+                                    <span>{{ $isEn ? 'Official Legal SPK Contract with SHA-256 integrity' : 'Dokumen Hukum SPK Resmi dengan Integritas SHA-256' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2 text-zinc-800 dark:text-zinc-200">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-black">✓</span>
+                                    <span>{{ $isEn ? 'Anti-Collision Sprint Batch slot isolation' : 'Alokasi Terjadwal Sprint Batch (Bebas Tabrakan)' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2 text-zinc-800 dark:text-zinc-200">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-black">✓</span>
+                                    <span>{{ $isEn ? '30–90 Days Bug-Free SLA Warranty + UAT & BAST' : 'Garansi Bug-Free 30–90 Hari Pascameluncur + UAT & BAST' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Step Guide -->
+                            <div class="p-3 bg-zinc-100 dark:bg-zinc-800/80 text-[11px] font-mono text-zinc-700 dark:text-zinc-300 space-y-1">
+                                <span class="font-bold block text-zinc-900 dark:text-white uppercase">{{ $isEn ? 'HOW IT WORKS:' : 'ALUR PENGERJAAN:' }}</span>
+                                <span>1. {{ $isEn ? 'Draft specifications & scope in Blueprint (Free)' : 'Rancang spesifikasi & ruang lingkup di Blueprint (Gratis)' }}</span><br>
+                                <span>2. {{ $isEn ? 'Lock scope & sign official digital SPK contract' : 'Kunci scope & tandatangani kontrak SPK digital resmi' }}</span><br>
+                                <span>3. {{ $isEn ? 'Pay 50% DP to lock your dedicated sprint batch' : 'Bayar DP 50% untuk kunci slot sprint batch pengerjaan' }}</span><br>
+                                <span>4. {{ $isEn ? '50% Final Settlement after UAT passing & handover' : 'Pelunasan 50% setelah lolos UAT & serah terima kunci (BAST)' }}</span>
+                            </div>
+                        </div>
+
+                        <a 
+                            href="{{ url('/blueprint?tier=full_mvp&track=studio&new=1') }}"
+                            class="w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider text-center transition rounded-none shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <span>📐</span>
+                            <span>{{ $isEn ? 'LAUNCH STUDIO BLUEPRINT (TURNKEY) →' : 'MULAI BLUEPRINT MITRA (TURNKEY) →' }}</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Action Row -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t-2 border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                <a 
+                    href="/pricing"
+                    class="w-full sm:w-auto px-4 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-bold uppercase transition rounded-none text-center flex items-center justify-center gap-1.5"
+                >
+                    <span>📊</span>
+                    <span>{{ $isEn ? 'Compare Full Package Pricing Matrix →' : 'Bandingkan Matriks Harga Lengkap →' }}</span>
+                </a>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <a 
+                        href="https://wa.me/{{ $whatsappNumber }}?text={{ rawurlencode($isEn ? 'Hello Yoseph Iriandi, I want to consult about starting a new project on Neriah Pro.' : 'Halo Yoseph Iriandi, saya ingin berkonsultasi mengenai inisialisasi proyek baru di Neriah Pro.') }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="w-full sm:w-auto px-4 py-2 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black font-bold uppercase transition rounded-none text-center flex items-center justify-center gap-1.5"
+                    >
+                        <span>💬</span>
+                        <span>{{ $isEn ? 'Ask Lead Architect' : 'Konsultasi Arsitek' }}</span>
+                    </a>
+                    <button 
+                        type="button" 
+                        @click="openNewProjectModal = false"
+                        class="w-full sm:w-auto px-4 py-2 bg-zinc-200 hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold uppercase transition rounded-none cursor-pointer"
+                    >
+                        {{ $isEn ? 'Close' : 'Tutup' }}
+                    </button>
+                </div>
             </div>
         </div>
     </div>

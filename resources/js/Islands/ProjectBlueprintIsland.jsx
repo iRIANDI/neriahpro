@@ -127,24 +127,24 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
   }, [lang, requestedTier]);
 
   // Execution Track: 'retail' (Jalur Mandiri) vs 'studio' (Jalur Turnkey Dedicated / Mitra Proyek)
+  const isNewWorkspaceLaunch = Boolean(initialData?._meta?.is_fresh_workspace || !initialData?._meta?.is_editing_slug);
+
+  const hasPaidRetailLicense = Boolean(
+    !isNewWorkspaceLaunch && (
+      initialData?.has_paid_retail_license ||
+      initialData?.user_metadata?.paid ||
+      initialData?.paid
+    )
+  );
+
   const isRetailCustomer = Boolean(
-    initialData?.is_retail_customer ||
-    initialData?.is_existing_retail ||
-    initialData?.has_paid_retail_license ||
+    (!isNewWorkspaceLaunch && (initialData?.is_retail_customer || initialData?.is_existing_retail)) ||
+    (initialData?.selected_track === 'retail') ||
     (initialData?.selected_tier && ['spark', 'starter', 'pro', 'ultimate', 'lite', 'retail_spark', 'retail_starter', 'retail_pro', 'retail_ultimate'].includes(String(initialData.selected_tier).toLowerCase())) ||
     (requestedTier && ['spark', 'starter', 'pro', 'ultimate', 'lite', 'retail_spark', 'retail_starter', 'retail_pro', 'retail_ultimate'].includes(String(requestedTier).toLowerCase()))
   );
-  const hasPaidRetailLicense = Boolean(
-    initialData?.has_paid_retail_license ||
-    initialData?.user_metadata?.paid ||
-    initialData?.paid
-  );
 
   const [currentTrack, setCurrentTrack] = useState(() => {
-    // If this blueprint or customer is bound to an active/paid retail license, firmly default to retail
-    if (isRetailCustomer || initialData?.selected_track === 'retail' || initialData?.track === 'retail') {
-      return 'retail';
-    }
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const qTrack = (urlParams.get('track') || urlParams.get('mode') || '').toLowerCase();
@@ -158,8 +158,19 @@ export default function ProjectBlueprintIsland({ csrfToken, submitUrl, initialDa
         return 'studio';
       }
     } catch (e) { }
+
     if (initialData?.selected_track === 'studio' || initialData?.track === 'studio') return 'studio';
-    if (initialData?.selected_tier && ['spark', 'starter', 'pro', 'ultimate', 'lite'].includes(String(initialData.selected_tier).toLowerCase())) return 'retail';
+    if (initialData?.selected_track === 'retail' || initialData?.track === 'retail') return 'retail';
+
+    // If an existing saved blueprint is already bound to paid retail license
+    if (hasPaidRetailLicense) {
+      return 'retail';
+    }
+
+    if (isRetailCustomer) {
+      return 'retail';
+    }
+
     return 'retail';
   });
 

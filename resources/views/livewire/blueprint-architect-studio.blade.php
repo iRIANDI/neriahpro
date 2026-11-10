@@ -35,6 +35,7 @@
 
 <div
     x-data="{
+        confirmNewModalOpen: false,
         showSystemAlerts: false,
         showLeftPane: true,
         showRightPane: true,
@@ -115,12 +116,34 @@
                 </span>
                 <button
                     type="button"
-                    wire:click="startFreshIsolatedProject"
+                    @click="confirmNewModalOpen = true"
                     class="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:hover:bg-amber-900 dark:text-amber-200 dark:border-amber-700 text-[10px] font-mono font-black rounded-none cursor-pointer transition hidden lg:inline-block"
                     title="{{ $isEnLoc ? 'Reset clean 100% isolated workspace' : 'Reset workspace bersih 100% terisolasi' }}"
                 >
                     {{ $isEnLoc ? '+ New' : '+ Baru' }}
                 </button>
+
+                <!-- Concrete Package Entitlement Status Pill (Proteksi & Status Paket Aktif) -->
+                @php
+                    $isEntitledPaid = $entitlementTier !== 'FREE_SANDBOX';
+                    $tierLabel = match($entitlementTier) {
+                        'FREE_SANDBOX' => $isEnLoc ? 'Free Sandbox (Rp 0)' : 'Sandbox Gratis (Rp 0)',
+                        'SINGLE_APP_PASS' => $isEnLoc ? 'Single App Pass' : 'Lisensi Single App',
+                        'PRO_RETAIL' => $isEnLoc ? 'Pro Retail (Verified)' : 'Lisensi Pro Retail (Aktif)',
+                        'AGENCY_PARTNER' => $isEnLoc ? 'Agency Partner OS' : 'Lisensi Agency Partner',
+                        'MITRA_TURNKEY' => $isEnLoc ? 'Mitra Turnkey Studio' : 'Mitra Turnkey Studio (DP 50%)',
+                        default => $entitlementTier,
+                    };
+                @endphp
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 border text-[10px] font-mono font-black uppercase rounded-none shadow-xs {{ $isEntitledPaid ? 'bg-emerald-100 text-emerald-950 border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700' : 'bg-zinc-100 text-zinc-800 border-zinc-300 dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700' }}" title="{{ $isEnLoc ? 'Active Package Entitlement Tier' : 'Tingkat Paket Lisensi Aktif' }}">
+                    <span>{{ $isEntitledPaid ? '🛡️' : '🆓' }}</span>
+                    <span>{{ $tierLabel }}</span>
+                    @if(!$isEntitledPaid)
+                        <a href="/pricing" target="_blank" class="ml-1 text-cyan-700 dark:text-cyan-400 underline hover:opacity-80">
+                            {{ $isEnLoc ? 'Upgrade →' : 'Pilih Paket →' }}
+                        </a>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -3098,4 +3121,100 @@ docker compose exec app npm install && docker compose exec app npm run build</pr
             </div>
         </div>
     @endif
+
+    <!-- =================================================================== -->
+    <!-- SOLID BRUTALIST CONFIRMATION MODAL: + NEW CANVAS INITIALIZATION       -->
+    <!-- =================================================================== -->
+    <div 
+        x-show="confirmNewModalOpen" 
+        x-cloak 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs font-sans"
+        x-transition:enter="transition ease-out duration-150"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-100"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        @keydown.escape.window="confirmNewModalOpen = false"
+    >
+        <div 
+            @click.outside="confirmNewModalOpen = false" 
+            class="w-full max-w-lg bg-white dark:bg-zinc-950 border-2 border-zinc-900 dark:border-zinc-700 p-6 rounded-none shadow-2xl space-y-4"
+        >
+            <div class="flex items-start justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div>
+                    <span class="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-[10px] font-black uppercase tracking-wider block mb-1">
+                        {{ $isEnLoc ? 'HERMETIC WORKSPACE ISOLATION' : 'ISOLASI RUANG KERJA BERSIH' }}
+                    </span>
+                    <h3 class="text-base sm:text-lg font-black uppercase text-zinc-900 dark:text-white font-mono">
+                        {{ $isEnLoc ? 'Initialize Clean Project Canvas?' : 'Mulai Kanvas Proyek Bersih Baru?' }}
+                    </h3>
+                </div>
+                <button 
+                    type="button" 
+                    @click="confirmNewModalOpen = false"
+                    class="p-1 text-zinc-400 hover:text-zinc-900 dark:hover:text-white font-mono font-bold cursor-pointer"
+                >
+                    ✕
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs leading-relaxed">
+                <!-- Fact 1: Database Safety -->
+                <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 rounded-none flex items-start gap-2.5">
+                    <span class="text-base shrink-0">🛡️</span>
+                    <div>
+                        <span class="font-bold text-emerald-950 dark:text-emerald-200 font-mono block uppercase">
+                            {{ $isEnLoc ? '1. Your Saved Blueprints Are 100% Safe' : '1. Proyek Tersimpan Anda Tetap 100% Aman' }}
+                        </span>
+                        <span class="text-emerald-900 dark:text-emerald-300">
+                            {{ $isEnLoc 
+                                ? 'Any previously saved or paid blueprint is permanently stored in your account database. This action does NOT delete or overwrite your existing data.'
+                                : 'Setiap proyek yang sudah pernah Anda simpan atau bayar tetap tersimpan permanen di database akun Anda. Tindakan ini TIDAK menghapus atau menimpa data proyek Anda.' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Fact 2: Zero Cost -->
+                <div class="p-3 bg-cyan-50 dark:bg-cyan-950/30 border border-cyan-300 dark:border-cyan-800 rounded-none flex items-start gap-2.5">
+                    <span class="text-base shrink-0">🆓</span>
+                    <div>
+                        <span class="font-bold text-cyan-950 dark:text-cyan-200 font-mono block uppercase">
+                            {{ $isEnLoc ? '2. 100% Free Sandbox Exploration' : '2. Eksplorasi Sandbox 100% Bebas Biaya' }}
+                        </span>
+                        <span class="text-cyan-900 dark:text-cyan-300">
+                            {{ $isEnLoc 
+                                ? 'Starting a new canvas is completely free. No invoices or charges are generated until you explicitly choose to activate a license or sign an SPK contract.'
+                                : 'Membuka kanvas baru ini 100% gratis. Tidak ada tagihan atau pembayaran yang dimulai sampai Anda sendiri yang memutuskan membeli lisensi atau menandatangani SPK.' }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Fact 3: What It Clears -->
+                <p class="text-zinc-600 dark:text-zinc-400 font-mono text-[11px]">
+                    {{ $isEnLoc
+                        ? 'This action will clear the temporary in-memory editor tables and assign a fresh ULID isolation token to prevent cross-project bleed.'
+                        : 'Tindakan ini akan mengosongkan kanvas editor saat ini dan menerbitkan token isolasi ULID baru agar tidak terjadi kebocoran skema antar proyek.' }}
+                </p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                <button 
+                    type="button" 
+                    @click="confirmNewModalOpen = false"
+                    class="px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-bold uppercase rounded-none transition cursor-pointer"
+                >
+                    {{ $isEnLoc ? 'Cancel' : 'Batalkan' }}
+                </button>
+                <button 
+                    type="button" 
+                    wire:click="startFreshIsolatedProject"
+                    @click="confirmNewModalOpen = false"
+                    class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase rounded-none transition cursor-pointer shadow-xs"
+                >
+                    {{ $isEnLoc ? 'Yes, Open Clean Canvas →' : 'Ya, Buka Kanvas Bersih →' }}
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

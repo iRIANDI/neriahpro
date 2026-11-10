@@ -365,6 +365,10 @@ class ScaffoldGeneratorService
             $files = array_merge($files, $decoupledFiles);
         }
 
+        // Project OS v12.0: Wahyu Ivan Standard - Black Box Error Monitoring Telemetry & PII Log Scrubber
+        $files['resources/js/telemetry/blackbox-error-catcher.js'] = self::generateBlackBoxErrorTelemetryJs($slug);
+        $files['app/Http/Controllers/Telemetry/ClientErrorTelemetryController.php'] = self::generateTelemetryControllerPhp();
+
         // Apply any user-elaborated / customized scaffold files (persisted in user_metadata)
         $customizations = $blueprint->user_metadata['scaffold_customizations'] ?? [];
         if (! empty($customizations) && is_array($customizations)) {
@@ -5977,5 +5981,181 @@ MD;
         return StubLoader::load('scaffold/sw-offline-outbox.js.stub', [
             '{{ SLUG }}' => $slug,
         ]);
+    }
+
+    /**
+     * Project OS v12.0: Wahyu Ivan Standard - Black Box Error Monitoring Telemetry JS (`resources/js/telemetry/blackbox-error-catcher.js`).
+     */
+    public static function generateBlackBoxErrorTelemetryJs(string $slug): string
+    {
+        return <<<'JS'
+/**
+ * Black Box Client Error Telemetry & Anti-Leak Log Scrubber
+ * The Wahyu Ivan Standard: Eliminates "Works on my machine" syndrome across device fragmentation.
+ * Catches client-side errors on older iPhones/browsers with strict Zero-Leak PII scrubbing.
+ */
+(function () {
+  'use strict';
+  if (typeof window === 'undefined') return;
+
+  let errorCount = 0;
+  setInterval(() => { errorCount = 0; }, 60000);
+
+  function getDeviceProfile() {
+    const ua = navigator.userAgent || '';
+    let os = 'Unknown OS';
+    let device = 'Desktop';
+
+    if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+      device = /iPad/.test(ua) ? 'iPad' : 'iPhone';
+      const match = ua.match(/OS (\d+[_\d]*)/);
+      os = match ? 'iOS ' + match[1].replace(/_/g, '.') : 'iOS';
+    } else if (/Android/.test(ua)) {
+      device = 'Android Device';
+      const match = ua.match(/Android\s([0-9\.]+)/);
+      os = match ? 'Android ' + match[1] : 'Android';
+    } else if (/Macintosh|Mac OS X/.test(ua)) {
+      device = 'Mac';
+      os = 'macOS';
+    } else if (/Windows/.test(ua)) {
+      device = 'PC';
+      os = 'Windows';
+    }
+
+    let browser = 'Unknown Browser';
+    if (/Chrome/.test(ua) && !/Edge|OPR|Edg/.test(ua)) browser = 'Chrome';
+    else if (/Safari/.test(ua) && !/Chrome/.test(ua)) browser = 'Safari';
+    else if (/Firefox/.test(ua)) browser = 'Firefox';
+    else if (/Edg/.test(ua)) browser = 'Edge';
+
+    return { device, os, browser, screen_w: window.innerWidth || 0, screen_h: window.innerHeight || 0 };
+  }
+
+  function scrubPii(text) {
+    if (!text || typeof text !== 'string') return '';
+    return text
+      .replace(/\b(?:\d[ -]*?){13,16}\b/g, '[REDACTED_CREDIT_CARD]')
+      .replace(/Bearer\s+[a-zA-Z0-9_\-\.]+/gi, 'Bearer [REDACTED_TOKEN]')
+      .replace(/ey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g, '[REDACTED_JWT]')
+      .replace(/(password|passwd|pwd|secret|token|api_key|cvv|cvc)=[^&\s]+/gi, '$1=[REDACTED]');
+  }
+
+  function sendTelemetry(payload) {
+    if (errorCount >= 3) return;
+    errorCount++;
+
+    const body = JSON.stringify({
+      error_message: scrubPii(payload.message || 'Unknown client error'),
+      error_type: payload.type || 'CLIENT_RUNTIME_CRASH',
+      file_url: scrubPii(payload.source || ''),
+      line_number: payload.lineno || null,
+      stack_trace: scrubPii(payload.stack || ''),
+      device_info: getDeviceProfile(),
+      current_url: scrubPii(window.location.href),
+    });
+
+    const endpoint = '/api/telemetry/client-error';
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(endpoint, new Blob([body], { type: 'application/json' }));
+      return;
+    }
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body,
+      keepalive: true,
+    }).catch(() => {});
+  }
+
+  window.addEventListener('error', function (e) {
+    if (e.message === 'Script error.' && !e.filename) return;
+    sendTelemetry({ type: 'WINDOW_ON_ERROR', message: e.message, source: e.filename, lineno: e.lineno, stack: e.error ? e.error.stack : '' });
+  });
+
+  window.addEventListener('unhandledrejection', function (e) {
+    const r = e.reason || {};
+    sendTelemetry({ type: 'UNHANDLED_PROMISE_REJECTION', message: r.message || String(r), stack: r.stack || '' });
+  });
+})();
+JS;
+    }
+
+    /**
+     * Project OS v12.0: Wahyu Ivan Standard - Telemetry Controller (`app/Http/Controllers/Telemetry/ClientErrorTelemetryController.php`).
+     */
+    public static function generateTelemetryControllerPhp(): string
+    {
+        return <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Telemetry;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
+
+class ClientErrorTelemetryController extends Controller
+{
+    /**
+     * Ingest client-side error telemetry with strict PII log scrubbing and spike alerting.
+     */
+    public function store(Request $request): JsonResponse
+    {
+        $ip = $request->ip() ?: '127.0.0.1';
+        $rateKey = 'client-telemetry:' . $ip;
+        if (RateLimiter::tooManyAttempts($rateKey, 20)) {
+            return response()->json(['status' => 'rate_limited'], 429);
+        }
+        RateLimiter::hit($rateKey, 60);
+
+        $payload = $request->all();
+        $clean = $this->scrubPii($payload);
+
+        Log::warning('[BlackBox Client Error] ' . ($clean['error_type'] ?? 'CRASH') . ': ' . ($clean['error_message'] ?? '-'), [
+            'device' => $clean['device_info'] ?? [],
+            'file' => $clean['file_url'] ?? null,
+            'line' => $clean['line_number'] ?? null,
+            'url' => $clean['current_url'] ?? null,
+            'ip' => $ip,
+        ]);
+
+        // Error Spike Trigger (Wahyu Ivan Standard)
+        $spikeKey = 'error_spike:' . date('YmdH') . '_' . (int)(date('i') / 5);
+        $count = (int) Cache::increment($spikeKey);
+        Cache::put($spikeKey, $count, now()->addMinutes(10));
+        if ($count === 10) {
+            Log::alert('[CRITICAL ERROR SPIKE] 10+ client device crashes in 5 minutes! Immediate investigation required.');
+        }
+
+        return response()->json(['status' => 'recorded', 'pii_scrubbed' => true]);
+    }
+
+    private function scrubPii(mixed $data): mixed
+    {
+        if (is_array($data)) {
+            $res = [];
+            foreach ($data as $k => $v) {
+                if (in_array(strtolower((string)$k), ['password', 'secret', 'token', 'cvv', 'card', 'cookie', 'auth'], true)) {
+                    $res[$k] = '[REDACTED]';
+                } else {
+                    $res[$k] = $this->scrubPii($v);
+                }
+            }
+            return $res;
+        }
+        if (is_string($data)) {
+            $data = (string) preg_replace('/\b(?:\d[ -]*?){13,16}\b/', '[REDACTED_CREDIT_CARD]', $data);
+            $data = (string) preg_replace('/Bearer\s+[a-zA-Z0-9_\-\.]+/i', 'Bearer [REDACTED_TOKEN]', $data);
+            return (string) preg_replace('/ey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/', '[REDACTED_JWT]', $data);
+        }
+        return $data;
+    }
+}
+PHP;
     }
 }

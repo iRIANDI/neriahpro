@@ -60,5 +60,30 @@ class ClientIncidentController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Wahyu Ivan Standard: Global Black Box Client Error Telemetry Endpoint.
+     * Ingests unhandled runtime errors from client devices with strict PII scrubbing.
+     */
+    public function recordTelemetry(Request $request): JsonResponse
+    {
+        $payload = $request->all();
+
+        try {
+            $result = ClientIncidentReportService::recordBlackBoxTelemetry($payload, $request);
+
+            return response()->json([
+                'success' => true,
+                'data' => $result,
+            ], 200);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Gagal mencatat telemetry blackbox: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Telemetry logged silently.',
+            ], 200);
+        }
+    }
 }
 

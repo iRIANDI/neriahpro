@@ -137,7 +137,6 @@ class CvProController extends Controller
             'enable_cv_pro' => (bool) ($globalSettings['feature_enable_cv_pro']->value ?? true),
             'enable_pricing' => (bool) ($globalSettings['feature_enable_cv_pricing']->value ?? true),
             'enable_job_hub' => (bool) ($globalSettings['feature_enable_cv_job_hub']->value ?? true),
-            'enable_keuangan' => (bool) ($globalSettings['feature_enable_cv_keuangan']->value ?? true),
             'enable_mock_interview' => (bool) ($globalSettings['feature_enable_cv_mock_interview']->value ?? true),
             'enable_linkedin_suite' => (bool) ($globalSettings['feature_enable_cv_linkedin_suite']->value ?? true),
         ];

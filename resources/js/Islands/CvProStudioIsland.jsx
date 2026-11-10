@@ -31,8 +31,6 @@ import {
   FileUp,
   Scan,
   X,
-  DollarSign,
-  FileSpreadsheet,
   ArrowUpRight,
   Wand2,
   Sliders,
@@ -808,7 +806,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
 
 
 
-  // Navigation Tabs: 'editor' | 'job_hub' | 'finance' | 'ats_audit' | 'mock_interview' | 'outreach'
+  // Navigation Tabs: 'editor' | 'job_hub' | 'ats_audit' | 'mock_interview' | 'outreach'
   const [activeTab, setActiveTab] = useState('editor');
 
   // Tour Guide State
@@ -967,54 +965,6 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
   const [copyNotification, setCopyNotification] = useState(false);
   const [linkedInContent, setLinkedInContent] = useState(null);
   const [generatingLinkedIn, setGeneratingLinkedIn] = useState(false);
-
-  // Finance & Pricing Ledger State
-  const [financeTransactions, setFinanceTransactions] = useState([
-    {
-      id: 'TRX-101',
-      date: '2026-09-29',
-      client_name: 'Budi Hartono (PT Solusi Cemerlang)',
-      package: 'Executive VIP (Career AI + Coaching)',
-      price: 300000,
-      payment_method: 'Midtrans QRIS',
-      status: 'paid'
-    },
-    {
-      id: 'TRX-102',
-      date: '2026-09-27',
-      client_name: 'Siti Aminah, S.Kom',
-      package: 'Full Stack (Siap Kerja + Cover Letter)',
-      price: 150000,
-      payment_method: 'Bank Transfer (BCA)',
-      status: 'paid'
-    },
-    {
-      id: 'TRX-103',
-      date: '2026-09-26',
-      client_name: 'Rian Pratama',
-      package: 'Standard (ATS Optimized)',
-      price: 75000,
-      payment_method: 'GoPay / E-Wallet',
-      status: 'paid'
-    },
-    {
-      id: 'TRX-104',
-      date: '2026-09-24',
-      client_name: 'Farhan Maulana',
-      package: 'Starter / Lite (Template)',
-      price: 35000,
-      payment_method: 'ShopeePay',
-      status: 'pending'
-    }
-  ]);
-  const [showAddTransactionModal, setShowAddTransactionModal] = useState(false);
-  const [newTransaction, setNewTransaction] = useState({
-    client_name: '',
-    package: 'Standard (ATS Optimized)',
-    price: 75000,
-    payment_method: 'Midtrans QRIS',
-    status: 'paid'
-  });
 
   // Microsoft MarkItDown Upload & Scan State
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -1640,28 +1590,6 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
     reader.readAsText(file);
   };
 
-  // Export Financial Ledger to CSV
-  const handleExportFinanceCsv = () => {
-    const headers = ['ID Transaksi', 'Tanggal', 'Nama Klien', 'Paket Layanan', 'Nominal IDR', 'Metode Pembayaran', 'Status'];
-    const rows = financeTransactions.map(t => [
-      t.id,
-      t.date,
-      `"${t.client_name.replace(/"/g, '""')}"`,
-      `"${t.package.replace(/"/g, '""')}"`,
-      t.price,
-      t.payment_method,
-      t.status
-    ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `laporan-keuangan-cv-pro-${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
-
   // Kanban Stage Helpers
   const stages = [
     { key: 'wishlist', label: 'Wishlist / Target', color: 'border-zinc-300 dark:border-zinc-700' },
@@ -1997,11 +1925,6 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
     }));
   };
 
-  // Finance KPI calculations
-  const totalOmset = financeTransactions.filter(t => t.status === 'paid').reduce((acc, t) => acc + t.price, 0);
-  const totalPaidCount = financeTransactions.filter(t => t.status === 'paid').length;
-  const aov = totalPaidCount > 0 ? Math.round(totalOmset / totalPaidCount) : 0;
-
   const p = content.personal_info || {};
 
   return (
@@ -2041,13 +1964,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 </span>
               </button>
 
-              <button
-                onClick={() => setActiveTab('finance')}
-                className={`px-3 py-1 flex items-center gap-1.5 transition ${activeTab === 'finance' ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
-              >
-                <DollarSign className="w-3.5 h-3.5" />
-                <span>Keuangan Pro</span>
-              </button>
+
 
               <button
                 onClick={() => { setActiveTab('ats_audit'); runAtsAudit(); }}
@@ -2521,101 +2438,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
         </div>
       )}
 
-      {/* ADD TRANSACTION MODAL */}
-      {showAddTransactionModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 w-full max-w-md shadow-2xl flex flex-col">
-            <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Tambah Catatan Transaksi Layanan</h3>
-              <button onClick={() => setShowAddTransactionModal(false)} className="text-zinc-400 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-5 space-y-3 text-xs">
-              <div>
-                <label className="block text-zinc-600 dark:text-zinc-400 mb-1 font-medium">Nama Klien</label>
-                <input
-                  type="text"
-                  value={newTransaction.client_name}
-                  onChange={(e) => setNewTransaction({ ...newTransaction, client_name: e.target.value })}
-                  placeholder="e.g. Ahmad Fauzi, S.T."
-                  className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-xs"
-                />
-              </div>
-              <div>
-                <label className="block text-zinc-600 dark:text-zinc-400 mb-1 font-medium">Paket Layanan</label>
-                <select
-                  value={newTransaction.package}
-                  onChange={(e) => {
-                    const pkg = e.target.value;
-                    let price = 75000;
-                    if (pkg.includes('Lite')) price = 35000;
-                    if (pkg.includes('Full Stack')) price = 150000;
-                    if (pkg.includes('VIP')) price = 300000;
-                    setNewTransaction({ ...newTransaction, package: pkg, price });
-                  }}
-                  className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-2 py-1.5 text-xs"
-                >
-                  <option value="Starter / Lite (Template)">1. Starter / Lite (Template) - Rp 35.000</option>
-                  <option value="Standard (ATS Optimized)">2. Standard (ATS Optimized) - Rp 75.000</option>
-                  <option value="Full Stack (Siap Kerja + Cover Letter)">3. Full Stack (Siap Kerja) - Rp 150.000</option>
-                  <option value="Executive VIP (Career AI + Coaching)">4. Executive VIP (Career AI) - Rp 300.000</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-zinc-600 dark:text-zinc-400 mb-1 font-medium">Nominal (IDR)</label>
-                  <input
-                    type="number"
-                    value={newTransaction.price}
-                    onChange={(e) => setNewTransaction({ ...newTransaction, price: Number(e.target.value) })}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-zinc-600 dark:text-zinc-400 mb-1 font-medium">Status</label>
-                  <select
-                    value={newTransaction.status}
-                    onChange={(e) => setNewTransaction({ ...newTransaction, status: e.target.value })}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 px-2 py-1.5 text-xs"
-                  >
-                    <option value="paid">Lunas (Paid)</option>
-                    <option value="pending">Menunggu (Pending)</option>
-                  </select>
-                </div>
-              </div>
-              <div className="pt-2 flex justify-end gap-2">
-                <button
-                  onClick={() => setShowAddTransactionModal(false)}
-                  className="px-3 py-1.5 border border-zinc-300 text-xs font-bold"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={() => {
-                    if (!newTransaction.client_name) {
-                      showLocalToast('warning', 'Silakan isi nama klien terlebih dahulu.', 'VALIDASI DIPERLUKAN');
-                      return;
-                    }
-                    const created = {
-                      id: `TRX-${Date.now().toString().slice(-4)}`,
-                      date: new Date().toISOString().split('T')[0],
-                      ...newTransaction
-                    };
-                    setFinanceTransactions(prev => [created, ...prev]);
-                    setShowAddTransactionModal(false);
-                    setNewTransaction({ client_name: '', package: 'Standard (ATS Optimized)', price: 75000, payment_method: 'Midtrans QRIS', status: 'paid' });
-                    showLocalToast('success', 'Catatan transaksi berhasil disimpan.', 'TRANSAKSI DISIMPAN');
-                  }}
-                  className="px-4 py-1.5 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-none"
-                >
-                  Simpan Transaksi
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* 2. MAIN CONTAINER WITH TAB PANELS */}
       <div className="max-w-7xl mx-auto px-4 mt-6">
@@ -4794,159 +4617,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* TAB 3: FINANCE & PRICING CALCULATOR                                       */}
-        {/* ========================================================================= */}
-        {activeTab === 'finance' && (
-          <div className="space-y-6">
-            
-            {/* Top KPI Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm">
-                <span className="text-xs font-mono font-bold uppercase text-zinc-500">Total Omset Layanan</span>
-                <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                  Rp {totalOmset.toLocaleString('id-ID')}
-                </div>
-                <span className="text-[11px] text-zinc-400">Dari {totalPaidCount} transaksi lunas</span>
-              </div>
 
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm">
-                <span className="text-xs font-mono font-bold uppercase text-zinc-500">Rata-rata Order (AOV)</span>
-                <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">
-                  Rp {aov.toLocaleString('id-ID')}
-                </div>
-                <span className="text-[11px] text-zinc-400">Nilai tiket per klien</span>
-              </div>
-
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm">
-                <span className="text-xs font-mono font-bold uppercase text-zinc-500">Total Order Dicatat</span>
-                <div className="text-2xl font-black text-zinc-900 dark:text-white mt-1">
-                  {financeTransactions.length}
-                </div>
-                <span className="text-[11px] text-zinc-400">B2C & B2B Consulting</span>
-              </div>
-
-              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm">
-                <span className="text-xs font-mono font-bold uppercase text-zinc-500">Tingkat Sukses Pelunasan</span>
-                <div className="text-2xl font-black text-amber-500 mt-1">
-                  {financeTransactions.length > 0 ? Math.round((totalPaidCount / financeTransactions.length) * 100) : 0}%
-                </div>
-                <span className="text-[11px] text-zinc-400">Metode QRIS & Transfer</span>
-              </div>
-            </div>
-
-            {/* Rate Card & Service Packages Catalog */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm space-y-4">
-              <h3 className="text-xs font-mono font-bold uppercase text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-indigo-500" />
-                <span>Katalog Paket Layanan & Kalkulator Biaya (Pricing Rate Card)</span>
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
-                <div className="p-4 border border-zinc-200 dark:border-zinc-800 rounded bg-zinc-50 dark:bg-zinc-950/40 space-y-2">
-                  <span className="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 font-mono font-bold text-[10px] rounded">1. STARTER / LITE</span>
-                  <div className="text-lg font-black text-zinc-900 dark:text-white">Rp 35.000</div>
-                  <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-[11px]">
-                    <li>✓ Akses template Modern</li>
-                    <li>✓ Export PDF & Print View</li>
-                    <li>✗ Tanpa konsultasi ahli</li>
-                  </ul>
-                </div>
-
-                <div className="p-4 border-2 border-indigo-500/50 rounded bg-indigo-50/20 dark:bg-indigo-950/20 space-y-2 relative">
-                  <span className="px-2 py-0.5 bg-indigo-600 text-white font-mono font-bold text-[10px] rounded">2. STANDARD (FAVORIT)</span>
-                  <div className="text-lg font-black text-indigo-600 dark:text-indigo-400">Rp 75.000</div>
-                  <ul className="text-zinc-700 dark:text-zinc-300 space-y-1 text-[11px]">
-                    <li>✓ Audit ATS Skor 80+</li>
-                    <li>✓ Poles kata kerja aksi aktif</li>
-                    <li>✓ Sisipkan data metrik (%/Rp)</li>
-                  </ul>
-                </div>
-
-                <div className="p-4 border border-zinc-200 dark:border-zinc-800 rounded bg-zinc-50 dark:bg-zinc-950/40 space-y-2">
-                  <span className="px-2 py-0.5 bg-emerald-600 text-white font-mono font-bold text-[10px] rounded">3. FULL STACK</span>
-                  <div className="text-lg font-black text-zinc-900 dark:text-white">Rp 150.000</div>
-                  <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-[11px]">
-                    <li>✓ Semua fitur Standard</li>
-                    <li>✓ Cover Letter tertarget</li>
-                    <li>✓ Optimasi Profil LinkedIn</li>
-                  </ul>
-                </div>
-
-                <div className="p-4 border border-zinc-200 dark:border-zinc-800 rounded bg-zinc-50 dark:bg-zinc-950/40 space-y-2">
-                  <span className="px-2 py-0.5 bg-purple-600 text-white font-mono font-bold text-[10px] rounded">4. EXECUTIVE VIP</span>
-                  <div className="text-lg font-black text-purple-600 dark:text-purple-400">Rp 300.000</div>
-                  <ul className="text-zinc-600 dark:text-zinc-400 space-y-1 text-[11px]">
-                    <li>✓ Semua fitur Full Stack</li>
-                    <li>✓ Simulasi Mock Interview STAR</li>
-                    <li>✓ Garansi lolos seleksi berkas</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Transactions Ledger Table */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
-                  <span>Buku Kas Transaksi Layanan Pembuatan CV</span>
-                </h3>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleExportFinanceCsv}
-                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Export Excel (.csv)</span>
-                  </button>
-                  <button
-                    onClick={() => setShowAddTransactionModal(true)}
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Catat Transaksi Baru</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-zinc-700 dark:text-zinc-300">
-                  <thead className="bg-zinc-50 dark:bg-zinc-800 font-mono text-zinc-500 text-[11px] uppercase">
-                    <tr>
-                      <th className="p-2.5">ID TRX</th>
-                      <th className="p-2.5">Tanggal</th>
-                      <th className="p-2.5">Klien</th>
-                      <th className="p-2.5">Paket Layanan</th>
-                      <th className="p-2.5">Nominal (IDR)</th>
-                      <th className="p-2.5">Metode Bayar</th>
-                      <th className="p-2.5">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                    {financeTransactions.map((t) => (
-                      <tr key={t.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition">
-                        <td className="p-2.5 font-mono font-bold text-indigo-600 dark:text-indigo-400">{t.id}</td>
-                        <td className="p-2.5 font-mono">{t.date}</td>
-                        <td className="p-2.5 font-semibold text-zinc-900 dark:text-white">{t.client_name}</td>
-                        <td className="p-2.5">{t.package}</td>
-                        <td className="p-2.5 font-mono font-bold">Rp {t.price.toLocaleString('id-ID')}</td>
-                        <td className="p-2.5 text-zinc-500">{t.payment_method}</td>
-                        <td className="p-2.5">
-                          <span className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded ${t.status === 'paid' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400'}`}>
-                            {t.status === 'paid' ? 'LUNAS' : 'MENUNGGU'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
-        )}
 
         {/* ========================================================================= */}
         {/* TAB 4: AI ATS AUDITOR & QUALITY LINTER                                    */}

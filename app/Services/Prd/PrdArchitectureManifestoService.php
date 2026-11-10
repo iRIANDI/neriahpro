@@ -1677,6 +1677,16 @@ class PrdArchitectureManifestoService
                         ? 'New feature release cycles take minutes safely with zero regression risks in production.'
                         : 'Siklus rilis fitur baru berlangsung dalam hitungan menit secara aman tanpa risiko regresi atau bug di lingkungan produksi.',
                 ],
+                [
+                    'area' => $isEn ? '6. Black Box Error Monitoring & Zero-PII Telemetry (Wahyu Ivan Standard)' : '6. Black Box Error Monitoring, Kompatibilitas Perangkat & Log Scrubber Anti-Bocor PII (Wahyu Ivan Standard)',
+                    'current_capability' => 'Standard exception handling & local debug logger',
+                    'world_class_option' => $isEn
+                        ? 'Deploy airplane-grade Black Box error telemetry: Global client-side catchers (window.onerror, unhandledrejection, React ErrorBoundary) specifically instrumented against device fragmentation (older iPhones, legacy Safari, syntax incompatibility from AI vibe-coding), server exception pipelines (Sentry/OpenTelemetry), automated error spike triggers via Slack/WhatsApp before users submit 1-star reviews, and a mandatory Anti-Leak Log Scrubber guaranteeing zero logging of passwords, auth tokens, cookies, or credit card numbers.'
+                        : 'Implementasikan Black Box Error Monitoring skala pesawat terbang: Penangkap error global di sisi klien (window.onerror, unhandledrejection, React ErrorBoundary) yang mendeteksi ketidakcocokan perangkat pengguna akhir (seperti iPhone lama / Safari versi lawas / fungsi sintaks hasil generate AI), penerusan telemetri server (Sentry/OpenTelemetry), notifikasi alert otomatis lonjakan error via Slack/WhatsApp sebelum klien memberikan ulasan bintang 1, serta Log Scrubber Anti-Leak yang menyaring ketat data sensitif (kata sandi, token otentikasi, session cookie, dan kartu kredit) agar tidak bocor dari sistem log.',
+                    'benefit' => $isEn
+                        ? 'Eliminates "works on my machine" blind spots, identifies exact device/OS/broken line in seconds, protects user conversion rates, and guarantees zero PII privacy leak liabilities.'
+                        : 'Mengeliminasi jebakan "lancar di laptop developer tapi rusak di HP user", mengetahui secara presisi tipe perangkat/versi OS/baris kode rusak dalam hitungan detik, mengamankan tingkat checkout/konversi, serta menjamin nihil risiko kebocoran data sensitif dari log sistem.',
+                ],
             ],
             'implementation_roadmap' => $isEn ? [
                 'Phase 1 (Months 1-2)' => 'Core MVP Foundation: Strict ULID PostgreSQL, Keyset Cursor O(1), Midtrans Snap Idempotency, Filament Admin, and 10 Pillars Software Factory OS.',

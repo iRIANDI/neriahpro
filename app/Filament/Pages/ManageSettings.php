@@ -146,7 +146,6 @@ class ManageSettings extends Page implements HasForms
             'feature_enable_cv_pro' => true,
             'feature_enable_cv_pricing' => true,
             'feature_enable_cv_job_hub' => true,
-            'feature_enable_cv_keuangan' => true,
             'feature_enable_cv_mock_interview' => true,
             'feature_enable_cv_linkedin_suite' => true,
             'site_tagline_id' => 'Layanan Pengembangan Software & Arsitektur Sistem Digital Profesional',
@@ -982,11 +981,6 @@ class ManageSettings extends Page implements HasForms
                                         Toggle::make('feature_enable_cv_job_hub')
                                             ->label('Tampilkan Tab Job Hub (Kanban Board)')
                                             ->helperText('Pelacakan tahapan lamaran kerja (Wishlist, Applied, Interview, Offer).')
-                                            ->default(true),
-
-                                        Toggle::make('feature_enable_cv_keuangan')
-                                            ->label('Tampilkan Tab Keuangan Pro')
-                                            ->helperText('Kalkulator gaji bersih, budget persiapan karir, dan target tabungan.')
                                             ->default(true),
 
                                         Toggle::make('feature_enable_cv_mock_interview')

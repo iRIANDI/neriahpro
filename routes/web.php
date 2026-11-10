@@ -43,6 +43,7 @@ Route::get('/readyz', [HealthProbeController::class, 'readyz'])->name('readyz');
 Route::post('/api/onboarding', [OnboardingController::class, 'store']);
 Route::post('/api/vision-blueprint', [VisionBlueprintController::class, 'store'])->middleware('throttle:30,1');
 Route::post('/api/blueprint/report-incident', [\App\Http\Controllers\Api\ClientIncidentController::class, 'report'])->middleware('throttle:30,1');
+Route::post('/api/telemetry/client-error', [\App\Http\Controllers\Api\ClientIncidentController::class, 'recordTelemetry'])->middleware('throttle:60,1');
 
 Route::get('/document/{document}/preview', [DocumentController::class, 'preview'])
     ->name('document.preview')

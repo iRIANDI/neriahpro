@@ -95,7 +95,7 @@ class ClientIncidentReportService
         }
 
         // 7. Persist Immutable Incident Record
-        $diagnostics = $data['technical_diagnostics'] ?? [];
+        $diagnostics = self::scrubPii($data['technical_diagnostics'] ?? []);
         if ($request && is_array($diagnostics)) {
             $diagnostics['user_agent'] = $request->userAgent();
             $diagnostics['url'] = $request->fullUrl();
@@ -107,13 +107,13 @@ class ClientIncidentReportService
         $report = ClientIncidentReport::create([
             'incident_code' => $incidentCode,
             'vision_blueprint_id' => $bpId,
-            'client_email' => $data['client_email'] ?? 'guest@neriahpro.com',
-            'client_name' => $data['client_name'] ?? null,
-            'client_phone' => $data['client_phone'] ?? null,
+            'client_email' => self::scrubPiiString((string) ($data['client_email'] ?? 'guest@neriahpro.com')),
+            'client_name' => self::scrubPiiString((string) ($data['client_name'] ?? '')),
+            'client_phone' => self::scrubPiiString((string) ($data['client_phone'] ?? '')),
             'error_type' => $errorType,
-            'error_message' => $errorMsg,
+            'error_message' => self::scrubPiiString($errorMsg),
             'technical_diagnostics' => $diagnostics,
-            'client_notes' => $data['client_notes'] ?? null,
+            'client_notes' => self::scrubPiiString((string) ($data['client_notes'] ?? '')),
             'status' => 'COMPENSATED',
             'compensation_type' => 'SERVICE_CREDIT_AND_SLA_WARRANTY',
             'compensation_voucher_code' => $voucherCode,
@@ -143,6 +143,126 @@ class ClientIncidentReportService
         }
 
         return $report;
+    }
+
+    /**
+     * Wahyu Ivan Standard: Black Box Client & Server Error Telemetry Ingestion.
+     * Captures device crashes (older iPhones, legacy Safari, AI vibe-coding syntax incompatibility)
+     * with strict PII log scrubbing and automated spike alert triggering.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    public static function recordBlackBoxTelemetry(array $data, ?Request $request = null): array
+    {
+        $ip = $request ? $request->ip() : ($data['ip_address'] ?? '127.0.0.1');
+
+        // Rate limit background telemetry (max 30 telemetry calls/min per IP)
+        $rateKey = 'blackbox-telemetry:' . $ip;
+        if (RateLimiter::tooManyAttempts($rateKey, 30)) {
+            return ['status' => 'rate_limited', 'message' => 'Telemetry threshold reached.'];
+        }
+        RateLimiter::hit($rateKey, 60);
+
+        // Sanitize incoming payload through PII Log Scrubber
+        $cleanData = self::scrubPii($data);
+        $errorMsg = (string) ($cleanData['error_message'] ?? 'Unknown client JS runtime error');
+        $errorType = (string) ($cleanData['error_type'] ?? 'CLIENT_BLACKBOX_ERROR');
+        $deviceInfo = $cleanData['device_info'] ?? [];
+        $currentUrl = (string) ($cleanData['current_url'] ?? ($request ? $request->fullUrl() : '-'));
+
+        $telemetryCode = 'BB-' . date('Ymd-His') . '-' . strtoupper(substr(bin2hex(random_bytes(2)), 0, 4));
+
+        \Illuminate\Support\Facades\Log::warning("[BlackBox Telemetry] {$telemetryCode}: {$errorType} - {$errorMsg}", [
+            'code' => $telemetryCode,
+            'device' => $deviceInfo,
+            'url' => $currentUrl,
+            'file' => $cleanData['file_url'] ?? null,
+            'line' => $cleanData['line_number'] ?? null,
+            'stack' => substr((string) ($cleanData['stack_trace'] ?? ''), 0, 1000),
+            'ip' => $ip,
+        ]);
+
+        // Automated Error Spike Alert (Detects sudden surge in device errors e.g. 10 errors / 5 min)
+        try {
+            $spikeBucket = date('YmdH') . '_' . (int) (date('i') / 5);
+            $spikeKey = 'blackbox_spike_bucket:' . $spikeBucket;
+            $count = (int) \Illuminate\Support\Facades\Cache::increment($spikeKey);
+            \Illuminate\Support\Facades\Cache::put($spikeKey, $count, now()->addMinutes(10));
+
+            // Alert once when hitting spike threshold (10 errors in 5 min)
+            if ($count === 10) {
+                $alertMessage = "🚨 [BLACK BOX ERROR SPIKE ALERT]\n"
+                    . "Terdeteksi lonjakan {$count} error klien dalam 5 menit terakhir!\n"
+                    . "URL: {$currentUrl}\n"
+                    . "Error: " . substr($errorMsg, 0, 120) . "\n"
+                    . "Perangkat: " . ($deviceInfo['device'] ?? 'Unknown') . " (" . ($deviceInfo['os'] ?? 'Unknown') . ")\n"
+                    . "Segera investigasi kode sebelum pengguna menulis ulasan buruk!";
+
+                if (class_exists(\App\Services\Notification\FonnteWhatsAppService::class)) {
+                    \App\Services\Notification\FonnteWhatsAppService::notifyAdmin($alertMessage);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::info('[BlackBox Telemetry] Spike checker bypassed: ' . $e->getMessage());
+        }
+
+        return [
+            'status' => 'recorded',
+            'telemetry_code' => $telemetryCode,
+            'pii_scrubbed' => true,
+        ];
+    }
+
+    /**
+     * Strict Zero-Leak PII Log Scrubber.
+     * Recursively redacts passwords, tokens, auth headers, and credit card numbers.
+     */
+    public static function scrubPii(mixed $input): mixed
+    {
+        if (is_array($input)) {
+            $scrubbed = [];
+            foreach ($input as $k => $v) {
+                $keyLower = strtolower((string) $k);
+                if (in_array($keyLower, ['password', 'passwd', 'pwd', 'secret', 'token', 'authorization', 'bearer', 'cvv', 'cvc', 'credit_card', 'card_number', 'card', 'pin', 'cookie', 'session'], true)) {
+                    $scrubbed[$k] = '[REDACTED_SENSITIVE_DATA]';
+                } else {
+                    $scrubbed[$k] = self::scrubPii($v);
+                }
+            }
+
+            return $scrubbed;
+        }
+
+        if (is_string($input)) {
+            return self::scrubPiiString($input);
+        }
+
+        return $input;
+    }
+
+    /**
+     * Redact sensitive patterns from strings (passwords, tokens, credit cards).
+     */
+    public static function scrubPiiString(string $text): string
+    {
+        if (empty($text)) {
+            return $text;
+        }
+
+        // 1. Credit card numbers (13-16 digits with optional spaces/hyphens)
+        $text = (string) preg_replace('/\b(?:\d[ -]*?){13,16}\b/', '[REDACTED_CREDIT_CARD]', $text);
+
+        // 2. Bearer tokens
+        $text = (string) preg_replace('/Bearer\s+[a-zA-Z0-9_\-\.]+/i', 'Bearer [REDACTED_TOKEN]', $text);
+
+        // 3. JWT tokens (ey...)
+        $text = (string) preg_replace('/ey[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/', '[REDACTED_JWT]', $text);
+
+        // 4. Password / token key-value pairs in URLs or JSON
+        $text = (string) preg_replace('/(?i)(password|passwd|pwd|secret|api_key|token|auth_token)\s*[:=]\s*["\']?[^"\'&\s]+["\']?/', '$1=[REDACTED]', $text);
+
+        return $text;
     }
 }
 

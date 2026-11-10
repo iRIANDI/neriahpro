@@ -305,6 +305,9 @@
 
         let isProgrammaticScroll = false;
         let programmaticScrollTimer = null;
+        window.isProgrammaticScrolling = function() {
+            return isProgrammaticScroll;
+        };
 
         window.syncNavMetrics = function() {
             try {

@@ -21,6 +21,18 @@
                     'section-10': false,
                     'section-13': false,
                 },
+                subCollapses: {
+                    'sec-6-9-strat-guidance': false,
+                    'sec-6-10-pros-cons': false,
+                    'sec-6-11-ai-shield': false,
+                    'sec-6-12-agentic-matrix': false,
+                    'sec-6-13-rag-matrix': false,
+                    'sec-6-13-repo-export': false,
+                    'sec-6-14-health-auditor': false,
+                    'sec-6-15-sla-simulator': false,
+                },
+                autoAccordionEnabled: true,
+                _autoAccordionInitialized: false,
                 allSectionsExpanded: true,
                 toggleAllSections() {
                     this.allSectionsExpanded = !this.allSectionsExpanded;
@@ -41,6 +53,26 @@
                         }
                     }
                 },
+                toggleSubSection(key) {
+                    this.subCollapses = {
+                        ...this.subCollapses,
+                        [key]: !this.subCollapses[key]
+                    };
+                },
+                toggleAutoAccordion() {
+                    this.autoAccordionEnabled = !this.autoAccordionEnabled;
+                    if (window.showToast) {
+                        window.showToast({
+                            type: this.autoAccordionEnabled ? 'success' : 'info',
+                            title: this.autoAccordionEnabled 
+                                ? (this.locale === 'en' ? 'AUTO-ACCORDION ACTIVATED' : 'AUTO-ACCORDION DIAKTIFKAN') 
+                                : (this.locale === 'en' ? 'AUTO-ACCORDION PAUSED' : 'AUTO-ACCORDION DINONAKTIFKAN'),
+                            message: this.autoAccordionEnabled 
+                                ? (this.locale === 'en' ? 'Sections will auto-collapse when scrolled past and auto-expand in view.' : 'Seksi akan otomatis diciutkan setelah dilewati dan dibuka saat tampil di layar.') 
+                                : (this.locale === 'en' ? 'Sections remain in their current state until manually toggled.' : 'Seksi akan tetap berada pada posisi saat ini hingga dibuka-tutup manual.')
+                        });
+                    }
+                },
                 expandAllSections() {
                     this.allSectionsExpanded = true;
                     const next = {};
@@ -48,6 +80,11 @@
                         next[sec] = false;
                     }
                     this.sectionCollapses = next;
+                    const nextSub = {};
+                    for (const sub in this.subCollapses) {
+                        nextSub[sub] = false;
+                    }
+                    this.subCollapses = nextSub;
                     setTimeout(() => { if (window.reRenderActiveMermaid) window.reRenderActiveMermaid(); }, 150);
                     if (window.showToast) {
                         window.showToast({
@@ -64,6 +101,11 @@
                         next[sec] = true;
                     }
                     this.sectionCollapses = next;
+                    const nextSub = {};
+                    for (const sub in this.subCollapses) {
+                        nextSub[sub] = true;
+                    }
+                    this.subCollapses = nextSub;
                     if (window.showToast) {
                         window.showToast({
                             type: 'info',
@@ -2372,6 +2414,22 @@
                     if (this.sectionCollapses && this.sectionCollapses[id]) {
                         this.sectionCollapses[id] = false;
                     }
+                    if (id.startsWith('sub-sec-6-')) {
+                        this.sectionCollapses['section-6'] = false;
+                        const subMap = {
+                            'sub-sec-6-9': 'sec-6-9-strat-guidance',
+                            'sub-sec-6-10': 'sec-6-10-pros-cons',
+                            'sub-sec-6-11': 'sec-6-11-ai-shield',
+                            'sub-sec-6-12': 'sec-6-12-agentic-matrix',
+                            'sub-sec-6-13-rag': 'sec-6-13-rag-matrix',
+                            'sub-sec-6-13-export': 'sec-6-13-repo-export',
+                            'sub-sec-6-14': 'sec-6-14-health-auditor',
+                            'sub-sec-6-15': 'sec-6-15-sla-simulator',
+                        };
+                        if (subMap[id]) {
+                            this.subCollapses[subMap[id]] = false;
+                        }
+                    }
                     window.jumpToSection(id);
                     this.activeSectionId = id;
                     this.autoSyncAccordion = true;
@@ -2463,7 +2521,134 @@
                         });
                     }
                 },
+                initAutoAccordion() {
+                    if (this._autoAccordionInitialized) return;
+                    this._autoAccordionInitialized = true;
+
+                    const mainTargets = [
+                        { id: 'section-00-execution-guide', key: 'section-00-execution-guide' },
+                        { id: 'section-1', key: 'section-1' },
+                        { id: 'section-1-5', key: 'section-1-5' },
+                        { id: 'section-2', key: 'section-2' },
+                        { id: 'section-3', key: 'section-3' },
+                        { id: 'section-3-5', key: 'section-3-5' },
+                        { id: 'section-3-8', key: 'section-3-8' },
+                        { id: 'section-4', key: 'section-4' },
+                        { id: 'section-5', key: 'section-5' },
+                        { id: 'section-6', key: 'section-6' },
+                        { id: 'section-7', key: 'section-7' },
+                        { id: 'section-8', key: 'section-8' },
+                        { id: 'section-9', key: 'section-9' },
+                        { id: 'section-10', key: 'section-10' },
+                        { id: 'section-13', key: 'section-13' }
+                    ];
+
+                    const subTargets = [
+                        { id: 'sub-sec-6-9', key: 'sec-6-9-strat-guidance' },
+                        { id: 'sub-sec-6-10', key: 'sec-6-10-pros-cons' },
+                        { id: 'sub-sec-6-11', key: 'sec-6-11-ai-shield' },
+                        { id: 'sub-sec-6-12', key: 'sec-6-12-agentic-matrix' },
+                        { id: 'sub-sec-6-13-rag', key: 'sec-6-13-rag-matrix' },
+                        { id: 'sub-sec-6-13-export', key: 'sec-6-13-repo-export' },
+                        { id: 'sub-sec-6-14', key: 'sec-6-14-health-auditor' },
+                        { id: 'sub-sec-6-15', key: 'sec-6-15-sla-simulator' }
+                    ];
+
+                    let ticking = false;
+
+                    const evaluateAccordionStates = () => {
+                        if (!this.autoAccordionEnabled) {
+                            ticking = false;
+                            return;
+                        }
+
+                        if (typeof window.isProgrammaticScrolling === 'function' && window.isProgrammaticScrolling()) {
+                            ticking = false;
+                            return;
+                        }
+
+                        const navOffset = 110;
+                        const winH = window.innerHeight;
+
+                        // 1. Evaluate Main Sections
+                        mainTargets.forEach(item => {
+                            const el = document.getElementById(item.id);
+                            if (!el) return;
+                            const rect = el.getBoundingClientRect();
+                            const isCurrentlyCollapsed = !!this.sectionCollapses[item.key];
+
+                            // Passed above viewport
+                            if (rect.bottom < navOffset) {
+                                if (!isCurrentlyCollapsed) {
+                                    const beforeH = el.offsetHeight;
+                                    this.sectionCollapses[item.key] = true;
+                                    this.$nextTick(() => {
+                                        const afterH = el.offsetHeight;
+                                        const diff = beforeH - afterH;
+                                        if (diff > 0) {
+                                            window.scrollBy({ top: -diff, behavior: 'instant' });
+                                        }
+                                    });
+                                }
+                            }
+                            // Visible in viewport
+                            else if (rect.top < winH - 60 && rect.bottom >= navOffset) {
+                                if (isCurrentlyCollapsed) {
+                                    this.sectionCollapses[item.key] = false;
+                                    if (item.id === 'section-3-8' || item.id === 'section-4' || item.id === 'section-5') {
+                                        setTimeout(() => { if (window.reRenderActiveMermaid) window.reRenderActiveMermaid(); }, 120);
+                                    }
+                                }
+                            }
+                        });
+
+                        // 2. Evaluate Sub Sections inside Section 6 if Section 6 is visible & open
+                        if (!this.sectionCollapses['section-6']) {
+                            subTargets.forEach(item => {
+                                const el = document.getElementById(item.id);
+                                if (!el) return;
+                                const rect = el.getBoundingClientRect();
+                                const isCurrentlyCollapsed = !!this.subCollapses[item.key];
+
+                                // Passed above viewport
+                                if (rect.bottom < navOffset) {
+                                    if (!isCurrentlyCollapsed) {
+                                        const beforeH = el.offsetHeight;
+                                        this.subCollapses[item.key] = true;
+                                        this.$nextTick(() => {
+                                            const afterH = el.offsetHeight;
+                                            const diff = beforeH - afterH;
+                                            if (diff > 0) {
+                                                window.scrollBy({ top: -diff, behavior: 'instant' });
+                                            }
+                                        });
+                                    }
+                                }
+                                // Visible in viewport
+                                else if (rect.top < winH - 60 && rect.bottom >= navOffset) {
+                                    if (isCurrentlyCollapsed) {
+                                        this.subCollapses[item.key] = false;
+                                    }
+                                }
+                            });
+                        }
+
+                        ticking = false;
+                    };
+
+                    window.addEventListener('scroll', () => {
+                        if (!ticking) {
+                            window.requestAnimationFrame(evaluateAccordionStates);
+                            ticking = true;
+                        }
+                    }, { passive: true });
+
+                    setTimeout(evaluateAccordionStates, 300);
+                },
                 init() {
+                    // Initialize Smart Scroll Auto-Accordion
+                    this.initAutoAccordion();
+
                     // Initialize Download Center Artifacts list & countdown ticker
                     this.fetchDownloadArtifacts();
                     this.ensureCountdownTicker();

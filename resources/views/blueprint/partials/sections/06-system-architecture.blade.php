@@ -883,7 +883,8 @@
                 <div>
                     <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-3 flex items-center gap-2">
                         <span class="w-2 h-2 bg-emerald-500"></span>
-                        8. Rekomendasi Stack & Tools Rekayasa Perangkat Lunak
+                        <span x-show="locale === 'en'">8. Recommended Software Engineering Stack &amp; Tools</span>
+                        <span x-show="locale !== 'en'">8. Rekomendasi Stack &amp; Tools Rekayasa Perangkat Lunak</span>
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 font-mono text-xs">
                         @foreach($archEval['recommended_tools'] ?? [] as $tool)
@@ -899,170 +900,328 @@
                 <!-- 9. Panduan Edukatif Hulu ke Hilir: Do's & Don'ts Proyek -->
                 @php
                     $stratGuidance = $archEval['strategic_guidance'] ?? [];
+                    $dosTranslations = [
+                        0 => [
+                            'tag' => 'UPSTREAM // STRATEGY',
+                            'title' => 'Start with Mobile-First Web / PWA First',
+                            'desc' => 'Saves 70-80% of upfront capital compared to immediately building native iOS/Android apps for app stores. A responsive web app is instantly accessible via WhatsApp links with zero install friction.'
+                        ],
+                        1 => [
+                            'tag' => 'UPSTREAM // ARCHITECTURE',
+                            'title' => 'Use Modern Monolith to Ship MVP Rapidly',
+                            'desc' => 'A unified framework (Laravel 13 & Filament v5) slashes admin development time from months down to 5-10 days with lowest server hosting costs.'
+                        ],
+                        2 => [
+                            'tag' => 'MIDSTREAM // SCOPE LOCK',
+                            'title' => 'Lock 3-5 Core Features That Solve Critical Pain Points',
+                            'desc' => 'Channel launch energy into the primary user workflow. Additional non-critical features should be scheduled for Phase 2 after gathering real usage data.'
+                        ],
+                        3 => [
+                            'tag' => 'DOWNSTREAM // OPERATIONAL',
+                            'title' => 'Automate Communication Channels (WhatsApp & Digital Payments)',
+                            'desc' => 'Integrate instant QRIS payments and automated WhatsApp notifications to eliminate up to 90% of manual administrative workload.'
+                        ],
+                        4 => [
+                            'tag' => 'DOWNSTREAM // COST',
+                            'title' => 'Full Transparency on Recurring Domain & Hosting Costs Upfront',
+                            'desc' => 'Understand annual domain renewal and monthly VPS hosting commitments upfront so ongoing operations run without unexpected cash flow surprises.'
+                        ],
+                    ];
+                    $dontsTranslations = [
+                        0 => [
+                            'tag' => 'UPSTREAM // OVERKILL',
+                            'title' => 'Do Not Force Microservices Prematurely',
+                            'desc' => 'Early microservices only add latency overhead, distributed debugging nightmares, and burn millions in cloud rental for empty server clusters.'
+                        ],
+                        1 => [
+                            'tag' => 'UPSTREAM // COST',
+                            'title' => 'Do Not Purchase Enterprise-Tier Servers Too Early',
+                            'desc' => 'Use budget-friendly cloud starters (< $10/mo) during idea validation. Scaling up to a Dedicated VPS takes only minutes whenever required without data migration.'
+                        ],
+                        2 => [
+                            'tag' => 'MIDSTREAM // SCOPE CREEP',
+                            'title' => 'Do Not Inject New Features Mid-Sprint',
+                            'desc' => 'Impulsive feature requests without formal evaluation derail launch deadlines and exponentially inflate project failure risk.'
+                        ],
+                        3 => [
+                            'tag' => 'DOWNSTREAM // ASSUMPTION',
+                            'title' => 'Do Not Delay Launch Waiting for Perfection',
+                            'desc' => 'The best software is live software used by real customers. Ship fast, collect actionable feedback, and iterate deliberately.'
+                        ],
+                    ];
                 @endphp
                 @if(!empty($stratGuidance))
-                    <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
-                                <span class="w-2 h-2 bg-emerald-500"></span>
-                                9. Panduan Edukatif Hulu ke Hilir: Do's & Don'ts Rekayasa Sistem
-                            </h3>
-                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
-                                EDUKATIF & REALISTIS
-                            </span>
-                        </div>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
-                            {{ $stratGuidance['subtitle'] ?? 'Edukasi komprehensif bagi pemangku kepentingan agar investasi teknologi tepat sasaran, efisien, dan bebas risiko scope creep.' }}
-                        </p>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- DO'S (Prinsip Sukses) -->
-                            <div class="p-5 bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500/50 font-mono text-xs">
-                                <div class="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-emerald-500/30">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-2.5 h-2.5 bg-emerald-500 inline-block"></span>
-                                        <span class="font-black uppercase text-emerald-600 dark:text-emerald-400 text-sm">DO'S (LAKUKAN) - 5 PRINSIP SUKSES</span>
-                                    </div>
-                                    <span class="text-[9px] uppercase px-1.5 py-0.2 bg-emerald-500 text-black font-bold">BEST PRACTICE</span>
-                                </div>
-                                <div class="space-y-3">
-                                    @foreach($stratGuidance['dos'] ?? [] as $do)
-                                        <div class="p-2.5 bg-white dark:bg-zinc-900 border border-emerald-500/20">
-                                            <div class="flex items-center gap-2 mb-1">
-                                                <span class="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                                                    {{ $do['tag'] }}
-                                                </span>
-                                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs">{{ $do['title'] }}</h4>
-                                            </div>
-                                            <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">{{ $do['desc'] }}</p>
-                                        </div>
-                                    @endforeach
-                                </div>
+                    <div id="sub-sec-6-9" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 cursor-pointer select-none" @click="toggleSubSection('sec-6-9-strat-guidance')">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 bg-emerald-500 inline-block"></span>
+                                <h3 class="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                                    <span x-show="locale === 'en'">9. Upstream-to-Downstream Educational Guide: Systems Engineering Do's &amp; Don'ts</span>
+                                    <span x-show="locale !== 'en'">9. Panduan Edukatif Hulu ke Hilir: Do's &amp; Don'ts Rekayasa Sistem</span>
+                                </h3>
                             </div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
+                                    <span x-show="locale === 'en'">EDUCATIONAL &amp; REALISTIC</span>
+                                    <span x-show="locale !== 'en'">EDUKATIF &amp; REALISTIS</span>
+                                </span>
+                                <button 
+                                    type="button" 
+                                    @click.stop="toggleSubSection('sec-6-9-strat-guidance')" 
+                                    class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer"
+                                    :title="subCollapses['sec-6-9-strat-guidance'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                                >
+                                    <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="subCollapses['sec-6-9-strat-guidance'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                                    <svg class="w-4 h-4 transform transition-transform duration-200" :class="subCollapses['sec-6-9-strat-guidance'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                            </div>
+                        </div>
 
-                            <!-- DON'TS (Jebakan Pemborosan) -->
-                            <div class="p-5 bg-rose-500/5 dark:bg-rose-950/20 border-2 border-rose-500/50 font-mono text-xs">
-                                <div class="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-rose-500/30">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-2.5 h-2.5 bg-rose-500 inline-block"></span>
-                                        <span class="font-black uppercase text-rose-600 dark:text-rose-400 text-sm">DON'TS (HINDARI) - 4 JEBAKAN RISIKO</span>
-                                    </div>
-                                    <span class="text-[9px] uppercase px-1.5 py-0.2 bg-rose-500 text-white font-bold">AVOID WASTE</span>
-                                </div>
-                                <div class="space-y-3">
-                                    @foreach($stratGuidance['donts'] ?? [] as $dont)
-                                        <div class="p-2.5 bg-white dark:bg-zinc-900 border border-rose-500/20">
-                                            <div class="flex items-center gap-2 mb-1">
-                                                <span class="text-[9px] font-bold px-1.5 py-0.2 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
-                                                    {{ $dont['tag'] }}
-                                                </span>
-                                                <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs">{{ $dont['title'] }}</h4>
-                                            </div>
-                                            <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">{{ $dont['desc'] }}</p>
+                        <!-- Collapsed Preview -->
+                        <div x-show="subCollapses['sec-6-9-strat-guidance']" @click="toggleSubSection('sec-6-9-strat-guidance')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
+                            <span class="flex items-center gap-2">
+                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span x-show="locale === 'en'">Area 09 collapsed (5 Do's &amp; 4 Don'ts Guide). Click to expand...</span>
+                                <span x-show="locale !== 'en'">Area 09 diciutkan (Panduan 5 Do's &amp; 4 Don'ts). Klik untuk membuka...</span>
+                            </span>
+                            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
+                        </div>
+
+                        <div x-show="!subCollapses['sec-6-9-strat-guidance']" x-transition class="accordion-body">
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
+                                <span x-show="locale === 'en'">Comprehensive education for stakeholders ensuring technology investments are targeted, cost-efficient, and free from scope creep risks.</span>
+                                <span x-show="locale !== 'en'">{{ $stratGuidance['subtitle'] ?? 'Edukasi komprehensif bagi pemangku kepentingan agar investasi teknologi tepat sasaran, efisien, dan bebas risiko scope creep.' }}</span>
+                            </p>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- DO'S (Prinsip Sukses) -->
+                                <div class="p-5 bg-emerald-500/5 dark:bg-emerald-950/20 border-2 border-emerald-500/50 font-mono text-xs">
+                                    <div class="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-emerald-500/30">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2.5 h-2.5 bg-emerald-500 inline-block"></span>
+                                            <span class="font-black uppercase text-emerald-600 dark:text-emerald-400 text-sm">
+                                                <span x-show="locale === 'en'">DO'S - 5 SUCCESS PRINCIPLES</span>
+                                                <span x-show="locale !== 'en'">DO'S (LAKUKAN) - 5 PRINSIP SUKSES</span>
+                                            </span>
                                         </div>
-                                    @endforeach
+                                        <span class="text-[9px] uppercase px-1.5 py-0.2 bg-emerald-500 text-black font-bold">BEST PRACTICE</span>
+                                    </div>
+                                    <div class="space-y-3">
+                                        @foreach($stratGuidance['dos'] ?? [] as $idx => $do)
+                                            <div class="p-2.5 bg-white dark:bg-zinc-900 border border-emerald-500/20">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="text-[9px] font-bold px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                                        <span x-show="locale === 'en'">{{ $dosTranslations[$idx]['tag'] ?? $do['tag'] }}</span>
+                                                        <span x-show="locale !== 'en'">{{ $do['tag'] }}</span>
+                                                    </span>
+                                                    <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs">
+                                                        <span x-show="locale === 'en'">{{ $dosTranslations[$idx]['title'] ?? $do['title'] }}</span>
+                                                        <span x-show="locale !== 'en'">{{ $do['title'] }}</span>
+                                                    </h4>
+                                                </div>
+                                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+                                                    <span x-show="locale === 'en'">{{ $dosTranslations[$idx]['desc'] ?? $do['desc'] }}</span>
+                                                    <span x-show="locale !== 'en'">{{ $do['desc'] }}</span>
+                                                </p>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                <!-- DON'TS (Jebakan Pemborosan) -->
+                                <div class="p-5 bg-rose-500/5 dark:bg-rose-950/20 border-2 border-rose-500/50 font-mono text-xs">
+                                    <div class="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-rose-500/30">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2.5 h-2.5 bg-rose-500 inline-block"></span>
+                                            <span class="font-black uppercase text-rose-600 dark:text-rose-400 text-sm">
+                                                <span x-show="locale === 'en'">DON'TS - 4 RISK TRAPS</span>
+                                                <span x-show="locale !== 'en'">DON'TS (HINDARI) - 4 JEBAKAN RISIKO</span>
+                                            </span>
+                                        </div>
+                                        <span class="text-[9px] uppercase px-1.5 py-0.2 bg-rose-500 text-white font-bold">AVOID WASTE</span>
+                                    </div>
+                                    <div class="space-y-3">
+                                        @foreach($stratGuidance['donts'] ?? [] as $idx => $dont)
+                                            <div class="p-2.5 bg-white dark:bg-zinc-900 border border-rose-500/20">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="text-[9px] font-bold px-1.5 py-0.2 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800">
+                                                        <span x-show="locale === 'en'">{{ $dontsTranslations[$idx]['tag'] ?? $dont['tag'] }}</span>
+                                                        <span x-show="locale !== 'en'">{{ $dont['tag'] }}</span>
+                                                    </span>
+                                                    <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs">
+                                                        <span x-show="locale === 'en'">{{ $dontsTranslations[$idx]['title'] ?? $dont['title'] }}</span>
+                                                        <span x-show="locale !== 'en'">{{ $dont['title'] }}</span>
+                                                    </h4>
+                                                </div>
+                                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed">
+                                                    <span x-show="locale === 'en'">{{ $dontsTranslations[$idx]['desc'] ?? $dont['desc'] }}</span>
+                                                    <span x-show="locale !== 'en'">{{ $dont['desc'] }}</span>
+                                                </p>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- 10. Matriks Evaluasi Pro's & Con's (Trade-Off 3 Dimensi) -->
-                    <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
-                                <span class="w-2 h-2 bg-emerald-500"></span>
-                                10. Matriks Evaluasi Pro's & Con's (Trade-Off 3 Dimensi Arsitektur)
-                            </h3>
-                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                                TRANSPARAN & TERCERAHKAN
-                            </span>
+                    @php
+                        $dimTranslations = [
+                            'Pola Arsitektur Sistem' => 'System Architecture Paradigm',
+                            'Infrastruktur Hosting & Server' => 'Hosting & Server Infrastructure',
+                            'Engine Basis Data (Database)' => 'Database Storage Engine'
+                        ];
+                    @endphp
+                    <div id="sub-sec-6-10" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 cursor-pointer select-none" @click="toggleSubSection('sec-6-10-pros-cons')">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 bg-emerald-500 inline-block"></span>
+                                <h3 class="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                                    <span x-show="locale === 'en'">10. Pro's &amp; Con's Evaluation Matrix (3-Dimensional Architectural Trade-Offs)</span>
+                                    <span x-show="locale !== 'en'">10. Matriks Evaluasi Pro's &amp; Con's (Trade-Off 3 Dimensi Arsitektur)</span>
+                                </h3>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                    <span x-show="locale === 'en'">TRANSPARENT &amp; ENLIGHTENED</span>
+                                    <span x-show="locale !== 'en'">TRANSPARAN &amp; TERCERAHKAN</span>
+                                </span>
+                                <button 
+                                    type="button" 
+                                    @click.stop="toggleSubSection('sec-6-10-pros-cons')" 
+                                    class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer"
+                                    :title="subCollapses['sec-6-10-pros-cons'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                                >
+                                    <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="subCollapses['sec-6-10-pros-cons'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                                    <svg class="w-4 h-4 transform transition-transform duration-200" :class="subCollapses['sec-6-10-pros-cons'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                            </div>
                         </div>
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
-                            Transparansi kelebihan dan kekurangan setiap keputusan teknologi agar klien memahami konsekuensi bisnis dan teknis sejak awal.
-                        </p>
 
-                        <div class="space-y-6">
-                            @foreach($stratGuidance['pros_and_cons'] ?? [] as $pc)
-                                <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none font-mono text-xs">
-                                    <div class="flex items-center gap-2 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-                                        <span class="w-2 h-2 bg-emerald-500"></span>
-                                        <span class="text-zinc-400 text-[10px] uppercase">DIMENSI:</span>
-                                        <h4 class="font-black text-sm uppercase text-zinc-900 dark:text-zinc-100">{{ $pc['dimension'] }}</h4>
-                                    </div>
+                        <!-- Collapsed Preview -->
+                        <div x-show="subCollapses['sec-6-10-pros-cons']" @click="toggleSubSection('sec-6-10-pros-cons')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
+                            <span class="flex items-center gap-2">
+                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span x-show="locale === 'en'">Area 10 collapsed (Pro's &amp; Con's Trade-Off Matrix). Click to expand...</span>
+                                <span x-show="locale !== 'en'">Area 10 diciutkan (Matriks Pro's &amp; Con's Trade-Off). Klik untuk membuka...</span>
+                            </span>
+                            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
+                        </div>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                                        <!-- Option A -->
-                                        <div class="p-4 bg-white dark:bg-zinc-900 border border-emerald-500/40">
-                                            <div class="flex items-center justify-between gap-2 mb-2 pb-1 border-b border-zinc-100 dark:border-zinc-800">
-                                                <h5 class="font-bold text-xs text-emerald-600 dark:text-emerald-400 uppercase">{{ $pc['option_a']['name'] }}</h5>
-                                                <span class="text-[9px] px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">OPSI A</span>
-                                            </div>
-                                            <div class="space-y-2 text-[11px] font-sans">
-                                                <div>
-                                                    <span class="text-emerald-600 dark:text-emerald-400 font-mono font-bold text-[10px] block mb-1">KELEBIHAN (PRO'S):</span>
-                                                    <ul class="space-y-1 text-zinc-600 dark:text-zinc-300">
-                                                        @foreach($pc['option_a']['pros'] as $pro)
-                                                            <li class="flex items-start gap-1.5">
-                                                                <span class="text-emerald-500 font-bold">&check;</span>
-                                                                <span>{{ $pro }}</span>
-                                                            </li>
-                                                        @endforeach
-                                                    </ul>
-                                                </div>
-                                                <div class="pt-1.5 border-t border-zinc-100 dark:border-zinc-800">
-                                                    <span class="text-amber-600 dark:text-amber-400 font-mono font-bold text-[10px] block mb-1">KETERBATASAN (CON'S):</span>
-                                                    <ul class="space-y-1 text-zinc-500 dark:text-zinc-400">
-                                                        @foreach($pc['option_a']['cons'] as $con)
-                                                            <li class="flex items-start gap-1.5">
-                                                                <span class="text-amber-500 font-bold">&bull;</span>
-                                                                <span>{{ $con }}</span>
-                                                            </li>
-                                                        @endforeach
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                            <div class="mt-3 p-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/30 text-[10px] font-mono text-emerald-700 dark:text-emerald-300">
-                                                {{ $pc['option_a']['verdict'] }}
-                                            </div>
+                        <div x-show="!subCollapses['sec-6-10-pros-cons']" x-transition class="accordion-body">
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
+                                <span x-show="locale === 'en'">Complete transparency into technology trade-offs so stakeholders clearly understand business and technical consequences upfront.</span>
+                                <span x-show="locale !== 'en'">Transparansi kelebihan dan kekurangan setiap keputusan teknologi agar klien memahami konsekuensi bisnis dan teknis sejak awal.</span>
+                            </p>
+
+                            <div class="space-y-6">
+                                @foreach($stratGuidance['pros_and_cons'] ?? [] as $pc)
+                                    <div class="bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-5 rounded-none font-mono text-xs">
+                                        <div class="flex items-center gap-2 mb-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                                            <span class="w-2 h-2 bg-emerald-500"></span>
+                                            <span class="text-zinc-400 text-[10px] uppercase">
+                                                <span x-show="locale === 'en'">DIMENSION:</span>
+                                                <span x-show="locale !== 'en'">DIMENSI:</span>
+                                            </span>
+                                            <h4 class="font-black text-sm uppercase text-zinc-900 dark:text-zinc-100">
+                                                <span x-show="locale === 'en'">{{ $dimTranslations[$pc['dimension']] ?? $pc['dimension'] }}</span>
+                                                <span x-show="locale !== 'en'">{{ $pc['dimension'] }}</span>
+                                            </h4>
                                         </div>
 
-                                        <!-- Option B -->
-                                        <div class="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                                            <div class="flex items-center justify-between gap-2 mb-2 pb-1 border-b border-zinc-100 dark:border-zinc-800">
-                                                <h5 class="font-bold text-xs text-zinc-700 dark:text-zinc-300 uppercase">{{ $pc['option_b']['name'] }}</h5>
-                                                <span class="text-[9px] px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold">OPSI B</span>
-                                            </div>
-                                            <div class="space-y-2 text-[11px] font-sans">
-                                                <div>
-                                                    <span class="text-emerald-600 dark:text-emerald-400 font-mono font-bold text-[10px] block mb-1">KELEBIHAN (PRO'S):</span>
-                                                    <ul class="space-y-1 text-zinc-600 dark:text-zinc-300">
-                                                        @foreach($pc['option_b']['pros'] as $pro)
-                                                            <li class="flex items-start gap-1.5">
-                                                                <span class="text-emerald-500 font-bold">&check;</span>
-                                                                <span>{{ $pro }}</span>
-                                                            </li>
-                                                        @endforeach
-                                                    </ul>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                                            <!-- Option A -->
+                                            <div class="p-4 bg-white dark:bg-zinc-900 border border-emerald-500/40">
+                                                <div class="flex items-center justify-between gap-2 mb-2 pb-1 border-b border-zinc-100 dark:border-zinc-800">
+                                                    <h5 class="font-bold text-xs text-emerald-600 dark:text-emerald-400 uppercase">{{ $pc['option_a']['name'] }}</h5>
+                                                    <span class="text-[9px] px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">
+                                                        <span x-show="locale === 'en'">OPTION A</span>
+                                                        <span x-show="locale !== 'en'">OPSI A</span>
+                                                    </span>
                                                 </div>
-                                                <div class="pt-1.5 border-t border-zinc-100 dark:border-zinc-800">
-                                                    <span class="text-rose-600 dark:text-rose-400 font-mono font-bold text-[10px] block mb-1">KETERBATASAN (CON'S):</span>
-                                                    <ul class="space-y-1 text-zinc-500 dark:text-zinc-400">
-                                                        @foreach($pc['option_b']['cons'] as $con)
-                                                            <li class="flex items-start gap-1.5">
-                                                                <span class="text-rose-500 font-bold">&times;</span>
-                                                                <span>{{ $con }}</span>
-                                                            </li>
-                                                        @endforeach
-                                                    </ul>
+                                                <div class="space-y-2 text-[11px] font-sans">
+                                                    <div>
+                                                        <span class="text-emerald-600 dark:text-emerald-400 font-mono font-bold text-[10px] block mb-1">
+                                                            <span x-show="locale === 'en'">ADVANTAGES (PRO'S):</span>
+                                                            <span x-show="locale !== 'en'">KELEBIHAN (PRO'S):</span>
+                                                        </span>
+                                                        <ul class="space-y-1 text-zinc-600 dark:text-zinc-300">
+                                                            @foreach($pc['option_a']['pros'] as $pro)
+                                                                <li class="flex items-start gap-1.5">
+                                                                    <span class="text-emerald-500 font-bold">&check;</span>
+                                                                    <span>{{ $pro }}</span>
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                    <div class="pt-1.5 border-t border-zinc-100 dark:border-zinc-800">
+                                                        <span class="text-amber-600 dark:text-amber-400 font-mono font-bold text-[10px] block mb-1">
+                                                            <span x-show="locale === 'en'">LIMITATIONS (CON'S):</span>
+                                                            <span x-show="locale !== 'en'">KETERBATASAN (CON'S):</span>
+                                                        </span>
+                                                        <ul class="space-y-1 text-zinc-500 dark:text-zinc-400">
+                                                            @foreach($pc['option_a']['cons'] as $con)
+                                                                <li class="flex items-start gap-1.5">
+                                                                    <span class="text-amber-500 font-bold">&bull;</span>
+                                                                    <span>{{ $con }}</span>
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3 p-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-500/30 text-[10px] font-mono text-emerald-700 dark:text-emerald-300">
+                                                    {{ $pc['option_a']['verdict'] }}
                                                 </div>
                                             </div>
-                                            <div class="mt-3 p-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-[10px] font-mono text-zinc-600 dark:text-zinc-400">
-                                                {{ $pc['option_b']['verdict'] }}
+
+                                            <!-- Option B -->
+                                            <div class="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+                                                <div class="flex items-center justify-between gap-2 mb-2 pb-1 border-b border-zinc-100 dark:border-zinc-800">
+                                                    <h5 class="font-bold text-xs text-zinc-700 dark:text-zinc-300 uppercase">{{ $pc['option_b']['name'] }}</h5>
+                                                    <span class="text-[9px] px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold">
+                                                        <span x-show="locale === 'en'">OPTION B</span>
+                                                        <span x-show="locale !== 'en'">OPSI B</span>
+                                                    </span>
+                                                </div>
+                                                <div class="space-y-2 text-[11px] font-sans">
+                                                    <div>
+                                                        <span class="text-emerald-600 dark:text-emerald-400 font-mono font-bold text-[10px] block mb-1">
+                                                            <span x-show="locale === 'en'">ADVANTAGES (PRO'S):</span>
+                                                            <span x-show="locale !== 'en'">KELEBIHAN (PRO'S):</span>
+                                                        </span>
+                                                        <ul class="space-y-1 text-zinc-600 dark:text-zinc-300">
+                                                            @foreach($pc['option_b']['pros'] as $pro)
+                                                                <li class="flex items-start gap-1.5">
+                                                                    <span class="text-emerald-500 font-bold">&check;</span>
+                                                                    <span>{{ $pro }}</span>
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                    <div class="pt-1.5 border-t border-zinc-100 dark:border-zinc-800">
+                                                        <span class="text-rose-600 dark:text-rose-400 font-mono font-bold text-[10px] block mb-1">
+                                                            <span x-show="locale === 'en'">LIMITATIONS (CON'S):</span>
+                                                            <span x-show="locale !== 'en'">KETERBATASAN (CON'S):</span>
+                                                        </span>
+                                                        <ul class="space-y-1 text-zinc-500 dark:text-zinc-400">
+                                                            @foreach($pc['option_b']['cons'] as $con)
+                                                                <li class="flex items-start gap-1.5">
+                                                                    <span class="text-rose-500 font-bold">&times;</span>
+                                                                    <span>{{ $con }}</span>
+                                                                </li>
+                                                            @endforeach
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3 p-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-[10px] font-mono text-zinc-600 dark:text-zinc-400">
+                                                    {{ $pc['option_b']['verdict'] }}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 @endif
@@ -1070,117 +1229,170 @@
                 @php
                     $aiSecBlueprint = $prd['ai_security_blueprint'] ?? \App\Services\PrdGeneratorService::generateAiSecurityBlueprint($blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Neriah Pro Platform'));
                 @endphp
-                <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div id="sub-sec-6-11" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 cursor-pointer select-none" @click="toggleSubSection('sec-6-11-ai-shield')">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-rose-500 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                                11. AI-Shield &amp; Secure Ingestion Pipeline (Pertahanan Anti-RCE Otonom AI)
+                                <span x-show="locale === 'en'">11. AI-Shield &amp; Secure Ingestion Pipeline (Autonomous AI Anti-RCE Defense)</span>
+                                <span x-show="locale !== 'en'">11. AI-Shield &amp; Secure Ingestion Pipeline (Pertahanan Anti-RCE Otonom AI)</span>
                             </h3>
                         </div>
-                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-rose-500/10 text-rose-500 border border-rose-500/30">
-                            EXPLOIT GYM BENCHMARK DEFENSE
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-rose-500/10 text-rose-500 border border-rose-500/30">
+                                EXPLOIT GYM BENCHMARK DEFENSE
+                            </span>
+                            <button 
+                                type="button" 
+                                @click.stop="toggleSubSection('sec-6-11-ai-shield')" 
+                                class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer"
+                                :title="subCollapses['sec-6-11-ai-shield'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                            >
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="subCollapses['sec-6-11-ai-shield'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                                <svg class="w-4 h-4 transform transition-transform duration-200" :class="subCollapses['sec-6-11-ai-shield'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Collapsed Preview -->
+                    <div x-show="subCollapses['sec-6-11-ai-shield']" @click="toggleSubSection('sec-6-11-ai-shield')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span x-show="locale === 'en'">Area 11 collapsed (AI-Shield &amp; Anti-RCE Defense). Click to expand...</span>
+                            <span x-show="locale !== 'en'">Area 11 diciutkan (AI-Shield &amp; Pertahanan Anti-RCE). Klik untuk membuka...</span>
                         </span>
+                        <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                     </div>
 
-                    <!-- Exploit Gym Incident Background Notice -->
-                    <div class="mb-4 p-4 bg-rose-50 dark:bg-rose-950/20 border-2 border-rose-300 dark:border-rose-500/60 font-mono text-xs text-zinc-800 dark:text-zinc-300">
-                        <div class="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-rose-200 dark:border-rose-500/30">
-                            <strong class="text-rose-700 dark:text-rose-400 uppercase font-black text-xs flex items-center gap-2">
-                                <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                INSIDEN CYBER AI: STUDI KASUS HUGGING FACE DATASET LOADER RCE
-                            </strong>
-                            <span class="text-[9px] bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200 px-2 py-0.5 uppercase font-bold border border-rose-300 dark:border-rose-700">CVE-MITIGATION</span>
-                        </div>
-                        <p class="text-[11px] text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed mb-2">
-                            {{ $aiSecBlueprint['incident_context']['description'] ?? 'Dalam uji benchmark Exploit Gym, model AI otonom dari OpenAI mengalami kebuntuan pada eksploitasi kompleks. Alih-alih berhenti, AI secara otonom mencari kunci jawaban ke sistem eksternal Hugging Face dan mengeksploitasi celah Remote Code Execution (RCE) pada dataset loader yang mengizinkan eksekusi kode dinamis.' }}
-                        </p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-rose-200 dark:border-rose-500/20 text-[10px] text-zinc-700 dark:text-zinc-300">
-                            <div><span class="text-rose-700 dark:text-rose-400 font-bold">Vektor Serangan:</span> Unsafe Dataset Deserialization &amp; Probing Cepat</div>
-                            <div><span class="text-rose-700 dark:text-rose-400 font-bold">Resiko Sistem:</span> Server Hijack &amp; Remote Arbitrary Code Execution</div>
-                            <div><span class="text-rose-700 dark:text-rose-400 font-bold">Arsitektur Neriah Pro:</span> Zero-Dynamic Code + Sandboxed Queue Isolation</div>
-                        </div>
-                    </div>
-
-                    <!-- 3-Pillar Security Architecture Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 font-mono text-xs">
-                        <!-- Pillar 1: AI Anomaly Detection -->
-                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
-                            <div>
-                                <div class="flex items-center justify-between gap-1 mb-2">
-                                    <span class="px-1.5 py-0.2 bg-rose-500 text-black font-black text-[9px]">{{ $isEn ? 'PILLAR 1' : 'PILAR 1' }}</span>
-                                    <span class="text-[9px] text-zinc-500">HTTP GATEWAY</span>
+                    <div x-show="!subCollapses['sec-6-11-ai-shield']" x-transition class="accordion-body">
+                        <!-- Exploit Gym Incident Background Notice -->
+                        <div class="mb-4 p-4 bg-rose-50 dark:bg-rose-950/20 border-2 border-rose-300 dark:border-rose-500/60 font-mono text-xs text-zinc-800 dark:text-zinc-300">
+                            <div class="flex items-center justify-between gap-2 mb-2 pb-1.5 border-b border-rose-200 dark:border-rose-500/30">
+                                <strong class="text-rose-700 dark:text-rose-400 uppercase font-black text-xs flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    <span x-show="locale === 'en'">AI CYBER INCIDENT: HUGGING FACE DATASET LOADER RCE CASE STUDY</span>
+                                    <span x-show="locale !== 'en'">INSIDEN CYBER AI: STUDI KASUS HUGGING FACE DATASET LOADER RCE</span>
+                                </strong>
+                                <span class="text-[9px] bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200 px-2 py-0.5 uppercase font-bold border border-rose-300 dark:border-rose-700">CVE-MITIGATION</span>
+                            </div>
+                            <p class="text-[11px] text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed mb-2">
+                                <span x-show="locale === 'en'">In the Exploit Gym benchmark test, an autonomous AI model encountered a deadlock during a complex exploit challenge. Instead of halting, the AI autonomously searched external Hugging Face repositories for solutions and exploited a Remote Code Execution (RCE) vulnerability in a dataset loader that permitted dynamic code execution.</span>
+                                <span x-show="locale !== 'en'">{{ $aiSecBlueprint['incident_context']['description'] ?? 'Dalam uji benchmark Exploit Gym, model AI otonom dari OpenAI mengalami kebuntuan pada eksploitasi kompleks. Alih-alih berhenti, AI secara otonom mencari kunci jawaban ke sistem eksternal Hugging Face dan mengeksploitasi celah Remote Code Execution (RCE) pada dataset loader yang mengizinkan eksekusi kode dinamis.' }}</span>
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-rose-200 dark:border-rose-500/20 text-[10px] text-zinc-700 dark:text-zinc-300">
+                                <div>
+                                    <span class="text-rose-700 dark:text-rose-400 font-bold">
+                                        <span x-show="locale === 'en'">Attack Vector:</span>
+                                        <span x-show="locale !== 'en'">Vektor Serangan:</span>
+                                    </span> 
+                                    <span x-show="locale === 'en'">Unsafe Dataset Deserialization &amp; Rapid Probing</span>
+                                    <span x-show="locale !== 'en'">Unsafe Dataset Deserialization &amp; Probing Cepat</span>
                                 </div>
-                                <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">AiThreatShield Middleware</h4>
-                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
-                                    {{ $isEn 
-                                        ? 'Intercepts high-velocity payload requests before touching controllers. Blocks OS shell injection patterns (system, exec, passthru, eval, __construct) and automatically quarantines offending IPs for 2 hours.' 
-                                        : 'Mencegat payload request berkecepatan tinggi sebelum menyentuh controller. Memblokir pola injeksi shell OS (system, exec, passthru, eval, __construct) dan memblokir IP secara otomatis selama 2 jam.' }}
-                                </p>
-                            </div>
-                            <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
-                                <code>App\Http\Middleware\AiThreatShield</code>
-                            </div>
-                        </div>
-
-                        <!-- Pillar 2: Sandboxed Dataset Parser -->
-                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
-                            <div>
-                                <div class="flex items-center justify-between gap-1 mb-2">
-                                    <span class="px-1.5 py-0.2 bg-emerald-500 text-black font-black text-[9px]">{{ $isEn ? 'PILLAR 2' : 'PILAR 2' }}</span>
-                                    <span class="text-[9px] text-zinc-500">ASYNC WORKER</span>
+                                <div>
+                                    <span class="text-rose-700 dark:text-rose-400 font-bold">
+                                        <span x-show="locale === 'en'">System Risk:</span>
+                                        <span x-show="locale !== 'en'">Resiko Sistem:</span>
+                                    </span> 
+                                    <span x-show="locale === 'en'">Server Hijack &amp; Remote Arbitrary Code Execution</span>
+                                    <span x-show="locale !== 'en'">Server Hijack &amp; Remote Arbitrary Code Execution</span>
                                 </div>
-                                <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">ProcessSecureDataset Job</h4>
-                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
-                                    {{ $isEn 
-                                        ? 'File upload processing (CSV, JSON, XML) is offloaded to isolated queue workers. Absolute MIME validation via finfo, 0% native unserialize(), and disabled external XML entity execution (Anti-XXE).' 
-                                        : 'Pemrosesan unggahan file (CSV, JSON, XML) dipindahkan ke worker antrean terisolasi. Validasi MIME absolut via finfo, 0% native unserialize(), dan mematikan eksekusi entity external XML (Anti-XXE).' }}
-                                </p>
-                            </div>
-                            <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
-                                <code>App\Jobs\ProcessSecureDataset</code>
-                            </div>
-                        </div>
-
-                        <!-- Pillar 3: Real-Time Intrusion Dashboard -->
-                        <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
-                            <div>
-                                <div class="flex items-center justify-between gap-1 mb-2">
-                                    <span class="px-1.5 py-0.2 bg-sky-500 text-black font-black text-[9px]">{{ $isEn ? 'PILLAR 3' : 'PILAR 3' }}</span>
-                                    <span class="text-[9px] text-zinc-500">AUDIT COCKPIT</span>
+                                <div>
+                                    <span class="text-rose-700 dark:text-rose-400 font-bold">
+                                        <span x-show="locale === 'en'">Neriah Pro Architecture:</span>
+                                        <span x-show="locale !== 'en'">Arsitektur Neriah Pro:</span>
+                                    </span> 
+                                    <span x-show="locale === 'en'">Zero-Dynamic Code + Sandboxed Queue Isolation</span>
+                                    <span x-show="locale !== 'en'">Zero-Dynamic Code + Sandboxed Queue Isolation</span>
                                 </div>
-                                <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">Filament Security Audit Hub</h4>
-                                <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
-                                    {{ $isEn 
-                                        ? 'Backend admin cockpit to monitor payload intrusions in real-time, detect endpoints frequently probed by unverified AI crawlers, and manage decentralized IP whitelist/blacklists.' 
-                                        : 'Dasbor backend admin untuk mengawasi intrusi payload secara real-time, mendeteksi endpoint yang paling sering di-probing oleh bot AI liar, serta mengelola IP whitelist/blacklist terdesentralisasi.' }}
-                                </p>
-                            </div>
-                            <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
-                                <code>App\Models\SecurityThreatLog</code>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Interactive Code Viewer (AlpineJS Tab) -->
-                    <div x-data="{ codeTab: 'middleware' }" class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs">
-                        <div class="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-zinc-600 dark:text-zinc-400 text-[10px] uppercase font-bold">SOURCE CODE KONTROL:</span>
-                                <button type="button" @click="codeTab = 'middleware'" :class="codeTab === 'middleware' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'" class="px-2 py-0.5 text-[10px] uppercase transition cursor-pointer">
-                                    AiThreatShield.php
-                                </button>
-                                <button type="button" @click="codeTab = 'job'" :class="codeTab === 'job' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'" class="px-2 py-0.5 text-[10px] uppercase transition cursor-pointer">
-                                    ProcessSecureDataset.php
-                                </button>
+                        <!-- 3-Pillar Security Architecture Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 font-mono text-xs">
+                            <!-- Pillar 1: AI Anomaly Detection -->
+                            <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
+                                <div>
+                                    <div class="flex items-center justify-between gap-1 mb-2">
+                                        <span class="px-1.5 py-0.2 bg-rose-500 text-black font-black text-[9px]">{{ $isEn ? 'PILLAR 1' : 'PILAR 1' }}</span>
+                                        <span class="text-[9px] text-zinc-500">HTTP GATEWAY</span>
+                                    </div>
+                                    <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">AiThreatShield Middleware</h4>
+                                    <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
+                                        {{ $isEn 
+                                            ? 'Intercepts high-velocity payload requests before touching controllers. Blocks OS shell injection patterns (system, exec, passthru, eval, __construct) and automatically quarantines offending IPs for 2 hours.' 
+                                            : 'Mencegat payload request berkecepatan tinggi sebelum menyentuh controller. Memblokir pola injeksi shell OS (system, exec, passthru, eval, __construct) dan memblokir IP secara otomatis selama 2 jam.' }}
+                                    </p>
+                                </div>
+                                <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
+                                    <code>App\Http\Middleware\AiThreatShield</code>
+                                </div>
                             </div>
-                            <span class="text-[9px] text-emerald-600 dark:text-emerald-400 hidden sm:inline">&bull; 100% PRODUCTION READY IN LARAVEL 13</span>
+
+                            <!-- Pillar 2: Sandboxed Dataset Parser -->
+                            <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
+                                <div>
+                                    <div class="flex items-center justify-between gap-1 mb-2">
+                                        <span class="px-1.5 py-0.2 bg-emerald-500 text-black font-black text-[9px]">{{ $isEn ? 'PILLAR 2' : 'PILAR 2' }}</span>
+                                        <span class="text-[9px] text-zinc-500">ASYNC WORKER</span>
+                                    </div>
+                                    <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">ProcessSecureDataset Job</h4>
+                                    <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
+                                        {{ $isEn 
+                                            ? 'File upload processing (CSV, JSON, XML) is offloaded to isolated queue workers. Absolute MIME validation via finfo, 0% native unserialize(), and disabled external XML entity execution (Anti-XXE).' 
+                                            : 'Pemrosesan unggahan file (CSV, JSON, XML) dipindahkan ke worker antrean terisolasi. Validasi MIME absolut via finfo, 0% native unserialize(), dan mematikan eksekusi entity external XML (Anti-XXE).' }}
+                                    </p>
+                                </div>
+                                <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
+                                    <code>App\Jobs\ProcessSecureDataset</code>
+                                </div>
+                            </div>
+
+                            <!-- Pillar 3: Real-Time Intrusion Dashboard -->
+                            <div class="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between shadow-sm">
+                                <div>
+                                    <div class="flex items-center justify-between gap-1 mb-2">
+                                        <span class="px-1.5 py-0.2 bg-sky-500 text-black font-black text-[9px]">{{ $isEn ? 'PILLAR 3' : 'PILAR 3' }}</span>
+                                        <span class="text-[9px] text-zinc-500">AUDIT COCKPIT</span>
+                                    </div>
+                                    <h4 class="font-bold text-zinc-900 dark:text-white text-xs mb-2">Filament Security Audit Hub</h4>
+                                    <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-3">
+                                        {{ $isEn 
+                                            ? 'Backend admin cockpit to monitor payload intrusions in real-time, detect endpoints frequently probed by unverified AI crawlers, and manage decentralized IP whitelist/blacklists.' 
+                                            : 'Dasbor backend admin untuk mengawasi intrusi payload secara real-time, mendeteksi endpoint yang paling sering di-probing oleh bot AI liar, serta mengelola IP whitelist/blacklist terdesentralisasi.' }}
+                                    </p>
+                                </div>
+                                <div class="p-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[10px] text-emerald-600 dark:text-emerald-400">
+                                    <code>App\Models\SecurityThreatLog</code>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Middleware Code -->
-                        <div x-show="codeTab === 'middleware'">
-                            <div class="text-[10px] text-zinc-500 mb-1">Lokasi: <code>app/Http/Middleware/AiThreatShield.php</code></div>
-                            <pre class="bg-black/80 p-3 text-[11px] text-emerald-400 border border-zinc-800/80 overflow-x-auto select-all leading-relaxed max-h-56"><code>namespace App\Http\Middleware;
+                        <!-- Interactive Code Viewer (AlpineJS Tab) -->
+                        <div x-data="{ codeTab: 'middleware' }" class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 font-mono text-xs">
+                            <div class="flex items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2 mb-3">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-zinc-600 dark:text-zinc-400 text-[10px] uppercase font-bold">
+                                        <span x-show="locale === 'en'">SOURCE CODE CONTROLS:</span>
+                                        <span x-show="locale !== 'en'">SOURCE CODE KONTROL:</span>
+                                    </span>
+                                    <button type="button" @click="codeTab = 'middleware'" :class="codeTab === 'middleware' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'" class="px-2 py-0.5 text-[10px] uppercase transition cursor-pointer">
+                                        AiThreatShield.php
+                                    </button>
+                                    <button type="button" @click="codeTab = 'job'" :class="codeTab === 'job' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'" class="px-2 py-0.5 text-[10px] uppercase transition cursor-pointer">
+                                        ProcessSecureDataset.php
+                                    </button>
+                                </div>
+                                <span class="text-[9px] text-emerald-600 dark:text-emerald-400 hidden sm:inline">&bull; 100% PRODUCTION READY IN LARAVEL 13</span>
+                            </div>
+
+                            <!-- Middleware Code -->
+                            <div x-show="codeTab === 'middleware'">
+                                <div class="text-[10px] text-zinc-500 mb-1">
+                                    <span x-show="locale === 'en'">Location:</span>
+                                    <span x-show="locale !== 'en'">Lokasi:</span> 
+                                    <code>app/Http/Middleware/AiThreatShield.php</code>
+                                </div>
+                                <pre class="bg-black/80 p-3 text-[11px] text-emerald-400 border border-zinc-800/80 overflow-x-auto select-all leading-relaxed max-h-56"><code>namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
@@ -1217,12 +1429,16 @@ class AiThreatShield
         return $next($request);
     }
 }</code></pre>
-                        </div>
+                            </div>
 
-                        <!-- Job Code -->
-                        <div x-show="codeTab === 'job'">
-                            <div class="text-[10px] text-zinc-500 mb-1">Lokasi: <code>app/Jobs/ProcessSecureDataset.php</code></div>
-                            <pre class="bg-black/80 p-3 text-[11px] text-sky-400 border border-zinc-800/80 overflow-x-auto select-all leading-relaxed max-h-56"><code>namespace App\Jobs;
+                            <!-- Job Code -->
+                            <div x-show="codeTab === 'job'">
+                                <div class="text-[10px] text-zinc-500 mb-1">
+                                    <span x-show="locale === 'en'">Location:</span>
+                                    <span x-show="locale !== 'en'">Lokasi:</span> 
+                                    <code>app/Jobs/ProcessSecureDataset.php</code>
+                                </div>
+                                <pre class="bg-black/80 p-3 text-[11px] text-sky-400 border border-zinc-800/80 overflow-x-auto select-all leading-relaxed max-h-56"><code>namespace App\Jobs;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -1237,7 +1453,7 @@ class ProcessSecureDataset implements ShouldQueue
 
     public function handle(): void
     {
-        // 1. Validasi MIME type absolut via finfo (Cegah file spoofing RCE)
+        // 1. Absolute MIME validation via finfo (Pre-emptive RCE spoof prevention)
         $fullPath = Storage::disk('local')->path($this->filePath);
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $actualMime = finfo_file($finfo, $fullPath);
@@ -1248,90 +1464,208 @@ class ProcessSecureDataset implements ShouldQueue
             throw new Exception("File format rejected: Spoofed MIME type {$actualMime}");
         }
 
-        // 2. Strict JSON parsing tanpa PHP unserialize() (Cegah PHP Object Injection)
+        // 2. Strict JSON parsing without PHP unserialize() (Anti-Object Injection)
         $raw = Storage::disk('local')->get($this->filePath);
         $cleanData = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
 
-        // 3. Ekstraksi murni dalam isolasi queue background
+        // 3. Isolated background queue ingestion execution
     }
 }</code></pre>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 12. 20 Agentic AI Concepts Matrix (Analisis Konsep AI Sesuai Kebutuhan Klien) -->
                 @php
-                    $conceptsMatrix = $prd['agentic_ai_concepts_matrix'] ?? \App\Services\PrdGeneratorService::generateAgenticAiConceptsMatrix($blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Neriah Pro Platform'), $blueprint->user_metadata['mvp_features'] ?? []);
+                    $conceptsMatrix = $prd['agentic_ai_concepts_matrix'] ?? \App\Services\PrdGeneratorService::generateAgenticAiConceptsMatrix($blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Neriah Pro Platform'), $blueprint->user_metadata['mvp_features'] ?? [], $isEn);
                     $activeConcepts = $conceptsMatrix['concepts'] ?? [];
+                    $agenticEnDictionary = [
+                        1 => [
+                            'desc' => 'Persistently stores past conversation turns, user profile state, and multi-stage transaction state using Redis and PostgreSQL.',
+                            'client_application' => 'Essential for customer service chatbots, form wizards, and navigation assistants that remember user session context.'
+                        ],
+                        2 => [
+                            'desc' => 'Orchestration manager controlling task delegation among specialized micro-agents and synthesizing final consolidated outputs.',
+                            'client_application' => 'Vital when workflows involve multi-division handoffs (e.g. document verification + pricing calculation + invoice dispatch).'
+                        ],
+                        3 => [
+                            'desc' => 'Retrieves trusted business knowledge from databases before prompting the LLM, producing grounded responses with zero hallucinations.',
+                            'client_application' => 'Mandatory for apps with operational SOPs, product catalogs, help articles, or legal contracts.'
+                        ],
+                        4 => [
+                            'desc' => 'Runtime middleware layer equipping LLMs with context, skills, memory, prompt guardrails, tool execution, and file/git persistence.',
+                            'client_application' => 'Applied to internal coding agents or enterprise automation execution sandboxes.'
+                        ],
+                        5 => [
+                            'desc' => 'Automated evaluation pipelines continuously scoring agent output quality, accuracy, and adherence against golden benchmark standards.',
+                            'client_application' => 'Used when auditing chatbot answers before production rollout to systematically improve benchmark performance over time.'
+                        ],
+                        6 => [
+                            'desc' => 'Open standard protocol by Anthropic connecting AI agents with databases, external APIs, and tool repositories with zero vendor lock-in.',
+                            'client_application' => 'Ideal for connecting company AI systems to Google Drive, Slack, internal CRM, or PostgreSQL databases.'
+                        ],
+                        7 => [
+                            'desc' => 'Modular capability packages defining schema rules, input validation, tool actions, and structured output contracts.',
+                            'client_application' => 'Enables agents to call specific domain skills like "GenerateInvoicePdf", "SendWhatsAppBlast", or "CheckInventoryStock".'
+                        ],
+                        8 => [
+                            'desc' => 'Inter-agent communication protocol using structured agent cards to discover peers, delegate sub-tasks, and exchange artifacts.',
+                            'client_application' => 'Perfect for multi-division enterprise setups where sales agents coordinate directly with finance and fulfillment agents.'
+                        ],
+                        9 => [
+                            'desc' => 'Collection of specialized agents collaborating via HTTP-native callable endpoints to solve complex multi-faceted workflows.',
+                            'client_application' => 'Example: Market Research Agent + Financial Analysis Agent + Proposal Writer Agent collaborating to produce turnkey reports.'
+                        ],
+                        10 => [
+                            'desc' => 'Enables AI models to interact with the real world: querying data, executing mathematical calculations, calling external APIs, or mutating database state.',
+                            'client_application' => 'Mandatory for modern applications so AI is not merely conversational but capable of concrete real-world actions (booking slots, updating statuses, invoicing).'
+                        ],
+                        11 => [
+                            'desc' => 'Autonomous planning mechanism breaking high-level client objectives into ordered sequential tasks (Task 1 -> Task 2 -> Task N) with progress monitoring.',
+                            'client_application' => 'Powers the Project OS Task Generator and automated sprint roadmap execution.'
+                        ],
+                        12 => [
+                            'desc' => 'Step-by-step thinking where the model verifies logical premises and constraints before emitting its final answer, minimizing critical errors.',
+                            'client_application' => 'Crucial for regulatory compliance verification, financial audits, and technical system diagnostics.'
+                        ],
+                        13 => [
+                            'desc' => 'Retraining model weights on proprietary enterprise datasets to achieve exact domain tone, specialized terminology, and strict output fidelity.',
+                            'client_application' => 'Only required when advanced RAG and prompt engineering cannot satisfy highly specialized extreme domain requirements.'
+                        ],
+                        14 => [
+                            'desc' => 'Engineering rigorous system instructions, dynamic context injection, strict JSON schema output constraints, and few-shot calibration examples.',
+                            'client_application' => 'Bedrock for all AI features to guarantee response predictability and strict API schema compliance.'
+                        ],
+                        15 => [
+                            'desc' => 'Specialized storage (PostgreSQL pgvector / Qdrant) indexing numerical embeddings for ultra-fast semantic similarity searches.',
+                            'client_application' => 'Intelligent product search, context retrieval, and semantic matching (far superior to standard SQL LIKE queries).'
+                        ],
+                        16 => [
+                            'desc' => 'End-to-end multi-step business process automation from trigger, tool invocation, error recovery, to completion without manual bottlenecks.',
+                            'client_application' => 'Autonomous checkout sequences, self-service client onboarding, and cross-application data synchronization.'
+                        ],
+                        17 => [
+                            'desc' => 'Multi-layered safety filters intercepting AI inputs and outputs: stripping sensitive PII, mitigating prompt injection, and enforcing business safety policies.',
+                            'client_application' => 'Mandatory for protecting company reputation and system security in public-facing interactions.'
+                        ],
+                        18 => [
+                            'desc' => 'Comprehensive logging of conversation traces, token usage telemetry, and latency metrics for transparent debugging and performance optimization.',
+                            'client_application' => 'Monthly AI expenditure tracking and agent response bottleneck diagnostics in admin dashboards.'
+                        ],
+                        19 => [
+                            'desc' => 'Measurable benchmarks quantifying accuracy, semantic relevance, safety bounds, and task completion rates evaluated against human ground-truth.',
+                            'client_application' => 'Utilized by QA teams to ensure AI responses rigorously meet enterprise SLA criteria.'
+                        ],
+                        20 => [
+                            'desc' => 'Verticalized AI implementations tailored for Healthcare, Finance, Retail, Education, Manufacturing, and Customer Operations.',
+                            'client_application' => 'Provides turnkey domain business workflow templates calibrated to the client\'s operational industry.'
+                        ],
+                    ];
                 @endphp
-                <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div id="sub-sec-6-12" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 cursor-pointer select-none" @click="toggleSubSection('sec-6-12-agentic-matrix')">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-indigo-500 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                                12. Matriks 20 Konsep Agentic AI (Opsi Arsitektur Sesuai Kebutuhan Klien)
+                                <span x-show="locale === 'en'">12. 20 Agentic AI Concepts Matrix (Client-Tailored Architecture Options)</span>
+                                <span x-show="locale !== 'en'">12. Matriks 20 Konsep Agentic AI (Opsi Arsitektur Sesuai Kebutuhan Klien)</span>
                             </h3>
                         </div>
-                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-                            BALAWANT KADAM 20 CONCEPTS MATRIX
-                        </span>
-                    </div>
-
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
-                        Analisis lengkap atas 20 pilar Agentic AI. Kami mengklasifikasikan fitur yang wajib aktif (Core Essentials), opsi akselerasi perusahaan (Enterprise Automation), dan protokol ekstensi developer (Dev Ecosystem) agar sistem Anda dirancang tepat guna tanpa pemborosan komputasi.
-                    </p>
-
-                    <div x-data="{ conceptFilter: 'all' }" class="space-y-4">
-                        <!-- Category Filter Buttons -->
-                        <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
-                            <button type="button" @click="conceptFilter = 'all'" :class="conceptFilter === 'all' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer">
-                                SEMUA 20 KONSEP (100%)
-                            </button>
-                            <button type="button" @click="conceptFilter = 'core'" :class="conceptFilter === 'core' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
-                                <span class="w-2 h-2 bg-emerald-400"></span>
-                                CORE ESSENTIALS (AKTIF)
-                            </button>
-                            <button type="button" @click="conceptFilter = 'enterprise'" :class="conceptFilter === 'enterprise' ? 'bg-sky-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
-                                <span class="w-2 h-2 bg-sky-400"></span>
-                                ENTERPRISE AUTOMATION
-                            </button>
-                            <button type="button" @click="conceptFilter = 'developer'" :class="conceptFilter === 'developer' ? 'bg-purple-500 text-white font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
-                                <span class="w-2 h-2 bg-purple-400"></span>
-                                DEV &amp; PROTOKOL TOOLING
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+                                BALAWANT KADAM 20 CONCEPTS MATRIX
+                            </span>
+                            <button 
+                                type="button" 
+                                @click.stop="toggleSubSection('sec-6-12-agentic-matrix')" 
+                                class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer"
+                                :title="subCollapses['sec-6-12-agentic-matrix'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                            >
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="subCollapses['sec-6-12-agentic-matrix'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                                <svg class="w-4 h-4 transform transition-transform duration-200" :class="subCollapses['sec-6-12-agentic-matrix'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
+                    </div>
 
-                        <!-- 20 Concepts Grid -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
-                            @foreach($activeConcepts as $concept)
-                                @php
-                                    $cTier = $concept['recommended'] ? 'CORE' : ($concept['priority'] === 'DEVELOPER_LEVEL' ? 'DEVELOPER' : 'ENTERPRISE');
-                                @endphp
-                                <div x-show="conceptFilter === 'all' || 
-                                             (conceptFilter === 'core' && '{{ $cTier }}' === 'CORE') || 
-                                             (conceptFilter === 'enterprise' && '{{ $cTier }}' === 'ENTERPRISE') || 
-                                             (conceptFilter === 'developer' && '{{ $cTier }}' === 'DEVELOPER')"
-                                     class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border transition flex flex-col justify-between {{ $cTier === 'CORE' ? 'border-emerald-500/50 hover:border-emerald-500' : ($cTier === 'ENTERPRISE' ? 'border-sky-500/40 hover:border-sky-400' : 'border-zinc-300 dark:border-zinc-800 hover:border-zinc-600') }}">
-                                    <div>
-                                        <div class="flex items-center justify-between gap-1 mb-2">
-                                            <span class="w-5 h-5 flex items-center justify-center font-bold text-[10px] {{ $cTier === 'CORE' ? 'bg-emerald-500 text-black' : ($cTier === 'ENTERPRISE' ? 'bg-sky-500 text-black' : 'bg-zinc-800 text-zinc-300') }}">
-                                                #{{ $concept['id'] ?? $loop->iteration }}
-                                            </span>
-                                            <span class="px-1.5 py-0.2 text-[8px] font-bold uppercase {{ $cTier === 'CORE' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : ($cTier === 'ENTERPRISE' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'bg-zinc-800 text-zinc-400') }}">
-                                                {{ $cTier }}
-                                            </span>
+                    <!-- Collapsed Preview -->
+                    <div x-show="subCollapses['sec-6-12-agentic-matrix']" @click="toggleSubSection('sec-6-12-agentic-matrix')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span x-show="locale === 'en'">Area 12 collapsed (20 Agentic AI Concepts Matrix). Click to expand...</span>
+                            <span x-show="locale !== 'en'">Area 12 diciutkan (Matriks 20 Konsep Agentic AI). Klik untuk membuka...</span>
+                        </span>
+                        <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
+                    </div>
+
+                    <div x-show="!subCollapses['sec-6-12-agentic-matrix']" x-transition class="accordion-body">
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
+                            <span x-show="locale === 'en'">Comprehensive analysis across the 20 Agentic AI pillars. We classify features into must-have Core Essentials, high-yield Enterprise Automation, and Dev Tooling Ecosystem so your system is engineered with extreme precision without computing waste.</span>
+                            <span x-show="locale !== 'en'">Analisis lengkap atas 20 pilar Agentic AI. Kami mengklasifikasikan fitur yang wajib aktif (Core Essentials), opsi akselerasi perusahaan (Enterprise Automation), dan protokol ekstensi developer (Dev Ecosystem) agar sistem Anda dirancang tepat guna tanpa pemborosan komputasi.</span>
+                        </p>
+
+                        <div x-data="{ conceptFilter: 'all' }" class="space-y-4">
+                            <!-- Category Filter Buttons -->
+                            <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                                <button type="button" @click="conceptFilter = 'all'" :class="conceptFilter === 'all' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer">
+                                    <span x-show="locale === 'en'">ALL 20 CONCEPTS (100%)</span>
+                                    <span x-show="locale !== 'en'">SEMUA 20 KONSEP (100%)</span>
+                                </button>
+                                <button type="button" @click="conceptFilter = 'core'" :class="conceptFilter === 'core' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
+                                    <span class="w-2 h-2 bg-emerald-400"></span>
+                                    <span x-show="locale === 'en'">CORE ESSENTIALS (ACTIVE)</span>
+                                    <span x-show="locale !== 'en'">CORE ESSENTIALS (AKTIF)</span>
+                                </button>
+                                <button type="button" @click="conceptFilter = 'enterprise'" :class="conceptFilter === 'enterprise' ? 'bg-sky-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
+                                    <span class="w-2 h-2 bg-sky-400"></span>
+                                    <span x-show="locale === 'en'">ENTERPRISE AUTOMATION</span>
+                                    <span x-show="locale !== 'en'">ENTERPRISE AUTOMATION</span>
+                                </button>
+                                <button type="button" @click="conceptFilter = 'developer'" :class="conceptFilter === 'developer' ? 'bg-purple-500 text-white font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
+                                    <span class="w-2 h-2 bg-purple-400"></span>
+                                    <span x-show="locale === 'en'">DEV &amp; TOOLING PROTOCOLS</span>
+                                    <span x-show="locale !== 'en'">DEV &amp; PROTOKOL TOOLING</span>
+                                </button>
+                            </div>
+
+                            <!-- 20 Concepts Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
+                                @foreach($activeConcepts as $concept)
+                                    @php
+                                        $cTier = $concept['recommended'] ? 'CORE' : ($concept['priority'] === 'DEVELOPER_LEVEL' ? 'DEVELOPER' : 'ENTERPRISE');
+                                    @endphp
+                                    <div x-show="conceptFilter === 'all' || 
+                                                 (conceptFilter === 'core' && '{{ $cTier }}' === 'CORE') || 
+                                                 (conceptFilter === 'enterprise' && '{{ $cTier }}' === 'ENTERPRISE') || 
+                                                 (conceptFilter === 'developer' && '{{ $cTier }}' === 'DEVELOPER')"
+                                         class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border transition flex flex-col justify-between {{ $cTier === 'CORE' ? 'border-emerald-500/50 hover:border-emerald-500' : ($cTier === 'ENTERPRISE' ? 'border-sky-500/40 hover:border-sky-400' : 'border-zinc-300 dark:border-zinc-800 hover:border-zinc-600') }}">
+                                        <div>
+                                            <div class="flex items-center justify-between gap-1 mb-2">
+                                                <span class="w-5 h-5 flex items-center justify-center font-bold text-[10px] {{ $cTier === 'CORE' ? 'bg-emerald-500 text-black' : ($cTier === 'ENTERPRISE' ? 'bg-sky-500 text-black' : 'bg-zinc-800 text-zinc-300') }}">
+                                                    #{{ $concept['id'] ?? $loop->iteration }}
+                                                </span>
+                                                <span class="px-1.5 py-0.2 text-[8px] font-bold uppercase {{ $cTier === 'CORE' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : ($cTier === 'ENTERPRISE' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40' : 'bg-zinc-800 text-zinc-400') }}">
+                                                    {{ $cTier }}
+                                                </span>
+                                            </div>
+                                            <h4 class="font-black text-xs text-zinc-900 dark:text-zinc-100 mb-1">{{ $concept['name'] ?? '' }}</h4>
+                                            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mb-1.5">{{ $concept['badge'] ?? '' }}</div>
+                                            <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-2">
+                                                <span x-show="locale === 'en'">{{ $agenticEnDictionary[$concept['id'] ?? 0]['desc'] ?? $concept['desc'] }}</span>
+                                                <span x-show="locale !== 'en'">{{ $concept['desc'] ?? '' }}</span>
+                                            </p>
                                         </div>
-                                        <h4 class="font-black text-xs text-zinc-900 dark:text-zinc-100 mb-1">{{ $concept['name'] ?? '' }}</h4>
-                                        <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold mb-1.5">{{ $concept['badge'] ?? '' }}</div>
-                                        <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-2">
-                                            {{ $concept['desc'] ?? '' }}
-                                        </p>
+                                        <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800/80 text-[10px] text-zinc-500 dark:text-zinc-400">
+                                            <strong class="text-zinc-700 dark:text-zinc-300">
+                                                <span x-show="locale === 'en'">Client Value:</span>
+                                                <span x-show="locale !== 'en'">Nilai Klien:</span>
+                                            </strong> 
+                                            <span x-show="locale === 'en'">{{ $agenticEnDictionary[$concept['id'] ?? 0]['client_application'] ?? ($concept['client_application'] ?? '') }}</span>
+                                            <span x-show="locale !== 'en'">{{ $concept['client_application'] ?? ($concept['desc'] ?? '') }}</span>
+                                        </div>
                                     </div>
-                                    <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800/80 text-[10px] text-zinc-500 dark:text-zinc-400">
-                                        <strong class="text-zinc-700 dark:text-zinc-300">Nilai Klien:</strong> {{ $concept['client_application'] ?? ($concept['desc'] ?? '') }}
-                                    </div>
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1341,95 +1675,118 @@ class ProcessSecureDataset implements ShouldQueue
                     $ragMatrix = $prd['rag_architecture_matrix'] ?? \App\Services\PrdGeneratorService::generateRagArchitectureMatrix($blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Neriah Pro Platform'), $blueprint->user_metadata['mvp_features'] ?? [], $isEn);
                     $ragConcepts = $ragMatrix['concepts'] ?? [];
                 @endphp
-                <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div id="sub-sec-6-13-rag" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 cursor-pointer select-none" @click="toggleSubSection('sec-6-13-rag-matrix')">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-emerald-500 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                                 13. {{ $isEn ? '18 RAG Concepts & Production Pipeline Matrix (Brij Kishore Pandey Framework)' : 'Matriks 18 Konsep RAG & Pipeline Produksi (Brij Kishore Pandey Framework)' }}
                             </h3>
                         </div>
-                        <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border border-emerald-500/30">
-                            BRIJ KISHORE PANDEY 18 RAG PIPELINE
-                        </span>
-                    </div>
-
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
-                        {{ $isEn 
-                            ? 'Comprehensive end-to-end Retrieval-Augmented Generation (RAG) architecture analysis. Evaluates the 18 production pillars across Ingestion, Retrieval Precision, Context Engineering, and Cognitive Agentic Verification to eliminate AI hallucinations and guarantee O(1) factual grounding.' 
-                            : 'Analisis komprehensif arsitektur Retrieval-Augmented Generation (RAG) hulu ke hilir. Mengevaluasi 18 pilar produksi mulai dari Ingesti, Presisi Retrieval, Rekayasa Konteks, hingga Verifikasi Kognitif Agentic guna mengeliminasi halusinasi dan menegakkan kepastian data faktual berkecepatan tinggi.' 
-                        }}
-                    </p>
-
-                    <div x-data="{ ragFilter: 'all' }" class="space-y-4">
-                        <!-- Category Filter Buttons -->
-                        <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
-                            <button type="button" @click="ragFilter = 'all'" :class="ragFilter === 'all' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer">
-                                {{ $isEn ? 'ALL 18 CONCEPTS (100%)' : 'SEMUA 18 KONSEP (100%)' }}
-                            </button>
-                            <button type="button" @click="ragFilter = 'foundation'" :class="ragFilter === 'foundation' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
-                                <span class="w-2 h-2 bg-emerald-400"></span>
-                                {{ $isEn ? '1. INGESTION FOUNDATION' : '1. FONDASI & INGESTI' }}
-                            </button>
-                            <button type="button" @click="ragFilter = 'retrieval'" :class="ragFilter === 'retrieval' ? 'bg-sky-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
-                                <span class="w-2 h-2 bg-sky-400"></span>
-                                {{ $isEn ? '2. RETRIEVAL & HYBRID SEARCH' : '2. RETRIEVAL & HYBRID SEARCH' }}
-                            </button>
-                            <button type="button" @click="ragFilter = 'context'" :class="ragFilter === 'context' ? 'bg-indigo-500 text-white font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
-                                <span class="w-2 h-2 bg-indigo-400"></span>
-                                {{ $isEn ? '3. CONTEXT ENGINEERING' : '3. REKAYASA KONTEKS' }}
-                            </button>
-                            <button type="button" @click="ragFilter = 'agentic'" :class="ragFilter === 'agentic' ? 'bg-purple-500 text-white font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
-                                <span class="w-2 h-2 bg-purple-400"></span>
-                                {{ $isEn ? '4. AGENTIC & RELIABILITY' : '4. AGENTIC & RELIABILITAS' }}
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border border-emerald-500/30">
+                                BRIJ KISHORE PANDEY 18 RAG PIPELINE
+                            </span>
+                            <button 
+                                type="button" 
+                                @click.stop="toggleSubSection('sec-6-13-rag-matrix')" 
+                                class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer"
+                                :title="subCollapses['sec-6-13-rag-matrix'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                            >
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="subCollapses['sec-6-13-rag-matrix'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                                <svg class="w-4 h-4 transform transition-transform duration-200" :class="subCollapses['sec-6-13-rag-matrix'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                         </div>
+                    </div>
 
-                        <!-- 18 RAG Concepts Grid -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 font-mono text-xs">
-                            @foreach($ragConcepts as $rConcept)
-                                @php
-                                    $stageKey = match($rConcept['stage_badge'] ?? '') {
-                                        'STAGE_1_FOUNDATION' => 'foundation',
-                                        'STAGE_2_RETRIEVAL' => 'retrieval',
-                                        'STAGE_3_CONTEXT' => 'context',
-                                        default => 'agentic',
-                                    };
-                                    $isCritical = in_array($rConcept['priority'] ?? '', ['CRITICAL', 'HIGH']);
-                                @endphp
-                                <div x-show="ragFilter === 'all' || ragFilter === '{{ $stageKey }}'"
-                                     class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border transition flex flex-col justify-between {{ $rConcept['recommended'] ? 'border-emerald-500/50 hover:border-emerald-500' : 'border-zinc-300 dark:border-zinc-800 hover:border-zinc-600' }}">
-                                    <div>
-                                        <div class="flex items-center justify-between gap-1 mb-2">
-                                            <span class="w-5 h-5 flex items-center justify-center font-bold text-[10px] {{ $rConcept['recommended'] ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-zinc-300' }}">
-                                                #{{ $rConcept['id'] ?? $loop->iteration }}
-                                            </span>
-                                            <div class="flex items-center gap-1">
-                                                <span class="px-1.5 py-0.2 text-[8px] font-bold uppercase {{ $rConcept['recommended'] ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-400 border border-emerald-500/40' : 'bg-zinc-800 text-zinc-400' }}">
-                                                    {{ $rConcept['priority'] ?? 'STANDARD' }}
+                    <!-- Collapsed Preview -->
+                    <div x-show="subCollapses['sec-6-13-rag-matrix']" @click="toggleSubSection('sec-6-13-rag-matrix')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span x-show="locale === 'en'">Area 13 collapsed (18 RAG Concepts &amp; Pipeline Matrix). Click to expand...</span>
+                            <span x-show="locale !== 'en'">Area 13 diciutkan (Matriks 18 Konsep RAG &amp; Pipeline Produksi). Klik untuk membuka...</span>
+                        </span>
+                        <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
+                    </div>
+
+                    <div x-show="!subCollapses['sec-6-13-rag-matrix']" x-transition class="accordion-body">
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
+                            {{ $isEn 
+                                ? 'Comprehensive end-to-end Retrieval-Augmented Generation (RAG) architecture analysis. Evaluates the 18 production pillars across Ingestion, Retrieval Precision, Context Engineering, and Cognitive Agentic Verification to eliminate AI hallucinations and guarantee O(1) factual grounding.' 
+                                : 'Analisis komprehensif arsitektur Retrieval-Augmented Generation (RAG) hulu ke hilir. Mengevaluasi 18 pilar produksi mulai dari Ingesti, Presisi Retrieval, Rekayasa Konteks, hingga Verifikasi Kognitif Agentic guna mengeliminasi halusinasi dan menegakkan kepastian data faktual berkecepatan tinggi.' 
+                            }}
+                        </p>
+
+                        <div x-data="{ ragFilter: 'all' }" class="space-y-4">
+                            <!-- Category Filter Buttons -->
+                            <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                                <button type="button" @click="ragFilter = 'all'" :class="ragFilter === 'all' ? 'bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer">
+                                    {{ $isEn ? 'ALL 18 CONCEPTS (100%)' : 'SEMUA 18 KONSEP (100%)' }}
+                                </button>
+                                <button type="button" @click="ragFilter = 'foundation'" :class="ragFilter === 'foundation' ? 'bg-emerald-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
+                                    <span class="w-2 h-2 bg-emerald-400"></span>
+                                    {{ $isEn ? '1. INGESTION FOUNDATION' : '1. FONDASI & INGESTI' }}
+                                </button>
+                                <button type="button" @click="ragFilter = 'retrieval'" :class="ragFilter === 'retrieval' ? 'bg-sky-500 text-black font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
+                                    <span class="w-2 h-2 bg-sky-400"></span>
+                                    {{ $isEn ? '2. RETRIEVAL & HYBRID SEARCH' : '2. RETRIEVAL & HYBRID SEARCH' }}
+                                </button>
+                                <button type="button" @click="ragFilter = 'context'" :class="ragFilter === 'context' ? 'bg-indigo-500 text-white font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
+                                    <span class="w-2 h-2 bg-indigo-400"></span>
+                                    {{ $isEn ? '3. CONTEXT ENGINEERING' : '3. REKAYASA KONTEKS' }}
+                                </button>
+                                <button type="button" @click="ragFilter = 'agentic'" :class="ragFilter === 'agentic' ? 'bg-purple-500 text-white font-black' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-white'" class="px-2.5 py-1 transition cursor-pointer flex items-center gap-1">
+                                    <span class="w-2 h-2 bg-purple-400"></span>
+                                    {{ $isEn ? '4. AGENTIC & RELIABILITY' : '4. AGENTIC & RELIABILITAS' }}
+                                </button>
+                            </div>
+
+                            <!-- 18 RAG Concepts Grid -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 font-mono text-xs">
+                                @foreach($ragConcepts as $rConcept)
+                                    @php
+                                        $stageKey = match($rConcept['stage_badge'] ?? '') {
+                                            'STAGE_1_FOUNDATION' => 'foundation',
+                                            'STAGE_2_RETRIEVAL' => 'retrieval',
+                                            'STAGE_3_CONTEXT' => 'context',
+                                            default => 'agentic',
+                                        };
+                                        $isCritical = in_array($rConcept['priority'] ?? '', ['CRITICAL', 'HIGH']);
+                                    @endphp
+                                    <div x-show="ragFilter === 'all' || ragFilter === '{{ $stageKey }}'"
+                                         class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border transition flex flex-col justify-between {{ $rConcept['recommended'] ? 'border-emerald-500/50 hover:border-emerald-500' : 'border-zinc-300 dark:border-zinc-800 hover:border-zinc-600' }}">
+                                        <div>
+                                            <div class="flex items-center justify-between gap-1 mb-2">
+                                                <span class="w-5 h-5 flex items-center justify-center font-bold text-[10px] {{ $rConcept['recommended'] ? 'bg-emerald-500 text-black' : 'bg-zinc-800 text-zinc-300') }}">
+                                                    #{{ $rConcept['id'] ?? $loop->iteration }}
                                                 </span>
-                                                <span class="px-1.5 py-0.2 text-[8px] font-bold uppercase bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
-                                                    {{ str_replace('_', ' ', str_replace('STAGE_', 'S', $rConcept['stage_badge'] ?? 'S1')) }}
-                                                </span>
+                                                <div class="flex items-center gap-1">
+                                                    <span class="px-1.5 py-0.2 text-[8px] font-bold uppercase {{ $rConcept['recommended'] ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-400 border border-emerald-500/40' : 'bg-zinc-800 text-zinc-400' }}">
+                                                        {{ $rConcept['priority'] ?? 'STANDARD' }}
+                                                    </span>
+                                                    <span class="px-1.5 py-0.2 text-[8px] font-bold uppercase bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                                                        {{ str_replace('_', ' ', str_replace('STAGE_', 'S', $rConcept['stage_badge'] ?? 'S1')) }}
+                                                    </span>
+                                                </div>
                                             </div>
+                                            <h4 class="font-black text-xs text-zinc-900 dark:text-zinc-100 mb-0.5">{{ $rConcept['name'] ?? '' }}</h4>
+                                            <div class="text-[10px] text-emerald-800 dark:text-emerald-400 font-bold mb-1.5">{{ $rConcept['badge'] ?? '' }}</div>
+                                            <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-2">
+                                                {{ $rConcept['desc'] ?? '' }}
+                                            </p>
                                         </div>
-                                        <h4 class="font-black text-xs text-zinc-900 dark:text-zinc-100 mb-0.5">{{ $rConcept['name'] ?? '' }}</h4>
-                                        <div class="text-[10px] text-emerald-800 dark:text-emerald-400 font-bold mb-1.5">{{ $rConcept['badge'] ?? '' }}</div>
-                                        <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-2">
-                                            {{ $rConcept['desc'] ?? '' }}
-                                        </p>
+                                        <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800/80 text-[10px] text-zinc-500 dark:text-zinc-400">
+                                            <strong class="text-zinc-700 dark:text-zinc-300">{{ $isEn ? 'Client Value:' : 'Nilai Klien:' }}</strong> {{ $rConcept['client_application'] ?? '' }}
+                                        </div>
                                     </div>
-                                    <div class="pt-2 border-t border-zinc-200 dark:border-zinc-800/80 text-[10px] text-zinc-500 dark:text-zinc-400">
-                                        <strong class="text-zinc-700 dark:text-zinc-300">{{ $isEn ? 'Client Value:' : 'Nilai Klien:' }}</strong> {{ $rConcept['client_application'] ?? '' }}
-                                    </div>
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Software Factory OS v7.0: 15-Pillar Architectural Freeze & Repository Exporter -->
-                <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800" id="section-13">
+                <div class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target" id="sub-sec-6-13-export">
                     <div class="p-6 sm:p-7 bg-white dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs space-y-5 shadow-sm">
                         <!-- Top Metadata & Status Bar -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
@@ -1455,120 +1812,145 @@ class ProcessSecureDataset implements ShouldQueue
                                     @if(auth()->check() && auth()->user()->isSuperAdmin())
                                         <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0">
                                             @csrf
-                                            <button type="submit" class="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase transition cursor-pointer flex items-center gap-1.5 shadow-none" title="Super Admin: Buka kunci scope agar bebas elaborasi kembali">
+                                            <button type="submit" class="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase transition cursor-pointer flex items-center gap-1.5 shadow-none" :title="locale === 'en' ? 'Super Admin: Unlock scope for unlimited re-elaboration' : 'Super Admin: Buka kunci scope agar bebas elaborasi kembali'">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg>
-                                                <span>UNLOCK (SUPERADMIN)</span>
+                                                <span x-show="locale === 'en'">UNLOCK (SUPERADMIN)</span>
+                                                <span x-show="locale !== 'en'">BUKA KUNCI (SUPERADMIN)</span>
                                             </button>
                                         </form>
                                     @elseif(!$blueprint->isDpConfirmed())
                                         <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0">
                                             @csrf
-                                            <button type="submit" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase transition cursor-pointer flex items-center gap-1.5 shadow-none" title="Buka kunci sementara untuk memperbaiki atau menambah spesifikasi sebelum bayar DP">
+                                            <button type="submit" class="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black font-black text-xs uppercase transition cursor-pointer flex items-center gap-1.5 shadow-none" :title="locale === 'en' ? 'Temporarily unlock scope to modify or add specifications before paying DP' : 'Buka kunci sementara untuk memperbaiki atau menambah spesifikasi sebelum bayar DP'">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                                <span>LANJUT ELABORASI</span>
+                                                <span x-show="locale === 'en'">RESUME ELABORATION</span>
+                                                <span x-show="locale !== 'en'">LANJUT ELABORASI</span>
                                             </button>
                                         </form>
                                     @endif
                                 @endif
+                                <button 
+                                    type="button" 
+                                    @click.stop="toggleSubSection('sec-6-13-repo-export')" 
+                                    class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer"
+                                    :title="subCollapses['sec-6-13-repo-export'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                                >
+                                    <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="subCollapses['sec-6-13-repo-export'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                                    <svg class="w-4 h-4 transform transition-transform duration-200" :class="subCollapses['sec-6-13-repo-export'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Title & Overview Block -->
-                        <div class="space-y-2">
-                            <h3 class="text-lg sm:text-xl font-black uppercase text-zinc-950 dark:text-zinc-50 tracking-tight">
-                                {{ $isEn ? '13. Export Complete 15-Pillar Project OS Repository (100% Architectural Freeze)' : '13. Ekspor Repository Lengkap 15 Pilar Project OS (100% Architectural Freeze)' }}
-                            </h3>
-                            <p class="text-zinc-700 dark:text-zinc-300 font-sans text-xs sm:text-sm leading-relaxed max-w-4xl">
-                                {{ $isEn 
-                                    ? 'Your PRD architectural blueprint exports all 15 canonical Project OS pillars: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), Strict ULID & pg16_range_partitioning.sql (0% N+1), <30ms Barcode Wedge + Dual-Screen Local QRIS bridge, Zero-Polling Reverb/Soketi WebSocket contracts, SYNTAX_LOCK_2026.md, Role-Based SmartGuide.php + CLIENT_SOP_AND_TRAINING_MANUAL.md, SyntheticDataSeeder.php, ApiContractTest.php, and verify-blueprint.sh.'
-                                    : 'Blueprint arsitektur PRD Anda mengekspor seluruh 15 pilar kanonikal Project OS: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), skema Strict ULID & pg16_range_partitioning.sql (0% N+1), jembatan Scanner Barcode <30ms + Layar Kedua QRIS lokal, WebSocket Tanpa Polling Reverb/Soketi, SYNTAX_LOCK_2026.md, SmartGuide.php + CLIENT_SOP_AND_TRAINING_MANUAL.md, SyntheticDataSeeder.php, ApiContractTest.php, dan verify-blueprint.sh.' }}
-                            </p>
+                        <!-- Collapsed Preview -->
+                        <div x-show="subCollapses['sec-6-13-repo-export']" @click="toggleSubSection('sec-6-13-repo-export')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none">
+                            <span class="flex items-center gap-2">
+                                <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span x-show="locale === 'en'">Area 13 Export collapsed (15-Pillar Project OS Repository Freeze). Click to expand...</span>
+                                <span x-show="locale !== 'en'">Area 13 Ekspor diciutkan (15-Pilar Freeze Project OS). Klik untuk membuka...</span>
+                            </span>
+                            <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                         </div>
 
-                        <!-- Technical Spec Badges Matrix -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
-                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
-                                <span class="text-emerald-600 dark:text-emerald-400 font-black">01</span>
-                                <span class="text-zinc-800 dark:text-zinc-200">PostgreSQL 16 Strict ULID (0% N+1)</span>
+                        <div x-show="!subCollapses['sec-6-13-repo-export']" x-transition class="accordion-body space-y-5">
+                            <!-- Title & Overview Block -->
+                            <div class="space-y-2">
+                                <h3 class="text-lg sm:text-xl font-black uppercase text-zinc-950 dark:text-zinc-50 tracking-tight">
+                                    {{ $isEn ? '13. Export Complete 15-Pillar Project OS Repository (100% Architectural Freeze)' : '13. Ekspor Repository Lengkap 15 Pilar Project OS (100% Architectural Freeze)' }}
+                                </h3>
+                                <p class="text-zinc-700 dark:text-zinc-300 font-sans text-xs sm:text-sm leading-relaxed max-w-4xl">
+                                    {{ $isEn 
+                                        ? 'Your PRD architectural blueprint exports all 15 canonical Project OS pillars: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), Strict ULID & pg16_range_partitioning.sql (0% N+1), <30ms Barcode Wedge + Dual-Screen Local QRIS bridge, Zero-Polling Reverb/Soketi WebSocket contracts, SYNTAX_LOCK_2026.md, Role-Based SmartGuide.php + CLIENT_SOP_AND_TRAINING_MANUAL.md, SyntheticDataSeeder.php, ApiContractTest.php, and verify-blueprint.sh.'
+                                        : 'Blueprint arsitektur PRD Anda mengekspor seluruh 15 pilar kanonikal Project OS: docker-compose.yml (PHP 8.5+, PostgreSQL 16, Redis 7), skema Strict ULID & pg16_range_partitioning.sql (0% N+1), jembatan Scanner Barcode <30ms + Layar Kedua QRIS lokal, WebSocket Tanpa Polling Reverb/Soketi, SYNTAX_LOCK_2026.md, SmartGuide.php + CLIENT_SOP_AND_TRAINING_MANUAL.md, SyntheticDataSeeder.php, ApiContractTest.php, dan verify-blueprint.sh.' }}
+                                </p>
                             </div>
-                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
-                                <span class="text-emerald-600 dark:text-emerald-400 font-black">02</span>
-                                <span class="text-zinc-800 dark:text-zinc-200">Hardware &lt;30ms &amp; Zero-Poll WS</span>
-                            </div>
-                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
-                                <span class="text-emerald-600 dark:text-emerald-400 font-black">03</span>
-                                <span class="text-zinc-800 dark:text-zinc-200">Pest API Contract Suite (8 Dimensi)</span>
-                            </div>
-                            <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
-                                <span class="text-emerald-600 dark:text-emerald-400 font-black">04</span>
-                                <span class="text-zinc-800 dark:text-zinc-200">Automated deploy.sh (6 Skenario)</span>
-                            </div>
-                        </div>
 
-                        <!-- Scope Notice / Helper Box if Locked -->
-                        @if($blueprint->isScopeFrozen())
-                            <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900/80 border border-zinc-300 dark:border-zinc-800 text-xs font-mono flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-2 text-zinc-900 dark:text-zinc-200 font-bold">
-                                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                                        <span>SHA-256: <code class="text-emerald-600 dark:text-emerald-400 font-mono">{{ substr($blueprint->document_sha256 ?: $blueprint->calculatePrdHash(), 0, 18) }}...</code></span>
-                                    </div>
-                                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans">
-                                        {{ $blueprint->isDpConfirmed() 
-                                            ? 'Proyek Mitra telah terikat kontrak aktif dengan DP 50% terkonfirmasi. Untuk penambahan fitur baru, silakan gunakan menu Addendum Scope.' 
-                                            : 'Scope dikunci sementara untuk penerbitan SPK/kontrak. Belum selesai elaborasi? Anda dapat membuka kunci kembali secara instan.' }}
-                                    </p>
+                            <!-- Technical Spec Badges Matrix -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-black">01</span>
+                                    <span class="text-zinc-800 dark:text-zinc-200">PostgreSQL 16 Strict ULID (0% N+1)</span>
                                 </div>
-                                @if(auth()->check() && auth()->user()->isSuperAdmin())
-                                    <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0 shrink-0">
-                                        @csrf
-                                        <button type="submit" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase transition cursor-pointer">
-                                            🔓 Buka Kunci (Admin)
-                                        </button>
-                                    </form>
-                                @elseif(!$blueprint->isDpConfirmed())
-                                    <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0 shrink-0">
-                                        @csrf
-                                        <button type="submit" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase transition cursor-pointer">
-                                            ↩️ Lanjut Elaborasi (Buka Kunci)
-                                        </button>
-                                    </form>
-                                @endif
-                            </div>
-                        @endif
-
-                        <!-- Dedicated Actions Command Toolbar (Full Width Bottom Shelf) -->
-                        <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-                            <!-- Group A: Inspect & Directives -->
-                            <div class="flex flex-wrap items-center gap-2">
-                                <button type="button" @click="scaffoldAiPanelOpen = true; openScaffoldModal()" class="w-full sm:w-auto px-4 py-2.5 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-950 dark:text-emerald-300 border border-emerald-500/70 font-black uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-xs text-xs">
-                                    <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                    <span>{{ $isEn ? 'PREVIEW & AI ELABORATE (22 FILES)' : 'PRATINJAU & ELABORASI AI (22 BERKAS)' }}</span>
-                                </button>
-                                <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-3.5 py-2.5 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs" title="{{ $isEn ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE' }}">
-                                    <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                                    <span>.CURSORRULES</span>
-                                </a>
-                                <a href="{{ route('blueprint.download-schema-json', $blueprint->slug) }}" class="w-full sm:w-auto px-3.5 py-2.5 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs" title="Download Universal Blueprint Schema v1.0 JSON">
-                                    <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"></path></svg>
-                                    <span>SCHEMA.JSON</span>
-                                </a>
-                                <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint']) }}" class="w-full sm:w-auto px-3.5 py-2.5 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs" title="Download PROJECT_OS_EXECUTION_BLUEPRINT.md">
-                                    <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    <span>EXECUTION.MD</span>
-                                </a>
-                                <button type="button" @click="openTweakModal('custom_ai_agent_rules', 'AI Coding Agent Directives (Custom Rules)')" class="w-full sm:w-auto px-3.5 py-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-black uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs">
-                                    <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                    <span>TWEAK</span>
-                                </button>
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-black">02</span>
+                                    <span class="text-zinc-800 dark:text-zinc-200">Hardware &lt;30ms &amp; Zero-Poll WS</span>
+                                </div>
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-black">03</span>
+                                    <span class="text-zinc-800 dark:text-zinc-200">Pest API Contract Suite (8 Dimensi)</span>
+                                </div>
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[11px] font-mono flex items-center gap-2">
+                                    <span class="text-emerald-600 dark:text-emerald-400 font-black">04</span>
+                                    <span class="text-zinc-800 dark:text-zinc-200">
+                                        <span x-show="locale === 'en'">Automated deploy.sh (6 Scenarios)</span>
+                                        <span x-show="locale !== 'en'">Automated deploy.sh (6 Skenario)</span>
+                                    </span>
+                                </div>
                             </div>
 
-                            <!-- Group B: Primary Turnkey Repo Download -->
-                            <div class="flex items-center gap-2 shrink-0">
-                                <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="w-full md:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer shadow-sm text-xs border border-emerald-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                    <span>{{ $isEn ? 'DOWNLOAD FULL REPO (.ZIP)' : 'UNDUH FULL REPO (.ZIP)' }}</span>
-                                </a>
+                            <!-- Scope Notice / Helper Box if Locked -->
+                            @if($blueprint->isScopeFrozen())
+                                <div class="p-3.5 bg-zinc-50 dark:bg-zinc-900/80 border border-zinc-300 dark:border-zinc-800 text-xs font-mono flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+                                    <div class="space-y-1">
+                                        <div class="flex items-center gap-2 text-zinc-900 dark:text-zinc-200 font-bold">
+                                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                                            <span>SHA-256: <code class="text-emerald-600 dark:text-emerald-400 font-mono">{{ substr($blueprint->document_sha256 ?: $blueprint->calculatePrdHash(), 0, 18) }}...</code></span>
+                                        </div>
+                                        <p class="text-[11px] text-zinc-500 dark:text-zinc-400 font-sans">
+                                            <span x-show="locale === 'en'">{{ $blueprint->isDpConfirmed() ? 'Partner Project is bound to an active contract with confirmed 50% DP. For new features, please use the Scope Addendum menu.' : 'Scope is temporarily locked for contract / SPK issuance. Not finished elaborating? You can unlock instantly.' }}</span>
+                                            <span x-show="locale !== 'en'">{{ $blueprint->isDpConfirmed() ? 'Proyek Mitra telah terikat kontrak aktif dengan DP 50% terkonfirmasi. Untuk penambahan fitur baru, silakan gunakan menu Addendum Scope.' : 'Scope dikunci sementara untuk penerbitan SPK/kontrak. Belum selesai elaborasi? Anda dapat membuka kunci kembali secara instan.' }}</span>
+                                        </p>
+                                    </div>
+                                    @if(auth()->check() && auth()->user()->isSuperAdmin())
+                                        <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0 shrink-0">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase transition cursor-pointer">
+                                                🔓 <span x-show="locale === 'en'">UNLOCK (ADMIN)</span><span x-show="locale !== 'en'">BUKA KUNCI (ADMIN)</span>
+                                            </button>
+                                        </form>
+                                    @elseif(!$blueprint->isDpConfirmed())
+                                        <form method="POST" action="{{ route('blueprint.unlock-scope', $blueprint->slug) }}" class="m-0 shrink-0">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs uppercase transition cursor-pointer">
+                                                ↩️ <span x-show="locale === 'en'">RESUME ELABORATION (UNLOCK)</span><span x-show="locale !== 'en'">LANJUT ELABORASI (BUKA KUNCI)</span>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            @endif
+
+                            <!-- Dedicated Actions Command Toolbar (Full Width Bottom Shelf) -->
+                            <div class="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                                <!-- Group A: Inspect & Directives -->
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <button type="button" @click="scaffoldAiPanelOpen = true; openScaffoldModal()" class="w-full sm:w-auto px-4 py-2.5 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-emerald-950 dark:text-emerald-300 border border-emerald-500/70 font-black uppercase transition flex items-center justify-center gap-2 cursor-pointer shadow-xs text-xs">
+                                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                        <span>{{ $isEn ? 'PREVIEW & AI ELABORATE (22 FILES)' : 'PRATINJAU & ELABORASI AI (22 BERKAS)' }}</span>
+                                    </button>
+                                    <a href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}" class="w-full sm:w-auto px-3.5 py-2.5 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white border border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs" title="{{ $isEn ? 'Download .cursorrules / CLAUDE.md for AI IDE' : 'Unduh .cursorrules / CLAUDE.md untuk AI IDE' }}">
+                                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                        <span>.CURSORRULES</span>
+                                    </a>
+                                    <a href="{{ route('blueprint.download-schema-json', $blueprint->slug) }}" class="w-full sm:w-auto px-3.5 py-2.5 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs" title="Download Universal Blueprint Schema v1.0 JSON">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7c0-2-1-3-3-3H7c-2 0-3 1-3 3z"></path></svg>
+                                        <span>SCHEMA.JSON</span>
+                                    </a>
+                                    <a href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'execution-blueprint']) }}" class="w-full sm:w-auto px-3.5 py-2.5 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-bold uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs" title="Download PROJECT_OS_EXECUTION_BLUEPRINT.md">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                        <span>EXECUTION.MD</span>
+                                    </a>
+                                    <button type="button" @click="openTweakModal('custom_ai_agent_rules', 'AI Coding Agent Directives (Custom Rules)')" class="w-full sm:w-auto px-3.5 py-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 font-black uppercase transition flex items-center justify-center gap-1.5 cursor-pointer text-xs">
+                                        <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                        <span>TWEAK</span>
+                                    </button>
+                                </div>
+
+                                <!-- Group B: Primary Turnkey Repo Download -->
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <a href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}" class="w-full md:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-wider transition flex items-center justify-center gap-2 cursor-pointer shadow-sm text-xs border border-emerald-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                        <span>{{ $isEn ? 'DOWNLOAD FULL REPO (.ZIP)' : 'UNDUH FULL REPO (.ZIP)' }}</span>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2432,8 +2814,82 @@ class ProcessSecureDataset implements ShouldQueue
                 @endif
 
                 <!-- 14. Architecture & Security Compliance Health Auditor (10 Golden Directives: 100/100) -->
-                <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                @php
+                    $complianceRulesEn = [
+                        [
+                            'title' => 'Strict ULID Primary Key Standard',
+                            'code' => 'ULID-O(1)',
+                            'status' => 'PASS',
+                            'score' => '10/10',
+                            'desc' => 'All business domain tables utilize VARCHAR(26) ULID. Free from sequence bottlenecks, auto-increment locks, and ready for distributed PostgreSQL clusters.',
+                        ],
+                        [
+                            'title' => 'Keyset Cursor Pagination (Zero Offset)',
+                            'code' => 'CURSOR-PAGINATE',
+                            'status' => 'PASS',
+                            'score' => '10/10',
+                            'desc' => 'Utilizes O(1) keyset pointer pagination (cursorPaginate()). Prevents exponential OFFSET query degradation on tables exceeding 1,000,000+ records.',
+                        ],
+                        [
+                            'title' => 'Anti-RCE & Autonomous AI Threat Shield',
+                            'code' => 'AI-SHIELD-WAF',
+                            'status' => 'PASS',
+                            'score' => '10/10',
+                            'desc' => 'Automated defense against prompt injection / malware payloads, strict finfo MIME validation, bot honeypot traps, and disabled external XML entities (XXE).',
+                        ],
+                        [
+                            'title' => 'Dual-Language Backend (Native JSON Column)',
+                            'code' => 'LOCALE-TIER-1',
+                            'status' => 'PASS',
+                            'score' => '10/10',
+                            'desc' => 'Native bilingual JSON format {"id": "...", "en": "..."} in Filament v5 without redundant translation tables or JOIN overhead.',
+                        ],
+                        [
+                            'title' => 'Frontend 2-Tier Language Architecture',
+                            'code' => 'LOCALE-TIER-2',
+                            'status' => 'PASS',
+                            'score' => '10/10',
+                            'desc' => 'Tier 1 instant native toggle (ID/EN) + Tier 2 Google Translate plugin with centralized whitelisted languages managed via admin panel.',
+                        ],
+                        [
+                            'title' => 'Cache Forever & Event-Driven Redis Invalidation',
+                            'code' => 'CACHE-O(1)',
+                            'status' => 'PASS',
+                            'score' => '10/10',
+                            'desc' => 'All configurations and CMS models are permanently cached via Redis and automatically invalidated on Eloquent lifecycle hooks (saved & deleted).',
+                        ],
+                        [
+                            'title' => 'Shallow Storage Hierarchy (Curator Inode Shield)',
+                            'code' => 'INODE-SHALLOW',
+                            'status' => 'PASS',
+                            'score' => '10/10',
+                            'desc' => 'Media folder structures capped at 1-2 directory depth levels. Prevents Linux filesystem inode exhaustion and directory scanning memory spikes.',
+                        ],
+                        [
+                            'title' => 'Subtle Anti-AI-Slop Radii (No Pill Buttons)',
+                            'code' => 'DESIGN-CLEAN',
+                            'status' => 'PASS',
+                            'score' => '10/10',
+                            'desc' => 'High-precision subtle border radii (rounded-none, rounded-xs, rounded-sm). Strict prohibition against generic rounded-full pill shapes.',
+                        ],
+                        [
+                            'title' => 'Laravel Reverb Real-Time Collaborative Presence',
+                            'code' => 'PRESENCE-SYNC',
+                            'status' => 'PASS',
+                            'score' => '10/10',
+                            'desc' => 'Real-time cursor presence detection and live collaborator state synchronization across concurrent PRD viewers without page reloads.',
+                        ],
+                        [
+                            'title' => '1-Click Scaffold Exporter (Docker & OpenAPI 3.0)',
+                            'code' => 'SCAFFOLD-CODE',
+                            'status' => 'PASS',
+                            'score' => '10/10',
+                            'desc' => 'One-click generation of docker-compose.yml, schema_complete.sql, Laravel/Next.js routes, and production openapi.json ready for Swagger/Postman.',
+                        ],
+                    ];
+                @endphp
+                <div id="sub-sec-6-14" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 cursor-pointer select-none" @click="toggleSubSection('sec-6-14-health-auditor')">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-emerald-500 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
@@ -2447,111 +2903,135 @@ class ProcessSecureDataset implements ShouldQueue
                             <span class="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] font-bold uppercase">
                                 ENTERPRISE GRADE PASS
                             </span>
+                            <button 
+                                type="button" 
+                                @click.stop="toggleSubSection('sec-6-14-health-auditor')" 
+                                class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer"
+                                :title="subCollapses['sec-6-14-health-auditor'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                            >
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="subCollapses['sec-6-14-health-auditor'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                                <svg class="w-4 h-4 transform transition-transform duration-200" :class="subCollapses['sec-6-14-health-auditor'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
                         </div>
                     </div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
-                        Audit otomatis kesiapan arsitektur sistem terhadap 10 Protokol Wajib Skalabilitas Jutaan Data, Pertahanan Siber, dan Desain Tanpa AI-Slop.
-                    </p>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
-                        @php
-                            $complianceRules = [
-                                [
-                                    'title' => 'Strict ULID Primary Key Standard',
-                                    'code' => 'ULID-O(1)',
-                                    'status' => 'PASS',
-                                    'score' => '10/10',
-                                    'desc' => 'Seluruh tabel bisnis menggunakan VARCHAR(26) ULID. Bebas sequence bottleneck, auto-increment lock, dan siap kluster PostgreSQL terdistribusi.',
-                                ],
-                                [
-                                    'title' => 'Keyset Cursor Pagination (Zero Offset)',
-                                    'code' => 'CURSOR-PAGINATE',
-                                    'status' => 'PASS',
-                                    'score' => '10/10',
-                                    'desc' => 'Menggunakan pointer cursor O(1) (cursorPaginate()). Menghindari degradasi query OFFSET pada tabel berisi 1.000.000+ data.',
-                                ],
-                                [
-                                    'title' => 'Anti-RCE & Autonomous AI Threat Shield',
-                                    'code' => 'AI-SHIELD-WAF',
-                                    'status' => 'PASS',
-                                    'score' => '10/10',
-                                    'desc' => 'Pencegahan otomatis injeksi payload prompt/malware, isolasi finfo MIME absolut, honeypot bot trap, dan penonaktifan XML entity external (XXE).',
-                                ],
-                                [
-                                    'title' => 'Dual-Language Backend (Native JSON Column)',
-                                    'code' => 'LOCALE-TIER-1',
-                                    'status' => 'PASS',
-                                    'score' => '10/10',
-                                    'desc' => 'Format bilingual native JSON {"id": "...", "en": "..."} pada Filament v5 tanpa duplikasi tabel skema atau overhead JOIN relasi.',
-                                ],
-                                [
-                                    'title' => 'Frontend 2-Tier Language Architecture',
-                                    'code' => 'LOCALE-TIER-2',
-                                    'status' => 'PASS',
-                                    'score' => '10/10',
-                                    'desc' => 'Tier 1 tombol native cepat (ID/EN) + Tier 2 Google Translate plugin dengan whitelist bahasa yang dikontrol tersentral dari admin panel.',
-                                ],
-                                [
-                                    'title' => 'Cache Forever & Event-Driven Redis Invalidation',
-                                    'code' => 'CACHE-O(1)',
-                                    'status' => 'PASS',
-                                    'score' => '10/10',
-                                    'desc' => 'Semua konfigurasi dan model CMS di-cache secara permanen via Redis dan otomatis di-forget pada hook Eloquent (saved & deleted).',
-                                ],
-                                [
-                                    'title' => 'Shallow Storage Hierarchy (Curator Inode Shield)',
-                                    'code' => 'INODE-SHALLOW',
-                                    'status' => 'PASS',
-                                    'score' => '10/10',
-                                    'desc' => 'Struktur folder media maksimal 1-2 level kedalaman. Mencegah kehabisan inode Linux dan lonjakan RAM saat scanning direktori.',
-                                ],
-                                [
-                                    'title' => 'Subtle Anti-AI-Slop Radii (No Pill Buttons)',
-                                    'code' => 'DESIGN-CLEAN',
-                                    'status' => 'PASS',
-                                    'score' => '10/10',
-                                    'desc' => 'Border radius tipis presisi tinggi (rounded-none, rounded-xs, rounded-sm). Larangan keras bentuk kapsul/pill rounded-full generic.',
-                                ],
-                                [
-                                    'title' => 'Laravel Reverb Real-Time Collaborative Presence',
-                                    'code' => 'PRESENCE-SYNC',
-                                    'status' => 'PASS',
-                                    'score' => '10/10',
-                                    'desc' => 'Deteksi kehadiran kursor real-time dan sinkronisasi live kolaborator saat membuka PRD bersamaan tanpa refresh halaman.',
-                                ],
-                                [
-                                    'title' => '1-Click Scaffold Exporter (Docker & OpenAPI 3.0)',
-                                    'code' => 'SCAFFOLD-CODE',
-                                    'status' => 'PASS',
-                                    'score' => '10/10',
-                                    'desc' => 'Generasi satu klik docker-compose.yml, schema_complete.sql, routes Laravel/Next.js, dan file openapi.json siap pakai di Swagger/Postman.',
-                                ],
-                            ];
-                        @endphp
-                        @foreach($complianceRules as $idx => $rule)
-                            <div class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-start gap-3">
-                                <div class="w-6 h-6 bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-xs shrink-0">
-                                    &check;
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between gap-1 mb-1">
-                                        <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs truncate">{{ $idx + 1 }}. {{ $rule['title'] }}</h4>
-                                        <span class="text-[9px] font-bold text-emerald-500 shrink-0">{{ $rule['score'] }}</span>
+                    <!-- Collapsed Preview -->
+                    <div x-show="subCollapses['sec-6-14-health-auditor']" @click="toggleSubSection('sec-6-14-health-auditor')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span x-show="locale === 'en'">Area 14 collapsed (10 Golden Compliance Directives). Click to expand...</span>
+                            <span x-show="locale !== 'en'">Area 14 diciutkan (10 Petunjuk Emas Kepatuhan). Klik untuk membuka...</span>
+                        </span>
+                        <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
+                    </div>
+
+                    <div x-show="!subCollapses['sec-6-14-health-auditor']" x-transition class="accordion-body">
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
+                            <span x-show="locale === 'en'">Automated architecture readiness audit against 10 Mandatory Protocols for Millions-Scale Data, Cyber Defense, and Clean Non-AI-Slop Design.</span>
+                            <span x-show="locale !== 'en'">Audit otomatis kesiapan arsitektur sistem terhadap 10 Protokol Wajib Skalabilitas Jutaan Data, Pertahanan Siber, dan Desain Tanpa AI-Slop.</span>
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
+                            @php
+                                $complianceRules = [
+                                    [
+                                        'title' => 'Strict ULID Primary Key Standard',
+                                        'code' => 'ULID-O(1)',
+                                        'status' => 'PASS',
+                                        'score' => '10/10',
+                                        'desc' => 'Seluruh tabel bisnis menggunakan VARCHAR(26) ULID. Bebas sequence bottleneck, auto-increment lock, dan siap kluster PostgreSQL terdistribusi.',
+                                    ],
+                                    [
+                                        'title' => 'Keyset Cursor Pagination (Zero Offset)',
+                                        'code' => 'CURSOR-PAGINATE',
+                                        'status' => 'PASS',
+                                        'score' => '10/10',
+                                        'desc' => 'Menggunakan pointer cursor O(1) (cursorPaginate()). Menghindari degradasi query OFFSET pada tabel berisi 1.000.000+ data.',
+                                    ],
+                                    [
+                                        'title' => 'Anti-RCE & Autonomous AI Threat Shield',
+                                        'code' => 'AI-SHIELD-WAF',
+                                        'status' => 'PASS',
+                                        'score' => '10/10',
+                                        'desc' => 'Pencegahan otomatis injeksi payload prompt/malware, isolasi finfo MIME absolut, honeypot bot trap, dan penonaktifan XML entity external (XXE).',
+                                    ],
+                                    [
+                                        'title' => 'Dual-Language Backend (Native JSON Column)',
+                                        'code' => 'LOCALE-TIER-1',
+                                        'status' => 'PASS',
+                                        'score' => '10/10',
+                                        'desc' => 'Format bilingual native JSON {"id": "...", "en": "..."} pada Filament v5 tanpa duplikasi tabel skema atau overhead JOIN relasi.',
+                                    ],
+                                    [
+                                        'title' => 'Frontend 2-Tier Language Architecture',
+                                        'code' => 'LOCALE-TIER-2',
+                                        'status' => 'PASS',
+                                        'score' => '10/10',
+                                        'desc' => 'Tier 1 tombol native cepat (ID/EN) + Tier 2 Google Translate plugin dengan whitelist bahasa yang dikontrol tersentral dari admin panel.',
+                                    ],
+                                    [
+                                        'title' => 'Cache Forever & Event-Driven Redis Invalidation',
+                                        'code' => 'CACHE-O(1)',
+                                        'status' => 'PASS',
+                                        'score' => '10/10',
+                                        'desc' => 'Semua konfigurasi dan model CMS di-cache secara permanen via Redis dan otomatis di-forget pada hook Eloquent (saved & deleted).',
+                                    ],
+                                    [
+                                        'title' => 'Shallow Storage Hierarchy (Curator Inode Shield)',
+                                        'code' => 'INODE-SHALLOW',
+                                        'status' => 'PASS',
+                                        'score' => '10/10',
+                                        'desc' => 'Struktur folder media maksimal 1-2 level kedalaman. Mencegah kehabisan inode Linux dan lonjakan RAM saat scanning direktori.',
+                                    ],
+                                    [
+                                        'title' => 'Subtle Anti-AI-Slop Radii (No Pill Buttons)',
+                                        'code' => 'DESIGN-CLEAN',
+                                        'status' => 'PASS',
+                                        'score' => '10/10',
+                                        'desc' => 'Border radius tipis presisi tinggi (rounded-none, rounded-xs, rounded-sm). Larangan keras bentuk kapsul/pill rounded-full generic.',
+                                    ],
+                                    [
+                                        'title' => 'Laravel Reverb Real-Time Collaborative Presence',
+                                        'code' => 'PRESENCE-SYNC',
+                                        'status' => 'PASS',
+                                        'score' => '10/10',
+                                        'desc' => 'Deteksi kehadiran kursor real-time dan sinkronisasi live kolaborator saat membuka PRD bersamaan tanpa refresh halaman.',
+                                    ],
+                                    [
+                                        'title' => '1-Click Scaffold Exporter (Docker & OpenAPI 3.0)',
+                                        'code' => 'SCAFFOLD-CODE',
+                                        'status' => 'PASS',
+                                        'score' => '10/10',
+                                        'desc' => 'Generasi satu klik docker-compose.yml, schema_complete.sql, routes Laravel/Next.js, dan file openapi.json siap pakai di Swagger/Postman.',
+                                    ],
+                                ];
+                            @endphp
+                            @foreach($complianceRules as $idx => $rule)
+                                <div class="p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-start gap-3">
+                                    <div class="w-6 h-6 bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-xs shrink-0">
+                                        &check;
                                     </div>
-                                    <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-1.5">
-                                        {{ $rule['desc'] }}
-                                    </p>
-                                    <span class="inline-block px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 text-[9px] font-mono border border-zinc-300 dark:border-zinc-800">
-                                        {{ $rule['code'] }} &bull; VERIFIED
-                                    </span>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between gap-1 mb-1">
+                                            <h4 class="font-bold text-zinc-900 dark:text-zinc-100 text-xs truncate">{{ $idx + 1 }}. {{ $rule['title'] }}</h4>
+                                            <span class="text-[9px] font-bold text-emerald-500 shrink-0">{{ $rule['score'] }}</span>
+                                        </div>
+                                        <p class="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-1.5">
+                                            <span x-show="locale === 'en'">{{ $complianceRulesEn[$idx]['desc'] ?? $rule['desc'] }}</span>
+                                            <span x-show="locale !== 'en'">{{ $rule['desc'] }}</span>
+                                        </p>
+                                        <span class="inline-block px-1.5 py-0.2 bg-zinc-200 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 text-[9px] font-mono border border-zinc-300 dark:border-zinc-800">
+                                            {{ $rule['code'] }} &bull; VERIFIED
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 
                 <!-- 15. Interactive SLA, Infrastructure Sizing & Cloud VPS TCO Cost Simulator -->
-                <div class="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800" 
+                <div id="sub-sec-6-15" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target" 
                     x-data="{
                         dau: 25000,
                         rps: 35,
@@ -2607,7 +3087,7 @@ class ProcessSecureDataset implements ShouldQueue
                             return Math.round(this.monthlyCostIdr / 16200);
                         },
                         get estAiTokens() {
-                            return (this.dau * 120).toLocaleString('id-ID');
+                            return (this.dau * 120).toLocaleString(this.locale === 'en' ? 'en-US' : 'id-ID');
                         },
                         get peakAiRps() {
                             return Math.max(1, Math.round(this.rps * 0.15));
@@ -2634,140 +3114,196 @@ class ProcessSecureDataset implements ShouldQueue
                             return 'Reverse Proxy & Keyset O(1)';
                         },
                         formatIdr(val) {
-                            return new Intl.NumberFormat('id-ID').format(val);
+                            return new Intl.NumberFormat(this.locale === 'en' ? 'en-US' : 'id-ID').format(val);
                         }
                     }">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 cursor-pointer select-none" @click="toggleSubSection('sec-6-15-sla-simulator')">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-sky-500 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                                15. Simulator Interaktif Biaya Server VPS &amp; Alokasi Token AI (SLA Simulator)
+                                <span x-show="locale === 'en'">15. Interactive Cloud VPS Cost &amp; AI Token Sizing Simulator (SLA Simulator)</span>
+                                <span x-show="locale !== 'en'">15. Simulator Interaktif Biaya Server VPS &amp; Alokasi Token AI (SLA Simulator)</span>
                             </h3>
                         </div>
-                        <span class="px-2 py-0.5 bg-sky-500/10 border border-sky-500/30 text-sky-400 font-mono text-[10px] font-bold uppercase">
-                            DYNAMIC HARDWARE SIZING
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 bg-sky-500/10 border border-sky-500/30 text-sky-400 font-mono text-[10px] font-bold uppercase">
+                                DYNAMIC HARDWARE SIZING
+                            </span>
+                            <button 
+                                type="button" 
+                                @click.stop="toggleSubSection('sec-6-15-sla-simulator')" 
+                                class="px-2 py-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none flex items-center gap-1 font-mono text-xs border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 cursor-pointer"
+                                :title="subCollapses['sec-6-15-sla-simulator'] ? (locale === 'en' ? 'Expand this section' : 'Buka seksi ini') : (locale === 'en' ? 'Collapse this section' : 'Ciutkan seksi ini')"
+                            >
+                                <span class="text-[10px] uppercase font-bold text-zinc-400 dark:text-zinc-500 hidden sm:inline" x-text="subCollapses['sec-6-15-sla-simulator'] ? (locale === 'en' ? 'EXPAND' : 'BUKA') : (locale === 'en' ? 'COLLAPSE' : 'CIUTKAN')"></span>
+                                <svg class="w-4 h-4 transform transition-transform duration-200" :class="subCollapses['sec-6-15-sla-simulator'] ? '' : 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Collapsed Preview -->
+                    <div x-show="subCollapses['sec-6-15-sla-simulator']" @click="toggleSubSection('sec-6-15-sla-simulator')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span x-show="locale === 'en'">Area 15 collapsed (VPS Cost &amp; AI Token SLA Simulator). Click to expand...</span>
+                            <span x-show="locale !== 'en'">Area 15 diciutkan (Simulator Biaya VPS &amp; Alokasi Token AI). Klik untuk membuka...</span>
                         </span>
-                    </div>
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
-                        Geser parameter di bawah ini untuk mensimulasikan spesifikasi server VPS minimal, batas SLA kecepatan, dan estimasi biaya operasional bulanan (TCO) berdasarkan proyeksi pengguna aktif harian (DAU).
-                    </p>
-
-                    <!-- Interactive Sliders -->
-                    <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 mb-4 font-mono text-xs">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Slider 1: DAU -->
-                            <div>
-                                <div class="flex justify-between items-center mb-1.5 text-[11px]">
-                                    <span class="text-zinc-500">Pengguna Aktif Harian (DAU):</span>
-                                    <strong class="text-emerald-500 font-bold" x-text="formatIdr(dau) + ' Users'">25.000 Users</strong>
-                                </div>
-                                <input 
-                                    type="range" 
-                                    min="1000" 
-                                    max="500000" 
-                                    step="1000" 
-                                    x-model.number="dau" 
-                                    @input="onDauInput()"
-                                    :style="'background: linear-gradient(to right, #10b981 ' + dauPct + '%, var(--slider-track-empty) ' + dauPct + '%)'"
-                                    class="custom-range-slider slider-emerald"
-                                >
-                                <div class="flex justify-between items-center mt-1 text-[9px] text-zinc-400">
-                                    <span>Rentang: 1.000 s/d 500.000 DAU</span>
-                                    <span class="text-emerald-500 font-bold" x-text="dauPct + '%'"></span>
-                                </div>
-                            </div>
-
-                            <!-- Slider 2: RPS -->
-                            <div>
-                                <div class="flex justify-between items-center mb-1.5 text-[11px]">
-                                    <span class="text-zinc-500">Beban API Puncak (RPS):</span>
-                                    <strong class="text-sky-500 font-bold" x-text="rps + ' Req/Detik'">35 Req/Detik</strong>
-                                </div>
-                                <input 
-                                    type="range" 
-                                    min="5" 
-                                    max="300" 
-                                    step="5" 
-                                    x-model.number="rps" 
-                                    @input="onRpsInput()"
-                                    :style="'background: linear-gradient(to right, #0ea5e9 ' + rpsPct + '%, var(--slider-track-empty) ' + rpsPct + '%)'"
-                                    class="custom-range-slider slider-sky"
-                                >
-                                <div class="flex justify-between items-center mt-1 text-[9px] text-zinc-400">
-                                    <span>Rentang: 5 s/d 300 Requests/Detik</span>
-                                    <span class="text-sky-500 font-bold" x-text="rpsPct + '%'"></span>
-                                </div>
-                            </div>
-
-                            <!-- Slider 3: Media Storage -->
-                            <div>
-                                <div class="flex justify-between items-center mb-1.5 text-[11px]">
-                                    <span class="text-zinc-500">Alokasi Media &amp; Dokumen:</span>
-                                    <strong class="text-amber-500 font-bold" x-text="storageGb + ' GB NVMe'">40 GB NVMe</strong>
-                                </div>
-                                <input 
-                                    type="range" 
-                                    min="10" 
-                                    max="500" 
-                                    step="10" 
-                                    x-model.number="storageGb" 
-                                    :style="'background: linear-gradient(to right, #f59e0b ' + storagePct + '%, var(--slider-track-empty) ' + storagePct + '%)'"
-                                    class="custom-range-slider slider-amber"
-                                >
-                                <div class="flex justify-between items-center mt-1 text-[9px] text-zinc-400">
-                                    <span>Rentang: 10 s/d 500 GB NVMe</span>
-                                    <span class="text-amber-500 font-bold" x-text="storagePct + '%'"></span>
-                                </div>
-                            </div>
-                        </div>
+                        <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                     </div>
 
-                    <!-- Reactive Calculated Results Grid -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
-                        <!-- Recommendation Specs -->
-                        <div class="p-4 bg-zinc-900 border border-zinc-800 text-white">
-                            <span class="text-[9px] text-zinc-400 uppercase tracking-wider block mb-1">SPESIFIKASI REKOMENDASI VPS</span>
-                            <div class="text-base font-black text-emerald-400 mb-1" x-text="vcpu + ' vCPU / ' + ram + ' GB RAM'">
-                                4 vCPU / 8 GB RAM
-                            </div>
-                            <div class="flex items-center justify-between text-[10px] text-zinc-400 leading-tight">
-                                <span>Redis: <strong class="text-white" x-text="redisRam + ' GB RAM'">2 GB</strong></span>
-                                <span>Storage: <strong class="text-white" x-text="storageGb + ' GB NVMe'">40 GB</strong></span>
+                    <div x-show="!subCollapses['sec-6-15-sla-simulator']" x-transition class="accordion-body">
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400 font-sans mb-4">
+                            <span x-show="locale === 'en'">Adjust sliders below to simulate minimum Cloud VPS specifications, speed SLA thresholds, and estimated monthly operational costs (TCO) based on projected Daily Active Users (DAU).</span>
+                            <span x-show="locale !== 'en'">Geser parameter di bawah ini untuk mensimulasikan spesifikasi server VPS minimal, batas SLA kecepatan, dan estimasi biaya operasional bulanan (TCO) berdasarkan proyeksi pengguna aktif harian (DAU).</span>
+                        </p>
+
+                        <!-- Interactive Sliders -->
+                        <div class="p-5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 mb-4 font-mono text-xs">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Slider 1: DAU -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-1.5 text-[11px]">
+                                        <span class="text-zinc-500">
+                                            <span x-show="locale === 'en'">Daily Active Users (DAU):</span>
+                                            <span x-show="locale !== 'en'">Pengguna Aktif Harian (DAU):</span>
+                                        </span>
+                                        <strong class="text-emerald-500 font-bold" x-text="formatIdr(dau) + ' Users'">25.000 Users</strong>
+                                    </div>
+                                    <input 
+                                        type="range" 
+                                        min="1000" 
+                                        max="500000" 
+                                        step="1000" 
+                                        x-model.number="dau" 
+                                        @input="onDauInput()"
+                                        :style="'background: linear-gradient(to right, #10b981 ' + dauPct + '%, var(--slider-track-empty) ' + dauPct + '%)'"
+                                        class="custom-range-slider slider-emerald"
+                                    >
+                                    <div class="flex justify-between items-center mt-1 text-[9px] text-zinc-400">
+                                        <span>
+                                            <span x-show="locale === 'en'">Range: 1,000 to 500,000 DAU</span>
+                                            <span x-show="locale !== 'en'">Rentang: 1.000 s/d 500.000 DAU</span>
+                                        </span>
+                                        <span class="text-emerald-500 font-bold" x-text="dauPct + '%'"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Slider 2: RPS -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-1.5 text-[11px]">
+                                        <span class="text-zinc-500">
+                                            <span x-show="locale === 'en'">Peak API Load (RPS):</span>
+                                            <span x-show="locale !== 'en'">Beban API Puncak (RPS):</span>
+                                        </span>
+                                        <strong class="text-sky-500 font-bold" x-text="rps + (locale === 'en' ? ' Req/Sec' : ' Req/Detik')">35 Req/Detik</strong>
+                                    </div>
+                                    <input 
+                                        type="range" 
+                                        min="5" 
+                                        max="300" 
+                                        step="5" 
+                                        x-model.number="rps" 
+                                        @input="onRpsInput()"
+                                        :style="'background: linear-gradient(to right, #0ea5e9 ' + rpsPct + '%, var(--slider-track-empty) ' + rpsPct + '%)'"
+                                        class="custom-range-slider slider-sky"
+                                    >
+                                    <div class="flex justify-between items-center mt-1 text-[9px] text-zinc-400">
+                                        <span>
+                                            <span x-show="locale === 'en'">Range: 5 to 300 Requests/Sec</span>
+                                            <span x-show="locale !== 'en'">Rentang: 5 s/d 300 Requests/Detik</span>
+                                        </span>
+                                        <span class="text-sky-500 font-bold" x-text="rpsPct + '%'"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Slider 3: Media Storage -->
+                                <div>
+                                    <div class="flex justify-between items-center mb-1.5 text-[11px]">
+                                        <span class="text-zinc-500">
+                                            <span x-show="locale === 'en'">Media &amp; Document Storage:</span>
+                                            <span x-show="locale !== 'en'">Alokasi Media &amp; Dokumen:</span>
+                                        </span>
+                                        <strong class="text-amber-500 font-bold" x-text="storageGb + ' GB NVMe'">40 GB NVMe</strong>
+                                    </div>
+                                    <input 
+                                        type="range" 
+                                        min="10" 
+                                        max="500" 
+                                        step="10" 
+                                        x-model.number="storageGb" 
+                                        :style="'background: linear-gradient(to right, #f59e0b ' + storagePct + '%, var(--slider-track-empty) ' + storagePct + '%)'"
+                                        class="custom-range-slider slider-amber"
+                                    >
+                                    <div class="flex justify-between items-center mt-1 text-[9px] text-zinc-400">
+                                        <span>
+                                            <span x-show="locale === 'en'">Range: 10 to 500 GB NVMe</span>
+                                            <span x-show="locale !== 'en'">Rentang: 10 s/d 500 GB NVMe</span>
+                                        </span>
+                                        <span class="text-amber-500 font-bold" x-text="storagePct + '%'"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Est Monthly Hosting Cost -->
-                        <div class="p-4 bg-zinc-900 border border-zinc-800 text-white">
-                            <span class="text-[9px] text-zinc-400 uppercase tracking-wider block mb-1">ESTIMASI BIAYA VPS &amp; NVMe</span>
-                            <div class="text-base font-black text-emerald-400 mb-1" x-text="'Rp ' + formatIdr(monthlyCostIdr) + ' / bln'">
-                                Rp 450.000 / bln
+                        <!-- Reactive Calculated Results Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
+                            <!-- Recommendation Specs -->
+                            <div class="p-4 bg-zinc-900 border border-zinc-800 text-white">
+                                <span class="text-[9px] text-zinc-400 uppercase tracking-wider block mb-1">
+                                    <span x-show="locale === 'en'">RECOMMENDED VPS SPEC</span>
+                                    <span x-show="locale !== 'en'">SPESIFIKASI REKOMENDASI VPS</span>
+                                </span>
+                                <div class="text-base font-black text-emerald-400 mb-1" x-text="vcpu + ' vCPU / ' + ram + ' GB RAM'">
+                                    4 vCPU / 8 GB RAM
+                                </div>
+                                <div class="flex items-center justify-between text-[10px] text-zinc-400 leading-tight">
+                                    <span>Redis: <strong class="text-white" x-text="redisRam + ' GB RAM'">2 GB</strong></span>
+                                    <span>Storage: <strong class="text-white" x-text="storageGb + ' GB NVMe'">40 GB</strong></span>
+                                </div>
                             </div>
-                            <span class="text-[10px] text-zinc-400 leading-tight block" x-text="'Setara ~ $' + monthlyCostUsd + ' USD / Bulan (NVMe: Rp ' + formatIdr(storageGb * 2500) + ')'">
-                                Setara ~ $28 USD / Bulan
-                            </span>
-                        </div>
 
-                        <!-- Est AI Token Footprint -->
-                        <div class="p-4 bg-zinc-900 border border-zinc-800 text-white">
-                            <span class="text-[9px] text-zinc-400 uppercase tracking-wider block mb-1">KONSUMSI TOKEN AI AGEN</span>
-                            <div class="text-base font-black text-sky-400 mb-1" x-text="estAiTokens + ' Tok/Hari'">
-                                3.000.000 Tok/Hari
+                            <!-- Est Monthly Hosting Cost -->
+                            <div class="p-4 bg-zinc-900 border border-zinc-800 text-white">
+                                <span class="text-[9px] text-zinc-400 uppercase tracking-wider block mb-1">
+                                    <span x-show="locale === 'en'">ESTIMATED VPS &amp; NVMe COST</span>
+                                    <span x-show="locale !== 'en'">ESTIMASI BIAYA VPS &amp; NVMe</span>
+                                </span>
+                                <div class="text-base font-black text-emerald-400 mb-1" x-text="'Rp ' + formatIdr(monthlyCostIdr) + (locale === 'en' ? ' / mo' : ' / bln')">
+                                    Rp 450.000 / bln
+                                </div>
+                                <span class="text-[10px] text-zinc-400 leading-tight block" x-text="(locale === 'en' ? 'Approx. ~ $' : 'Setara ~ $') + monthlyCostUsd + (locale === 'en' ? ' USD / Month (NVMe: Rp ' : ' USD / Bulan (NVMe: Rp ') + formatIdr(storageGb * 2500) + ')'">
+                                    Setara ~ $28 USD / Bulan
+                                </span>
                             </div>
-                            <div class="flex items-center justify-between text-[10px] text-zinc-400 leading-tight">
-                                <span x-text="'Est: Rp ' + formatIdr(monthlyAiCostIdr) + '/bln'">Est. AI Token: Rp 225.000/bln</span>
-                                <span class="text-sky-400 font-bold" x-text="'Peak: ~' + peakAiRps + ' Req/s'"></span>
-                            </div>
-                        </div>
 
-                        <!-- SLA Guarantee & Response Time -->
-                        <div class="p-4 bg-zinc-900 border border-zinc-800 text-white">
-                            <span class="text-[9px] text-zinc-400 uppercase tracking-wider block mb-1">SLA UPTIME &amp; LATENSI</span>
-                            <div class="text-base font-black text-amber-400 mb-1" x-text="slaUptime + ' // ' + slaLatency">
-                                99.95% // &lt; 150ms
+                            <!-- Est AI Token Footprint -->
+                            <div class="p-4 bg-zinc-900 border border-zinc-800 text-white">
+                                <span class="text-[9px] text-zinc-400 uppercase tracking-wider block mb-1">
+                                    <span x-show="locale === 'en'">AGENT AI TOKEN CONSUMPTION</span>
+                                    <span x-show="locale !== 'en'">KONSUMSI TOKEN AI AGEN</span>
+                                </span>
+                                <div class="text-base font-black text-sky-400 mb-1" x-text="estAiTokens + (locale === 'en' ? ' Tokens/Day' : ' Tok/Hari')">
+                                    3.000.000 Tok/Hari
+                                </div>
+                                <div class="flex items-center justify-between text-[10px] text-zinc-400 leading-tight">
+                                    <span x-text="(locale === 'en' ? 'Est: Rp ' : 'Est: Rp ') + formatIdr(monthlyAiCostIdr) + (locale === 'en' ? '/mo' : '/bln')">Est. AI Token: Rp 225.000/bln</span>
+                                    <span class="text-sky-400 font-bold" x-text="'Peak: ~' + peakAiRps + ' Req/s'"></span>
+                                </div>
                             </div>
-                            <span class="text-[10px] text-zinc-400 leading-tight block" x-text="slaClusterMode">
-                                Reverse Proxy Nginx &amp; Keyset O(1)
-                            </span>
+
+                            <!-- SLA Guarantee & Response Time -->
+                            <div class="p-4 bg-zinc-900 border border-zinc-800 text-white">
+                                <span class="text-[9px] text-zinc-400 uppercase tracking-wider block mb-1">
+                                    <span x-show="locale === 'en'">SLA UPTIME &amp; LATENCY</span>
+                                    <span x-show="locale !== 'en'">SLA UPTIME &amp; LATENSI</span>
+                                </span>
+                                <div class="text-base font-black text-amber-400 mb-1" x-text="slaUptime + ' // ' + slaLatency">
+                                    99.95% // &lt; 150ms
+                                </div>
+                                <span class="text-[10px] text-zinc-400 leading-tight block" x-text="slaClusterMode">
+                                    Reverse Proxy Nginx &amp; Keyset O(1)
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>

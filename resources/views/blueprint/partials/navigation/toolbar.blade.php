@@ -139,6 +139,25 @@
                     </span>
                 </button>
 
+                <!-- Smart Auto-Accordion Scroll Engine Toggle -->
+                <button 
+                    type="button" 
+                    @click="toggleAutoAccordion()" 
+                    class="px-2.5 py-1.5 border text-xs font-mono font-bold rounded-none transition flex items-center gap-1.5 cursor-pointer shrink-0" 
+                    :class="autoAccordionEnabled 
+                        ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' 
+                        : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-500 dark:text-zinc-400 border-zinc-300 dark:border-zinc-700'"
+                    :title="autoAccordionEnabled 
+                        ? (locale === 'en' ? 'Smart Auto-Accordion Active: Automatically collapses passed sections and expands visible sections on scroll. Click to disable.' : 'Smart Auto-Accordion Aktif: Otomatis ciutkan seksi yang sudah dilewati dan buka seksi yang tampil di layar. Klik untuk nonaktifkan.') 
+                        : (locale === 'en' ? 'Smart Auto-Accordion Disabled. Click to enable automatic collapse/expand on scroll.' : 'Smart Auto-Accordion Nonaktif. Klik untuk aktifkan otomatisasi buka-tutup seksi saat scroll.')"
+                >
+                    <span class="w-1.5 h-1.5 rounded-none" :class="autoAccordionEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-400'"></span>
+                    <span class="hidden md:inline">
+                        <span x-show="autoAccordionEnabled">AUTO-ACCORDION</span>
+                        <span x-show="!autoAccordionEnabled">MANUAL</span>
+                    </span>
+                </button>
+
                 @php
                     $isRetailLicense = ($blueprint->project_status === 'Retail License'
                         || ($isPurchased ?? false)

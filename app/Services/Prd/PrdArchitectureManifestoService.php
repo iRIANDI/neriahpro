@@ -535,207 +535,287 @@ class PrdArchitectureManifestoService
      * Generate Comprehensive 20 Agentic AI Concepts Architectural Matrix.
      * Evaluates and categorizes the 20 fundamental agentic concepts from Balawant Kadam's framework.
      */
-    public static function generateAgenticAiConceptsMatrix(string $businessName = 'Neriah Pro Platform', array $mvpItems = []): array
+    public static function generateAgenticAiConceptsMatrix(string $businessName = 'Neriah Pro Platform', array $mvpItems = [], bool $isEn = false): array
     {
         $allConcepts = [
             [
                 'id' => 1,
                 'name' => 'Memory & State',
                 'badge' => 'Agents Remember',
-                'pillar' => 'Core Production Essential',
+                'pillar' => $isEn ? 'Core Production Essential' : 'Pilar Inti Produksi',
                 'priority' => 'HIGH',
-                'desc' => 'Menyimpan riwayat percakapan masa lalu, snapshot profil pengguna, dan state transaksi multi-tahap secara persisten menggunakan Redis/PostgreSQL.',
-                'client_application' => 'Penting untuk chatbot layanan pelanggan, asisten pembuat formulir, dan asisten navigasi yang mengingat konteks sesi pengguna.',
+                'desc' => $isEn
+                    ? 'Persistently stores past conversation turns, user profile state, and multi-stage transaction state using Redis and PostgreSQL.'
+                    : 'Menyimpan riwayat percakapan masa lalu, snapshot profil pengguna, dan state transaksi multi-tahap secara persisten menggunakan Redis/PostgreSQL.',
+                'client_application' => $isEn
+                    ? 'Essential for customer service chatbots, form wizards, and navigation assistants that remember user session context.'
+                    : 'Penting untuk chatbot layanan pelanggan, asisten pembuat formulir, dan asisten navigasi yang mengingat konteks sesi pengguna.',
                 'recommended' => true,
             ],
             [
                 'id' => 2,
                 'name' => 'Orchestration',
                 'badge' => 'Controls Who Does What',
-                'pillar' => 'Autonomous Multi-Agent',
+                'pillar' => $isEn ? 'Autonomous Multi-Agent' : 'Multi-Agen Otonom',
                 'priority' => 'MEDIUM',
-                'desc' => 'Manajer orkestrasi yang mengontrol pembagian tugas kepada mikro-agen spesialis dan menyatukan output akhir.',
-                'client_application' => 'Berguna ketika aplikasi memiliki alur kerja kompleks yang melibatkan beberapa divisi kerja (misal verifikasi dokumen + kalkulasi harga + pengiriman faktur).',
+                'desc' => $isEn
+                    ? 'Orchestration manager controlling task delegation among specialized micro-agents and synthesizing final consolidated outputs.'
+                    : 'Manajer orkestrasi yang mengontrol pembagian tugas kepada mikro-agen spesialis dan menyatukan output akhir.',
+                'client_application' => $isEn
+                    ? 'Vital when workflows involve multi-division handoffs (e.g. document verification + pricing calculation + invoice dispatch).'
+                    : 'Berguna ketika aplikasi memiliki alur kerja kompleks yang melibatkan beberapa divisi kerja (misal verifikasi dokumen + kalkulasi harga + pengiriman faktur).',
                 'recommended' => true,
             ],
             [
                 'id' => 3,
                 'name' => 'RAG (Retrieval-Augmented Generation)',
                 'badge' => 'Fetch -> Inject -> Generate',
-                'pillar' => 'Core Production Essential',
+                'pillar' => $isEn ? 'Core Production Essential' : 'Pilar Inti Produksi',
                 'priority' => 'CRITICAL',
-                'desc' => 'Mengambil dokumen/informasi bisnis terpercaya dari basis data sebelum mengirimkan prompt ke LLM, menghasilkan jawaban grounded tanpa halusinasi.',
-                'client_application' => 'Mutlak wajib bagi aplikasi yang memiliki basis data SOP, katalog produk, artikel bantuan, atau dokumen legal perusahaan.',
+                'desc' => $isEn
+                    ? 'Retrieves trusted business knowledge from databases before prompting the LLM, producing grounded responses with zero hallucinations.'
+                    : 'Mengambil dokumen/informasi bisnis terpercaya dari basis data sebelum mengirimkan prompt ke LLM, menghasilkan jawaban grounded tanpa halusinasi.',
+                'client_application' => $isEn
+                    ? 'Mandatory for apps with operational SOPs, product catalogs, help articles, or legal contracts.'
+                    : 'Mutlak wajib bagi aplikasi yang memiliki basis data SOP, katalog produk, artikel bantuan, atau dokumen legal perusahaan.',
                 'recommended' => true,
             ],
             [
                 'id' => 4,
                 'name' => 'Harness',
                 'badge' => 'Makes an LLM Act',
-                'pillar' => 'Customization & Runtime',
+                'pillar' => $isEn ? 'Customization & Runtime' : 'Kustomisasi & Runtime',
                 'priority' => 'DEVELOPER_LEVEL',
-                'desc' => 'Lapisan runtime perantara yang membekali LLM dengan konteks, skills, memori, prompt guard, kontrol eksekusi (bash, grep), dan persistensi file/git.',
-                'client_application' => 'Diterapkan pada sistem coding agent internal atau automation sandbox enterprise.',
+                'desc' => $isEn
+                    ? 'Runtime middleware layer equipping LLMs with context, skills, memory, prompt guardrails, tool execution, and file/git persistence.'
+                    : 'Lapisan runtime perantara yang membekali LLM dengan konteks, skills, memori, prompt guard, kontrol eksekusi (bash, grep), dan persistensi file/git.',
+                'client_application' => $isEn
+                    ? 'Applied to internal coding agents or enterprise automation execution sandboxes.'
+                    : 'Diterapkan pada sistem coding agent internal atau automation sandbox enterprise.',
                 'recommended' => false,
             ],
             [
                 'id' => 5,
                 'name' => 'Evals',
                 'badge' => 'Score Agent Outputs',
-                'pillar' => 'Customization & Runtime',
+                'pillar' => $isEn ? 'Customization & Runtime' : 'Kustomisasi & Runtime',
                 'priority' => 'MEDIUM',
-                'desc' => 'Sistem evaluasi otomatis untuk menilai kualitas dan ketepatan output agent terhadap standar yang diharapkan secara berkala.',
-                'client_application' => 'Digunakan saat menguji kualitas jawaban chatbot sebelum peluncuran produksi agar performa meningkat dari waktu ke waktu.',
+                'desc' => $isEn
+                    ? 'Automated evaluation pipelines continuously scoring agent output quality, accuracy, and adherence against golden benchmark standards.'
+                    : 'Sistem evaluasi otomatis untuk menilai kualitas dan ketepatan output agent terhadap standar yang diharapkan secara berkala.',
+                'client_application' => $isEn
+                    ? 'Used when auditing chatbot answers before production rollout to systematically improve benchmark performance over time.'
+                    : 'Digunakan saat menguji kualitas jawaban chatbot sebelum peluncuran produksi agar performa meningkat dari waktu ke waktu.',
                 'recommended' => false,
             ],
             [
                 'id' => 6,
                 'name' => 'MCP (Model Context Protocol)',
                 'badge' => 'Standard Plug for Tools & Data',
-                'pillar' => 'Autonomous Multi-Agent',
+                'pillar' => $isEn ? 'Autonomous Multi-Agent' : 'Multi-Agen Otonom',
                 'priority' => 'HIGH',
-                'desc' => 'Protokol standar terbuka dari Anthropic yang menghubungkan agen LLM dengan database, API eksternal, dan repositori tools tanpa vendor lock-in.',
-                'client_application' => 'Sangat ideal untuk menghubungkan sistem AI perusahaan ke Google Drive, Slack, CRM internal, atau database PostgreSQL.',
+                'desc' => $isEn
+                    ? 'Open standard protocol by Anthropic connecting AI agents with databases, external APIs, and tool repositories with zero vendor lock-in.'
+                    : 'Protokol standar terbuka dari Anthropic yang menghubungkan agen LLM dengan database, API eksternal, dan repositori tools tanpa vendor lock-in.',
+                'client_application' => $isEn
+                    ? 'Ideal for connecting company AI systems to Google Drive, Slack, internal CRM, or PostgreSQL databases.'
+                    : 'Sangat ideal untuk menghubungkan sistem AI perusahaan ke Google Drive, Slack, CRM internal, atau database PostgreSQL.',
                 'recommended' => true,
             ],
             [
                 'id' => 7,
                 'name' => 'Skills Library',
                 'badge' => 'Reusable Agent Capabilities',
-                'pillar' => 'Autonomous Multi-Agent',
+                'pillar' => $isEn ? 'Autonomous Multi-Agent' : 'Multi-Agen Otonom',
                 'priority' => 'HIGH',
-                'desc' => 'Paket kapabilitas modular yang memiliki nama, deskripsi aturan, validasi input, eksekusi aksi, dan format pengembalian output.',
-                'client_application' => 'Membuat agen dapat memanggil keterampilan spesifik seperti "GenerateInvoicePdf", "SendWhatsAppBlast", atau "CheckInventoryStock".',
+                'desc' => $isEn
+                    ? 'Modular capability packages defining schema rules, input validation, tool actions, and structured output contracts.'
+                    : 'Paket kapabilitas modular yang memiliki nama, deskripsi aturan, validasi input, eksekusi aksi, dan format pengembalian output.',
+                'client_application' => $isEn
+                    ? 'Enables agents to call specific domain skills like "GenerateInvoicePdf", "SendWhatsAppBlast", or "CheckInventoryStock".'
+                    : 'Membuat agen dapat memanggil keterampilan spesifik seperti "GenerateInvoicePdf", "SendWhatsAppBlast", atau "CheckInventoryStock".',
                 'recommended' => true,
             ],
             [
                 'id' => 8,
                 'name' => 'A2A (Agent to Agent)',
                 'badge' => 'Agents Talk to Agents',
-                'pillar' => 'Autonomous Multi-Agent',
+                'pillar' => $isEn ? 'Autonomous Multi-Agent' : 'Multi-Agen Otonom',
                 'priority' => 'MEDIUM',
-                'desc' => 'Protokol komunikasi antar agen independen menggunakan kartu agen (agent cards) untuk menemukan kapabilitas dan bertukar artefak.',
-                'client_application' => 'Cocok untuk ekosistem enterprise besar di mana agen tim sales berkoordinasi langsung dengan agen tim finance secara terotomasi.',
+                'desc' => $isEn
+                    ? 'Inter-agent communication protocol using structured agent cards to discover peers, delegate sub-tasks, and exchange artifacts.'
+                    : 'Protokol komunikasi antar agen independen menggunakan kartu agen (agent cards) untuk menemukan kapabilitas dan bertukar artefak.',
+                'client_application' => $isEn
+                    ? 'Perfect for multi-division enterprise setups where sales agents coordinate directly with finance and fulfillment agents.'
+                    : 'Cocok untuk ekosistem enterprise besar di mana agen tim sales berkoordinasi langsung dengan agen tim finance secara terotomasi.',
                 'recommended' => false,
             ],
             [
                 'id' => 9,
                 'name' => 'Multi-Agent System',
                 'badge' => 'Specialists Collaborating',
-                'pillar' => 'Autonomous Multi-Agent',
+                'pillar' => $isEn ? 'Autonomous Multi-Agent' : 'Multi-Agen Otonom',
                 'priority' => 'MEDIUM',
-                'desc' => 'Kumpulan agen terspesialisasi yang bekerja bersama melalui endpoint callable HTTP-native untuk menyelesaikan masalah kompleks.',
-                'client_application' => 'Contoh: Agen Riset Pasar + Agen Analisis Keuangan + Agen Penulis Proposal berkolaborasi menghasilkan laporan komprehensif.',
+                'desc' => $isEn
+                    ? 'Collection of specialized agents collaborating via HTTP-native callable endpoints to solve complex multi-faceted workflows.'
+                    : 'Kumpulan agen terspesialisasi yang bekerja bersama melalui endpoint callable HTTP-native untuk menyelesaikan masalah kompleks.',
+                'client_application' => $isEn
+                    ? 'Example: Market Research Agent + Financial Analysis Agent + Proposal Writer Agent collaborating to produce turnkey reports.'
+                    : 'Contoh: Agen Riset Pasar + Agen Analisis Keuangan + Agen Penulis Proposal berkolaborasi menghasilkan laporan komprehensif.',
                 'recommended' => true,
             ],
             [
                 'id' => 10,
                 'name' => 'Tool Use (Function Calling)',
                 'badge' => 'Agents Use External Tools',
-                'pillar' => 'Core Production Essential',
+                'pillar' => $isEn ? 'Core Production Essential' : 'Pilar Inti Produksi',
                 'priority' => 'CRITICAL',
-                'desc' => 'Memungkinkan model AI berinteraksi dengan dunia nyata: mencari informasi, menghitung kalkulasi matematis, mengakses API, atau mengeksekusi query DB.',
-                'client_application' => 'Wajib untuk setiap aplikasi AI modern agar AI tidak hanya berbicara teks, melainkan mampu melakukan aksi riil (book slot, update status, create invoice).',
+                'desc' => $isEn
+                    ? 'Enables AI models to interact with the real world: querying data, executing mathematical calculations, calling external APIs, or mutating database state.'
+                    : 'Memungkinkan model AI berinteraksi dengan dunia nyata: mencari informasi, menghitung kalkulasi matematis, mengakses API, atau mengeksekusi query DB.',
+                'client_application' => $isEn
+                    ? 'Mandatory for modern applications so AI is not merely conversational but capable of concrete real-world actions (booking slots, updating statuses, invoicing).'
+                    : 'Wajib untuk setiap aplikasi AI modern agar AI tidak hanya berbicara teks, melainkan mampu melakukan aksi riil (book slot, update status, create invoice).',
                 'recommended' => true,
             ],
             [
                 'id' => 11,
                 'name' => 'Planning',
                 'badge' => 'Breaks Goals into Steps',
-                'pillar' => 'Autonomous Multi-Agent',
+                'pillar' => $isEn ? 'Autonomous Multi-Agent' : 'Multi-Agen Otonom',
                 'priority' => 'HIGH',
-                'desc' => 'Mekanisme perencanaan di mana agen memecah tujuan besar klien menjadi rantai tugas terurut (Task 1 -> Task 2 -> Task N) dan memonitor eksekusinya.',
-                'client_application' => 'Mendasari fitur Project OS Task Generator dan alur kerja sprint pengerjaan otomatis.',
+                'desc' => $isEn
+                    ? 'Autonomous planning mechanism breaking high-level client objectives into ordered sequential tasks (Task 1 -> Task 2 -> Task N) with progress monitoring.'
+                    : 'Mekanisme perencanaan di mana agen memecah tujuan besar klien menjadi rantai tugas terurut (Task 1 -> Task 2 -> Task N) dan memonitor eksekusinya.',
+                'client_application' => $isEn
+                    ? 'Powers the Project OS Task Generator and automated sprint roadmap execution.'
+                    : 'Mendasari fitur Project OS Task Generator dan alur kerja sprint pengerjaan otomatis.',
                 'recommended' => true,
             ],
             [
                 'id' => 12,
                 'name' => 'Reasoning (Chain-of-Thought)',
                 'badge' => 'Thinks Step by Step',
-                'pillar' => 'Autonomous Multi-Agent',
+                'pillar' => $isEn ? 'Autonomous Multi-Agent' : 'Multi-Agen Otonom',
                 'priority' => 'HIGH',
-                'desc' => 'Model AI berpikir secara bertahap dan memverifikasi rantai logika sebelum memberikan jawaban akhir, meminimalkan kekeliruan fatal.',
-                'client_application' => 'Krusial untuk aplikasi verifikasi kepatuhan hukum, audit keuangan, dan diagnosa teknis.',
+                'desc' => $isEn
+                    ? 'Step-by-step thinking where the model verifies logical premises and constraints before emitting its final answer, minimizing critical errors.'
+                    : 'Model AI berpikir secara bertahap dan memverifikasi rantai logika sebelum memberikan jawaban akhir, meminimalkan kekeliruan fatal.',
+                'client_application' => $isEn
+                    ? 'Crucial for regulatory compliance verification, financial audits, and technical system diagnostics.'
+                    : 'Krusial untuk aplikasi verifikasi kepatuhan hukum, audit keuangan, dan diagnosa teknis.',
                 'recommended' => true,
             ],
             [
                 'id' => 13,
                 'name' => 'Fine-Tuning',
                 'badge' => 'Customizes the Model',
-                'pillar' => 'Domain Customization',
+                'pillar' => $isEn ? 'Domain Customization' : 'Kustomisasi Domain',
                 'priority' => 'ADVANCED',
-                'desc' => 'Melatih kembali bobot model dasar dengan dataset privat perusahaan untuk menghasilkan gaya bahasa, jargon, dan ketepatan spesifik.',
-                'client_application' => 'Hanya dibutuhkan jika pendekatan RAG dan Prompt Engineering belum memadai untuk kasus spesifik ekstrem.',
+                'desc' => $isEn
+                    ? 'Retraining model weights on proprietary enterprise datasets to achieve exact domain tone, specialized terminology, and strict output fidelity.'
+                    : 'Melatih kembali bobot model dasar dengan dataset privat perusahaan untuk menghasilkan gaya bahasa, jargon, dan ketepatan spesifik.',
+                'client_application' => $isEn
+                    ? 'Only required when advanced RAG and prompt engineering cannot satisfy highly specialized extreme domain requirements.'
+                    : 'Hanya dibutuhkan jika pendekatan RAG dan Prompt Engineering belum memadai untuk kasus spesifik ekstrem.',
                 'recommended' => false,
             ],
             [
                 'id' => 14,
                 'name' => 'Prompt Engineering',
                 'badge' => 'Guides the Model',
-                'pillar' => 'Core Production Essential',
+                'pillar' => $isEn ? 'Core Production Essential' : 'Pilar Inti Produksi',
                 'priority' => 'HIGH',
-                'desc' => 'Merancang instruksi sistem yang jelas, memberikan konteks dinamis, membatasi format output (JSON schema), dan menyertakan contoh (few-shot).',
-                'client_application' => 'Pondasi seluruh integrasi AI di aplikasi untuk menjamin kestabilan respon dan kepatuhan format data API.',
+                'desc' => $isEn
+                    ? 'Engineering rigorous system instructions, dynamic context injection, strict JSON schema output constraints, and few-shot calibration examples.'
+                    : 'Merancang instruksi sistem yang jelas, memberikan konteks dinamis, membatasi format output (JSON schema), dan menyertakan contoh (few-shot).',
+                'client_application' => $isEn
+                    ? 'Bedrock for all AI features to guarantee response predictability and strict API schema compliance.'
+                    : 'Pondasi seluruh integrasi AI di aplikasi untuk menjamin kestabilan respon dan kepatuhan format data API.',
                 'recommended' => true,
             ],
             [
                 'id' => 15,
                 'name' => 'Vector Database',
                 'badge' => 'Stores Embeddings for Search',
-                'pillar' => 'Core Production Essential',
+                'pillar' => $isEn ? 'Core Production Essential' : 'Pilar Inti Produksi',
                 'priority' => 'CRITICAL',
-                'desc' => 'Basis data khusus (PostgreSQL pgvector / Qdrant) untuk menyimpan representasi numerik (embeddings) teks dan gambar guna pencarian semantik berkecepatan tinggi.',
-                'client_application' => 'Pencarian pintar produk, pencarian dokumen relevan, dan rekomendasi berbasis kemiripan makna (bukan sekadar kata kunci SQL LIKE).',
+                'desc' => $isEn
+                    ? 'Specialized storage (PostgreSQL pgvector / Qdrant) indexing numerical embeddings for ultra-fast semantic similarity searches.'
+                    : 'Basis data khusus (PostgreSQL pgvector / Qdrant) untuk menyimpan representasi numerik (embeddings) teks dan gambar guna pencarian semantik berkecepatan tinggi.',
+                'client_application' => $isEn
+                    ? 'Intelligent product search, context retrieval, and semantic matching (far superior to standard SQL LIKE queries).'
+                    : 'Pencarian pintar produk, pencarian dokumen relevan, dan rekomendasi berbasis kemiripan makna (bukan sekadar kata kunci SQL LIKE).',
                 'recommended' => true,
             ],
             [
                 'id' => 16,
                 'name' => 'Agentic Workflows',
                 'badge' => 'Automates Multi-Step Tasks',
-                'pillar' => 'Core Production Essential',
+                'pillar' => $isEn ? 'Core Production Essential' : 'Pilar Inti Produksi',
                 'priority' => 'CRITICAL',
-                'desc' => 'Otomatisasi proses bisnis multi-langkah dari trigger awal, pemanggilan tools/API, penanganan error, hingga penyelesaian end-to-end tanpa intervensi manual.',
-                'client_application' => 'Alur kerja checkout otomatis, onboarding klien mandiri, dan sinkronisasi data lintas aplikasi.',
+                'desc' => $isEn
+                    ? 'End-to-end multi-step business process automation from trigger, tool invocation, error recovery, to completion without manual bottlenecks.'
+                    : 'Otomatisasi proses bisnis multi-langkah dari trigger awal, pemanggilan tools/API, penanganan error, hingga penyelesaian end-to-end tanpa intervensi manual.',
+                'client_application' => $isEn
+                    ? 'Autonomous checkout sequences, self-service client onboarding, and cross-application data synchronization.'
+                    : 'Alur kerja checkout otomatis, onboarding klien mandiri, dan sinkronisasi data lintas aplikasi.',
                 'recommended' => true,
             ],
             [
                 'id' => 17,
                 'name' => 'Guardrails',
                 'badge' => 'Keeps AI Safe & Reliable',
-                'pillar' => 'Core Production Essential',
+                'pillar' => $isEn ? 'Core Production Essential' : 'Pilar Inti Produksi',
                 'priority' => 'CRITICAL',
-                'desc' => 'Sistem filter pengaman yang memvalidasi input dan output AI: menyaring kebocoran data sensitif (PII), mencegah prompt injection, dan menegakkan aturan kebijakan bisnis.',
-                'client_application' => 'Wajib untuk menjaga reputasi dan keamanan sistem perusahaan saat berhadapan langsung dengan publik.',
+                'desc' => $isEn
+                    ? 'Multi-layered safety filters intercepting AI inputs and outputs: stripping sensitive PII, mitigating prompt injection, and enforcing business safety policies.'
+                    : 'Sistem filter pengaman yang memvalidasi input dan output AI: menyaring kebocoran data sensitif (PII), mencegah prompt injection, dan menegakkan aturan kebijakan bisnis.',
+                'client_application' => $isEn
+                    ? 'Mandatory for protecting company reputation and system security in public-facing interactions.'
+                    : 'Wajib untuk menjaga reputasi dan keamanan sistem perusahaan saat berhadapan langsung dengan publik.',
                 'recommended' => true,
             ],
             [
                 'id' => 18,
                 'name' => 'Observability',
                 'badge' => 'Track & Improve Agents',
-                'pillar' => 'Core Production Essential',
+                'pillar' => $isEn ? 'Core Production Essential' : 'Pilar Inti Produksi',
                 'priority' => 'HIGH',
-                'desc' => 'Pencatatan menyeluruh terhadap log percakapan, metrik konsumsi token/biaya API, dan trace latensi untuk kemudahan debugging dan optimasi performa.',
-                'client_application' => 'Pemantauan pengeluaran biaya AI bulanan dan deteksi bottleneck respon agen di dasbor admin.',
+                'desc' => $isEn
+                    ? 'Comprehensive logging of conversation traces, token usage telemetry, and latency metrics for transparent debugging and performance optimization.'
+                    : 'Pencatatan menyeluruh terhadap log percakapan, metrik konsumsi token/biaya API, dan trace latensi untuk kemudahan debugging dan optimasi performa.',
+                'client_application' => $isEn
+                    ? 'Monthly AI expenditure tracking and agent response bottleneck diagnostics in admin dashboards.'
+                    : 'Pemantauan pengeluaran biaya AI bulanan dan deteksi bottleneck respon agen di dasbor admin.',
                 'recommended' => true,
             ],
             [
                 'id' => 19,
                 'name' => 'Evaluation Benchmarks',
                 'badge' => 'Measure Real-World Performance',
-                'pillar' => 'Domain Customization',
+                'pillar' => $isEn ? 'Domain Customization' : 'Kustomisasi Domain',
                 'priority' => 'MEDIUM',
-                'desc' => 'Metrik terukur untuk membandingkan akurasi, relevansi, keamanan, dan tingkat penyelesaian tugas dengan feedback manusia.',
-                'client_application' => 'Digunakan oleh tim QA untuk memastikan kualitas respon AI konsisten melayani standar SLA.',
+                'desc' => $isEn
+                    ? 'Measurable benchmarks quantifying accuracy, semantic relevance, safety bounds, and task completion rates evaluated against human ground-truth.'
+                    : 'Metrik terukur untuk membandingkan akurasi, relevansi, keamanan, dan tingkat penyelesaian tugas dengan feedback manusia.',
+                'client_application' => $isEn
+                    ? 'Utilized by QA teams to ensure AI responses rigorously meet enterprise SLA criteria.'
+                    : 'Digunakan oleh tim QA untuk memastikan kualitas respon AI konsisten melayani standar SLA.',
                 'recommended' => false,
             ],
             [
                 'id' => 20,
                 'name' => 'AI Agents in Industries',
                 'badge' => 'Solves Real-World Problems',
-                'pillar' => 'Industry Vertical',
+                'pillar' => $isEn ? 'Industry Vertical' : 'Vertikal Industri',
                 'priority' => 'HIGH',
-                'desc' => 'Penerapan agen AI spesifik industri: Healthcare, Finance, Retail, Education, Manufacturing, dan Customer Support.',
-                'client_application' => 'Menyediakan template proses bisnis siap pakai yang disesuaikan dengan sektor operasional bisnis klien.',
+                'desc' => $isEn
+                    ? 'Verticalized AI implementations tailored for Healthcare, Finance, Retail, Education, Manufacturing, and Customer Operations.'
+                    : 'Penerapan agen AI spesifik industri: Healthcare, Finance, Retail, Education, Manufacturing, dan Customer Support.',
+                'client_application' => $isEn
+                    ? 'Provides turnkey domain business workflow templates calibrated to the client\'s operational industry.'
+                    : 'Menyediakan template proses bisnis siap pakai yang disesuaikan dengan sektor operasional bisnis klien.',
                 'recommended' => true,
             ],
         ];

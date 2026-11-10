@@ -704,10 +704,9 @@ class PrdGeneratorService
      * Generate Comprehensive 20 Agentic AI Concepts Architectural Matrix.
      * Evaluates and categorizes the 20 fundamental agentic concepts from Balawant Kadam's framework.
      */
-    public static function generateAgenticAiConceptsMatrix(string $businessName = 'Neriah Pro Platform', array $mvpItems = array (
-)): array
+    public static function generateAgenticAiConceptsMatrix(string $businessName = 'Neriah Pro Platform', array $mvpItems = [], bool $isEn = false): array
     {
-        return PrdArchitectureManifestoService::generateAgenticAiConceptsMatrix($businessName, $mvpItems);
+        return PrdArchitectureManifestoService::generateAgenticAiConceptsMatrix($businessName, $mvpItems, $isEn);
     }
 
     /**

@@ -4,7 +4,7 @@
             --toolbar-h: 46px;
         }
         .prd-scroll-target {
-            scroll-margin-top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 46px) + 16px) !important;
+            scroll-margin-top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 46px)) !important;
         }
 
         /* Virtual Architecture Studio Diagram Viewers: Strict Fit to Container */

@@ -336,7 +336,11 @@
         setTimeout(window.syncNavMetrics, 1000);
 
         window.jumpToSection = function(id) {
-            const el = document.getElementById(id);
+            let el = document.getElementById(id);
+            if (!el) {
+                if (id === 'section-13') el = document.getElementById('sub-sec-6-13-export');
+                else if (id === 'sub-sec-6-13-export') el = document.getElementById('section-13');
+            }
             if (!el) return;
 
             // Lock scroll spy while smooth scrolling to target
@@ -344,18 +348,23 @@
             clearTimeout(programmaticScrollTimer);
             programmaticScrollTimer = setTimeout(() => {
                 isProgrammaticScroll = false;
-            }, 850);
+            }, 1400);
 
-            // Compute exact offset: global nav + toolbar + 16px breathing room
+            // Compute exact offset: global nav + toolbar (exact bottom of toolbar, matching the user's line)
             window.syncNavMetrics();
             const globalHeader = document.querySelector('header.fixed') || document.querySelector('nav');
             const toolbar = document.getElementById('blueprint-toolbar');
-            const globalH = globalHeader ? (globalHeader.getBoundingClientRect().height || globalHeader.offsetHeight) : 88;
-            const toolbarH = toolbar ? (toolbar.getBoundingClientRect().height || toolbar.offsetHeight) : 48;
-            const extraGap = 16;
-            const totalOffset = globalH + toolbarH + extraGap;
+            const globalH = (globalHeader ? (globalHeader.getBoundingClientRect().height || globalHeader.offsetHeight) : 0) 
+                || parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--global-nav-h')) 
+                || 88;
+            const toolbarH = (toolbar ? (toolbar.getBoundingClientRect().height || toolbar.offsetHeight) : 0) 
+                || parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--toolbar-h')) 
+                || 46;
 
-            const targetY = Math.max(0, el.getBoundingClientRect().top + window.pageYOffset - totalOffset);
+            const stickyOffset = Math.round(globalH + toolbarH);
+
+            const elAbsoluteTop = el.getBoundingClientRect().top + window.pageYOffset;
+            const targetY = Math.max(0, Math.round(elAbsoluteTop - stickyOffset));
             window.scrollTo({ top: targetY, behavior: 'smooth' });
 
             // Visual pulse highlight
@@ -363,14 +372,35 @@
             setTimeout(() => {
                 el.classList.remove('outline-2', 'outline-emerald-500');
             }, 1800);
+
+            // High-precision alignment handler on scroll completion
+            const settleScroll = () => {
+                window.removeEventListener('scrollend', settleScroll);
+                clearTimeout(programmaticScrollTimer);
+                isProgrammaticScroll = false;
+
+                if (el && el.offsetParent !== null) {
+                    const currentTop = Math.round(el.getBoundingClientRect().top);
+                    const diff = currentTop - stickyOffset;
+                    // If within 2px to 60px of the line, micro-adjust to exactly flush
+                    if (Math.abs(diff) >= 2 && Math.abs(diff) <= 60) {
+                        window.scrollBy({ top: diff, behavior: 'instant' });
+                    }
+                }
+            };
+
+            if ('onscrollend' in window) {
+                window.addEventListener('scrollend', settleScroll, { once: true });
+            }
+            setTimeout(settleScroll, 950);
         };
 
         window.setupBlueprintScrollSpy = function(onActiveChange) {
             const sectionIds = [
                 'section-00-execution-guide',
                 'section-1', 'section-1-5', 'section-2', 'section-3', 'section-3-5',
-                'section-3-8', 'section-4', 'section-5', 'section-6',
-                'section-7', 'section-8', 'section-9', 'section-10', 'section-13'
+                'section-3-8', 'section-4', 'section-5', 'section-6', 'section-13',
+                'section-7', 'section-8', 'section-9', 'section-10'
             ];
             let ticking = false;
             let lastActive = null;
@@ -390,7 +420,10 @@
                     current = sectionIds[0];
                 } else {
                     for (let i = sectionIds.length - 1; i >= 0; i--) {
-                        const el = document.getElementById(sectionIds[i]);
+                        let el = document.getElementById(sectionIds[i]);
+                        if (!el && sectionIds[i] === 'section-13') {
+                            el = document.getElementById('sub-sec-6-13-export');
+                        }
                         if (el && el.offsetParent !== null) {
                             const rect = el.getBoundingClientRect();
                             if (rect.top <= 220) {

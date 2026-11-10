@@ -19,7 +19,7 @@
 <!-- ========================================================================================= -->
 <!-- SECTION 00: PETA JALAN & PANDUAN EKSEKUSI DEVELOPER // 3 CARA MULAI & DOCKER DEV STACK    -->
 <!-- ========================================================================================= -->
-<section id="section-00-execution-guide" class="mb-8 font-sans scroll-mt-28">
+<section id="section-00-execution-guide" class="mb-8 font-sans prd-scroll-target">
     <div class="bg-white dark:bg-zinc-950 border-2 border-emerald-500 p-5 sm:p-7 rounded-none shadow-xl relative overflow-hidden">
         <!-- Accent Top Bar Indicator -->
         <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-500"></div>

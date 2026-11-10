@@ -2439,10 +2439,13 @@
                     }
                 },
                 jumpTo(id) {
+                    this.activeSectionId = id;
+                    this.floatingIndexOpen = false;
+
                     if (this.sectionCollapses && this.sectionCollapses[id]) {
                         this.sectionCollapses[id] = false;
                     }
-                    if (id.startsWith('sub-sec-6-')) {
+                    if (id.startsWith('sub-sec-6-') || id === 'section-13') {
                         this.sectionCollapses['section-6'] = false;
                         const subMap = {
                             'sub-sec-6-9': 'sec-6-9-strat-guidance',
@@ -2451,6 +2454,7 @@
                             'sub-sec-6-12': 'sec-6-12-agentic-matrix',
                             'sub-sec-6-13-rag': 'sec-6-13-rag-matrix',
                             'sub-sec-6-13-export': 'sec-6-13-repo-export',
+                            'section-13': 'sec-6-13-repo-export',
                             'sub-sec-6-14': 'sec-6-14-health-auditor',
                             'sub-sec-6-15': 'sec-6-15-sla-simulator',
                         };
@@ -2458,14 +2462,14 @@
                             this.subCollapses[subMap[id]] = false;
                         }
                     }
-                    window.jumpToSection(id);
-                    this.activeSectionId = id;
                     this.autoSyncAccordion = true;
                     this.syncAccordionToSection(id);
-                    this.floatingIndexOpen = false;
                     if (id === 'section-3-8' || id === 'section-4' || id === 'section-5') {
                         setTimeout(() => { if (window.reRenderActiveMermaid) window.reRenderActiveMermaid(); }, 120);
                     }
+                    this.$nextTick(() => {
+                        window.jumpToSection(id);
+                    });
                 },
                 getActiveSectionNumber() {
                     const numbers = {
@@ -2567,8 +2571,7 @@
                         { id: 'section-7', key: 'section-7' },
                         { id: 'section-8', key: 'section-8' },
                         { id: 'section-9', key: 'section-9' },
-                        { id: 'section-10', key: 'section-10' },
-                        { id: 'section-13', key: 'section-13' }
+                        { id: 'section-10', key: 'section-10' }
                     ];
 
                     const subTargets = [
@@ -2577,6 +2580,7 @@
                         { id: 'sub-sec-6-11', key: 'sec-6-11-ai-shield' },
                         { id: 'sub-sec-6-12', key: 'sec-6-12-agentic-matrix' },
                         { id: 'sub-sec-6-13-rag', key: 'sec-6-13-rag-matrix' },
+                        { id: 'section-13', key: 'sec-6-13-repo-export' },
                         { id: 'sub-sec-6-13-export', key: 'sec-6-13-repo-export' },
                         { id: 'sub-sec-6-14', key: 'sec-6-14-health-auditor' },
                         { id: 'sub-sec-6-15', key: 'sec-6-15-sla-simulator' }
@@ -2600,6 +2604,7 @@
 
                         // 1. Evaluate Main Sections
                         mainTargets.forEach(item => {
+                            if (this.activeSectionId === item.id) return;
                             const el = document.getElementById(item.id);
                             if (!el) return;
                             const rect = el.getBoundingClientRect();
@@ -2633,6 +2638,7 @@
                         // 2. Evaluate Sub Sections inside Section 6 if Section 6 is visible & open
                         if (!this.sectionCollapses['section-6']) {
                             subTargets.forEach(item => {
+                                if (this.activeSectionId === item.id) return;
                                 const el = document.getElementById(item.id);
                                 if (!el) return;
                                 const rect = el.getBoundingClientRect();

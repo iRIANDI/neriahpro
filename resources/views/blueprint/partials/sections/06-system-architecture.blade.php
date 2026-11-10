@@ -951,7 +951,7 @@
                     ];
                 @endphp
                 @if(!empty($stratGuidance))
-                    <div id="sub-sec-6-9" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                    <div id="sub-sec-6-9" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target prd-scroll-target">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 cursor-pointer select-none" @click="toggleSubSection('sec-6-9-strat-guidance')">
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 bg-emerald-500 inline-block"></span>
@@ -1073,7 +1073,7 @@
                             'Engine Basis Data (Database)' => 'Database Storage Engine'
                         ];
                     @endphp
-                    <div id="sub-sec-6-10" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                    <div id="sub-sec-6-10" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target prd-scroll-target">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 cursor-pointer select-none" @click="toggleSubSection('sec-6-10-pros-cons')">
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 bg-emerald-500 inline-block"></span>
@@ -1229,7 +1229,7 @@
                 @php
                     $aiSecBlueprint = $prd['ai_security_blueprint'] ?? \App\Services\PrdGeneratorService::generateAiSecurityBlueprint($blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Neriah Pro Platform'));
                 @endphp
-                <div id="sub-sec-6-11" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                <div id="sub-sec-6-11" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target prd-scroll-target">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 cursor-pointer select-none" @click="toggleSubSection('sec-6-11-ai-shield')">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-rose-500 inline-block"></span>
@@ -1563,7 +1563,7 @@ class ProcessSecureDataset implements ShouldQueue
                         ],
                     ];
                 @endphp
-                <div id="sub-sec-6-12" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                <div id="sub-sec-6-12" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target prd-scroll-target">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 cursor-pointer select-none" @click="toggleSubSection('sec-6-12-agentic-matrix')">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-indigo-500 inline-block"></span>
@@ -1675,7 +1675,7 @@ class ProcessSecureDataset implements ShouldQueue
                     $ragMatrix = $prd['rag_architecture_matrix'] ?? \App\Services\PrdGeneratorService::generateRagArchitectureMatrix($blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Neriah Pro Platform'), $blueprint->user_metadata['mvp_features'] ?? [], $isEn);
                     $ragConcepts = $ragMatrix['concepts'] ?? [];
                 @endphp
-                <div id="sub-sec-6-13-rag" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                <div id="sub-sec-6-13-rag" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target prd-scroll-target">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 cursor-pointer select-none" @click="toggleSubSection('sec-6-13-rag-matrix')">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-emerald-500 inline-block"></span>
@@ -1786,7 +1786,7 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
 
                 <!-- Software Factory OS v7.0: 15-Pillar Architectural Freeze & Repository Exporter -->
-                <div class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target" id="sub-sec-6-13-export">
+                <div class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target prd-scroll-target" id="section-13" data-alias-id="sub-sec-6-13-export">
                     <div class="p-6 sm:p-7 bg-white dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs space-y-5 shadow-sm">
                         <!-- Top Metadata & Status Bar -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
@@ -2888,7 +2888,7 @@ class ProcessSecureDataset implements ShouldQueue
                         ],
                     ];
                 @endphp
-                <div id="sub-sec-6-14" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target">
+                <div id="sub-sec-6-14" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target prd-scroll-target">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 cursor-pointer select-none" @click="toggleSubSection('sec-6-14-health-auditor')">
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-emerald-500 inline-block"></span>
@@ -3031,7 +3031,7 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
 
                 <!-- 15. Interactive SLA, Infrastructure Sizing & Cloud VPS TCO Cost Simulator -->
-                <div id="sub-sec-6-15" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target" 
+                <div id="sub-sec-6-15" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target prd-scroll-target" 
                     x-data="{
                         dau: 25000,
                         rps: 35,

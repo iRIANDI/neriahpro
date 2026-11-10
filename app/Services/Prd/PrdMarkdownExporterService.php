@@ -870,6 +870,26 @@ class PrdMarkdownExporterService
         $rules .= "  - Tanda kutip ganda (\") → `&quot;`\n";
         $rules .= "  - Tanda kutip tunggal (') → `&apos;`\n";
         $rules .= "- Untuk komponen Alpine yang kompleks (>3 properti, nested objects, lifecycle hooks, atau method panjang), SELALU ekstrak komponen ke dalam blok `<script>` terpisah (`function componentName() { return { ... }; }`) dan hubungkan dengan `<tag x-data=\"componentName()\">`.\n\n";
+
+        $rules .= "### I. Pixel-Perfect Sticky Navigation, Zero-Gap Alignment & Dynamic DOM Reflow Protocol\n";
+        $rules .= "- **Zero-Gap / Zero-Overlap Sticky Alignment Standard (Pendaratan Presisi Garis Batas Bawah Toolbar)**:\n";
+        $rules .= "  - Saat pengguna mengklik link navigasi (sidebar index, TOC, header pills, tombol jumpTo), elemen target WAJIB mendarat tepat menempel (*flush*) di batas bawah sticky header/toolbar (`top: globalNavH + toolbarH`) tanpa celah kosong dan tanpa tertutup sebagian.\n";
+        $rules .= "  - DILARANG KERAS menyisipkan offset sembarangan seperti `+ 16px`, `+ 20px`, atau hardcoded magic classes (`scroll-mt-28`). Menambah gap artifisial menyebabkan konten berhenti melayang di bawah toolbar dan tampak cacat/rusak.\n";
+        $rules .= "  - Formula Wajib: `stickyOffset = Math.round(globalNavH + toolbarH); targetY = Math.max(0, Math.round(elAbsoluteTop - stickyOffset));`\n";
+        $rules .= "  - CSS Target: `scroll-margin-top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 46px)) !important;`\n";
+        $rules .= "  - Sub-Pixel Settle Handler: Pasang listener `scrollend` (fallback 900–1200ms) untuk memeriksa deviasi sub-pixel rendering (2px–60px) dan melakukan auto micro-adjustment seketika via `window.scrollBy({ top: diff, behavior: 'instant' })`.\n";
+        $rules .= "- **Mandatory Concrete Target ID Integrity & Anti-Ghost ID Standard**:\n";
+        $rules .= "  - Setiap item yang didaftarkan pada navigasi/sidebar/TOC WAJIB memiliki elemen kontainer fisik dengan atribut `id` yang 100% identik di dalam DOM. Dilarang keras ada Ghost ID tanpa elemen padanan di HTML/Blade.\n";
+        $rules .= "  - Seluruh kontainer seksi utama maupun sub-seksi yang dapat dituju lewat navigasi WAJIB menyertakan class `.prd-scroll-target`.\n";
+        $rules .= "- **Asynchronous DOM Reflow Protocol (`\$nextTick` / `requestAnimationFrame`)**:\n";
+        $rules .= "  - Jika target seksi (atau parent kontainernya) sedang dalam status ciut (*collapsed*), sistem WAJIB membuka state collapse tersebut terlebih dahulu.\n";
+        $rules .= "  - DILARANG KERAS memanggil `getBoundingClientRect().top` atau mengeksekusi scroll secara sinkron langsung setelah mengubah variabel state Alpine/React. Pemanggilan scroll WAJIB dibungkus ke dalam `this.\$nextTick(() => { window.jumpToSection(id); })` agar browser menyelesaikan reflow DOM terlebih dahulu.\n";
+        $rules .= "- **ScrollSpy Physical DOM Order Standard (Anti-False Triggers)**:\n";
+        $rules .= "  - Urutan array ID seksi pada ScrollSpy WAJIB diurutkan secara persis dari atas ke bawah mengikuti urutan fisik elemen dalam DOM. Deteksi `isBottom` WAJIB mengarahkan ke elemen paling bawah dokumen yang sebenarnya.\n";
+        $rules .= "  - Kunci scrollspy (`isProgrammaticScroll = true`) selama animasi smooth scrolling berlangsung (1200–1600ms) untuk mencegah scrollspy merebut atau mengubah active index di tengah animasi.\n";
+        $rules .= "- **Active Section Immunity in Auto-Accordion / Scroll Observers**:\n";
+        $rules .= "  - Algoritma auto-accordion yang menciutkan seksi saat melewati viewport DILARANG KERAS menciutkan seksi yang sedang menjadi target aktif pengguna (`this.activeSectionId`), dan dilarang mengeksekusi kompensasi scroll saat smooth scrolling sedang berjalan.\n\n";
+
         $rules .= "---\n\n";
 
         // 4. Actors

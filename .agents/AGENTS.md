@@ -396,6 +396,35 @@ All AI agents and developers operating in this codebase MUST strictly adhere to 
     - Pengguna mobile dapat beralih pane secara instan dengan 1 tap tanpa dipaksa melakukan doom-scrolling vertikal ribuan piksel melalui panel lain.
     - Opsi `[ ☰ All ]` tetap disediakan jika pengguna ingin melihat semua panel secara bertumpuk.
 
+# Mandatory Rule: Pixel-Perfect Sticky Navigation, Zero-Gap Alignment & Dynamic DOM Reflow Protocol (Anti-Displaced Scroll & Ghost ID Prevention)
+- 📐 **ZERO-GAP / ZERO-OVERLAP STICKY ALIGNMENT STANDARD (PENDARATAN PRESISI GARIS BATAS BAWAH TOOLBAR)**:
+  - Saat pengguna mengklik link navigasi (sidebar index, TOC, header pills, tombol jumpTo), elemen target WAJIB mendarat tepat menempel (*flush*) di batas bawah sticky header/toolbar (`top: globalNavH + toolbarH`) tanpa celah kosong dan tanpa tertutup sebagian.
+  - 🚫 **DILARANG KERAS MENAMBAH GAP ARSIFIAL / HARDCODED OFFSET**: Dilarang menyisipkan offset sembarangan seperti `+ 16px`, `+ 20px`, atau hardcoded magic classes (`scroll-mt-28`, `scroll-mt-32`). Menambah gap artifisial menyebabkan konten berhenti melayang di bawah toolbar dan tampak cacat/rusak.
+  - 📏 **FORMULA PERSAMAAN SCROLL WAJIB**:
+    - Offset batas bawah sticky: `const stickyOffset = Math.round(globalNavH + toolbarH);`
+    - Target absolut scroll: `const targetY = Math.max(0, Math.round(el.getBoundingClientRect().top + window.pageYOffset - stickyOffset));`
+    - CSS Class `.prd-scroll-target`: `scroll-margin-top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 46px)) !important;`
+  - 🎯 **SUB-PIXEL SETTLE HANDLER**: Pasang listener event `scrollend` (dengan fallback timeout 900–1200ms) untuk memeriksa deviasi sub-pixel rendering (`Math.abs(el.getBoundingClientRect().top - stickyOffset)`). Jika selisih berada di rentang 2px–60px, lakukan auto micro-adjustment seketika via `window.scrollBy({ top: diff, behavior: 'instant' })` sehingga batas atas seksi 100% menempel tepat pada garis batas bawah toolbar.
+
+- 🆔 **MANDATORY CONCRETE TARGET ID INTEGRITY & ANTI-GHOST ID STANDARD**:
+  - Setiap item seksi/bab yang didaftarkan pada navigasi, sidebar, table of contents, drawer, atau scrollspy WAJIB memiliki elemen kontainer fisik dengan atribut `id` yang 100% identik di dalam DOM.
+  - 🚫 **STRICT BAN ON GHOST IDS**: Dilarang keras mendaftarkan ID pada konfigurasi navigasi yang tidak memiliki elemen padanan di HTML/Blade (misal ID `section-13` di menu tetapi elemen fisiknya memakai `sub-sec-6-13-export`). Jika ada alias modul, pasang atribut ganda (`id="section-13" data-alias-id="sub-sec-6-13-export"`) dan fallback lookup resolver pada helper JS `jumpToSection`.
+  - Seluruh kontainer seksi utama maupun sub-seksi arsitektur yang dapat dituju lewat navigasi WAJIB menyertakan class `.prd-scroll-target`.
+
+- ⚡ **ASYNCHRONOUS DOM REFLOW & EXPANSION PROTOCOL (`$nextTick` / `requestAnimationFrame`)**:
+  - Jika target seksi (atau induk kontainernya) sedang dalam status tertutup/ciut (*collapsed*), sistem WAJIB membuka state collapse tersebut terlebih dahulu.
+  - ⚠️ **DILARANG MENGHITUNG KOORDINAT SEBELUM REFLOW**: DILARANG KERAS memanggil `getBoundingClientRect().top` atau mengeksekusi scroll secara sinkron langsung setelah mengubah variabel state Alpine/React. Pemanggilan fungsi scroll WAJIB dibungkus ke dalam `this.$nextTick(() => { window.jumpToSection(id); })` atau `requestAnimationFrame` agar browser menyelesaikan reflow DOM terlebih dahulu dan mengukur tinggi elemen yang sudah mengembang penuh.
+
+- 🔄 **SCROLLSPY PHYSICAL DOM ORDER STANDARD (ANTI-FALSE TRIGGERS)**:
+  - Urutan array ID seksi pada ScrollSpy (`setupBlueprintScrollSpy`) WAJIB diurutkan secara persis dari atas ke bawah mengikuti urutan fisik elemen dalam DOM. Sub-seksi yang secara fisik berada di dalam atau di antara seksi lain wajib ditempatkan pada urutan fisiknya (misal: sub-seksi 13 diletakkan tepat setelah seksi 6, bukan di ujung array setelah seksi 10).
+  - Deteksi ujung bawah dokumen (`isBottom`) WAJIB mengarahkan ke elemen paling bawah dokumen yang sebenarnya (seksi 10), bukan seksi yang tersasar di akhir array.
+  - Kunci scrollspy (`isProgrammaticScroll = true`) selama animasi smooth scrolling berlangsung (1200–1600ms) untuk mencegah scrollspy merebut atau mengubah active index secara prematur di tengah animasi scroll.
+
+- 🛡️ **ACTIVE SECTION IMMUNITY IN AUTO-ACCORDION / SCROLL OBSERVERS**:
+  - Algoritma auto-accordion (`evaluateAccordionStates`) yang menciutkan seksi saat melewati viewport DILARANG KERAS menciutkan seksi yang sedang menjadi target aktif pengguna (`this.activeSectionId`).
+  - Sistem tidak boleh mengeksekusi kompensasi scroll (`window.scrollBy({ top: -diff })`) saat proses programmatic smooth scrolling sedang berjalan, guna mencegah scroll jumping dan pergeseran posisi landing.
+
+
 
 
 

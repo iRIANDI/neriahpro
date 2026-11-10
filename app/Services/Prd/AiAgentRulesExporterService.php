@@ -162,7 +162,9 @@ class AiAgentRulesExporterService
         $out .= "- **Multi-Language 2-Tier Architecture (ID & EN)**:\n";
         $out .= "  Tier 1 fields must be JSON array (`{\"id\": \"...\", \"en\": \"...\"}`). Input placeholders MUST be bilingual (`locale === 'en' ? 'e.g. ...' : 'misal: ...'`).\n";
         $out .= "- **Solid Brutalist UI Standard**:\n";
-        $out .= "  Subtle thin corners (`rounded-none` or `rounded-xs`). Strict ban on capsule/pill buttons (`rounded-full`). Solid sleek monochrome borders (`border-zinc-200 dark:border-zinc-800`). WCAG AAA contrast ratio.\n\n";
+        $out .= "  Subtle thin corners (`rounded-none` or `rounded-xs`). Strict ban on capsule/pill buttons (`rounded-full`). Solid sleek monochrome borders (`border-zinc-200 dark:border-zinc-800`). WCAG AAA contrast ratio.\n";
+        $out .= "- **Pixel-Perfect Sticky Navigation & Zero-Gap DOM Alignment**:\n";
+        $out .= "  Scroll margin and JS jumpTo MUST land exactly flush on the toolbar's bottom border (`top: globalNavH + toolbarH`) with zero arbitrary gaps. Wrap DOM expansions in nextTick before measuring coordinates. All section IDs must strictly match DOM elements (zero ghost IDs).\n\n";
 
         $out .= "---\n\n";
         $out .= PrdMarkdownExporterService::toCursorrules($blueprint, $prd, $isEn);
@@ -192,6 +194,7 @@ class AiAgentRulesExporterService
         $out .= "- **AgentShield Jail**: Obey `.claude/settings.json`. Never modify `.env*`, `.git/hooks/*`, or execute unauthorized shell scripts.\n";
         $out .= "- **Testing Protocol**: When writing features, verify behavior via Pest tests: `php artisan test --filter=...`.\n";
         $out .= "- **Strict ULID & Keyset O(1)**: PostgreSQL 16 strict ULID primary keys (`VARCHAR(26)`), keyset cursor pagination (`cursorPaginate()`).\n";
+        $out .= "- **Pixel-Perfect Sticky Navigation**: Scroll margins and jumpTo must align flush against sticky toolbars with zero gap and full DOM expansion via nextTick.\n";
         $out .= "- **Zero Assumption Directives**: Read `PROJECT_OS_EXECUTION_BLUEPRINT.md` and `.agents/SYNTAX_LOCK_2026.md` for framework conventions.\n\n";
 
         $out .= "---\n\n";
@@ -223,7 +226,8 @@ class AiAgentRulesExporterService
         $out .= "3. All API error responses MUST follow RFC 9457 (`application/problem+json`).\n";
         $out .= "4. Financial math must use `DECIMAL(19,4)` with `HALF_UP` penny allocation; never use IEEE-754 floats.\n";
         $out .= "5. Enforce ULID primary keys (`VARCHAR(26)`) and Keyset Cursor Pagination O(1) across all database queries.\n";
-        $out .= "6. Never use hardcoded magic strings or fuzzy string queries for business states.\n\n";
+        $out .= "6. Never use hardcoded magic strings or fuzzy string queries for business states.\n";
+        $out .= "7. Enforce pixel-perfect sticky navigation: scroll offsets must land flush with sticky toolbars without arbitrary gaps, and accordion states must expand before coordinate measurement.\n\n";
 
         $out .= "---\n\n";
         $out .= PrdMarkdownExporterService::toCursorrules($blueprint, $prd, $isEn);

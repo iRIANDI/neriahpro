@@ -130,6 +130,7 @@ class AgenticActionExecutionEngine
                 'simulate_sandbox_webhook_and_holding_rollup' => (strtolower(trim((string) ($args['action'] ?? 'holding_rollup'))) === 'simulate_webhook' ? $this->guardMutation($user, $toolName) : null) ?? $this->simulateSandboxWebhookAndHoldingRollup($args, $user),
                 'evaluate_entitlement_and_scope_paralysis_guard' => $this->evaluateEntitlementAndScopeParalysisGuard($args, $user),
                 'audit_cv_pro_compliance_and_governance' => $this->auditCvProComplianceAndGovernance($args, $user),
+                'manage_and_discover_agent_skills' => $this->manageAndDiscoverAgentSkills($args, $user),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
@@ -2512,6 +2513,53 @@ class AgenticActionExecutionEngine
                 'compliance_status_endpoint' => '/api/cv-pro/compliance-status',
             ],
         ];
+    }
+
+    /**
+     * Modul Open Agent Skills Ecosystem (Vercel Skills Hub, find-skills & ECC Harness).
+     *
+     * @param  array<string, mixed>  $args
+     * @return array<string, mixed>
+     */
+    public function manageAndDiscoverAgentSkills(array $args, ?User $user = null): array
+    {
+        $skillsService = app(AgentSkillsService::class);
+        $action = strtolower(trim((string) ($args['action'] ?? 'list_installed')));
+        $query = ! empty($args['query']) ? (string) $args['query'] : null;
+        $skillName = ! empty($args['skill_name']) ? (string) $args['skill_name'] : null;
+        $stackPreset = ! empty($args['stack_preset']) ? (string) $args['stack_preset'] : null;
+
+        return match ($action) {
+            'inspect' => $skillName ? ($skillsService->getSkill($skillName) ?? ['error' => "Skill '{$skillName}' tidak ditemukan di .agents/skills."]) : ['error' => 'Parameter skill_name wajib diisi.'],
+            'recommend' => [
+                'stack_preset' => $stackPreset,
+                'recommended_skills' => $skillsService->getRecommendedSkillsForBlueprint(null, $stackPreset),
+                'hub_url' => 'https://skills.sh/',
+            ],
+            'get_install_command' => [
+                'skill' => $skillName ?: 'find-skills',
+                'command' => $skillName
+                    ? "npx skills add https://github.com/vercel-labs/skills --skill {$skillName}"
+                    : 'npx skills add https://github.com/vercel-labs/skills --skill find-skills',
+                'documentation' => 'https://skills.sh/',
+            ],
+            'search' => [
+                'query' => $query,
+                'results' => $skillsService->getInstalledSkills($query),
+                'total_results' => count($skillsService->getInstalledSkills($query)),
+                'external_search_tip' => "Untuk mencari skill baru di luar repositori: jalankan 'npx skills find {$query}' atau kunjungi https://skills.sh/",
+            ],
+            default => [
+                'ecosystem' => $skillsService->getEcosystemStats(),
+                'installed_skills' => $skillsService->getInstalledSkills($query),
+                'skills_lock' => $skillsService->getSkillsLock(),
+                'quick_commands' => [
+                    'find_skills_install' => 'npx skills add https://github.com/vercel-labs/skills --skill find-skills',
+                    'search_cli' => 'npx skills find [keyword]',
+                    'update_all' => 'npx skills update',
+                ],
+            ],
+        };
     }
 
     /**

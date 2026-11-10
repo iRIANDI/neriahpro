@@ -236,4 +236,66 @@ class AiAgentModuleTest extends TestCase
         $sessionResponse = $component->call('exportSessionMarkdown', $session->id);
         $this->assertNotNull($sessionResponse);
     }
+
+    public function test_agent_skills_service_detects_find_skills_and_installed_skills(): void
+    {
+        $skillsService = app(\App\Services\Ai\AgentSkillsService::class);
+        $stats = $skillsService->getEcosystemStats();
+
+        $this->assertGreaterThanOrEqual(1, $stats['total_installed']);
+        $this->assertTrue($stats['has_find_skills']);
+        $this->assertEquals('1.0 (npx skills)', $stats['skills_cli_version']);
+
+        $skills = $skillsService->getInstalledSkills();
+        $this->assertNotEmpty($skills);
+        $slugs = collect($skills)->pluck('slug')->toArray();
+        $this->assertContains('find-skills', $slugs);
+
+        $findSkills = $skillsService->getSkill('find-skills');
+        $this->assertNotNull($findSkills);
+        $this->assertEquals('find-skills', $findSkills['slug']);
+        $this->assertStringContainsString('Helps users discover and install agent skills', $findSkills['description']);
+
+        $recs = $skillsService->getRecommendedSkillsForBlueprint(null, 'STACK_M1_LARAVEL_MONOLITH');
+        $this->assertNotEmpty($recs);
+        $this->assertEquals('find-skills', $recs[0]['skill']);
+    }
+
+    public function test_agentic_action_execution_engine_executes_manage_and_discover_agent_skills(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $engine = app(AgenticActionExecutionEngine::class);
+
+        // 1. List installed skills
+        $listResult = $engine->execute('manage_and_discover_agent_skills', [
+            'action' => 'list_installed',
+        ]);
+        $this->assertArrayHasKey('ecosystem', $listResult);
+        $this->assertTrue($listResult['ecosystem']['has_find_skills']);
+        $this->assertArrayHasKey('installed_skills', $listResult);
+
+        // 2. Inspect find-skills
+        $inspectResult = $engine->execute('manage_and_discover_agent_skills', [
+            'action' => 'inspect',
+            'skill_name' => 'find-skills',
+        ]);
+        $this->assertEquals('find-skills', $inspectResult['slug']);
+        $this->assertStringContainsString('find-skills', $inspectResult['file_path']);
+
+        // 3. Get install command
+        $cmdResult = $engine->execute('manage_and_discover_agent_skills', [
+            'action' => 'get_install_command',
+            'skill_name' => 'find-skills',
+        ]);
+        $this->assertStringContainsString('npx skills add', $cmdResult['command']);
+
+        // 4. Search
+        $searchResult = $engine->execute('manage_and_discover_agent_skills', [
+            'action' => 'search',
+            'query' => 'find-skills',
+        ]);
+        $this->assertGreaterThanOrEqual(1, $searchResult['total_results']);
+    }
 }

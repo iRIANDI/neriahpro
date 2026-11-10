@@ -90,7 +90,12 @@
         }
         @media (min-width: 640px) {
             .ai-metric-grid {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (min-width: 1024px) {
+            .ai-metric-grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
             }
         }
         .ai-metric-card {
@@ -179,6 +184,15 @@
                 <svg width="16" height="16" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; max-width: 16px; max-height: 16px; display: inline-block; flex-shrink: 0;" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                 <span>Jejak CCTV &amp; Audit Trail</span>
             </button>
+
+            <button type="button"
+                    x-on:click="activeSubTab = 'skills'"
+                    :class="activeSubTab === 'skills' ? 'is-active' : 'is-inactive'"
+                    class="ai-subtab-btn">
+                <svg width="16" height="16" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; max-width: 16px; max-height: 16px; display: inline-block; flex-shrink: 0;" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                <span>Agent Skills Hub (Vercel &amp; find-skills)</span>
+                <span class="px-1.5 py-0.5 rounded-xs text-[10px] font-mono bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-bold">{{ $totalSkills ?? 50 }} Skills</span>
+            </button>
         </div>
 
         {{-- TAB 1: PUSAT KOMANDO --}}
@@ -228,6 +242,12 @@
                     <div class="text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-400">Project OS Blueprints &amp; Tools</div>
                     <div class="text-2xl font-black font-mono tabular-nums text-zinc-950 dark:text-zinc-100 mt-1">{{ number_format($totalBlueprints, 0, ',', '.') }} <span class="text-xs font-bold text-emerald-800 dark:text-emerald-400">// 27 Native Tools</span></div>
                     <div class="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">Strict ULID + SYMBOL Lock + Kahn DAG + Hermetic Isolation v6.0</div>
+                </div>
+
+                <div class="ai-metric-card">
+                    <div class="text-[10px] font-mono font-bold uppercase text-zinc-700 dark:text-zinc-400">Agent Skills (Vercel Hub)</div>
+                    <div class="text-2xl font-black font-mono tabular-nums text-zinc-950 dark:text-zinc-100 mt-1">{{ number_format($totalSkills ?? 50, 0, ',', '.') }} <span class="text-xs font-bold text-emerald-800 dark:text-emerald-400">// find-skills</span></div>
+                    <div class="text-[11px] text-zinc-700 dark:text-zinc-400 mt-1">Open Agent Ecosystem &amp; skills.sh</div>
                 </div>
 
                 <div class="ai-metric-card">
@@ -400,6 +420,133 @@
                 @empty
                     <div class="p-6 text-center text-zinc-500 italic bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs">
                         Belum ada riwayat jejak CCTV terekam.
+                    </div>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- TAB 4: AGENT SKILLS ECOSYSTEM (VERCEL SKILLS HUB & FIND-SKILLS) --}}
+        <div x-show="activeSubTab === 'skills'" class="space-y-6">
+            {{-- Skills Hero Banner --}}
+            <div class="ai-hero-banner">
+                <div>
+                    <div class="flex items-center gap-2 mb-2 font-mono text-xs">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xs bg-emerald-950 border border-emerald-600 text-emerald-300 font-bold">
+                            <span class="w-2 h-2 rounded-xs bg-emerald-400 animate-pulse"></span>
+                            Vercel Skills Hub Synchronized
+                        </span>
+                        <span class="text-zinc-400">Open Agent Skills Ecosystem</span>
+                    </div>
+                    <h2 class="text-xl md:text-2xl font-black font-mono tracking-tight text-white uppercase">
+                        Agent Skills Engine &amp; Vercel Discovery Hub
+                    </h2>
+                    <p class="mt-2 text-xs md:text-sm text-zinc-300 max-w-2xl leading-relaxed">
+                        Modul AI Project OS kini diperkuat oleh <strong>Vercel Skills CLI</strong> (<code class="text-emerald-400 font-mono">npx skills</code>) dan modul <code class="text-emerald-400 font-mono">find-skills</code> dari Vercel Labs. Agen AI dapat mencari, menginstal, dan mengevaluasi modul keahlian (skills) tambahan dari repositori terbuka secara deterministik tanpa merusak integritas kode.
+                    </p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 font-mono text-xs">
+                    <a href="https://skills.sh/"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="px-4 py-2.5 bg-zinc-800 text-zinc-100 hover:bg-zinc-700 border border-zinc-700 font-bold rounded-xs transition-all flex items-center justify-center gap-2">
+                        <span>Jelajahi skills.sh ↗</span>
+                    </a>
+                    <button type="button"
+                            x-on:click="navigator.clipboard.writeText('npx skills add https://github.com/vercel-labs/skills --skill find-skills'); $dispatch('show-toast', {type: 'success', title: 'Perintah Tersalin', message: 'Perintah instalasi find-skills berhasil disalin ke clipboard.'})"
+                            class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-black rounded-xs shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        <span>Salin npx skills add</span>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Featured Card: find-skills Vercel Labs --}}
+            <div class="p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs space-y-3">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <span class="p-2 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-xs text-zinc-900 dark:text-zinc-100 font-mono font-bold text-xs">
+                            ⚡ SKILL RESMI
+                        </span>
+                        <div>
+                            <div class="font-mono font-black text-sm text-zinc-950 dark:text-white flex items-center gap-2">
+                                <span>find-skills</span>
+                                <span class="px-2 py-0.5 rounded-xs text-[10px] font-bold bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-black">
+                                    ✓ TERPASANG &amp; AKTIF
+                                </span>
+                            </div>
+                            <div class="text-[11px] text-zinc-500 font-mono">Source: https://github.com/vercel-labs/skills (Terkunci di skills-lock.json)</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 font-mono text-xs">
+                        <code class="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-xs text-[11px]">
+                            npx skills add https://github.com/vercel-labs/skills --skill find-skills
+                        </code>
+                    </div>
+                </div>
+                <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    <strong>Fungsi Utama:</strong> Membantu pengembang dan agen AI menemukan keahlian baru secara otomatis saat menghadapi tugas khusus (contoh: <em>"bagaimana cara optimasi React"</em>, <em>"cari skill untuk E2E testing"</em>, atau <em>"apakah ada skill untuk deployment"</em>). Modul ini membaca papan peringkat <a href="https://skills.sh/" target="_blank" class="text-emerald-600 dark:text-emerald-400 underline font-semibold">skills.sh</a>, memverifikasi reputasi sumber (Vercel Labs, Anthropic, Microsoft), dan menghasilkan instruksi instalasi aman.
+                </p>
+            </div>
+
+            {{-- Search & Filter Bar --}}
+            <div class="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xs flex flex-col sm:flex-row items-center justify-between gap-3 font-mono text-xs">
+                <div class="relative w-full sm:w-96">
+                    <input type="text"
+                           wire:model.live.debounce.300ms="skillSearch"
+                           placeholder="Cari skill (misal: find-skills, tdd, audit)..."
+                           class="w-full px-3 py-2 pr-8 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-xs text-xs text-zinc-950 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono">
+                    @if(!empty($skillSearch))
+                        <button type="button"
+                                wire:click="resetSkillSearch"
+                                class="absolute right-2 top-2.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 text-xs font-mono cursor-pointer">
+                            ✕
+                        </button>
+                    @endif
+                </div>
+
+                <div class="flex items-center gap-3 text-xs text-zinc-500">
+                    <span>Menampilkan <strong>{{ count($installedSkills ?? []) }}</strong> dari <strong>{{ $totalSkills ?? 50 }}</strong> Modul Skill</span>
+                </div>
+            </div>
+
+            {{-- Skills Grid / Cards --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @forelse(($installedSkills ?? []) as $sk)
+                    <div class="p-4 bg-white dark:bg-zinc-900 border {{ $sk['slug'] === 'find-skills' ? 'border-emerald-500/80 ring-1 ring-emerald-500/40' : 'border-zinc-200 dark:border-zinc-800' }} rounded-xs hover:border-zinc-400 dark:hover:border-zinc-600 transition-all space-y-2">
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="space-y-0.5">
+                                <div class="font-mono font-bold text-sm text-zinc-950 dark:text-white flex items-center gap-1.5">
+                                    <span>{{ $sk['name'] }}</span>
+                                    @if($sk['slug'] === 'find-skills')
+                                        <span class="px-1.5 py-0.2 rounded-xs text-[9px] font-black bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 uppercase">
+                                            Vercel Hub
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="text-[10px] text-zinc-400 font-mono">{{ $sk['file_path'] }}</div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-xs text-[10px] font-mono font-bold {{ $sk['is_vercel'] ? 'bg-zinc-900 text-zinc-100 dark:bg-zinc-100 dark:text-zinc-900' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200' }}">
+                                {{ $sk['category'] }}
+                            </span>
+                        </div>
+
+                        <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-3">
+                            {{ $sk['description'] }}
+                        </p>
+
+                        <div class="pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+                            <span class="truncate max-w-[200px]">Src: {{ $sk['source'] }}</span>
+                            <button type="button"
+                                    x-on:click="navigator.clipboard.writeText('{{ $sk['install_command'] }}'); $dispatch('show-toast', {type: 'info', title: 'Tersalin', message: 'Perintah instalasi tersalin.'})"
+                                    class="text-emerald-700 dark:text-emerald-400 hover:underline font-bold cursor-pointer">
+                                Salin CLI ↗
+                            </button>
+                        </div>
+                    </div>
+                @empty
+                    <div class="col-span-2 p-8 text-center text-zinc-500 italic bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xs font-mono text-xs">
+                        Tidak ada skill yang cocok dengan pencarian "{{ $skillSearch }}".
                     </div>
                 @endforelse
             </div>

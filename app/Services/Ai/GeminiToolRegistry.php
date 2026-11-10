@@ -967,6 +967,35 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+
+            // =========================================================================
+            // 22. MODUL OPEN AGENT SKILLS ECOSYSTEM (VERCEL SKILLS HUB & FIND-SKILLS)
+            // =========================================================================
+            [
+                'name' => 'manage_and_discover_agent_skills',
+                'description' => 'Mencari, memeriksa, atau mengelola Open Agent Skills (Vercel Skills Hub, find-skills, dan ECC Harness di .agents/skills) untuk memperluas kemampuan AI Copilot dan AI Coding Agent Project OS.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'action' => [
+                            'type' => 'STRING',
+                            'description' => 'Tindakan: "list_installed" (daftar skill terpasang & status lock), "search" (cari skill berdasarkan kata kunci), "inspect" (baca detail dan isi SKILL.md), "recommend" (rekomendasi skill untuk stack/sektor tertentu), atau "get_install_command" (dapatkan perintah npx skills add).',
+                        ],
+                        'query' => [
+                            'type' => 'STRING',
+                            'description' => 'Kata kunci pencarian nama atau deskripsi skill (opsional).',
+                        ],
+                        'skill_name' => [
+                            'type' => 'STRING',
+                            'description' => 'Nama atau slug skill yang ingin diperiksa (misal: "find-skills").',
+                        ],
+                        'stack_preset' => [
+                            'type' => 'STRING',
+                            'description' => 'Stack atau sektor proyek untuk rekomendasi (misal: "STACK_M1_LARAVEL_MONOLITH").',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

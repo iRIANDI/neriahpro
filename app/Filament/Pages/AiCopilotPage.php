@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\AiKnowledgeVector;
 use App\Models\AiWorkflowTrace;
 use App\Models\VisionBlueprint;
+use App\Services\Ai\AgentSkillsService;
 use App\Services\Ai\LlmGatewayService;
 use App\Services\Ai\VectorEmbeddingService;
 use Filament\Pages\Page;
@@ -45,6 +46,12 @@ class AiCopilotPage extends Page
     public string $activeSubTab = 'command';
     public string $docSearch = '';
     public ?string $docCursor = null;
+    public string $skillSearch = '';
+
+    public function resetSkillSearch(): void
+    {
+        $this->skillSearch = '';
+    }
 
     public function nextDocPage(?string $cursor): void
     {
@@ -121,12 +128,19 @@ class AiCopilotPage extends Page
             $recentTraces = AiWorkflowTrace::orderBy('id', 'desc')->limit(6)->get();
         } catch (\Throwable) {}
 
+        $skillsService = app(AgentSkillsService::class);
+        $skillsStats = $skillsService->getEcosystemStats();
+        $installedSkills = $skillsService->getInstalledSkills($this->skillSearch);
+
         return [
             'totalChunks' => $totalChunks,
             'totalBlueprints' => $totalBlueprints,
             'activeSprints' => $activeSprints,
             'recentTraces' => $recentTraces,
             'indexedDocs' => $this->getIndexedDocuments(),
+            'skillsStats' => $skillsStats,
+            'installedSkills' => $installedSkills,
+            'totalSkills' => $skillsStats['total_installed'] ?? count($installedSkills),
         ];
     }
 }

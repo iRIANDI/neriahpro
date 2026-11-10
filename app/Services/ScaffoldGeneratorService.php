@@ -232,6 +232,8 @@ class ScaffoldGeneratorService
             '.agents/UI_UX_CONTRACT.md' => ProjectOsBlueprintCompilerService::renderUiUxContractMarkdown(),
             '.agents/ENGINEERING_RULES.md' => ProjectOsBlueprintCompilerService::renderEngineeringRulesMarkdown(),
             '.agents/AGENT_HARNESS_ECC.md' => ProjectOsBlueprintCompilerService::renderAgentHarnessEccMarkdown(),
+            '.agents/skills/find-skills/SKILL.md' => \App\Services\Ai\AgentSkillsService::renderFindSkillsMarkdown(),
+            'skills-lock.json' => \App\Services\Ai\AgentSkillsService::renderSkillsLockJson(),
             '.agents/graphify/graph.json' => ProjectOsBlueprintCompilerService::renderInitialGraphifyJson($universalSchema),
             '.cursorrules' => PrdGeneratorService::toCursorrules($blueprint, $prd),
             'CLAUDE.md' => PrdGeneratorService::toCursorrules($blueprint, $prd),

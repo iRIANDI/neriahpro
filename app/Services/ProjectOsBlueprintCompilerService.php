@@ -2088,6 +2088,18 @@ Setiap pengembangan fitur WAJIB melewati 6 tahapan deterministik ini:
   - *Instinct*: Wajib signature `\Filament\Schemas\Schema $form`, `Width::Full`, `Grid::make(['default' => 1, 'xl' => 12])`, `TranslatableTabs` in-place (tanpa `LocaleSwitcher` global), dan proteksi FilePond dari `->live(onBlur: true)`.
 - **Saat menyentuh `resources/views/**/*.blade.php` atau `resources/js/**/*.jsx`**:
   - *Instinct*: Wajib `tabular-nums` & pemisah ribuan pada angka, sudut tipis maksimal `rounded-md` (haram `rounded-full`), hairline border 1px kontras tinggi dark/light, tanpa `alert()`, dan 100% aset lokal tanpa CDN.
+
+## 4. Open Agent Skills Ecosystem & Vercel Skills Hub (`npx skills` & `find-skills`)
+Proyek ini mengadopsi standar resmi Open Agent Skills (`skills.sh`) dari Vercel Labs:
+- **Skill Discovery Engine**: Gunakan modul `find-skills` untuk menemukan modul keahlian terverifikasi saat menghadapi kebutuhan kapabilitas baru:
+  ```bash
+  npx skills add https://github.com/vercel-labs/skills --skill find-skills
+  ```
+- **Manajemen Skill (CLI)**:
+  - `npx skills find [query]` — Cari skill interaktif atau berdasarkan kata kunci di ekosistem global.
+  - `npx skills add <package> --skill <nama-skill>` — Pasang skill spesifik secara terisolasi ke `.agents/skills/`.
+  - `npx skills update` — Perbarui seluruh modul skill ke versi mutakhir.
+- Seluruh modul skill disimpan secara deterministik di `.agents/skills/` dan diverifikasi integritasnya via `skills-lock.json`.
 MD;
     }
 

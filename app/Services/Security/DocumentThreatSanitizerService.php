@@ -148,6 +148,8 @@ class DocumentThreatSanitizerService
             'alpinejs' => '^3.14',
             'lucide-react' => '^0.475',
             'mermaid' => '^11.4',
+            'skills' => '^1.0',
+            'vercel-labs/skills' => '^1.0',
         ];
 
         if (str_contains($normStack, 'NEXTJS') || str_contains($normStack, 'REACT') || str_contains($normStack, 'D1') || str_contains($normStack, 'D2')) {

@@ -1786,8 +1786,8 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
 
                 <!-- Software Factory OS v7.0: 15-Pillar Architectural Freeze & Repository Exporter -->
-                <div class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target prd-scroll-target" id="section-13" data-alias-id="sub-sec-6-13-export">
-                    <div class="p-6 sm:p-7 bg-white dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs space-y-5 shadow-sm">
+                <div class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target" id="sub-sec-6-13-export-wrapper">
+                    <div id="section-13" data-alias-id="sub-sec-6-13-export" class="p-6 sm:p-7 bg-white dark:bg-zinc-950 border-2 border-emerald-600 dark:border-emerald-500 font-mono text-xs space-y-5 shadow-sm prd-scroll-target">
                         <!-- Top Metadata & Status Bar -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
                             <div class="flex items-center gap-2 flex-wrap">

@@ -2442,33 +2442,91 @@
                     this.activeSectionId = id;
                     this.floatingIndexOpen = false;
 
-                    if (this.sectionCollapses && this.sectionCollapses[id]) {
-                        this.sectionCollapses[id] = false;
+                    const mainOrder = [
+                        'section-00-execution-guide',
+                        'section-1',
+                        'section-1-5',
+                        'section-2',
+                        'section-3',
+                        'section-3-5',
+                        'section-3-8',
+                        'section-4',
+                        'section-5',
+                        'section-6',
+                        'section-7',
+                        'section-8',
+                        'section-9',
+                        'section-10'
+                    ];
+
+                    const subOrder = [
+                        { id: 'sub-sec-6-9', key: 'sec-6-9-strat-guidance' },
+                        { id: 'sub-sec-6-10', key: 'sec-6-10-pros-cons' },
+                        { id: 'sub-sec-6-11', key: 'sec-6-11-ai-shield' },
+                        { id: 'sub-sec-6-12', key: 'sec-6-12-agentic-matrix' },
+                        { id: 'sub-sec-6-13-rag', key: 'sec-6-13-rag-matrix' },
+                        { id: 'section-13', key: 'sec-6-13-repo-export', alias: 'sub-sec-6-13-export' },
+                        { id: 'sub-sec-6-14', key: 'sec-6-14-health-auditor' },
+                        { id: 'sub-sec-6-15', key: 'sec-6-15-sla-simulator' }
+                    ];
+
+                    const isSub = id.startsWith('sub-sec-6-') || id === 'section-13';
+                    const targetMainId = isSub ? 'section-6' : id;
+
+                    // Ensure target main section is expanded
+                    if (this.sectionCollapses) {
+                        this.sectionCollapses[targetMainId] = false;
                     }
-                    if (id.startsWith('sub-sec-6-') || id === 'section-13') {
-                        this.sectionCollapses['section-6'] = false;
-                        const subMap = {
-                            'sub-sec-6-9': 'sec-6-9-strat-guidance',
-                            'sub-sec-6-10': 'sec-6-10-pros-cons',
-                            'sub-sec-6-11': 'sec-6-11-ai-shield',
-                            'sub-sec-6-12': 'sec-6-12-agentic-matrix',
-                            'sub-sec-6-13-rag': 'sec-6-13-rag-matrix',
-                            'sub-sec-6-13-export': 'sec-6-13-repo-export',
-                            'section-13': 'sec-6-13-repo-export',
-                            'sub-sec-6-14': 'sec-6-14-health-auditor',
-                            'sub-sec-6-15': 'sec-6-15-sla-simulator',
-                        };
-                        if (subMap[id]) {
-                            this.subCollapses[subMap[id]] = false;
+
+                    // If sub-section inside Section 6, expand it
+                    if (isSub) {
+                        const targetSub = subOrder.find(s => s.id === id || s.alias === id);
+                        if (targetSub) {
+                            this.subCollapses[targetSub.key] = false;
                         }
                     }
+
+                    // Enforce Auto-Accordion on Jump:
+                    // Collapse preceding sections (already passed), expand target, collapse subsequent sections
+                    if (this.autoAccordionEnabled && this.sectionCollapses) {
+                        const targetMainIdx = mainOrder.indexOf(targetMainId);
+                        if (targetMainIdx !== -1) {
+                            mainOrder.forEach((secId, idx) => {
+                                if (idx < targetMainIdx) {
+                                    this.sectionCollapses[secId] = true;
+                                } else if (idx === targetMainIdx) {
+                                    this.sectionCollapses[secId] = false;
+                                } else {
+                                    this.sectionCollapses[secId] = true;
+                                }
+                            });
+                        }
+
+                        if (isSub) {
+                            const targetSubIdx = subOrder.findIndex(s => s.id === id || s.alias === id);
+                            if (targetSubIdx !== -1) {
+                                subOrder.forEach((sub, sIdx) => {
+                                    if (sIdx < targetSubIdx) {
+                                        this.subCollapses[sub.key] = true;
+                                    } else if (sIdx === targetSubIdx) {
+                                        this.subCollapses[sub.key] = false;
+                                    } else {
+                                        this.subCollapses[sub.key] = true;
+                                    }
+                                });
+                            }
+                        }
+                    }
+
                     this.autoSyncAccordion = true;
                     this.syncAccordionToSection(id);
                     if (id === 'section-3-8' || id === 'section-4' || id === 'section-5') {
                         setTimeout(() => { if (window.reRenderActiveMermaid) window.reRenderActiveMermaid(); }, 120);
                     }
                     this.$nextTick(() => {
-                        window.jumpToSection(id);
+                        requestAnimationFrame(() => {
+                            window.jumpToSection(id);
+                        });
                     });
                 },
                 getActiveSectionNumber() {
@@ -2580,8 +2638,7 @@
                         { id: 'sub-sec-6-11', key: 'sec-6-11-ai-shield' },
                         { id: 'sub-sec-6-12', key: 'sec-6-12-agentic-matrix' },
                         { id: 'sub-sec-6-13-rag', key: 'sec-6-13-rag-matrix' },
-                        { id: 'section-13', key: 'sec-6-13-repo-export' },
-                        { id: 'sub-sec-6-13-export', key: 'sec-6-13-repo-export' },
+                        { id: 'section-13', key: 'sec-6-13-repo-export', alias: 'sub-sec-6-13-export' },
                         { id: 'sub-sec-6-14', key: 'sec-6-14-health-auditor' },
                         { id: 'sub-sec-6-15', key: 'sec-6-15-sla-simulator' }
                     ];
@@ -2599,35 +2656,65 @@
                             return;
                         }
 
-                        const navOffset = 110;
+                        // Target line matches floating sidebar modal top edge
+                        const globalHeader = document.querySelector('header.fixed') || document.querySelector('nav');
+                        const toolbar = document.getElementById('blueprint-toolbar');
+                        const globalH = (globalHeader ? (globalHeader.getBoundingClientRect().height || globalHeader.offsetHeight) : 0) 
+                            || parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--global-nav-h')) 
+                            || 88;
+                        const toolbarH = (toolbar ? (toolbar.getBoundingClientRect().height || toolbar.offsetHeight) : 0) 
+                            || parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--toolbar-h')) 
+                            || 46;
+
+                        const stickyTop = Math.round(globalH + toolbarH + 12);
                         const winH = window.innerHeight;
+
+                        // Find anchor element currently in viewport to stabilize scroll
+                        let anchorEl = null;
+                        let beforeTop = 0;
+                        const activeEl = document.getElementById(this.activeSectionId);
+                        if (activeEl && activeEl.offsetParent !== null) {
+                            const aRect = activeEl.getBoundingClientRect();
+                            if (aRect.bottom > stickyTop && aRect.top < winH) {
+                                anchorEl = activeEl;
+                                beforeTop = aRect.top;
+                            }
+                        }
+                        if (!anchorEl) {
+                            for (const item of mainTargets) {
+                                const el = document.getElementById(item.id);
+                                if (el && el.offsetParent !== null) {
+                                    const r = el.getBoundingClientRect();
+                                    if (r.bottom > stickyTop && r.top < winH) {
+                                        anchorEl = el;
+                                        beforeTop = r.top;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        let stateChanged = false;
 
                         // 1. Evaluate Main Sections
                         mainTargets.forEach(item => {
-                            if (this.activeSectionId === item.id) return;
                             const el = document.getElementById(item.id);
-                            if (!el) return;
+                            if (!el || el.offsetParent === null) return;
                             const rect = el.getBoundingClientRect();
                             const isCurrentlyCollapsed = !!this.sectionCollapses[item.key];
 
                             // Passed above viewport
-                            if (rect.bottom < navOffset) {
+                            if (rect.bottom < stickyTop - 10) {
                                 if (!isCurrentlyCollapsed) {
-                                    const beforeH = el.offsetHeight;
                                     this.sectionCollapses[item.key] = true;
-                                    this.$nextTick(() => {
-                                        const afterH = el.offsetHeight;
-                                        const diff = beforeH - afterH;
-                                        if (diff > 0) {
-                                            window.scrollBy({ top: -diff, behavior: 'instant' });
-                                        }
-                                    });
+                                    stateChanged = true;
                                 }
                             }
-                            // Visible in viewport
-                            else if (rect.top < winH - 60 && rect.bottom >= navOffset) {
+                            // Visible / entering viewport
+                            else if (rect.top < winH - 80 && rect.bottom >= stickyTop - 10) {
                                 if (isCurrentlyCollapsed) {
                                     this.sectionCollapses[item.key] = false;
+                                    stateChanged = true;
                                     if (item.id === 'section-3-8' || item.id === 'section-4' || item.id === 'section-5') {
                                         setTimeout(() => { if (window.reRenderActiveMermaid) window.reRenderActiveMermaid(); }, 120);
                                     }
@@ -2635,34 +2722,39 @@
                             }
                         });
 
-                        // 2. Evaluate Sub Sections inside Section 6 if Section 6 is visible & open
+                        // 2. Evaluate Sub Sections inside Section 6 if Section 6 is open
                         if (!this.sectionCollapses['section-6']) {
                             subTargets.forEach(item => {
-                                if (this.activeSectionId === item.id) return;
-                                const el = document.getElementById(item.id);
-                                if (!el) return;
+                                let el = document.getElementById(item.id);
+                                if (!el && item.alias) el = document.getElementById(item.alias);
+                                if (!el || el.offsetParent === null) return;
                                 const rect = el.getBoundingClientRect();
                                 const isCurrentlyCollapsed = !!this.subCollapses[item.key];
 
                                 // Passed above viewport
-                                if (rect.bottom < navOffset) {
+                                if (rect.bottom < stickyTop - 10) {
                                     if (!isCurrentlyCollapsed) {
-                                        const beforeH = el.offsetHeight;
                                         this.subCollapses[item.key] = true;
-                                        this.$nextTick(() => {
-                                            const afterH = el.offsetHeight;
-                                            const diff = beforeH - afterH;
-                                            if (diff > 0) {
-                                                window.scrollBy({ top: -diff, behavior: 'instant' });
-                                            }
-                                        });
+                                        stateChanged = true;
                                     }
                                 }
-                                // Visible in viewport
-                                else if (rect.top < winH - 60 && rect.bottom >= navOffset) {
+                                // Visible / entering viewport
+                                else if (rect.top < winH - 80 && rect.bottom >= stickyTop - 10) {
                                     if (isCurrentlyCollapsed) {
                                         this.subCollapses[item.key] = false;
+                                        stateChanged = true;
                                     }
+                                }
+                            });
+                        }
+
+                        // Viewport anchoring compensation
+                        if (stateChanged && anchorEl && anchorEl.offsetParent !== null) {
+                            this.$nextTick(() => {
+                                const afterTop = anchorEl.getBoundingClientRect().top;
+                                const shift = Math.round(afterTop - beforeTop);
+                                if (Math.abs(shift) > 2) {
+                                    window.scrollBy({ top: shift, behavior: 'instant' });
                                 }
                             });
                         }

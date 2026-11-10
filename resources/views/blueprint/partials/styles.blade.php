@@ -2,9 +2,10 @@
         :root {
             --global-nav-h: 88px;
             --toolbar-h: 46px;
+            --sidebar-top-gap: 12px;
         }
         .prd-scroll-target {
-            scroll-margin-top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 46px)) !important;
+            scroll-margin-top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 46px) + var(--sidebar-top-gap, 12px)) !important;
         }
 
         /* Virtual Architecture Studio Diagram Viewers: Strict Fit to Container */

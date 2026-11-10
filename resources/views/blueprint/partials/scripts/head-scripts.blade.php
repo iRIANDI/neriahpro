@@ -338,22 +338,33 @@
         window.jumpToSection = function(id) {
             let el = document.getElementById(id);
             if (!el) {
-                if (id === 'section-13') el = document.getElementById('sub-sec-6-13-export');
-                else if (id === 'sub-sec-6-13-export') el = document.getElementById('section-13');
+                if (id === 'section-13') el = document.getElementById('sub-sec-6-13-export') || document.querySelector('[data-alias-id="sub-sec-6-13-export"]');
+                else if (id === 'sub-sec-6-13-export') el = document.getElementById('section-13') || document.querySelector('[data-alias-id="sub-sec-6-13-export"]');
             }
             if (!el) return;
+
+            // Target element to align with the sidebar
+            let targetEl = el;
+            if (id === 'section-13' || id === 'sub-sec-6-13-export') {
+                const greenCard = el.classList.contains('border-emerald-600') || el.classList.contains('border-emerald-500')
+                    ? el 
+                    : el.querySelector('.border-emerald-600, .border-emerald-500');
+                if (greenCard) targetEl = greenCard;
+            }
 
             // Lock scroll spy while smooth scrolling to target
             isProgrammaticScroll = true;
             clearTimeout(programmaticScrollTimer);
             programmaticScrollTimer = setTimeout(() => {
                 isProgrammaticScroll = false;
-            }, 1400);
+            }, 1200);
 
-            // Compute exact offset: global nav + toolbar (exact bottom of toolbar, matching the user's line)
+            // Compute exact offset: align flush with top edge of floating sidebar modal
+            // In sidebar.blade.php: style="top: calc(var(--global-nav-h, 88px) + var(--toolbar-h, 46px) + 12px);"
             window.syncNavMetrics();
             const globalHeader = document.querySelector('header.fixed') || document.querySelector('nav');
             const toolbar = document.getElementById('blueprint-toolbar');
+
             const globalH = (globalHeader ? (globalHeader.getBoundingClientRect().height || globalHeader.offsetHeight) : 0) 
                 || parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--global-nav-h')) 
                 || 88;
@@ -361,38 +372,41 @@
                 || parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--toolbar-h')) 
                 || 46;
 
-            const stickyOffset = Math.round(globalH + toolbarH);
+            const stickyOffset = Math.round(globalH + toolbarH + 12);
 
-            const elAbsoluteTop = el.getBoundingClientRect().top + window.pageYOffset;
+            const elAbsoluteTop = targetEl.getBoundingClientRect().top + window.pageYOffset;
             const targetY = Math.max(0, Math.round(elAbsoluteTop - stickyOffset));
             window.scrollTo({ top: targetY, behavior: 'smooth' });
 
             // Visual pulse highlight
-            el.classList.add('outline-2', 'outline-emerald-500', 'transition-all');
+            targetEl.classList.add('outline-2', 'outline-emerald-500', 'transition-all');
             setTimeout(() => {
-                el.classList.remove('outline-2', 'outline-emerald-500');
+                targetEl.classList.remove('outline-2', 'outline-emerald-500');
             }, 1800);
 
             // High-precision alignment handler on scroll completion
             const settleScroll = () => {
                 window.removeEventListener('scrollend', settleScroll);
                 clearTimeout(programmaticScrollTimer);
-                isProgrammaticScroll = false;
 
-                if (el && el.offsetParent !== null) {
-                    const currentTop = Math.round(el.getBoundingClientRect().top);
+                if (targetEl && targetEl.offsetParent !== null) {
+                    const currentTop = Math.round(targetEl.getBoundingClientRect().top);
                     const diff = currentTop - stickyOffset;
-                    // If within 2px to 60px of the line, micro-adjust to exactly flush
-                    if (Math.abs(diff) >= 2 && Math.abs(diff) <= 60) {
+                    // If within 1px to 120px of the line, micro-adjust to exactly flush with floating sidebar
+                    if (Math.abs(diff) >= 1 && Math.abs(diff) <= 120) {
                         window.scrollBy({ top: diff, behavior: 'instant' });
                     }
                 }
+                setTimeout(() => {
+                    isProgrammaticScroll = false;
+                }, 100);
             };
 
             if ('onscrollend' in window) {
                 window.addEventListener('scrollend', settleScroll, { once: true });
             }
-            setTimeout(settleScroll, 950);
+            setTimeout(settleScroll, 400);
+            setTimeout(settleScroll, 750);
         };
 
         window.setupBlueprintScrollSpy = function(onActiveChange) {

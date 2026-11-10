@@ -2100,6 +2100,22 @@ Proyek ini mengadopsi standar resmi Open Agent Skills (`skills.sh`) dari Vercel 
   - `npx skills add <package> --skill <nama-skill>` — Pasang skill spesifik secara terisolasi ke `.agents/skills/`.
   - `npx skills update` — Perbarui seluruh modul skill ke versi mutakhir.
 - Seluruh modul skill disimpan secara deterministik di `.agents/skills/` dan diverifikasi integritasnya via `skills-lock.json`.
+
+## 5. ECC Universal v2.2.3 CLI Engine (`.agents` Execution Target)
+Folder `.agents/` pada proyek ini dioperasikan di bawah manajemen ECC Universal v2.2.3 (`antigravity` target):
+- **Diagnosa Kesehatan**:
+  ```bash
+  npx ecc-universal@2.2.3 doctor --target antigravity
+  ```
+- **Daftar Target Terpasang**:
+  ```bash
+  npx ecc-universal@2.2.3 list-installed
+  ```
+- **Sinkronisasi / Re-install Modul Harness**:
+  ```bash
+  npx ecc-universal@2.2.3 install --target antigravity php --no-hooks
+  ```
+- Seluruh state tercatat dan diverifikasi di `.agents/ecc-install-state.json`.
 MD;
     }
 

@@ -131,6 +131,8 @@ class AiCopilotPage extends Page
         $skillsService = app(AgentSkillsService::class);
         $skillsStats = $skillsService->getEcosystemStats();
         $installedSkills = $skillsService->getInstalledSkills($this->skillSearch);
+        $eccStatus = $skillsService->getEccStatus();
+        $featuresGuide = $skillsService->getAiModuleFeaturesGuide();
 
         return [
             'totalChunks' => $totalChunks,
@@ -141,6 +143,10 @@ class AiCopilotPage extends Page
             'skillsStats' => $skillsStats,
             'installedSkills' => $installedSkills,
             'totalSkills' => $skillsStats['total_installed'] ?? count($installedSkills),
+            'eccStatus' => $eccStatus,
+            'featuresGuide' => $featuresGuide,
+            'quickPrompts' => $skillsService->getClientQuickPrompts(),
+            'eccSubagents' => $skillsService->getEccSubagents(),
         ];
     }
 }

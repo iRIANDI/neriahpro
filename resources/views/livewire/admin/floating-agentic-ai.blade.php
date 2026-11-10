@@ -850,6 +850,31 @@
                                         </div>
                                     @endif
 
+                                    {{-- Quick Client Helper Chips (ECC & Skills Discovery) --}}
+                                    <div class="px-3 pt-2 pb-0.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px] font-mono border-b border-zinc-100 dark:border-zinc-800/60">
+                                        <span class="text-[10px] text-zinc-400 font-bold uppercase shrink-0">💡 Helper:</span>
+                                        <button type="button"
+                                                wire:click="setQuickPrompt('Gunakan modul find-skills untuk mencari rekomendasi agent skill terbaik untuk optimasi performa React dan Pest PHP.')"
+                                                class="px-2 py-0.5 rounded-xs bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 shrink-0 cursor-pointer transition-colors">
+                                            ⚡ Rekomendasi Skill
+                                        </button>
+                                        <button type="button"
+                                                wire:click="setQuickPrompt('Periksa status kesehatan ECC Universal v2.2.3 pada folder .agents dan sebutkan subagent apa saja yang tersedia.')"
+                                                class="px-2 py-0.5 rounded-xs bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 shrink-0 cursor-pointer transition-colors">
+                                            🛡️ Status ECC .agents
+                                        </button>
+                                        <button type="button"
+                                                wire:click="setQuickPrompt('Berapa kapasitas sprint paralel yang aktif saat ini dan bagaimana ringkasan telemetri live CAG O(1)?')"
+                                                class="px-2 py-0.5 rounded-xs bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 shrink-0 cursor-pointer transition-colors">
+                                            📊 Telemetri CAG O(1)
+                                        </button>
+                                        <button type="button"
+                                                wire:click="setQuickPrompt('Jelaskan 6 pilar utama modul AI Project OS dan bagaimana cara memanggil 49 native tools.')"
+                                                class="px-2 py-0.5 rounded-xs bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 shrink-0 cursor-pointer transition-colors">
+                                            📖 Panduan Fitur AI
+                                        </button>
+                                    </div>
+
                                     {{-- Seamless Auto-Expanding Textarea --}}
                                     <div class="px-3 pt-2.5 pb-2">
                                         <textarea wire:model="inputMessage"

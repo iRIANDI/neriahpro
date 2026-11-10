@@ -297,5 +297,22 @@ class AiAgentModuleTest extends TestCase
             'query' => 'find-skills',
         ]);
         $this->assertGreaterThanOrEqual(1, $searchResult['total_results']);
+
+        // 5. ECC Universal Status
+        $eccResult = $engine->execute('manage_and_discover_agent_skills', [
+            'action' => 'ecc_status',
+        ]);
+        $this->assertTrue($eccResult['is_installed']);
+        $this->assertEquals('2.2.3', $eccResult['version']);
+        $this->assertGreaterThanOrEqual(60, $eccResult['total_subagents']);
+
+        // 6. AI Features Helper Guide
+        $guideResult = $engine->execute('manage_and_discover_agent_skills', [
+            'action' => 'get_ai_features_helper',
+        ]);
+        $this->assertArrayHasKey('overview', $guideResult);
+        $this->assertArrayHasKey('features', $guideResult);
+        $this->assertArrayHasKey('quick_prompts', $guideResult);
+        $this->assertCount(6, $guideResult['features']);
     }
 }

@@ -239,6 +239,11 @@ class FloatingAgenticAi extends Component
         }
     }
 
+    public function setQuickPrompt(string $prompt): void
+    {
+        $this->inputMessage = trim($prompt);
+    }
+
     public function cancelRenameSession(): void
     {
         $this->renamingSessionId = null;

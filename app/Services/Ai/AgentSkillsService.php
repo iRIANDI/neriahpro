@@ -15,11 +15,17 @@ class AgentSkillsService
 {
     protected string $skillsPath;
     protected string $lockFilePath;
+    protected string $eccStatePath;
+    protected string $eccAgentsPath;
+    protected string $eccRulesPath;
 
     public function __construct()
     {
         $this->skillsPath = base_path('.agents/skills');
         $this->lockFilePath = base_path('skills-lock.json');
+        $this->eccStatePath = base_path('.agents/ecc-install-state.json');
+        $this->eccAgentsPath = base_path('.agents/agents');
+        $this->eccRulesPath = base_path('.agents/rules');
     }
 
     /**
@@ -301,6 +307,240 @@ MD;
     }
 
     /**
+     * Dapatkan status instalasi dan integritas ECC Universal v2.2.3.
+     *
+     * @return array<string, mixed>
+     */
+    public function getEccStatus(): array
+    {
+        $hasState = File::exists($this->eccStatePath);
+        $stateData = [];
+
+        if ($hasState) {
+            try {
+                $stateData = json_decode(File::get($this->eccStatePath), true) ?: [];
+            } catch (\Throwable) {}
+        }
+
+        $totalSubagents = File::isDirectory($this->eccAgentsPath)
+            ? count(File::files($this->eccAgentsPath))
+            : 0;
+
+        $totalRules = File::isDirectory($this->eccRulesPath)
+            ? count(File::files($this->eccRulesPath))
+            : 0;
+
+        return [
+            'is_installed' => $hasState,
+            'version' => $stateData['source']['repoVersion'] ?? '2.2.3',
+            'schema_version' => $stateData['schemaVersion'] ?? 'ecc.install.v1',
+            'installed_at' => $stateData['installedAt'] ?? null,
+            'target_id' => $stateData['target']['id'] ?? 'antigravity-project',
+            'target_kind' => $stateData['target']['kind'] ?? 'project',
+            'target_root' => '.agents',
+            'selected_modules' => $stateData['resolution']['selectedModules'] ?? [
+                'rules-core', 'agents-core', 'commands-core', 'platform-configs', 'skill-unified-memory', 'workflow-quality'
+            ],
+            'legacy_languages' => $stateData['request']['legacyLanguages'] ?? ['php'],
+            'total_subagents' => $totalSubagents,
+            'total_rules' => $totalRules,
+            'total_skills' => count($this->getInstalledSkills()),
+            'status_label' => $hasState ? 'ACTIVE & VERIFIED (OK)' : 'STANDALONE',
+            'cli_recipes' => [
+                'doctor' => 'npx ecc-universal@2.2.3 doctor --target antigravity',
+                'list_installed' => 'npx ecc-universal@2.2.3 list-installed',
+                'reinstall' => 'npx ecc-universal@2.2.3 install --target antigravity php --no-hooks',
+                'status' => 'npx ecc-universal@2.2.3 status',
+            ],
+        ];
+    }
+
+    /**
+     * Dapatkan daftar ringkasan specialized subagents ECC di .agents/agents.
+     *
+     * @return array<int, array<string, string>>
+     */
+    public function getEccSubagents(?string $search = null): array
+    {
+        if (! File::isDirectory($this->eccAgentsPath)) {
+            return [];
+        }
+
+        $files = File::files($this->eccAgentsPath);
+        $agents = [];
+
+        foreach ($files as $file) {
+            if ($file->getExtension() !== 'md') {
+                continue;
+            }
+
+            $slug = $file->getFilenameWithoutExtension();
+            $content = File::get($file->getRealPath());
+
+            // Parse title and brief description
+            $title = Str::headline($slug);
+            $description = "Specialized AI persona for {$title}.";
+
+            if (preg_match('/^#\s+(.+)$/m', $content, $m)) {
+                $title = trim($m[1]);
+            }
+            if (preg_match('/(?:^#\s+.+\r?\n\r?\n)(.+?)(?:\r?\n\r?\n|##)/s', $content, $dm)) {
+                $description = trim(preg_replace('/\s+/', ' ', $dm[1]));
+            }
+
+            $item = [
+                'slug' => $slug,
+                'name' => $title,
+                'description' => Str::limit($description, 180),
+                'file_path' => '.agents/agents/'.$file->getFilename(),
+            ];
+
+            if ($search !== null && trim($search) !== '') {
+                $q = strtolower(trim($search));
+                $haystack = strtolower($item['slug'].' '.$item['name'].' '.$item['description']);
+                if (! str_contains($haystack, $q)) {
+                    continue;
+                }
+            }
+
+            $agents[] = $item;
+        }
+
+        usort($agents, fn ($a, $b) => strcmp($a['slug'], $b['slug']));
+
+        return $agents;
+    }
+
+    /**
+     * Helper Komprehensif: Katalog Fitur-Fitur Modul AI untuk Klien & Developer.
+     *
+     * @return array<string, mixed>
+     */
+    public function getAiModuleFeaturesGuide(): array
+    {
+        $ecc = $this->getEccStatus();
+        $skillsStats = $this->getEcosystemStats();
+
+        return [
+            'overview' => [
+                'title' => 'Neriah Pro AI Agentic & Software Factory OS',
+                'release' => 'v12.0 Enterprise Ultimate',
+                'description' => 'Sistem orkestrasi AI mandiri dengan arsitektur Tri-Hybrid (RAG, CAG, KAG), 49 Native Tools, Vercel Skills Hub, dan ECC Universal v2.2.3 Agent Harness.',
+            ],
+            'features' => [
+                [
+                    'id' => 'tri_hybrid_memory',
+                    'title' => 'Arsitektur Memori Tri-Hybrid (RAG • CAG • KAG)',
+                    'tag' => 'Pilar Kognitif',
+                    'badge' => 'pgvector + Cache O(1) + Rule Graph',
+                    'summary' => 'Menghilangkan halusinasi LLM secara mekanis dengan 3 lapisan memori berkecepatan tinggi.',
+                    'details' => [
+                        'RAG (Dense 768-dim + Sparse Lexical RRF)' => 'Mencari dokumen PRD dan pasal hukum dengan presisi 100%.',
+                        'CAG (Context Augmented O(1))' => 'Injeksi live telemetri status sprint, webhook, dan revenue tanpa query berulang.',
+                        'KAG (Knowledge Augmented Graph)' => 'Penegakan inva-aturan deterministik (Strict ULID, no alert, zero hardcode).',
+                    ],
+                ],
+                [
+                    'id' => 'ecc_universal_harness',
+                    'title' => 'ECC Universal v2.2.3 Agent Harness & 68 Subagents',
+                    'tag' => 'Mesin Rekayasa',
+                    'badge' => "{$ecc['total_subagents']} Subagents // {$ecc['total_rules']} Rules",
+                    'summary' => 'Harness eksekusi agen otomatis terstandarisasi di folder .agents dengan Ponytail 4-Rung Decision Ladder.',
+                    'details' => [
+                        'Subagents Terisolasi' => 'code-reviewer, architect, php-reviewer, security-reviewer, tdd-guide, dll.',
+                        'Integritas Checksum' => 'Terkunci deterministik via .agents/ecc-install-state.json.',
+                        'CLI Command' => 'npx ecc-universal@2.2.3 doctor --target antigravity',
+                    ],
+                ],
+                [
+                    'id' => 'vercel_skills_hub',
+                    'title' => 'Vercel Skills Hub & find-skills Discovery Engine',
+                    'tag' => 'Ekosistem Terbuka',
+                    'badge' => "{$skillsStats['total_installed']} Modul Skill Terpasang",
+                    'summary' => 'Kemampuan ekspansi keahlian agen secara modular dari skills.sh dan repositori GitHub terbuka.',
+                    'details' => [
+                        'find-skills' => 'Mesin pencari keahlian agen resmi dari Vercel Labs.',
+                        'Manajemen CLI' => 'npx skills find [keyword] dan npx skills add [source].',
+                        'skills-lock.json' => 'Verifikasi SHA-256 untuk pencegahan slopquatting.',
+                    ],
+                ],
+                [
+                    'id' => 'native_function_calling',
+                    'title' => '49 Enterprise Native Tools (Spatie RBAC & SHA-256 Audit)',
+                    'tag' => 'Operasional Sistem',
+                    'badge' => '100% Function Calling Protobuf Compatible',
+                    'summary' => '49 operasi sistem tervalidasi yang dapat dipanggil langsung oleh Google Gemini, DeepSeek, dan Claude.',
+                    'details' => [
+                        'Modul Blueprint & Kontrak' => 'create_blueprint, update_blueprint_status, convert_to_contract, search_blueprints.',
+                        'Modul Keuangan & Aset' => 'search_transactions, manage_domain_hosting.',
+                        'Modul Enterprise & HKI' => 'AgentShield, Co-Design Dual-Key, IP Canary Watermark, SLA Bug-Warranty 90 Hari.',
+                    ],
+                ],
+                [
+                    'id' => 'cctv_workflow_traces',
+                    'title' => 'Jejak CCTV Audit Workflow & Tracing Forensik',
+                    'tag' => 'Transparansi & Keamanan',
+                    'badge' => 'AiWorkflowTrace // SHA-256 Chained',
+                    'summary' => 'Merekam setiap pemanggilan AI, tool name, waktu eksekusi milidetik, dan parameter input/output secara transparan.',
+                    'details' => [
+                        'CCTV Log' => 'Tersedia di tab Jejak CCTV pada halaman AI Copilot.',
+                        'Tamper-Evident' => 'Terkoneksi ke rantai hash append-only audit_logs.',
+                    ],
+                ],
+                [
+                    'id' => 'multi_provider_failover',
+                    'title' => 'Multi-Provider LLM Gateway dengan Failover Otomatis',
+                    'tag' => 'Ketersediaan Tinggi',
+                    'badge' => 'DeepSeek V3 / R1 + Google Gemini 2.5/3.0',
+                    'summary' => 'Toleransi kegagalan otomatis antar-provider jika terjadi rate limit atau downtime API eksternal.',
+                    'details' => [
+                        'DeepSeek Engine' => 'Model penalaran cepat & ekonomis untuk operasional back-office.',
+                        'Google Gemini Engine' => 'Model multimodal 1M+ konteks untuk sintesis PRD & dokumen arsitektur tebal.',
+                    ],
+                ],
+            ],
+            'quick_prompts' => $this->getClientQuickPrompts(),
+            'ecc_status' => $ecc,
+        ];
+    }
+
+    /**
+     * Dapatkan prompt panduan cepat (helper) untuk dicoba klien.
+     *
+     * @return array<int, array<string, string>>
+     */
+    public function getClientQuickPrompts(): array
+    {
+        return [
+            [
+                'category' => 'Arsitektur',
+                'title' => 'Rancang Blueprint Baru',
+                'prompt' => 'Tolong rancang blueprint arsitektur sistem ERP Multi-Gudang dengan Keyset Cursor O(1) dan skema PostgreSQL Strict ULID.',
+            ],
+            [
+                'category' => 'Keahlian Agen',
+                'title' => 'Cari Skill di Ekosistem',
+                'prompt' => 'Gunakan modul find-skills untuk mencari rekomendasi agent skill terbaik untuk optimasi performa React dan pengujian Pest PHP.',
+            ],
+            [
+                'category' => 'Status Sistem',
+                'title' => 'Cek Kapasitas & Telemetri',
+                'prompt' => 'Berapa kapasitas sprint paralel yang aktif saat ini, berapa total blueprint yang sudah Scope Locked, dan bagaimana status kesehatan sistem?',
+            ],
+            [
+                'category' => 'Harness & ECC',
+                'title' => 'Audit Status ECC Harness',
+                'prompt' => 'Periksa status kesehatan ECC Universal v2.2.3 pada folder .agents dan sebutkan subagent apa saja yang tersedia untuk code review.',
+            ],
+            [
+                'category' => 'Garansi & SLA',
+                'title' => 'Triase Garansi Bug SLA 90 Hari',
+                'prompt' => 'Jelaskan bagaimana sistem membedakan antara klaim Bug Warranty Pasca-BAST Rp 0 dengan Change Request Delta v1.1 berbayar.',
+            ],
+        ];
+    }
+
+    /**
      * Render default skills-lock.json untuk scaffold generator.
      */
     public static function renderSkillsLockJson(): string
@@ -323,3 +563,4 @@ MD;
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     }
 }
+

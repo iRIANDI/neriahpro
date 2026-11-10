@@ -2530,6 +2530,13 @@ class AgenticActionExecutionEngine
         $stackPreset = ! empty($args['stack_preset']) ? (string) $args['stack_preset'] : null;
 
         return match ($action) {
+            'ecc_status' => $skillsService->getEccStatus(),
+            'list_subagents' => [
+                'total_subagents' => count($skillsService->getEccSubagents($query)),
+                'subagents' => $skillsService->getEccSubagents($query),
+                'execution_recipe' => 'Gunakan .agents/agents/<name>.md atau panggil subagent spesifik melalui agent loop.',
+            ],
+            'get_ai_features_helper' => $skillsService->getAiModuleFeaturesGuide(),
             'inspect' => $skillName ? ($skillsService->getSkill($skillName) ?? ['error' => "Skill '{$skillName}' tidak ditemukan di .agents/skills."]) : ['error' => 'Parameter skill_name wajib diisi.'],
             'recommend' => [
                 'stack_preset' => $stackPreset,
@@ -2551,9 +2558,13 @@ class AgenticActionExecutionEngine
             ],
             default => [
                 'ecosystem' => $skillsService->getEcosystemStats(),
+                'ecc_harness' => $skillsService->getEccStatus(),
                 'installed_skills' => $skillsService->getInstalledSkills($query),
                 'skills_lock' => $skillsService->getSkillsLock(),
+                'features_guide' => $skillsService->getAiModuleFeaturesGuide(),
                 'quick_commands' => [
+                    'ecc_doctor' => 'npx ecc-universal@2.2.3 doctor --target antigravity',
+                    'ecc_list' => 'npx ecc-universal@2.2.3 list-installed',
                     'find_skills_install' => 'npx skills add https://github.com/vercel-labs/skills --skill find-skills',
                     'search_cli' => 'npx skills find [keyword]',
                     'update_all' => 'npx skills update',

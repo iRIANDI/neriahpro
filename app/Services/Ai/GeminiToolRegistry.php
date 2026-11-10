@@ -973,13 +973,13 @@ class GeminiToolRegistry
             // =========================================================================
             [
                 'name' => 'manage_and_discover_agent_skills',
-                'description' => 'Mencari, memeriksa, atau mengelola Open Agent Skills (Vercel Skills Hub, find-skills, dan ECC Harness di .agents/skills) untuk memperluas kemampuan AI Copilot dan AI Coding Agent Project OS.',
+                'description' => 'Mencari, memeriksa, atau mengelola Open Agent Skills (Vercel Skills Hub, find-skills, dan ECC Universal v2.2.3 di folder .agents) serta menyajikan helper panduan fitur AI lengkap untuk klien.',
                 'parameters' => [
                     'type' => 'OBJECT',
                     'properties' => [
                         'action' => [
                             'type' => 'STRING',
-                            'description' => 'Tindakan: "list_installed" (daftar skill terpasang & status lock), "search" (cari skill berdasarkan kata kunci), "inspect" (baca detail dan isi SKILL.md), "recommend" (rekomendasi skill untuk stack/sektor tertentu), atau "get_install_command" (dapatkan perintah npx skills add).',
+                            'description' => 'Tindakan: "list_installed" (daftar skill terpasang), "search" (cari skill), "inspect" (detail SKILL.md), "recommend" (rekomendasi skill stack), "get_install_command" (perintah CLI npx skills add), "ecc_status" (status ECC Universal v2.2.3 pada .agents), "list_subagents" (daftar 68 subagents ECC), atau "get_ai_features_helper" (katalog helper fitur AI untuk klien).',
                         ],
                         'query' => [
                             'type' => 'STRING',

@@ -661,9 +661,19 @@ class FloatingAgenticAi extends Component
                 }
             }
 
-            // Build history payload for Copilot
-            $messagesPayload = $this->messages;
-            $messagesPayload[count($messagesPayload) - 1]['content'] = $fullPrompt;
+            // Build history payload for Copilot (sanitizing past transient error notices so they don't hallucinate future turns)
+            $messagesPayload = array_values(array_filter($this->messages, function ($m) {
+                $content = (string) ($m['content'] ?? '');
+                if (str_starts_with($content, 'Terjadi kendala pada gateway AI') || str_starts_with($content, 'Terjadi kendala saat memproses permintaan:')) {
+                    return false;
+                }
+                return true;
+            }));
+            if (!empty($messagesPayload)) {
+                $messagesPayload[count($messagesPayload) - 1]['content'] = $fullPrompt;
+            } else {
+                $messagesPayload = [['role' => 'user', 'content' => $fullPrompt]];
+            }
 
             $response = $gateway->chatWithCopilot($messagesPayload, [
                 'session_id' => $this->currentSessionId,

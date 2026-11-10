@@ -128,33 +128,51 @@
             }
         }
 
-        .ai-chat-bubble p {
-            margin-bottom: 0.75rem !important;
-            line-height: 1.65 !important;
+        .ai-chat-bubble {
+            white-space: normal !important;
         }
-        .ai-chat-bubble p:last-child {
+        .ai-chat-bubble > :first-child {
+            margin-top: 0 !important;
+        }
+        .ai-chat-bubble > :last-child {
             margin-bottom: 0 !important;
         }
+        .ai-chat-bubble p {
+            margin-top: 0.35rem !important;
+            margin-bottom: 0.35rem !important;
+            line-height: 1.55 !important;
+        }
+        .ai-chat-bubble h1,
+        .ai-chat-bubble h2,
+        .ai-chat-bubble h3,
+        .ai-chat-bubble h4 {
+            margin-top: 0.75rem !important;
+            margin-bottom: 0.35rem !important;
+            font-weight: 800 !important;
+            line-height: 1.35 !important;
+            color: inherit !important;
+        }
         .ai-chat-bubble ul, .ai-chat-bubble ol {
-            margin-top: 0.4rem !important;
-            margin-bottom: 0.75rem !important;
+            margin-top: 0.35rem !important;
+            margin-bottom: 0.45rem !important;
             padding-left: 1.25rem !important;
         }
         .ai-chat-bubble li {
-            margin-bottom: 0.3rem !important;
-            line-height: 1.55 !important;
+            margin-top: 0.1rem !important;
+            margin-bottom: 0.15rem !important;
+            line-height: 1.5 !important;
         }
         .ai-chat-bubble table {
             width: 100% !important;
             margin-top: 0.5rem !important;
-            margin-bottom: 0.5rem !important;
+            margin-bottom: 0.6rem !important;
             border-collapse: collapse !important;
             font-size: 11px !important;
         }
         .ai-chat-bubble th {
             background-color: #f4f4f5 !important;
             color: #18181b !important;
-            padding: 0.4rem 0.5rem !important;
+            padding: 0.35rem 0.6rem !important;
             border: 1px solid #d4d4d8 !important;
             font-weight: 700 !important;
             text-align: left !important;
@@ -165,17 +183,21 @@
             border-color: #3f3f46 !important;
         }
         .ai-chat-bubble td {
-            padding: 0.4rem 0.5rem !important;
+            padding: 0.35rem 0.6rem !important;
             border: 1px solid #e4e4e7 !important;
             vertical-align: top !important;
         }
         .dark .ai-chat-bubble td {
             border-color: #27272a !important;
         }
+        .ai-chat-bubble hr {
+            margin: 0.75rem 0 !important;
+            border-color: rgba(120, 120, 120, 0.25) !important;
+        }
         .ai-chat-bubble pre {
             background: #18181b !important;
             color: #f4f4f5 !important;
-            padding: 0.75rem !important;
+            padding: 0.65rem 0.75rem !important;
             border-radius: 2px !important;
             overflow-x: auto !important;
             font-size: 11px !important;
@@ -682,7 +704,7 @@
                                     <div class="max-w-[90%] p-3.5 rounded-xs border text-xs leading-relaxed {{ $msg['role'] === 'user' ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border-zinc-800 dark:border-zinc-200' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-800' }}">
                                         
                                         {{-- Render Message Body via Markdown --}}
-                                        <div class="prose prose-xs dark:prose-invert max-w-none break-words whitespace-pre-wrap font-sans ai-chat-bubble">
+                                        <div class="prose prose-xs dark:prose-invert max-w-none break-words whitespace-normal font-sans ai-chat-bubble">
                                             {!! \Illuminate\Support\Str::markdown($msg['content'] ?? '', [
                                                 'html_input' => 'strip',
                                                 'allow_unsafe_links' => false,

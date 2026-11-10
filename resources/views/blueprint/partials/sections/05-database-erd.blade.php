@@ -369,8 +369,6 @@
                                     <span x-show="locale !== 'en'">Memuat skema relasi database Mermaid...</span>
                                 </div>
                             </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>

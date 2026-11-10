@@ -1152,13 +1152,41 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 18. Indeks 14 Composable Core Primitives: AI Vision Biometrics (ArcFace ONNX 512-D + MiniFASNet) & Geospatial Geofence Anti-Fake GPS
+        $v14PrimitivesSourceId = 'composable-primitives-biometrics-and-geofence-v14';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $v14PrimitivesSourceId)->exists()) {
+            $v14Content = "Project OS v14.0 — 14 Composable Core Primitives & Arsitektur Dinamis Lintas Sektor (AI Vision Biometrics & Geospatial Geofencing):\n"
+                ."1. PRIMITIVE_AI_VISION_BIOMETRICS (Primitif #13):\n"
+                ."   - 4-Stage Computer Vision Pipeline: Deteksi bounding box wajah SCRFD -> Deteksi liveness pasif MiniFASNet FFT (<120ms) anti foto/layar HP -> Ekstraksi embedding 512-dimensi ArcFace ONNX -> Pencocokan kemiripan kosinus vektor pgvector HNSW (ambang batas >= 0.68).\n"
+                ."   - Kepatuhan UU PDP No. 27/2022: Penyimpanan template terenkripsi AES-256 di disk privat dan aksi PurgeBiometricRightToErasureAction untuk pemenuhan hak dilupakan/dihapus (Pasal 8).\n"
+                ."2. PRIMITIVE_GEOSPATIAL_GEOFENCE (Primitif #14):\n"
+                ."   - Dual Spatial Engine: Kombinasi formula Haversine SQL dan PostgreSQL PostGIS ST_DWithin.\n"
+                ."   - Proteksi Anti-Fake GPS: Validasi deviasi waktu server NTP (maks 30 detik), deteksi mock location provider, penolakan akurasi GPS buruk (>50m), dan pemblokiran kecepatan fiktif teleportasi (>120 km/jam).\n"
+                ."   - Alur Persetujuan Dinas Luar Kantor: State machine otomatis mengevaluasi pengajuan presensi luar geofence dengan alasan tugas resmi menuju antrean persetujuan atasan berjenjang.\n"
+                ."3. Adaptasi Dinamis Lintas Sektor: Mengintegrasikan biometrik dan geofencing secara cerdas pada Sektor 11 (HRIS), Sektor 06 (Logistik), Sektor 03 (Kesehatan), dan Sektor 10 (Media & Tiket).";
+
+            $embedding = $this->generateEmbedding("Project OS 14 Composable Primitives AI Vision Biometrics ArcFace MiniFASNet Geospatial Geofence Haversine PostGIS UU PDP Anti Fake GPS\n{$v14Content}");
+            AiKnowledgeVector::create([
+                'title' => 'Project OS v14.0: 14 Core Primitives (AI Vision Biometrics & Geospatial Geofence Anti-Fake GPS)',
+                'source_type' => 'composable_primitives_biometrics_geofence',
+                'source_id' => $v14PrimitivesSourceId,
+                'content' => "### Project OS v14.0: 14 Core Primitives (AI Vision Biometrics & Geospatial Geofence)\n\n{$v14Content}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => '14 Composable Core Primitives',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
             'status' => 'success',
             'synced_sections' => $syncedSections,
             'total_chunks' => $totalChunks,
-            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (Project OS v13.0 Multi-Bahasa Tier 1 JSONB vs Skalar & Domain Tour-Travel, v11.0 SEO/GEO Paripurna, v9.0 AgentShield 5-Layer, v8.0 36 Visual UI, 15 Pilar Master Freeze, 5 Elemen Dunia Nyata, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines) ke basis pengetahuan RAG pgvector.",
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (Project OS v14.0 14 Primitif Biometrik & Geofence, v13.0 Multi-Bahasa Tier 1 JSONB vs Skalar, v11.0 SEO/GEO Paripurna, v9.0 AgentShield 5-Layer, v8.0 36 Visual UI, 15 Pilar Master Freeze, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines) ke basis pengetahuan RAG pgvector.",
         ];
     }
 }

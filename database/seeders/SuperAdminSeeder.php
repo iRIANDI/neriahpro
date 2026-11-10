@@ -77,6 +77,10 @@ class SuperAdminSeeder extends Seeder
         $manageAiKnowledgePerm = Permission::firstOrCreate(['name' => 'manage_ai_knowledge_cag_rag_kag', 'guard_name' => 'web']);
         $manageScaffoldWorkspacesPerm = Permission::firstOrCreate(['name' => 'manage_scaffold_workspaces', 'guard_name' => 'web']);
         $managePricingTiersPerm = Permission::firstOrCreate(['name' => 'manage_pricing_tiers', 'guard_name' => 'web']);
+        $manageBiometricsPerm = Permission::firstOrCreate(['name' => 'manage_biometrics_and_liveness', 'guard_name' => 'web']);
+        $purgeBiometricsPerm = Permission::firstOrCreate(['name' => 'purge_biometrics_right_to_erasure', 'guard_name' => 'web']);
+        $manageGeofencePerm = Permission::firstOrCreate(['name' => 'manage_geofence_and_spatial_zones', 'guard_name' => 'web']);
+        $approveOutOfOfficePerm = Permission::firstOrCreate(['name' => 'approve_out_of_office_presence', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
@@ -132,6 +136,10 @@ class SuperAdminSeeder extends Seeder
             $manageAiKnowledgePerm,
             $manageScaffoldWorkspacesPerm,
             $managePricingTiersPerm,
+            $manageBiometricsPerm,
+            $purgeBiometricsPerm,
+            $manageGeofencePerm,
+            $approveOutOfOfficePerm,
         ]);
 
         $developerRole->givePermissionTo([
@@ -297,6 +305,10 @@ class SuperAdminSeeder extends Seeder
             'Update:Product',
             'Delete:Product',
             'view_cv_pro_finance',
+            'manage_biometrics_and_liveness',
+            'purge_biometrics_right_to_erasure',
+            'manage_geofence_and_spatial_zones',
+            'approve_out_of_office_presence',
         ];
         foreach ($forbiddenReviewerPermissions as $forbiddenPerm) {
             $p = Permission::where('name', $forbiddenPerm)->where('guard_name', 'web')->first();

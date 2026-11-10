@@ -996,6 +996,108 @@ class GeminiToolRegistry
                     ],
                 ],
             ],
+
+            // =========================================================================
+            // 23. MODUL AI VISION BIOMETRICS & SPATIAL GEOFENCING (PROJECT OS V12.0)
+            // =========================================================================
+            [
+                'name' => 'verify_biometric_face_vector',
+                'description' => 'Verifikasi keaslian wajah (passive liveness MiniFASNet FFT) dan pencocokan embedding 512-dimensi ArcFace ONNX via pgvector HNSW cosine distance (ambang batas >= 0.68) dengan kepatuhan UU PDP No. 27/2022.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'user_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID pengguna atau staf yang diverifikasi.',
+                        ],
+                        'liveness_score' => [
+                            'type' => 'NUMBER',
+                            'description' => 'Skor liveness pasif MiniFASNet (0.00 hingga 1.00, ambang batas sah >= 0.85).',
+                        ],
+                        'cosine_similarity' => [
+                            'type' => 'NUMBER',
+                            'description' => 'Skor kemiripan kosinus embedding vektor 512-D ArcFace vs template terdaftar (0.00 s/d 1.00, ambang batas sah >= 0.68).',
+                        ],
+                        'device_fingerprint' => [
+                            'type' => 'STRING',
+                            'description' => 'Hash fingerprint perangkat kamera pengguna.',
+                        ],
+                    ],
+                    'required' => ['user_id', 'liveness_score'],
+                ],
+            ],
+            [
+                'name' => 'evaluate_geofence_and_spatial_presence',
+                'description' => 'Evaluasi koordinat GPS presensi terhadap radius zona kantor via Haversine & PostGIS ST_DWithin, validasi anti-fake GPS (deviasi jam server NTP <= 30 detik), batas akurasi (< 50m), dan alur persetujuan dinas luar kantor.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'user_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID pengguna/karyawan yang melakukan presensi.',
+                        ],
+                        'user_latitude' => [
+                            'type' => 'NUMBER',
+                            'description' => 'Latitude koordinat GPS perangkat pengguna.',
+                        ],
+                        'user_longitude' => [
+                            'type' => 'NUMBER',
+                            'description' => 'Longitude koordinat GPS perangkat pengguna.',
+                        ],
+                        'office_latitude' => [
+                            'type' => 'NUMBER',
+                            'description' => 'Latitude titik pusat kantor / zona resmi.',
+                        ],
+                        'office_longitude' => [
+                            'type' => 'NUMBER',
+                            'description' => 'Longitude titik pusat kantor / zona resmi.',
+                        ],
+                        'radius_meters' => [
+                            'type' => 'INTEGER',
+                            'description' => 'Radius batas aman zona kantor dalam meter (misal: 100).',
+                        ],
+                        'device_timestamp' => [
+                            'type' => 'INTEGER',
+                            'description' => 'Waktu epoch unix di perangkat pengguna.',
+                        ],
+                        'accuracy_meters' => [
+                            'type' => 'NUMBER',
+                            'description' => 'Radius akurasi GPS perangkat (dalam meter, batas aman < 50m).',
+                        ],
+                        'is_mock_provider' => [
+                            'type' => 'BOOLEAN',
+                            'description' => 'Flag deteksi apakah lokasi berasal dari mock provider / Fake GPS.',
+                        ],
+                        'out_of_office_reason' => [
+                            'type' => 'STRING',
+                            'description' => 'Alasan tugas/dinas luar jika pengguna berada di luar geofence.',
+                        ],
+                    ],
+                    'required' => ['user_id', 'user_latitude', 'user_longitude', 'office_latitude', 'office_longitude'],
+                ],
+            ],
+            [
+                'name' => 'purge_biometric_vector_right_to_erasure',
+                'description' => 'Eksekusi Hak Penghapusan Data Biometrik (Right to Erasure UU PDP No. 27/2022 Pasal 8): Menghapus vektor 512-dimensi dan foto wajah dari disk terenkripsi AES-256 serta mencatat segel audit forensik permanen.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'user_id' => [
+                            'type' => 'STRING',
+                            'description' => 'ULID pengguna pemilik data biometrik yang dihapus.',
+                        ],
+                        'reason' => [
+                            'type' => 'STRING',
+                            'description' => 'Alasan permohonan penghapusan (misal: "Resign", "Permohonan Karyawan Hak Dilupakan").',
+                        ],
+                        'confirmation_token' => [
+                            'type' => 'STRING',
+                            'description' => 'Token konfirmasi penghapusan (misal: "PURGE_BIOMETRICS_CONFIRMED").',
+                        ],
+                    ],
+                    'required' => ['user_id', 'confirmation_token'],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

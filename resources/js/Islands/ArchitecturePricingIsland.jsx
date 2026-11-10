@@ -156,8 +156,8 @@ export const PILLAR_TOOLTIPS = {
   P01_P03: {
     title: { id: 'PILAR P01–P03 // ARSITEKTUR INTI', en: 'PILLARS P01–P03 // CORE ENGINE' },
     desc: {
-      id: 'Fondasi sistem: PRD 26 parameter, skema basis data PostgreSQL 16 Strict ULID O(1), dan container Docker multi-stack siap pakai.',
-      en: 'System core: 26-param PRD, PG16 Strict ULID database schema O(1), and ready-to-run multi-container Docker kit.'
+      id: 'Fondasi sistem: PRD 26 parameter, 14 Primitif Inti (Biometrik ArcFace & Geofencing Haversine/PostGIS), skema PostgreSQL 16 Strict ULID O(1), dan container Docker multi-stack.',
+      en: 'System core: 26-param PRD, 14 Core Primitives (ArcFace Biometrics & Haversine/PostGIS Geofencing), PG16 Strict ULID DB schema O(1), and ready-to-run Docker kit.'
     }
   },
   P04_P06: {
@@ -170,15 +170,15 @@ export const PILLAR_TOOLTIPS = {
   P07_P08: {
     title: { id: 'PILAR P07–P08 // MESIN AI KONTEKS', en: 'PILLARS P07–P08 // AI CONTEXT ENGINE' },
     desc: {
-      id: 'Kecerdasan AI: KAG Knowledge Graph, CAG Prompt Caching (hemat token 90%), dan 49 native tools calling.',
-      en: 'AI Intelligence: KAG Knowledge Graph, CAG token caching (90% savings), and 49 native tool calling functions.'
+      id: 'Kecerdasan AI: KAG Knowledge Graph, CAG Prompt Caching (hemat token 90%), dan 51 native tools calling (termasuk verifikasi biometrik & spasial).',
+      en: 'AI Intelligence: KAG Knowledge Graph, CAG token caching (90% savings), and 51 native tool calling functions (including biometric & spatial verification).'
     }
   },
   P09_P11: {
     title: { id: 'PILAR P09–P11 // KEAMANAN SIBER', en: 'PILLARS P09–P11 // CYBERSECURITY' },
     desc: {
-      id: 'Pertahanan siber: AgentShield red-team, rantai audit kriptografis SHA-256 anti-hapus, dan brankas privasi UU PDP.',
-      en: 'Cyber Defense: AgentShield red-team defense, immutable SHA-256 audit chain, and UU PDP privacy vault.'
+      id: 'Pertahanan siber: AgentShield red-team, rantai audit kriptografis SHA-256 anti-hapus, dan brankas privasi UU PDP (termasuk hak dilupakan data biometrik).',
+      en: 'Cyber Defense: AgentShield red-team defense, immutable SHA-256 audit chain, and UU PDP privacy vault (including biometric data right to erasure).'
     }
   },
   P12_P15: {
@@ -1081,6 +1081,20 @@ export default function ArchitecturePricingIsland({
       a: isEn
         ? 'Project OS includes an Iterative Change Request & Surgical Delta Generator. Instead of rewriting your application, it computes the exact delta between v1.0 and v1.1 and outputs ONLY additive strict-ULID migrations (zero DROP TABLE), graph.json diffs, Gemini tool deltas, and Zero-Regression tests. Plus, via the Live MCP Server Bridge (neriahpro-mcp .mcp.json), Claude Code, Cursor, and Antigravity IDE read your blueprint directly and mark phases Verified ✅ in real time.'
         : 'Project OS dilengkapi Iterative Change Request & Surgical Delta Generator (v1.0 -> v1.1). Alih-alih menulis ulang aplikasi dan berisiko merusak tabel yang sudah live, sistem menghitung selisih presisi dan HANYA menghasilkan migrasi ULID aditif (tanpa DROP TABLE), pembaruan graph.json, serta tes regresi otomatis. Ditambah lagi, melalui Live MCP Server Bridge (neriahpro-mcp .mcp.json), Claude Code, Cursor, dan Antigravity IDE terhubung langsung dua arah tanpa copy-paste manual.'
+    },
+    {
+      category: 'AI_MCP_SECURITY',
+      q: isEn ? 'How does PRIMITIVE_AI_VISION_BIOMETRICS ensure 99.8% anti-spoofing and UU PDP No. 27/2022 compliance?' : 'Bagaimana PRIMITIVE_AI_VISION_BIOMETRICS menjamin anti-spoofing 99.8% dan kepatuhan UU PDP No. 27/2022?',
+      a: isEn
+        ? 'It implements an automated 4-stage computer vision pipeline: (1) SCRFD multi-face bounding box detection, (2) MiniFASNet FFT frequency analysis for passive liveness detection (<120ms) rejecting photo prints and screen playbacks, (3) ArcFace ONNX 512-dimensional vector embedding extraction, and (4) pgvector HNSW index cosine distance similarity matching (>= 0.68 threshold). Under Indonesia UU PDP No. 27/2022 Article 8, sensitive face templates are stored in an AES-256 private disk and backed by PurgeBiometricRightToErasureAction for instant right-to-erasure compliance.'
+        : 'Sistem menerapkan pipeline visi komputer 4-tahap: (1) Deteksi wajah SCRFD, (2) Deteksi liveness pasif MiniFASNet FFT (<120ms) yang menolak manipulasi foto cetak atau video layar HP, (3) Ekstraksi embedding 512-dimensi ArcFace ONNX, dan (4) Pencocokan kemiripan kosinus indeks pgvector HNSW (ambang batas >= 0.68). Sesuai amanat UU PDP No. 27/2022 Pasal 8, vektor wajah disimpan terenkripsi AES-256 di disk privat dan dilengkapi aksi PurgeBiometricRightToErasureAction untuk pemenuhan hak dilupakan/dihapus.'
+    },
+    {
+      category: 'UI_UX_12_SEKTOR',
+      q: isEn ? 'How does PRIMITIVE_GEOSPATIAL_GEOFENCE prevent Fake GPS, device clock manipulation, and impossible teleportation?' : 'Bagaimana PRIMITIVE_GEOSPATIAL_GEOFENCE mencegah Fake GPS, pemunduran jam HP, dan perpindahan posisi fiktif?',
+      a: isEn
+        ? 'Our dual spatial engine pairs Haversine trigonometry with PostgreSQL PostGIS ST_DWithin queries. To defeat cheat apps, it validates NTP server time drift (flagged if >30s difference with device timestamp), checks mock location provider flags, rejects degraded GPS accuracy (>50m), and blocks impossible teleportation velocities (>120 km/h). Out-of-geofence submissions (e.g., field meetings) automatically route into a multi-tier supervisor approval state machine with push notification.'
+        : 'Engine spasial ganda menggabungkan trigonometri Haversine dan PostGIS ST_DWithin PostgreSQL. Untuk menangkal kecurangan, sistem memvalidasi selisih waktu server NTP (ditolak jika deviasi >30 detik), mendeteksi flag mock location provider di HP, menolak akurasi GPS buruk (>50m), dan memblokir kecepatan perpindahan fiktif (>120 km/jam). Karyawan yang presensi dinas luar kantor otomatis dialihkan ke antrean persetujuan atasan berjenjang (state machine) dengan notifikasi instan.'
     }
   ];
 
@@ -1285,7 +1299,7 @@ export default function ArchitecturePricingIsland({
     ],
     SECTOR_06_LOGISTICS_FLEET: [
       { code: 'UI_06A_SPLIT_MAP_DISPATCHER', badge: 'OPSI A • DISPATCHER ARMADA', shell: 'DUAL_PANE_SPLIT_WORKBENCH', title: isEn ? '50/50 Truck Tonnage/CBM Load & Live Manifest' : 'Kokpit Dispatcher Muatan Truk & Pelacakan Manifes', panes: ['6-COL: Resi + Bar Tonase/Kubikasi Truk', '6-COL: Milestone Pengiriman + Rekonsiliasi COD'] },
-      { code: 'UI_06B_COURIER_THUMB_POD_PWA', badge: 'OPSI B • PWA KURIR 1-JEMPOL', shell: 'MOBILE_FIRST_THUMB_PWA', title: isEn ? '1-Thumb Courier Stop Cards + Photo/Signature PoD' : 'PWA Kurir Lapangan 1-Jempol & Bukti Foto/TTD PoD', panes: ['5-COL: Kartu Rute Antar + Bar Jempol Bawah', '7-COL: Verifikasi Foto Geo + TTD Kanvas'] },
+      { code: 'UI_06B_COURIER_THUMB_POD_PWA', badge: 'OPSI B • GEOFENCE & POD PWA', shell: 'MOBILE_FIRST_THUMB_PWA', title: isEn ? 'Hub Geofencing, Anti-Fake GPS & 1-Thumb Photo PoD' : 'Geofence Radius Hub Transit, Anti-Fake GPS & Bukti Foto/TTD PoD', panes: ['5-COL: Radius Geofence Haversine + Deteksi Mock GPS', '7-COL: Verifikasi Foto Geo + TTD Kanvas'] },
       { code: 'UI_06C_WAREHOUSE_CROSSDOCK_SCANNER', badge: 'OPSI C • SORTIR GUDANG HUB', shell: 'FULLSCREEN_OPERATIONAL_KIOSK', title: isEn ? 'High-Speed Hub Cross-Docking & Misroute Guard' : 'Terminal Sortir Gudang Hub Inbound/Outbound Cepat', panes: ['7-COL: Scan Cepat <30ms + Peringatan Salah Rute', '5-COL: Segel Karung Master + Label Thermal'] },
     ],
     SECTOR_07_EDTECH_LMS: [
@@ -1305,12 +1319,12 @@ export default function ArchitecturePricingIsland({
     ],
     SECTOR_10_MEDIA_TICKETING: [
       { code: 'UI_10A_INTERACTIVE_SEAT_MAP_TTL', badge: 'OPSI A • PETA KURSI + TTL 10M', shell: 'DUAL_PANE_SPLIT_WORKBENCH', title: isEn ? 'Interactive Venue Seat Map + 10:00 Hold Countdown' : 'Peta Kursi Konser Interaktif & Hitung Mundur 10:00', panes: ['8-COL: Grid Kursi VIP/CAT + Kunci Kursi Atomic', '4-COL: Antrean Fair-Play + Tiket QR Dinamis'] },
-      { code: 'UI_10B_GATE_WRISTBAND_SCANNER', badge: 'OPSI B • SCANNER GATE <150MS', shell: 'FULLSCREEN_OPERATIONAL_KIOSK', title: isEn ? '<150ms Gate QR/RFID Scanner & Anti-Passback' : 'Layar Scanner Gate Masuk Event & Anti-Tiket Ganda', panes: ['7-COL: Layar HIJAU SAH vs MERAH DUPLIKAT', '5-COL: Kapasitas Zona Live + Cache Offline'] },
+      { code: 'UI_10B_GATE_WRISTBAND_SCANNER', badge: 'OPSI B • BIOMETRIC GATE <150MS', shell: 'FULLSCREEN_OPERATIONAL_KIOSK', title: isEn ? '<150ms Face Biometric Gate & Anti-Passback' : 'Layar Scanner Gate Masuk Event (Fast-Track Wajah Biometrik) & Anti-Tiket Ganda', panes: ['7-COL: Cocok Wajah ArcFace <150ms + HIJAU SAH vs MERAH DUPLIKAT', '5-COL: Kapasitas Zona Live + Cache Offline'] },
       { code: 'UI_10C_CREATOR_DAM_ROYALTY_DESK', badge: 'OPSI C • GALERI DAM & ROYALTI', shell: 'SIDEBAR_ERP_DENSE', title: isEn ? 'Digital Asset Licensing & 70:30 Royalty Ledger' : 'Galeri Lisensi Aset Digital (DAM) & Bagi Hasil Royalti', panes: ['7-COL: Preview Watermark + Signed URL 5m', '5-COL: Kalkulator Bagi Hasil Kreator Otomatis'] },
     ],
     SECTOR_11_HRIS_INTERNAL_OPS: [
       { code: 'UI_11A_SHIFT_ROSTER_CLASH_MATRIX', badge: 'OPSI A • ROSTER & PAYROLL', shell: 'SIDEBAR_ERP_DENSE', title: isEn ? '2D Shift Roster Clash Matrix & PPh21 Simulator' : 'Matriks Roster Shift 2D + Simulasi Gaji PPh21 TER', panes: ['7-COL: Grid Staf × Tanggal + Deteksi Malam->Pagi', '5-COL: 3 Kolom Bruto | Pajak/BPJS | THP'] },
-      { code: 'UI_11B_ESS_ATTENDANCE_APPROVAL_HUB', badge: 'OPSI B • PORTAL ESS + ZKTeco', shell: 'MOBILE_FIRST_THUMB_PWA', title: isEn ? 'Mobile ESS Geofence Clock-In + ZKTeco Biometric' : 'Portal Mandiri Karyawan (ESS) GPS + Mesin ZKTeco', panes: ['5-COL: Absen Selfie GPS + Cuti + Slip PDF', '7-COL: Sinkronisasi ZKTeco ADMS + Approval Lembur'] },
+      { code: 'UI_11B_ESS_ATTENDANCE_APPROVAL_HUB', badge: 'OPSI B • PORTAL ESS BIOMETRIK', shell: 'MOBILE_FIRST_THUMB_PWA', title: isEn ? 'Mobile ESS ArcFace 512-D Biometric + Haversine Geofence Clock-In' : 'Portal Mandiri Karyawan (ESS) Absensi Wajah ArcFace + Geofence GPS Haversine', panes: ['5-COL: HUD Kamera Biometrik + Deteksi Liveness MiniFASNet + Radius GPS', '7-COL: Alur Persetujuan Dinas Luar Kantor + Rekap Payroll Excel'] },
       { code: 'UI_11C_INTERNAL_ASSET_PROCUREMENT', badge: 'OPSI C • ASET KANTOR & PR/PO', shell: 'SIDEBAR_ERP_DENSE', title: isEn ? 'QR Asset Custody, PR->PO->GRN & Budget Ceiling' : 'Manajemen Aset QR Kantor, PR/PO & Plafon Anggaran', panes: ['7-COL: Alur PR -> PO -> GRN + Kunci Plafon', '5-COL: BAST Serah Terima Laptop/Aset QR'] },
     ],
     SECTOR_12_GOVTECH_NONPROFIT: [
@@ -2638,20 +2652,20 @@ export default function ArchitecturePricingIsland({
                           ⭐ {isEn ? 'Includes all Pro Blueprint features, plus:' : 'Mencakup seluruh fitur Pro Blueprint, ditambah:'}
                         </div>
                         {(isEn ? [
-                          'Pillars P01–P03 (Core Engine): 12 Sectors, 9 Stacks, Strict ULID & Keyset Cursor O(1)',
+                          'Pillars P01–P03 (Core Engine): 12 Sectors, 14 Primitives (Biometric Vision & Spatial Geofence), Strict ULID & Keyset Cursor O(1)',
                           'Pillars P04–P06 (UI/UX & Logic): 36 Operational Cockpits + 6 60fps Scrollytelling Presets (Zone A + B)',
-                          'Pillars P07–P08 (AI Engine): KAG Knowledge Graph + CAG Prompt Caching + 49 Native Tools Calling',
-                          'Pillars P09–P11 (Security): AgentShield Red-Team, SHA-256 Audit Trail Chain & UU PDP Vault',
+                          'Pillars P07–P08 (AI Engine): KAG Knowledge Graph + CAG Prompt Caching + 51 Native Tools Calling',
+                          'Pillars P09–P11 (Security): AgentShield Red-Team, SHA-256 Audit Trail Chain & UU PDP Vault (Biometric Right to Erasure)',
                           'Pillars P12–P15 (SaaS & Escrow): One-Stop Commercial Gate, Escrow Midtrans Snap & 90-Day SLA Warranty',
                           'Pillars P16–P17 (Authority): 12-Sector Schema.org JSON-LD & Native /llms.txt AI Citation Engine',
                           'Pillars P18–P20 (DevOps & SOP): Offline PWA Outbox, Pre-Migration pg_dump Guard & 1-Click Rollback',
                           'Executive 1-on-1 Call: 60-Minute Direct Strategic Advisory with Principal Architect Yoseph Iriandi',
                           'Corporate Legal Security: Mutual Non-Disclosure Agreement (NDA) with Digital Signature',
                         ] : [
-                          'Pilar P01–P03 (Arsitektur Inti): 12 Sektor, 9 Stack, Strict ULID & Keyset Cursor O(1)',
+                          'Pilar P01–P03 (Arsitektur Inti): 12 Sektor, 14 Primitif (Visi Biometrik & Geofence Spasial), Strict ULID & Keyset Cursor O(1)',
                           'Pilar P04–P06 (Desain UI/UX): 36 Cockpit Operasional + 6 Preset Scrollytelling 60fps (Zona A & B)',
-                          'Pilar P07–P08 (Mesin AI): KAG Knowledge Graph + CAG Prompt Caching + 49 Native Tool Calling',
-                          'Pilar P09–P11 (Keamanan Siber): AgentShield Red-Team, Rantai Audit SHA-256 & Brankas UU PDP PII',
+                          'Pilar P07–P08 (Mesin AI): KAG Knowledge Graph + CAG Prompt Caching + 51 Native Tool Calling',
+                          'Pilar P09–P11 (Keamanan Siber): AgentShield Red-Team, Rantai Audit SHA-256 & Brankas UU PDP PII (Hak Dilupakan Biometrik)',
                           'Pilar P12–P15 (Komersial & Legal): Gerbang Satu Pintu, Escrow Midtrans Snap & Garansi SLA 90 Hari',
                           'Pilar P16–P17 (Otoritas Digital): Schema.org Multi-Graph JSON-LD & Mesin Sitasi AI /llms.txt',
                           'Pilar P18–P20 (DevOps & SOP): Offline PWA Outbox, Guard pg_dump Pra-Migrasi & 1-Click Rollback',
@@ -3036,10 +3050,10 @@ export default function ArchitecturePricingIsland({
                           ⭐ {formatPillar(isEn ? 'Includes all Blueprint Advisory deliverables + Complete 20 Pillars of Software Factory OS v12.0:' : 'Mencakup seluruh hasil Blueprint Advisory + Lengkap 20 Pilar Software Factory OS v12.0:')}
                         </div>
                         {(isEn ? [
-                          'Pillars P01–P03 (Core Engine): 26-Parameter PRD, PostgreSQL 16 Strict ULID & Docker Multi-Stack Kit',
+                          'Pillars P01–P03 (Core Engine): 26-Parameter PRD, 14 Primitives (Biometric MiniFASNet & Haversine Geofence), PostgreSQL 16 Strict ULID & Docker Multi-Stack Kit',
                           'Pillars P04–P06 (UI/UX & Logic): 36 Operational Cockpits + 60fps Scrollytelling Presets & ACID Ledger',
-                          'Pillars P07–P08 (AI Context): KAG Knowledge Graph + CAG Prompt Caching + 49 Native Tools & MCP',
-                          'Pillars P09–P11 (Cybersecurity): AgentShield Red-Team, SHA-256 Audit Trail Chain & UU PDP Vault',
+                          'Pillars P07–P08 (AI Context): KAG Knowledge Graph + CAG Prompt Caching + 51 Native Tools & MCP',
+                          'Pillars P09–P11 (Cybersecurity): AgentShield Red-Team, SHA-256 Audit Trail Chain & UU PDP Vault (Biometric Erasure)',
                           'Pillars P12–P15 (Commercial & SLA): One-Stop Gate, Turnkey Escrow Snap, Scope Lock & 90-Day SLA Bug-Warranty',
                           'Pillars P16–P17 (Authority): 12-Sector Multi-Graph Schema.org JSON-LD & Native /llms.txt AI Citation Engine',
                           'Pillars P18–P20 (DevOps & SOP): Offline PWA Outbox Sync, Pre-Migration pg_dump Guard & Client A4 SOP Pack',
@@ -3053,10 +3067,10 @@ export default function ArchitecturePricingIsland({
                           '90-Day Priority Bug Warranty: Post-BAST SLA maintenance executed directly by Principal Architect',
                           'Change Request (CR) Portal: Standardized addendum module for transparent scope evolution',
                         ] : [
-                          'Pilar P01–P03 (Arsitektur Inti): PRD 26 Parameter, PostgreSQL 16 Strict ULID & Docker Multi-Stack Kit',
+                          'Pilar P01–P03 (Arsitektur Inti): PRD 26 Parameter, 14 Primitif (Biometrik MiniFASNet & Geofence Haversine), PG16 Strict ULID & Docker Multi-Stack Kit',
                           'Pilar P04–P06 (UI/UX & Logika): 36 Cockpit Operasional, Scrollytelling 60fps & ACID Ledger',
-                          'Pilar P07–P08 (Konteks AI Cerdas): KAG Knowledge Graph + CAG Prompt Caching + 49 Native Tools & MCP',
-                          'Pilar P09–P11 (Keamanan Siber): AgentShield Red-Team, Rantai Audit SHA-256 & Brankas Privasi UU PDP',
+                          'Pilar P07–P08 (Konteks AI Cerdas): KAG Knowledge Graph + CAG Prompt Caching + 51 Native Tools & MCP',
+                          'Pilar P09–P11 (Keamanan Siber): AgentShield Red-Team, Rantai Audit SHA-256 & Brankas Privasi UU PDP (Hak Dilupakan Biometrik)',
                           'Pilar P12–P15 (Komersial & Garansi): Gerbang Satu Pintu, Escrow Midtrans, Segel Scope & SLA 90 Hari',
                           'Pilar P16–P17 (Otoritas Digital): Schema.org Multi-Graph 12 Sektor & Mesin Sitasi AI GEO /llms.txt',
                           'Pilar P18–P20 (DevOps & SOP): Offline PWA Outbox Sync, Guard pg_dump Pra-Migrasi & Buku SOP A4',
@@ -4091,7 +4105,7 @@ return match (true) {
                 { id: 'COMMERCIAL', label: isEn ? '1. One-Stop & Commercial' : '1. Satu Pintu & Lisensi' },
                 { id: 'ARCHITECTURE', label: isEn ? '2. DB ULID, Stack & Scale' : '2. DB ULID, Stack & Skala' },
                 { id: 'UI_UX', label: isEn ? '3. 12-Sector 36 UI & 6 Scroll' : '3. 12 Sektor 36 UI & 6 Scroll' },
-                { id: 'AI_SECURITY', label: isEn ? '4. AI 49 Tools, KAG, CAG, RAG & Shield' : '4. AI 49 Tool, KAG, CAG, RAG & Shield' },
+                { id: 'AI_SECURITY', label: isEn ? '4. AI 51 Tools, KAG, CAG, RAG & Shield' : '4. AI 51 Tool, KAG, CAG, RAG & Shield' },
                 { id: 'SEO_GEO_V12', label: isEn ? '5. 20 Pillars, SEO/GEO, UU PDP & Escrow' : '5. 20 Pilar, SEO/GEO, UU PDP & Escrow' },
               ];
 
@@ -4134,12 +4148,12 @@ return match (true) {
                 },
                 {
                   cat: 'ARCHITECTURE',
-                  param: isEn ? '05. 20 Pillars of Software Factory OS v12.0 Paripurna' : '05. Kelengkapan 20 Pilar Software Factory OS v12.0 Paripurna',
-                  sparkGrant: isEn ? 'Spark: Pillar 1–2 Audit | Verified CSR Grant: Complete 20 Pillars (Subsidized)' : 'Spark: Audit Pilar 1–2 | Hibah CSR Terverifikasi: Lengkap 20 Pilar (Subsidi)',
-                  starterPass: isEn ? 'Starter: 5 Core Pillars | Single-App UMKM Pass: 20 Pillars (1 App Scope)' : 'Starter: 5 Pilar Inti | Single-App UMKM Pass: 20 Pilar (1 Aplikasi)',
-                  proAgencyUlt: isEn ? '✅ Complete 20 Paripurna Pillars Specification & Export Bundle' : '✅ Spesifikasi & Ekspor Lengkap 20 Pilar Rekayasa Paripurna',
-                  advisoryUmkm: isEn ? 'Advisory: 20-Pillar Blueprint + WBS | UMKM: Core Transactional Pillars Live' : 'Advisory: Cetak Biru 20 Pilar + WBS | UMKM: Pilar Transaksi Inti Live',
-                  fullMvp: isEn ? '✅ 100% All 20 Paripurna Pillars Coded, Verified & Deployed to Production' : '✅ 100% Seluruh 20 Pilar Paripurna Dikodingkan & Live di Server Produksi',
+                  param: isEn ? '05. 20 Pillars of Software Factory OS v12.0 & 14 Core Primitives' : '05. 20 Pilar Software Factory OS v12.0 & 14 Primitif Inti (Biometrik & Geofence)',
+                  sparkGrant: isEn ? 'Spark: Pillar 1–2 Audit | Verified CSR Grant: Complete 20 Pillars & Primitives (Subsidized)' : 'Spark: Audit Pilar 1–2 | Hibah CSR Terverifikasi: Lengkap 20 Pilar & Primitif (Subsidi)',
+                  starterPass: isEn ? 'Starter: 5 Core Pillars | Single-App UMKM Pass: 20 Pillars & Selected Primitives' : 'Starter: 5 Pilar Inti | Single-App UMKM Pass: 20 Pilar & Primitif Terpilih',
+                  proAgencyUlt: isEn ? '✅ Complete 20 Paripurna Pillars & 14 Primitives (Biometric Vision & Spatial Geofence)' : '✅ Spesifikasi Lengkap 20 Pilar & 14 Primitif Inti (Visi Biometrik & Geofence Spasial)',
+                  advisoryUmkm: isEn ? 'Advisory: 20-Pillar Blueprint + WBS | UMKM: Core Transactional & Geofence Pillars Live' : 'Advisory: Cetak Biru 20 Pilar + WBS | UMKM: Pilar Transaksi & Geofence Live',
+                  fullMvp: isEn ? '✅ 100% All 20 Paripurna Pillars & 14 Primitives Coded, Verified & Deployed to Production' : '✅ 100% Seluruh 20 Pilar & 14 Primitif Dikodingkan & Live di Server Produksi',
                 },
                 {
                   cat: 'ARCHITECTURE',
@@ -4233,12 +4247,12 @@ return match (true) {
                 },
                 {
                   cat: 'AI_SECURITY',
-                  param: isEn ? '16. 49 Native AI Tools (KAG + CAG + Hybrid RAG) & Live 2-Way MCP Bridge' : '16. 49 Native AI Tool Calling (KAG + CAG + RAG) & Jembatan Live MCP 2-Arah',
+                  param: isEn ? '16. 51 Native AI Tools (KAG, CAG, RAG, Biometrics & Geofence) & Live 2-Way MCP Bridge' : '16. 51 Native AI Tool Calling (KAG, CAG, RAG, Biometrik & Geofence) & Jembatan Live MCP 2-Arah',
                   sparkGrant: isEn ? 'CSR Grant: Live .mcp.json Bridge for Claude Code, Cursor & Antigravity' : 'Hibah CSR: Jembatan .mcp.json Live untuk Claude Code, Cursor & Antigravity',
                   starterPass: isEn ? 'Single-App Pass: .mcp.json Bridge + SYNTAX_LOCK_2026.md Dictionary' : 'Single-App Pass: Jembatan .mcp.json + Kamus SYNTAX_LOCK_2026.md',
                   proAgencyUlt: isEn ? '✅ Full 2-Way MCP Sync (pos_get_phase_prompt / pos_mark_phase_verified)' : '✅ Sinkronisasi 2-Arah MCP (pos_get_phase_prompt / pos_mark_phase_verified)',
                   advisoryUmkm: isEn ? 'Advisory: AI Architecture Mapping | UMKM: Admin Copilot Ready' : 'Advisory: Pemetaan AI | UMKM: Siap Asisten Admin Copilot',
-                  fullMvp: isEn ? '✅ Full Backend Admin AI Agentic Engine (KAG, CAG, RAG & 49 Tools)' : '✅ Engine AI Agentic Backend Admin Penuh (KAG, CAG, RAG & 49 Tool)',
+                  fullMvp: isEn ? '✅ Full Backend Admin AI Agentic Engine (KAG, CAG, RAG, Biometrics & 51 Tools)' : '✅ Engine AI Agentic Backend Admin Penuh (KAG, CAG, RAG, Biometrik & 51 Tool)',
                 },
                 {
                   cat: 'AI_SECURITY',
@@ -4287,12 +4301,12 @@ return match (true) {
                 },
                 {
                   cat: 'SEO_GEO_V12',
-                  param: isEn ? '22. UU PDP No. 27/2022 Privacy Vault (AES-256 + HMAC-SHA256 Blind Index O(1))' : '22. Brankas Privasi UU PDP No. 27/2022 (AES-256 + Blind Index HMAC-SHA256 O(1))',
+                  param: isEn ? '22. UU PDP No. 27/2022 Privacy Vault (AES-256, Blind Index O(1) & Biometric Erasure)' : '22. Brankas Privasi UU PDP No. 27/2022 (AES-256, Blind Index O(1) & Hak Dilupakan Biometrik)',
                   sparkGrant: isEn ? 'CSR Grant: Encrypted Donor/Patient NIK & Phone with O(1) Blind Index' : 'Hibah CSR: Enkripsi NIK/HP Donatur & Pasien dengan Blind Index O(1)',
                   starterPass: isEn ? 'Single-App Pass: HasEncryptedPiiWithBlindIndex Trait Included' : 'Single-App Pass: Disertakan Trait HasEncryptedPiiWithBlindIndex',
-                  proAgencyUlt: isEn ? '✅ 64-Char HMAC-SHA256 Blind Index + 1-Click JSON Portability & Safe Erasure' : '✅ Blind Index 64-Karakter + Ekspor JSON 1-Klik & Anonimisasi Aman-Jurnal',
+                  proAgencyUlt: isEn ? '✅ 64-Char HMAC-SHA256 Blind Index + 1-Click Portability & Biometric Right-to-Erasure' : '✅ Blind Index 64-Karakter + Ekspor JSON 1-Klik & Hak Penghapusan Biometrik Pasal 8',
                   advisoryUmkm: isEn ? 'UU PDP Compliance Architecture & Consent Banner' : 'Arsitektur Kepatuhan UU PDP & Banner Persetujuan Privasi',
-                  fullMvp: isEn ? '✅ Live Self-Service Privacy Vault in /customer/dashboard (Preserves Ledger)' : '✅ Brankas Privasi Mandiri Aktif di /customer/dashboard (Jurnal Utuh)',
+                  fullMvp: isEn ? '✅ Live Self-Service Privacy Vault in /customer/dashboard (Preserves Ledger & Biometrics)' : '✅ Brankas Privasi Mandiri Aktif di /customer/dashboard (Jurnal & Biometrik Aman)',
                 },
                 {
                   cat: 'SEO_GEO_V12',

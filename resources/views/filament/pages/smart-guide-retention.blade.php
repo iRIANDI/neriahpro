@@ -2014,17 +2014,18 @@
                     🚀 ARSITEKTUR REKAYASA MUTAKHIR // PROJECT OS V12.0
                 </div>
                 <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 6px 0 0 0;">
-                    21. Ekosistem Paripurna V12.0: 7 SaaS Tiers, Turnkey Escrow, 36 UI + 6 Scroll, 20 Pilar, 26 FAQs, Tri-Hybrid AI &amp; Auto-Save Workspace
+                    21. Ekosistem Paripurna V12.0: 7 SaaS Tiers, Turnkey Escrow, 36 UI + 6 Scroll, 20 Pilar, 28 FAQs, Tri-Hybrid AI (14 Primitif, 51 Tools) &amp; Auto-Save Workspace
                 </h3>
             </div>
             <div style="display: flex; gap: 6px; align-items: center;">
                 <span class="sg-badge-active">20/20 PILAR TERKUNCI</span>
-                <span class="sg-badge-active">49 NATIVE TOOLS</span>
+                <span class="sg-badge-active">14 PRIMITIF INTI</span>
+                <span class="sg-badge-active">51 NATIVE TOOLS</span>
             </div>
         </div>
 
         <p style="font-size: 12px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;">
-            Pembaruan teknologi v12.0 menyempurnakan seluruh spektrum rekayasa Project OS dari sisi komersial (7 SaaS Tiers &amp; Turnkey Escrow 50/50), desain antarmuka industri (36 Cockpit Operasional + 6 Preset Scrollytelling), fondasi 20 Pilar Paripurna, 26 FAQ teruji, Tri-Hybrid AI Memory (CAG O(1), RAG Dense/Sparse RRF, KAG Graph Rules), hingga auto-save folder scaffolding kustom per-proyek yang terisolasi di cloud.
+            Pembaruan teknologi v12.0 menyempurnakan seluruh spektrum rekayasa Project OS dari sisi komersial (7 SaaS Tiers &amp; Turnkey Escrow 50/50), desain antarmuka industri (36 Cockpit Operasional + 6 Preset Scrollytelling), fondasi 20 Pilar Paripurna, 14 Composable Core Primitives (termasuk Visi Biometrik Wajah &amp; Geofence Spasial Anti-Fake GPS), 28 FAQ teruji, Tri-Hybrid AI Memory (CAG O(1), RAG Dense/Sparse RRF, KAG Graph Rules, 51 Native Tools), hingga auto-save folder scaffolding kustom per-proyek yang terisolasi di cloud.
         </p>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px;">
@@ -2080,17 +2081,17 @@
                 </div>
             </div>
 
-            <!-- Subcard 5: Tri-Hybrid AI & 49 Tools -->
+            <!-- Subcard 5: Tri-Hybrid AI & 51 Tools -->
             <div class="sg-subcard" style="border-left: 3px solid #3b82f6;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                    <strong style="color: #2563eb; font-size: 12px; text-transform: uppercase;">05. TRI-HYBRID AI CONTEXT ENGINE</strong>
-                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(59, 130, 246, 0.1); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3);">CAG • RAG • KAG</span>
+                    <strong style="color: #2563eb; font-size: 12px; text-transform: uppercase;">05. TRI-HYBRID AI &amp; 14 CORE PRIMITIVES</strong>
+                    <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(59, 130, 246, 0.1); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.3);">51 TOOLS • CAG • RAG • KAG</span>
                 </div>
                 <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    <div>• <strong>14 Composable Primitives</strong>: Primitif #13 AI Vision Biometrics (ArcFace 512-D ONNX, MiniFASNet FFT, UU PDP Pasal 8) &amp; Primitif #14 Geospatial Geofence (Haversine + PostGIS ST_DWithin, NTP anti-drift &le;30s).</div>
                     <div>• <strong>CAG (Cache-Augmented Generation)</strong>: Prompt caching O(1) via Redis &amp; Anthropic headers (hemat 70%+ token, respons &lt;100ms).</div>
-                    <div>• <strong>RAG (Retrieval-Augmented)</strong>: Vektor 768-dim pgvector + BM25 sparse lexical search dengan Reciprocal Rank Fusion (RRF).</div>
-                    <div>• <strong>KAG (Knowledge-Augmented)</strong>: Graphify deterministic architectural knowledge graph menjaga invarian arsitektur.</div>
-                    <div>• <strong>49 Native AI Tools</strong>: Terhubung langsung via <code>.mcp.json</code> ke Claude Code, Cursor, Windsurf, dan Antigravity.</div>
+                    <div>• <strong>RAG &amp; KAG Context</strong>: Vektor 768-dim pgvector + BM25 sparse lexical RRF + Graphify deterministic knowledge graph.</div>
+                    <div>• <strong>51 Native AI Tools</strong>: Terhubung langsung via <code>.mcp.json</code> ke Claude Code, Cursor, Windsurf, dan Antigravity (termasuk verifikasi biometrik &amp; spasial).</div>
                 </div>
             </div>
 

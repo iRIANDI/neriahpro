@@ -422,9 +422,9 @@
                 </h2>
                 <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-3xl">
                     @if($isEn)
-                        Neriah Pro operates under the 20 Pillars Software Factory OS v12.0 framework, ensuring enterprise-grade stability, zero-downtime deployment, mathematical O(1) database scalability, Midtrans Snap Escrow (50/50), Tri-Hybrid Context Engine (CAG, RAG, KAG, 49 Native Tools), and isolated custom workspace auto-save.
+                        Neriah Pro operates under the 20 Pillars Software Factory OS v12.0 framework, ensuring enterprise-grade stability, zero-downtime deployment, mathematical O(1) database scalability, Midtrans Snap Escrow (50/50), 14 Core Composable Primitives, Tri-Hybrid Context Engine (CAG, RAG, KAG, 51 Native Tools), and isolated custom workspace auto-save.
                     @else
-                        Neriah Pro menerapkan standar 20 Pilar Software Factory OS v12.0 untuk menjamin kestabilan produksi, skalabilitas database O(1) berbasis PostgreSQL 16 Strict ULID, Escrow Midtrans Snap (50/50 &amp; 3-Milestone), Mesin Konteks AI Tri-Hybrid (CAG, RAG, KAG, 49 Native Tools), dan auto-save folder scaffolding kustom terisolasi di cloud per proyek.
+                        Neriah Pro menerapkan standar 20 Pilar Software Factory OS v12.0 untuk menjamin kestabilan produksi, skalabilitas database O(1) berbasis PostgreSQL 16 Strict ULID, Escrow Midtrans Snap (50/50 &amp; 3-Milestone), 14 Primitif Inti (termasuk Biometrik ArcFace &amp; Geofence Spasial), Mesin Konteks AI Tri-Hybrid (CAG, RAG, KAG, 51 Native Tools), dan auto-save folder scaffolding kustom terisolasi di cloud per proyek.
                     @endif
                 </p>
             </div>
@@ -445,11 +445,11 @@
                 <!-- Pilar 2 -->
                 <div class="border border-zinc-300 dark:border-zinc-800 p-3.5 bg-zinc-50 dark:bg-zinc-900/60 space-y-1.5">
                     <div class="flex items-center justify-between font-mono">
-                        <span class="font-black text-zinc-900 dark:text-white uppercase">P02: 12 Sektor &amp; 9 Stack</span>
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">P02: 12 Sektor &amp; 14 Primitif</span>
                         <span class="text-[9px] px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 font-bold">Topology</span>
                     </div>
                     <p class="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                        Taksonomi 12 industri, 12 primitif transaksi, dan 9 adapter arsitektur (Monolith M1, Headless D1, Polyglot S1).
+                        Taksonomi 12 industri, 14 primitif inti (termasuk Visi Biometrik Wajah ArcFace &amp; Geofence GPS Haversine), dan 9 adapter arsitektur (M1/D1/S1).
                     </p>
                 </div>
 
@@ -511,11 +511,11 @@
                 <!-- Pilar 8 -->
                 <div class="border border-zinc-300 dark:border-zinc-800 p-3.5 bg-zinc-50 dark:bg-zinc-900/60 space-y-1.5">
                     <div class="flex items-center justify-between font-mono">
-                        <span class="font-black text-zinc-900 dark:text-white uppercase">P08: 49 Native Tools &amp; MCP</span>
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">P08: 51 Native Tools &amp; MCP</span>
                         <span class="text-[9px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950 text-blue-950 dark:text-blue-200 font-bold">Tool Calling</span>
                     </div>
                     <p class="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                        49 native tools eksekutif terhubung ke <code>.mcp.json</code> untuk Claude Code, Cursor, Windsurf, dan Antigravity IDE.
+                        51 native tools eksekutif terhubung ke <code>.mcp.json</code> (termasuk verifikasi biometrik &amp; spasial) untuk Claude Code, Cursor, Windsurf, dan Antigravity.
                     </p>
                 </div>
 
@@ -548,7 +548,7 @@
                         <span class="text-[9px] px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 font-bold">Privacy</span>
                     </div>
                     <p class="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                        Enkripsi data pribadi AES-256 + HMAC-SHA256 Blind Index O(1) untuk pencarian cepat NIK/HP tanpa membuka plaintext.
+                        Enkripsi data pribadi AES-256 + HMAC-SHA256 Blind Index O(1) untuk pencarian NIK/HP, serta pemenuhan Hak Dilupakan Biometrik UU PDP Pasal 8.
                     </p>
                 </div>
 

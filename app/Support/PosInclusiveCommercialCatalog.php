@@ -1076,6 +1076,24 @@ class PosInclusiveCommercialCatalog
                     ],
                     'behind_the_scenes' => 'PRIMITIVE_FUND_GRANT_DISBURSEMENT + SHA-256 Public Trust Ledger',
                 ],
+                [
+                    'primitive_code' => 'PRIMITIVE_AI_VISION_BIOMETRICS',
+                    'locked' => false,
+                    'human_label' => [
+                        'id' => 'Absensi biometrik wajah kamera dengan verifikasi anti-spoofing liveness & hak dilupakan UU PDP',
+                        'en' => 'Camera face biometric attendance with anti-spoofing passive liveness & UU PDP privacy',
+                    ],
+                    'behind_the_scenes' => 'PRIMITIVE_AI_VISION_BIOMETRICS + MiniFASNet & ArcFace ONNX 512-D + pgvector HNSW',
+                ],
+                [
+                    'primitive_code' => 'PRIMITIVE_GEOSPATIAL_GEOFENCE',
+                    'locked' => false,
+                    'human_label' => [
+                        'id' => 'Membatasi radius presensi kantor dengan GPS anti-fake, cek deviasi jam server, & approval dinas luar',
+                        'en' => 'Enforce office presence radius with anti-fake GPS, server time sync, & out-of-office approval',
+                    ],
+                    'behind_the_scenes' => 'PRIMITIVE_GEOSPATIAL_GEOFENCE + Haversine & PostGIS ST_DWithin',
+                ],
             ],
             'visual_actor_roles' => [
                 ['code' => 'ROLE_OWNER_DIRECTOR', 'icon' => '👑', 'label' => ['id' => 'Pemilik Usaha / Direktur / Ketua Yayasan', 'en' => 'Business Owner / Director / Board Chair']],

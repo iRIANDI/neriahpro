@@ -326,6 +326,20 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
   Serta menyuntikkan **Clean Code & Anti-Bloat Architecture Protocol (Anti-God Object)** ke dalam prompt AI agent (`PrdFeatureSpecificationService`, `PrdMarkdownExporterService::toCursorrules()`, `.agents/rules/clean-code-modular-standard.md.stub`, dan `ScaffoldGeneratorService`) yang mewajibkan AI coding agent menulis kode modular terisolasi (<400 baris per file) dan melarang kelas/komponen raksasa monolitik.
 - **`App\Models\CmsGlobalSetting` & `App\Http\Controllers\PageController` (Cache Incomplete Class Resiliency)**:
   Sistem penanganan cache CMS dan global configuration yang 100% kebal terhadap error `__PHP_Incomplete_Class`: `CmsGlobalSetting::getAllCached()` dan `PageController` hanya menyimpan raw array atribut primitif (`cms_global_settings_data` & `cms_page_data_{slug}`) alih-alih serialisasi objek/koleksi Eloquent mentah. Dilengkapi self-healing otomatis di level model, controller, dan Blade view (`page.blade.php`, `cv-pro/index.blade.php`) yang mendeteksi serta me-reset cache secara transparan jika terdeteksi data korup/legacy.
+- **`App\Support\BrandLogoHelper` & `resources/views/components/fullscreen-loader.blade.php`**:
+  Mesin **Full-Screen Loading Anti-Pop-In Curtain & Dynamic Backend Brand Logo System**:
+  1. *Dynamic Backend Logo*: Resolusi logo brand resmi secara dinamis dari `CmsGlobalSetting` (`site_logo`, `site_logo_url`, `brand_logo`, atau `seo_schema.organization.logo`) dengan fallback ke monogram 'NP' brutalist. Jika admin mengunggah atau mengganti logo di Filament Admin (`ManageSettings` -> Identitas Brand & Logo Website), seluruh header dan layar loader seketika terbarui tanpa koding ulang.
+  2. *Anti-Pop-In Fullscreen Loader*: Menutupi layar secara instan (0-flicker inline CSS & dark mode early-sniff) saat halaman dibuka untuk menyembunyikan kalkulasi render, inisialisasi Alpine.js, dan hidrasi React 19 Islands. Memiliki multi-phase progress bar deterministik dan auto-dismiss halus saat `window.load`, `alpine:initialized`, dan `neriah-islands:ready` tercapai dengan safety valve 2.5s.
+  3. *Context-Aware Bilingual Content*: Menampilkan teks dwibahasa Tier 1 (ID & EN) dan badge fungsional dinamis sesuai rute/fitur aktif:
+     - Project OS / Blueprint: `PROJECT OS // ARCHITECTURE HUB` ("Menyiapkan Studio Project OS...")
+     - CV Pro / Generator: `CV PRO // AI RESUME & ATS ENGINE` ("Menyiapkan Studio CV Pro...")
+     - Customer Dashboard: `CLIENT PORTAL // SECURE DASHBOARD` ("Menyiapkan Dashboard Klien...")
+     - Checkout / Cart: `COMMERCIAL // SPRINT CAPACITY` ("Menyiapkan Ringkasan Pemesanan...")
+     - Explore / Katalog: `EXPLORE // SOLUTIONS CATALOG` ("Menyiapkan Katalog Solusi Digital...")
+     - Legal & Compliance: `COMPLIANCE // SERVICE GUARANTEE` ("Menyiapkan Dokumen Legalitas...")
+     - Default / Beranda: `NERIAH PRO // LIFE SOLUTION APPS` ("Menyiapkan Layanan Digital Neriah Pro...").
+  4. *Solid Brutalist Standard*: 100% Dark & Light mode compliance (`bg-white dark:bg-zinc-950`), WCAG AAA high-contrast text, aksen garis presisi emerald/amber, tanpa gradien norak, dan larangan mutlak bentuk kapsul (`rounded-none` / `rounded-xs`).
+
 - **`App\Http\Middleware\SetAppLocale`**:
   Mendeteksi dan menetapkan bahasa aktif (`id` / `en`) secara transparan dari query string, sesi, atau cookie `neriah_locale`.
 - **`App\Support\CountryZoneHelper`**:

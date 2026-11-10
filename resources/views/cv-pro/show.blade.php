@@ -67,6 +67,11 @@
 </head>
 <body class="bg-zinc-100 text-zinc-900 min-h-screen py-8 antialiased">
 
+    <!-- Enterprise Fullscreen Loading Screen (Prevents Component Pop-In) -->
+    <div class="no-print">
+        <x-fullscreen-loader feature="cv_pro" />
+    </div>
+
     <!-- Sticky Floating Action Bar (Hidden on print) -->
     <header class="no-print fixed top-4 inset-x-0 z-50 flex justify-center px-4">
         <div class="bg-zinc-900/90 backdrop-blur-md text-white border border-zinc-700/80 px-4 py-2.5 shadow-2xl flex items-center gap-3 sm:gap-6 text-xs font-mono">

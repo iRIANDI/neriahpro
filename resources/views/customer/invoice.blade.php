@@ -78,6 +78,11 @@
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen py-8">
 
+    <!-- Enterprise Fullscreen Loading Screen (Prevents Component Pop-In) -->
+    <div class="no-print">
+        <x-fullscreen-loader feature="customer_portal" />
+    </div>
+
     <!-- FLOATING TOP CONTROLS (NON-PRINT) -->
     <div class="max-w-4xl mx-auto px-4 mb-6 no-print flex items-center justify-between gap-4">
         <a 

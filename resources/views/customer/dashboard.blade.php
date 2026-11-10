@@ -548,6 +548,9 @@
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen transition-colors duration-200" x-data="customerDashboardApp()">
 
+    <!-- Enterprise Fullscreen Loading Screen (Prevents Component Pop-In) -->
+    <x-fullscreen-loader feature="customer_portal" />
+
     <!-- 1. TOP UTILITY HEADER (FULL SITE NAVIGATION + DUAL TIER LANGUAGE + THEME TOGGLE) -->
     <x-global-navigation :global-settings="$globalSettings" />
 

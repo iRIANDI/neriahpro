@@ -414,6 +414,9 @@
 <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col justify-between transition-colors duration-200"
       x-data="customerLoginApp()">
 
+    <!-- Enterprise Fullscreen Loading Screen (Prevents Component Pop-In) -->
+    <x-fullscreen-loader feature="customer_portal" />
+
     <!-- TOP NAVIGATION BAR: BRAND, TIER 1 LOCALE, TIER 2 TRANSLATE, THEME TOGGLE -->
     <header class="border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">

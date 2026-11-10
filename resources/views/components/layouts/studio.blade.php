@@ -43,6 +43,9 @@
     </style>
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 font-sans antialiased min-h-screen lg:h-screen lg:overflow-hidden flex flex-col">
+    <!-- Enterprise Fullscreen Loading Screen (Prevents Component Pop-In) -->
+    <x-fullscreen-loader feature="project_os" />
+
     {{ $slot }}
 
     <!-- Centralized Zero-Slop Floating Toast Container -->

@@ -103,9 +103,19 @@ class CmsGlobalSetting extends Model
         );
     }
 
+    public static function purgeRuntimeCache(): void
+    {
+        static::$runtimeCache = null;
+        try {
+            \Illuminate\Support\Facades\Cache::forget('cms_global_settings');
+            \Illuminate\Support\Facades\Cache::forget('cms_global_settings_data');
+        } catch (\Throwable) {}
+    }
+
     protected static function booted()
     {
         static::saved(function ($setting) {
+            static::$runtimeCache = null;
             \Illuminate\Support\Facades\Cache::forget('app_timezone');
             \Illuminate\Support\Facades\Cache::forget('seo_schema_organization');
             \Illuminate\Support\Facades\Cache::forget('seo_schema_website');
@@ -118,6 +128,7 @@ class CmsGlobalSetting extends Model
         });
 
         static::deleted(function ($setting) {
+            static::$runtimeCache = null;
             \Illuminate\Support\Facades\Cache::forget('app_timezone');
             \Illuminate\Support\Facades\Cache::forget('seo_schema_organization');
             \Illuminate\Support\Facades\Cache::forget('seo_schema_website');

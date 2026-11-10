@@ -138,6 +138,9 @@
 </head>
 <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased overflow-x-hidden min-h-screen transition-colors duration-200">
     
+    <!-- Enterprise Fullscreen Loading Screen (Prevents Component Pop-In) -->
+    <x-fullscreen-loader />
+
     <!-- Global Navigation -->
     <x-global-navigation :global-settings="$globalSettings" />
 

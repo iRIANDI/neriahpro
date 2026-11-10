@@ -25,7 +25,7 @@ import {
   Key
 } from 'lucide-react';
 
-export default function GlobalNavigationIsland({ settings, featureFlags, cartData, authUser }) {
+export default function GlobalNavigationIsland({ settings, featureFlags, cartData, authUser, brandLogoUrl }) {
   const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
   const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
   const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
@@ -285,9 +285,18 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
           
           {/* Brand Logo */}
           <a href="/" className="flex items-center gap-2 group shrink-0 mr-4 sm:mr-6 lg:mr-8">
-            <span className="w-7 h-7 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black flex items-center justify-center font-mono font-black text-xs rounded-none transition-transform group-hover:scale-105">
-              N
-            </span>
+            {brandLogoUrl && !brandLogoUrl.includes('favicon.ico') ? (
+              <img 
+                src={brandLogoUrl} 
+                alt="Neriah Pro" 
+                className="h-7 w-auto max-w-[120px] object-contain transition-transform group-hover:scale-105" 
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            ) : (
+              <span className="w-7 h-7 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black flex items-center justify-center font-mono font-black text-xs rounded-none transition-transform group-hover:scale-105">
+                N
+              </span>
+            )}
             <span className="font-black text-lg sm:text-xl uppercase tracking-tighter text-zinc-900 dark:text-white font-sans">
               NERIAH<span className="text-emerald-500">PRO</span>
             </span>

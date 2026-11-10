@@ -52,6 +52,9 @@
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
+    <!-- Enterprise Fullscreen Loading Screen (Prevents Component Pop-In) -->
+    <x-fullscreen-loader feature="cv_pro" />
+
     @php
         if (!isset($globalSettings) || $globalSettings instanceof \__PHP_Incomplete_Class || (!is_array($globalSettings) && !($globalSettings instanceof \Illuminate\Support\Collection) && !($globalSettings instanceof \ArrayAccess))) {
             try {

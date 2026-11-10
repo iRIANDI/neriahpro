@@ -78,4 +78,5 @@
     'featureFlags' => $featureFlags,
     'cartData' => $cartData,
     'authUser' => $authUser,
+    'brandLogoUrl' => \App\Support\BrandLogoHelper::getLogoUrl(),
 ])

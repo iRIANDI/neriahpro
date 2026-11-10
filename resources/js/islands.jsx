@@ -48,4 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to mount island:', err);
         }
     });
+
+    // Notify full-screen loader and page observers that React Islands are mounted
+    try {
+        window.dispatchEvent(new CustomEvent('neriah-islands:ready'));
+    } catch (e) {}
 });

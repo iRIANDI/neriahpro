@@ -127,6 +127,8 @@ class ManageSettings extends Page implements HasForms
                     'url' => 'https://neriahpro.com',
                 ],
             ],
+            'site_logo' => null,
+            'site_logo_url' => null,
             'pricing_advisory_price' => '2.500.000',
             'pricing_mvp_price' => 'Custom Quotation',
             'pricing_umkm_price' => '7.500.000',
@@ -284,6 +286,32 @@ class ManageSettings extends Page implements HasForms
                                     ->searchable()
                                     ->required()
                                     ->default('Asia/Jakarta'),
+
+                                Section::make('Identitas Brand & Logo Website (Header & Full-Screen Loader)')
+                                    ->description('Konfigurasi logo resmi website Neriah Pro. Logo ini secara dinamis ditampilkan pada navbar header dan layar full-screen loading di seluruh halaman Neriah Pro.')
+                                    ->schema([
+                                        \App\Support\FilamentCuratorHelper::picker('site_logo', 'branding', 'Logo Brand / Website (File Upload / Media)')
+                                            ->helperText('Unggah berkas logo resmi (format SVG atau PNG transparan direkomendasikan). Logo ini otomatis dipakai pada layar full-screen loading.')
+                                            ->columnSpan(1),
+                                        TextInput::make('site_logo_url')
+                                            ->label('Alternatif URL Logo Eksternal')
+                                            ->placeholder('misal: https://neriahpro.com/images/logo.png')
+                                            ->helperText('Opsional: Tautan URL gambar absolut jika tidak mengunggah berkas media.')
+                                            ->columnSpan(1),
+                                        Placeholder::make('site_logo_preview')
+                                            ->label('Pratinjau Logo Aktif')
+                                            ->content(function ($get) {
+                                                $url = \App\Support\BrandLogoHelper::getLogoUrlFromValues($get('site_logo'), $get('site_logo_url'), $get('seo_schema.organization.logo'));
+                                                $filename = basename(parse_url($url, PHP_URL_PATH) ?: 'logo');
+                                                return new \Illuminate\Support\HtmlString(
+                                                    '<div class="p-3 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-sm inline-flex items-center gap-3">'
+                                                    . '<img src="' . e($url) . '" alt="Logo Preview" class="h-10 w-auto max-w-[160px] object-contain" />'
+                                                    . '<span class="text-xs font-mono text-zinc-600 dark:text-zinc-400 font-bold">Aktif: ' . e($filename) . '</span>'
+                                                    . '</div>'
+                                                );
+                                            })
+                                            ->columnSpanFull(),
+                                    ])->columns(2),
                                     
                                 KeyValue::make('site_identity')
                                     ->label('Site Identity')
@@ -1390,6 +1418,10 @@ class ManageSettings extends Page implements HasForms
 
         if (isset($data['developer_signature_image']) && is_array($data['developer_signature_image'])) {
             $data['developer_signature_image'] = reset($data['developer_signature_image']) ?: '';
+        }
+
+        if (isset($data['site_logo']) && is_array($data['site_logo'])) {
+            $data['site_logo'] = reset($data['site_logo']) ?: '';
         }
         
         foreach ($data as $key => $value) {

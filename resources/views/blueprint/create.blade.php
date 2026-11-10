@@ -75,6 +75,9 @@
 </head>
 <body class="bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
 
+    <!-- Enterprise Fullscreen Loading Screen (Prevents Component Pop-In) -->
+    <x-fullscreen-loader feature="project_os" />
+
     <!-- Global Header (Precision Sharp Style) -->
     <header class="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 py-3.5 px-6 sticky top-0 z-50 transition-colors">
         <div class="max-w-6xl mx-auto flex items-center justify-between">

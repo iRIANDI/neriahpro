@@ -58,3 +58,4 @@ Folder `.agents/` pada proyek ini dioperasikan di bawah manajemen ECC Universal 
   npx ecc-universal@2.2.3 install --target antigravity php --no-hooks
   ```
 - Seluruh state tercatat dan diverifikasi di `.agents/ecc-install-state.json`.
+

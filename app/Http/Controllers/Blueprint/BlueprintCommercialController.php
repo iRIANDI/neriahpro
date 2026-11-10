@@ -25,6 +25,7 @@ use App\Services\BlueprintSlopScannerService;
 use App\Services\BrownfieldMigrationAuditorService;
 use App\Services\Legal\LegalDocumentVaultService;
 use App\Services\MidtransSnapService;
+use App\Services\Notification\FonnteWhatsAppService;
 use App\Services\PosCommercialBridgeService;
 use App\Services\PrdGeneratorService;
 use App\Services\ProjectOsBlueprintCompilerService;
@@ -847,6 +848,15 @@ class BlueprintCommercialController extends Controller
             \Illuminate\Support\Facades\Log::warning('Notification to admin failed: '.$e->getMessage());
         }
 
+        // Automated Real-Time WhatsApp Alert to Admin via Fonnte API
+        if ($packageName === 'impact_nonprofit_grant' && isset($grantApplication)) {
+            try {
+                FonnteWhatsAppService::notifyNewGrantApplication($grantApplication, $uploadedDocMeta);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Fonnte WhatsApp notification failed for grant application: '.$e->getMessage());
+            }
+        }
+
         $basePrice = $packageMeta['default_price'] ?? 99000;
         $settingKey = $packageMeta['setting_key'] ?? null;
         if ($settingKey) {
@@ -973,6 +983,15 @@ class BlueprintCommercialController extends Controller
                 } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::warning("Failed to link pending order {$orderId} to blueprint {$blueprintSlug}: " . $e->getMessage());
                 }
+            }
+        }
+
+        // Automated Real-Time WhatsApp Alert to Admin for new Leads & Orders
+        if ($packageName !== 'impact_nonprofit_grant') {
+            try {
+                FonnteWhatsAppService::notifyNewLead($lead, $displayPackage, $isRetail, $orderId, (int) $finalAmount);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Fonnte WhatsApp notification failed for lead: '.$e->getMessage());
             }
         }
 

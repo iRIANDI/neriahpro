@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'fonnte' => [
+        'token' => env('FONNTE_API_TOKEN'),
+        'admin_whatsapp' => env('ADMIN_WHATSAPP_NUMBER', '081380448253'),
+    ],
+
 ];

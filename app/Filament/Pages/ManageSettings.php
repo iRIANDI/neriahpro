@@ -159,6 +159,9 @@ class ManageSettings extends Page implements HasForms
             'pricing_consultation_sla' => 'Maksimal 2 Jam Kerja',
             'pricing_enable_instant_whatsapp' => true,
             'pricing_whatsapp_template' => 'Halo Lead Architect Neriah Pro, saya tertarik memesan paket layanan arsitektur dan ingin mendiskusikan kebutuhan sistem kami...',
+            'enable_admin_whatsapp_notifications' => true,
+            'admin_notification_whatsapp' => '081380448253',
+            'fonnte_api_token' => env('FONNTE_API_TOKEN', ''),
         ];
 
         // Filter out null or empty strings from database so defaults prevail
@@ -1306,6 +1309,25 @@ class ManageSettings extends Page implements HasForms
                                             ->rows(3)
                                             ->default('Halo Lead Architect Neriah Pro, saya tertarik memesan paket layanan arsitektur dan ingin mendiskusikan kebutuhan sistem kami...')
                                             ->columnSpanFull(),
+                                    ])->columns(3),
+
+                                Section::make('Notifikasi WhatsApp Admin Otomatis (Fonnte API Gateway)')
+                                    ->description('Kirim alert WhatsApp otomatis ke Lead Architect saat ada berkas dokumen legalitas CSR / pesanan lisensi baru masuk.')
+                                    ->schema([
+                                        Toggle::make('enable_admin_whatsapp_notifications')
+                                            ->label('Aktifkan Notifikasi WhatsApp Otomatis ke Admin')
+                                            ->helperText('Otomatis mengirim rincian pemohon, nomor SK/Akta, dan ringkasan order ke WhatsApp Admin via Fonnte API.')
+                                            ->default(true),
+                                        TextInput::make('admin_notification_whatsapp')
+                                            ->label('Nomor WhatsApp Admin Penerima Alert')
+                                            ->helperText('Nomor WhatsApp yang akan menerima alert pengajuan CSR dan order baru (contoh: 081380448253).')
+                                            ->default('081380448253')
+                                            ->required(),
+                                        TextInput::make('fonnte_api_token')
+                                            ->label('Fonnte API Token')
+                                            ->helperText('Token API resmi dari dashboard https://fonnte.com. Jika kosong, sistem otomatis membaca dari ENV FONNTE_API_TOKEN.')
+                                            ->password()
+                                            ->revealable(),
                                     ])->columns(3),
                             ]),
                     ])

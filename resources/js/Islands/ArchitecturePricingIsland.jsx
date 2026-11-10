@@ -620,10 +620,10 @@ export default function ArchitecturePricingIsland({
     {
       category: 'SATU_PINTU',
       q: isEn
-        ? 'Why does the One-Stop Wizard (Satu Pintu v12.0) require selecting a SaaS License or Mitra Contract before unlocking full blueprints (No Unpaid Studio Bypass)?'
+        ? 'Why does the One-Stop Wizard (v12.0) require selecting a SaaS License or Mitra Contract before unlocking full blueprints (No Unpaid Studio Bypass)?'
         : 'Mengapa Satu Pintu Wizard v12.0 mengunci akses cetak biru penuh ke pemilihan Paket SaaS atau Kontrak Mitra (Tanpa Tombol Bypass Gratis)?',
       a: isEn
-        ? 'To guarantee 100% commercial consistency between the One-Stop configurator and our official 7 Retail SaaS Tiers & 3 Mitra Studio Contracts below. In Satu Pintu v12.0, every left-panel selection (Step B 12 Sectors, Step C Stack Topology, Step D 36 Visual UI + 6 Scrollytelling Presets, Step E1 Persona Mode, Step E2 Tier-1 Regulation) dynamically updates the right-hand summary in real time and locks directly into Step F (your chosen SaaS License or Mitra Contract). Server-side validation in BlueprintController::create() also enforces entitlement so unpaid sessions cannot bypass paid Pro/Ultimate/Agency tiers.'
+        ? 'To guarantee 100% commercial consistency between the One-Stop configurator and our official 7 Retail SaaS Tiers & 3 Mitra Studio Contracts below. In One-Stop Wizard v12.0, every left-panel selection (Step B 12 Sectors, Step C Stack Topology, Step D 36 Visual UI + 6 Scrollytelling Presets, Step E1 Persona Mode, Step E2 Tier-1 Regulation) dynamically updates the right-hand summary in real time and locks directly into Step F (your chosen SaaS License or Mitra Contract). Server-side validation in BlueprintController::create() also enforces entitlement so unpaid sessions cannot bypass paid Pro/Ultimate/Agency tiers.'
         : 'Demi menjaga konsistensi komersial 100% antara konfigurator Satu Pintu di atas dengan daftar 7 Paket SaaS Retail & 3 Kontrak Mitra di bawahnya. Pada Satu Pintu v12.0, setiap pilihan di panel kiri (Langkah B 12 Sektor, Langkah C Topologi Stack, Langkah D 36 Visual UI + 6 Preset Scrollytelling, Langkah E1 Mode Persona, Langkah E2 Regulasi Tier-1) langsung memperbarui panel status kanan secara real-time dan dikunci ke Langkah F (pilihan Lisensi SaaS atau Kontrak Mitra). Proteksi server di BlueprintController::create() juga memblokir bypass URL langsung tanpa lisensi aktif.'
     },
     {
@@ -1803,7 +1803,7 @@ export default function ArchitecturePricingIsland({
                                 ) : (
                                   <div className="p-2 bg-emerald-100/80 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/70 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] leading-snug">
                                     {isEn
-                                      ? 'All Satu Pintu selections (Sector, Stack, Visual UI & Regulation) attach directly to your SaaS license checkout & Customer Portal.'
+                                      ? 'All One-Stop selections (Sector, Stack, Visual UI & Regulation) attach directly to your SaaS license checkout & Customer Portal.'
                                       : 'Seluruh konfigurasi Satu Pintu (Sektor, Stack, Visual UI & Regulasi) otomatis dikunci ke Lisensi SaaS & Dashboard Akun Anda pasca-checkout.'}
                                   </div>
                                 )}
@@ -2393,7 +2393,7 @@ export default function ArchitecturePricingIsland({
                           'Pillars P04–P06 (UI/UX): 36 Operational Cockpits + 6 60fps Scrollytelling Presets (Zone A + B)',
                           'Pillars P07–P08 (AI Engine): KAG Knowledge Graph + CAG Prompt Caching + 49 Native Tools Calling',
                           'Pillars P09–P11 (Security): AgentShield Red-Team, SHA-256 Audit Trail Chain & UU PDP Vault',
-                          'Pillars P12–P15 (SaaS): Satu Pintu Commercial Gate, Escrow Midtrans Snap & 90-Day SLA Warranty',
+                          'Pillars P12–P15 (SaaS): One-Stop Commercial Gate, Escrow Midtrans Snap & 90-Day SLA Warranty',
                           'Pillars P16–P17 (Authority): 12-Sector Schema.org JSON-LD & Native /llms.txt AI Citation Engine',
                           'Pillars P18–P20 (DevOps): Offline PWA Outbox, Pre-Migration pg_dump Guard & 1-Click Rollback',
                           'Executive 1-on-1 Call: 60-Minute Direct Strategic Session with Principal Architect',
@@ -2791,7 +2791,7 @@ export default function ArchitecturePricingIsland({
                           'Pillars P04–P06 (UI/UX & Logic): 36 Operational Cockpits + 6 60fps Scrollytelling Presets, Dual-Persona Studio, match() ACID Ledger',
                           'Pillars P07–P08 (AI Context): KAG Knowledge Graph + CAG Prompt Caching + 49 Native Tool Calling Functions & Live MCP Bridge',
                           'Pillars P09–P11 (Security): AgentShield Red-Team, Tamper-Evident SHA-256 Audit Trail Chain, UU PDP PII Vault & Blind Index',
-                          'Pillars P12–P15 (SaaS & Escrow): Satu Pintu Gate, Turnkey Escrow Midtrans Snap (50/50 & 3-Milestone), SHA-256 Scope Lock, 90-Day SLA Bug-Warranty',
+                          'Pillars P12–P15 (SaaS & Escrow): One-Stop Commercial Gate, Turnkey Escrow Midtrans Snap (50/50 & 3-Milestone), SHA-256 Scope Lock, 90-Day SLA Bug-Warranty',
                           'Pillars P16–P17 (Authority): 12-Sector Multi-Graph Schema.org JSON-LD & Native /llms.txt AI Citation GEO Engine',
                           'Pillars P18–P20 (DevOps & SOP): Offline PWA Outbox Sync, Pre-Migration pg_dump Guard & 1-Click Rollback, Role Onboarding & Client A4 SOP',
                           'Pillar 4 (Realistic Data): Synthetic Mock Data Seeder Engine (100+ records for instant staging)',
@@ -3663,7 +3663,7 @@ return match (true) {
                             { no: '09', id: 'AgentShield Red-Team & Anti-AI Malware', en: 'AgentShield Red-Team & Anti-Malware', artifact: 'verify-blueprint.sh' },
                             { no: '10', id: 'Rantai Audit SHA-256 Kriptografis', en: 'Cryptographic SHA-256 Audit Trail Chain', artifact: 'AuditLog::record' },
                             { no: '11', id: 'Brankas Privasi UU PDP & Blind Index O(1)', en: 'UU PDP Privacy Vault & Blind Index O(1)', artifact: 'HasEncryptedPiiWithBlindIndex.php' },
-                            { no: '12', id: 'Gerbang Lisensi Komersial Satu Pintu', en: 'Satu Pintu Commercial SaaS Gate', artifact: 'SatuPintuEntitlementLock.php' },
+                            { no: '12', id: 'Gerbang Lisensi Komersial Satu Pintu', en: 'One-Stop Commercial SaaS Gate', artifact: 'SatuPintuEntitlementLock.php' },
                             { no: '13', id: 'Turnkey Escrow Midtrans Snap (50/50)', en: 'Turnkey Escrow Midtrans Snap (50/50)', artifact: 'MidtransEscrowPaymentService.php' },
                             { no: '14', id: 'RAB Jam Kerja & Segel Lingkup SHA-256', en: 'Algorithmic Fair RAB & SHA-256 Scope Lock', artifact: 'SHA-256 Scope Lock SPK' },
                             { no: '15', id: 'BAST Digital & Garansi Bug SLA 90 Hari', en: 'Digital BAST & 90-Day SLA Bug-Warranty', artifact: 'DigitalBastService.php' },
@@ -3839,7 +3839,7 @@ return match (true) {
             {pricingSectionTab === 'matrix' && (() => {
               const matrixCategories = [
                 { id: 'ALL', label: isEn ? 'All 28 Parameters' : 'Semua 28 Parameter' },
-                { id: 'COMMERCIAL', label: isEn ? '1. Satu Pintu & Commercial' : '1. Satu Pintu & Lisensi' },
+                { id: 'COMMERCIAL', label: isEn ? '1. One-Stop & Commercial' : '1. Satu Pintu & Lisensi' },
                 { id: 'ARCHITECTURE', label: isEn ? '2. DB ULID, Stack & Scale' : '2. DB ULID, Stack & Skala' },
                 { id: 'UI_UX', label: isEn ? '3. 12-Sector 36 UI & 6 Scroll' : '3. 12 Sektor 36 UI & 6 Scroll' },
                 { id: 'AI_SECURITY', label: isEn ? '4. AI 49 Tools, KAG, CAG, RAG & Shield' : '4. AI 49 Tool, KAG, CAG, RAG & Shield' },
@@ -3858,7 +3858,7 @@ return match (true) {
                 },
                 {
                   cat: 'COMMERCIAL',
-                  param: isEn ? '02. Satu Pintu Commercial Gate & Entitlement Lock' : '02. Gerbang Satu Pintu & Kunci Lisensi Resmi',
+                  param: isEn ? '02. One-Stop Commercial Gate & Entitlement Lock' : '02. Gerbang Satu Pintu & Kunci Lisensi Resmi',
                   sparkGrant: isEn ? 'Spark: 2x/Mo Guest Quota | CSR Grant: Requires Akta / SK Kemenkumham Verification' : 'Spark: Kuota Tamu 2x/Bln | Hibah CSR: Wajib Verifikasi Akta / SK Kemenkumham',
                   starterPass: isEn ? 'Starter (Rp 99K): Phase 1–3 | Single-App Pass (Rp 299K): 1 App Full Lock' : 'Starter (Rp 99rb): Fase 1–3 | Single-App Pass (Rp 299rb): Kunci Penuh 1 Aplikasi',
                   proAgencyUlt: isEn ? 'Pro (Rp 399K) / Agency 5-Seat (Rp 990K) / Ultimate (Rp 1.49M): Full Unlock' : 'Pro (Rp 399rb) / Agency 5-Kursi (Rp 990rb) / Ultimate (Rp 1,49 Jt): Terbuka Penuh',
@@ -4130,7 +4130,7 @@ return match (true) {
                 { no: '09', name: isEn ? 'Live 2-Way MCP Bridge' : 'Jembatan Live MCP 2-Arah', slop: isEn ? 'Zero IDE awareness of blueprint state' : 'IDE tidak tahu status progres cetak biru', pos: isEn ? 'Live .mcp.json + 49 Native AI Tools (KAG/CAG/RAG)' : 'Sinkronisasi .mcp.json + 49 Tool AI (KAG/CAG/RAG)' },
                 { no: '10', name: isEn ? 'AgentShield & Living CVE' : 'AgentShield & Living CVE', slop: isEn ? 'Vulnerable to Prompt Injection & IDOR' : 'Rawan kebocoran IDOR & serangan Prompt Injection', pos: isEn ? '3-Gate AgentShield + Phase 7 Red-Team + CVE Autopatch' : 'Firewall AgentShield + Uji Red-Team Fase 7 + Patch CVE' },
                 { no: '11', name: isEn ? 'Canary IP & SHA-256 Audit' : 'Canary IP & Audit SHA-256', slop: isEn ? 'Mutable logs & unprotected documents' : 'Log mudah dihapus & dokumen rawan dibajak', pos: isEn ? 'Zero-Width Canary IP + SHA-256 Hash Chain (.xlsx)' : 'Tanda Air Canary IP + Rantai Hash SHA-256 (.xlsx)' },
-                { no: '12', name: isEn ? 'Satu Pintu Commercial Gate' : 'Gerbang Komersial Satu Pintu', slop: isEn ? 'Inconsistent free bypass vs pricing cards' : 'Tombol loncat gratis tidak sinkron dengan tabel harga', pos: isEn ? 'Unified Step A–F Configurator + Backend Entitlement Lock' : 'Konfigurator Terpadu Langkah A–F + Kunci Lisensi Server' },
+                { no: '12', name: isEn ? 'One-Stop Commercial Gate' : 'Gerbang Komersial Satu Pintu', slop: isEn ? 'Inconsistent free bypass vs pricing cards' : 'Tombol loncat gratis tidak sinkron dengan tabel harga', pos: isEn ? 'Unified Step A–F Configurator + Backend Entitlement Lock' : 'Konfigurator Terpadu Langkah A–F + Kunci Lisensi Server' },
                 { no: '13', name: isEn ? 'CSR Non-Profit Grant (Rp 0)' : 'Hibah Sosial CSR (Rp 0)', slop: isEn ? 'Ambiguous Rp 0 pricing abused by commercial' : 'Harga Rp 0 ambigu & disalahgunakan bisnis komersial', pos: isEn ? 'Rp 1.49M Subsidized 100% -> Rp 0 (Mandatory Akta Check)' : 'Nilai Rp 1,49 Jt Disubsidi 100% -> Rp 0 (Wajib Akta/SK)' },
                 { no: '14', name: isEn ? '12-Sector Schema.org @graph' : 'Schema.org @graph 12 Sektor', slop: isEn ? 'Missing or generic WebPage JSON-LD' : 'Tanpa JSON-LD atau hanya WebPage generik', pos: isEn ? 'Multi-Graph @graph Tailored to All 12 Industry Sectors' : 'Multi-Graph @graph Spesifik 12 Sektor Industri' },
                 { no: '15', name: isEn ? 'GEO /llms.txt & OG Cards' : 'GEO /llms.txt & Kartu OG', slop: isEn ? 'Invisible to ChatGPT, Perplexity & Claude' : 'Tidak terbaca oleh ChatGPT Search, Perplexity & Claude', pos: isEn ? '/llms.txt + 50-Word Capsules + IndexNow + Local OG' : '/llms.txt + Kapsul 50 Kata + IndexNow + OG Lokal' },
@@ -4367,7 +4367,7 @@ return match (true) {
             {pricingSectionTab === 'faq' && (() => {
               const faqCategories = [
                 { id: 'ALL', label: isEn ? `All (${faqs.length})` : `Semua (${faqs.length})` },
-                { id: 'SATU_PINTU', label: isEn ? 'Satu Pintu & CSR Rp 0' : 'Satu Pintu & Hibah CSR Rp 0' },
+                { id: 'SATU_PINTU', label: isEn ? 'One-Stop & CSR Rp 0' : 'Satu Pintu & Hibah CSR Rp 0' },
                 { id: 'UI_UX_12_SEKTOR', label: isEn ? '12 Sectors, 36 UI & Scrollytelling' : '12 Sektor, 36 UI & Scrollytelling' },
                 { id: 'SEO_GEO_UU_PDP', label: isEn ? 'SEO/GEO, UU PDP & Offline PWA' : 'SEO/GEO, UU PDP & Offline PWA' },
                 { id: 'AI_MCP_SECURITY', label: isEn ? 'AI 49 Tools, MCP & AgentShield' : 'AI 49 Tool, MCP & AgentShield' },
@@ -4385,7 +4385,7 @@ return match (true) {
                 });
 
               const categoryBadgeLabel = {
-                SATU_PINTU: isEn ? 'SATU PINTU & COMMERCIAL' : 'SATU PINTU & KOMERSIAL',
+                SATU_PINTU: isEn ? 'ONE-STOP & COMMERCIAL' : 'SATU PINTU & KOMERSIAL',
                 UI_UX_12_SEKTOR: isEn ? '12 SECTORS & DUAL-ZONE UI' : '12 SEKTOR & DUAL-ZONE UI',
                 SEO_GEO_UU_PDP: isEn ? 'SEO/GEO, UU PDP & PWA' : 'SEO/GEO, UU PDP & PWA',
                 AI_MCP_SECURITY: isEn ? 'AI, MCP & AGENTSHIELD' : 'AI, MCP & AGENTSHIELD',
@@ -4425,7 +4425,7 @@ return match (true) {
                           type="text"
                           value={faqSearchQuery}
                           onChange={(e) => setFaqSearchQuery(e.target.value)}
-                          placeholder={isEn ? 'Search FAQ (e.g. CSR Rp 0, Satu Pintu, llms.txt, UU PDP, Offline, SLA 90)...' : 'Cari pertanyaan FAQ (mis: CSR Rp 0, Satu Pintu, llms.txt, UU PDP, Offline, SLA 90)...'}
+                          placeholder={isEn ? 'Search FAQ (e.g. CSR Rp 0, One-Stop, llms.txt, UU PDP, Offline, SLA 90)...' : 'Cari pertanyaan FAQ (mis: CSR Rp 0, Satu Pintu, llms.txt, UU PDP, Offline, SLA 90)...'}
                           className="w-full pl-8 pr-8 py-2 bg-white dark:bg-zinc-950 border-2 border-zinc-300 dark:border-zinc-700 text-zinc-950 dark:text-zinc-100 font-mono text-xs rounded-none focus:border-emerald-500 outline-none"
                         />
                         {faqSearchQuery && (

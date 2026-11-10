@@ -12,7 +12,7 @@
             <section id="section-6" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3 cursor-pointer select-none" @click="toggleSection('section-6')">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">08</span>
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none" x-text="getSectionNum('section-6')">08</span>
                         <div>
                             <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
                                 <span x-show="locale === 'en'">Architecture &amp; Infrastructure Evaluation (AI Database Ready)</span>
@@ -44,8 +44,8 @@
                 <div x-show="sectionCollapses['section-6']" @click="toggleSection('section-6')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
                     <span class="flex items-center gap-2">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span x-show="locale === 'en'">Section 08 collapsed (Architecture &amp; Cloud Infrastructure Evaluation). Click to expand...</span>
-                        <span x-show="locale !== 'en'">Seksi 08 diciutkan (Evaluasi Arsitektur &amp; Infrastruktur Cloud). Klik untuk membuka...</span>
+                        <span x-show="locale === 'en'">Section <span x-text="getSectionNum('section-6')">08</span> collapsed (Architecture &amp; Cloud Infrastructure Evaluation). Click to expand...</span>
+                        <span x-show="locale !== 'en'">Seksi <span x-text="getSectionNum('section-6')">08</span> diciutkan (Evaluasi Arsitektur &amp; Infrastruktur Cloud). Klik untuk membuka...</span>
                     </span>
                     <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                 </div>
@@ -956,8 +956,8 @@
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 bg-emerald-500 inline-block"></span>
                                 <h3 class="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                                    <span x-show="locale === 'en'">9. Upstream-to-Downstream Educational Guide: Systems Engineering Do's &amp; Don'ts</span>
-                                    <span x-show="locale !== 'en'">9. Panduan Edukatif Hulu ke Hilir: Do's &amp; Don'ts Rekayasa Sistem</span>
+                                    <span x-show="locale === 'en'">8.1. Upstream-to-Downstream Educational Guide: Systems Engineering Do's &amp; Don'ts</span>
+                                    <span x-show="locale !== 'en'">8.1. Panduan Edukatif Hulu ke Hilir: Do's &amp; Don'ts Rekayasa Sistem</span>
                                 </h3>
                             </div>
                             <div class="flex items-center gap-2">
@@ -981,8 +981,8 @@
                         <div x-show="subCollapses['sec-6-9-strat-guidance']" @click="toggleSubSection('sec-6-9-strat-guidance')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
                             <span class="flex items-center gap-2">
                                 <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                <span x-show="locale === 'en'">Area 09 collapsed (5 Do's &amp; 4 Don'ts Guide). Click to expand...</span>
-                                <span x-show="locale !== 'en'">Area 09 diciutkan (Panduan 5 Do's &amp; 4 Don'ts). Klik untuk membuka...</span>
+                                <span x-show="locale === 'en'">Area 8.1 collapsed (5 Do's &amp; 4 Don'ts Guide). Click to expand...</span>
+                                <span x-show="locale !== 'en'">Area 8.1 diciutkan (Panduan 5 Do's &amp; 4 Don'ts). Klik untuk membuka...</span>
                             </span>
                             <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                         </div>
@@ -1078,8 +1078,8 @@
                             <div class="flex items-center gap-2">
                                 <span class="w-2.5 h-2.5 bg-emerald-500 inline-block"></span>
                                 <h3 class="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                                    <span x-show="locale === 'en'">10. Pro's &amp; Con's Evaluation Matrix (3-Dimensional Architectural Trade-Offs)</span>
-                                    <span x-show="locale !== 'en'">10. Matriks Evaluasi Pro's &amp; Con's (Trade-Off 3 Dimensi Arsitektur)</span>
+                                    <span x-show="locale === 'en'">8.2. Pro's &amp; Con's Evaluation Matrix (3-Dimensional Architectural Trade-Offs)</span>
+                                    <span x-show="locale !== 'en'">8.2. Matriks Evaluasi Pro's &amp; Con's (Trade-Off 3 Dimensi Arsitektur)</span>
                                 </h3>
                             </div>
                             <div class="flex items-center gap-2">
@@ -1103,8 +1103,8 @@
                         <div x-show="subCollapses['sec-6-10-pros-cons']" @click="toggleSubSection('sec-6-10-pros-cons')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
                             <span class="flex items-center gap-2">
                                 <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                <span x-show="locale === 'en'">Area 10 collapsed (Pro's &amp; Con's Trade-Off Matrix). Click to expand...</span>
-                                <span x-show="locale !== 'en'">Area 10 diciutkan (Matriks Pro's &amp; Con's Trade-Off). Klik untuk membuka...</span>
+                                <span x-show="locale === 'en'">Area 8.2 collapsed (Pro's &amp; Con's Trade-Off Matrix). Click to expand...</span>
+                                <span x-show="locale !== 'en'">Area 8.2 diciutkan (Matriks Pro's &amp; Con's Trade-Off). Klik untuk membuka...</span>
                             </span>
                             <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                         </div>
@@ -1234,8 +1234,8 @@
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-rose-500 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                                <span x-show="locale === 'en'">11. AI-Shield &amp; Secure Ingestion Pipeline (Autonomous AI Anti-RCE Defense)</span>
-                                <span x-show="locale !== 'en'">11. AI-Shield &amp; Secure Ingestion Pipeline (Pertahanan Anti-RCE Otonom AI)</span>
+                                <span x-show="locale === 'en'">8.3. AI-Shield &amp; Secure Ingestion Pipeline (Autonomous AI Anti-RCE Defense)</span>
+                                <span x-show="locale !== 'en'">8.3. AI-Shield &amp; Secure Ingestion Pipeline (Pertahanan Anti-RCE Otonom AI)</span>
                             </h3>
                         </div>
                         <div class="flex items-center gap-2">
@@ -1258,8 +1258,8 @@
                     <div x-show="subCollapses['sec-6-11-ai-shield']" @click="toggleSubSection('sec-6-11-ai-shield')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
                         <span class="flex items-center gap-2">
                             <svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            <span x-show="locale === 'en'">Area 11 collapsed (AI-Shield &amp; Anti-RCE Defense). Click to expand...</span>
-                            <span x-show="locale !== 'en'">Area 11 diciutkan (AI-Shield &amp; Pertahanan Anti-RCE). Klik untuk membuka...</span>
+                            <span x-show="locale === 'en'">Area 8.3 collapsed (AI-Shield &amp; Anti-RCE Defense). Click to expand...</span>
+                            <span x-show="locale !== 'en'">Area 8.3 diciutkan (AI-Shield &amp; Pertahanan Anti-RCE). Klik untuk membuka...</span>
                         </span>
                         <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                     </div>
@@ -1568,8 +1568,8 @@ class ProcessSecureDataset implements ShouldQueue
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-indigo-500 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                                <span x-show="locale === 'en'">12. 20 Agentic AI Concepts Matrix (Client-Tailored Architecture Options)</span>
-                                <span x-show="locale !== 'en'">12. Matriks 20 Konsep Agentic AI (Opsi Arsitektur Sesuai Kebutuhan Klien)</span>
+                                <span x-show="locale === 'en'">8.4. 20 Agentic AI Architectural Concepts (Client-Tailored Architecture Options)</span>
+                                <span x-show="locale !== 'en'">8.4. Matriks 20 Konsep Agentic AI (Opsi Arsitektur Sesuai Kebutuhan Klien)</span>
                             </h3>
                         </div>
                         <div class="flex items-center gap-2">
@@ -1592,8 +1592,8 @@ class ProcessSecureDataset implements ShouldQueue
                     <div x-show="subCollapses['sec-6-12-agentic-matrix']" @click="toggleSubSection('sec-6-12-agentic-matrix')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
                         <span class="flex items-center gap-2">
                             <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            <span x-show="locale === 'en'">Area 12 collapsed (20 Agentic AI Concepts Matrix). Click to expand...</span>
-                            <span x-show="locale !== 'en'">Area 12 diciutkan (Matriks 20 Konsep Agentic AI). Klik untuk membuka...</span>
+                            <span x-show="locale === 'en'">Area 8.4 collapsed (20 Agentic AI Concepts Matrix). Click to expand...</span>
+                            <span x-show="locale !== 'en'">Area 8.4 diciutkan (Matriks 20 Konsep Agentic AI). Klik untuk membuka...</span>
                         </span>
                         <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                     </div>
@@ -1680,7 +1680,7 @@ class ProcessSecureDataset implements ShouldQueue
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-emerald-500 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                                13. {{ $isEn ? '18 RAG Concepts & Production Pipeline Matrix (Brij Kishore Pandey Framework)' : 'Matriks 18 Konsep RAG & Pipeline Produksi (Brij Kishore Pandey Framework)' }}
+                                8.5. {{ $isEn ? '18 RAG Concepts & Production Pipeline Matrix (Brij Kishore Pandey Framework)' : 'Matriks 18 Konsep RAG & Pipeline Produksi (Brij Kishore Pandey Framework)' }}
                             </h3>
                         </div>
                         <div class="flex items-center gap-2">
@@ -1703,8 +1703,8 @@ class ProcessSecureDataset implements ShouldQueue
                     <div x-show="subCollapses['sec-6-13-rag-matrix']" @click="toggleSubSection('sec-6-13-rag-matrix')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
                         <span class="flex items-center gap-2">
                             <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            <span x-show="locale === 'en'">Area 13 collapsed (18 RAG Concepts &amp; Pipeline Matrix). Click to expand...</span>
-                            <span x-show="locale !== 'en'">Area 13 diciutkan (Matriks 18 Konsep RAG &amp; Pipeline Produksi). Klik untuk membuka...</span>
+                            <span x-show="locale === 'en'">Area 8.5 collapsed (18 RAG Concepts &amp; Pipeline Matrix). Click to expand...</span>
+                            <span x-show="locale !== 'en'">Area 8.5 diciutkan (Matriks 18 Konsep RAG &amp; Pipeline Produksi). Klik untuk membuka...</span>
                         </span>
                         <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                     </div>
@@ -1845,8 +1845,8 @@ class ProcessSecureDataset implements ShouldQueue
                         <div x-show="subCollapses['sec-6-13-repo-export']" @click="toggleSubSection('sec-6-13-repo-export')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none">
                             <span class="flex items-center gap-2">
                                 <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                <span x-show="locale === 'en'">Area 13 Export collapsed (15-Pillar Project OS Repository Freeze). Click to expand...</span>
-                                <span x-show="locale !== 'en'">Area 13 Ekspor diciutkan (15-Pilar Freeze Project OS). Klik untuk membuka...</span>
+                                <span x-show="locale === 'en'">Section <span x-text="getSectionNum('section-13')">09</span> Export collapsed (15-Pillar Project OS Repository Freeze). Click to expand...</span>
+                                <span x-show="locale !== 'en'">Seksi <span x-text="getSectionNum('section-13')">09</span> Ekspor diciutkan (15-Pilar Freeze Project OS). Klik untuk membuka...</span>
                             </span>
                             <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                         </div>
@@ -1855,7 +1855,7 @@ class ProcessSecureDataset implements ShouldQueue
                             <!-- Title & Overview Block -->
                             <div class="space-y-2">
                                 <h3 class="text-lg sm:text-xl font-black uppercase text-zinc-950 dark:text-zinc-50 tracking-tight">
-                                    {{ $isEn ? '13. Export Complete 15-Pillar Project OS Repository (100% Architectural Freeze)' : '13. Ekspor Repository Lengkap 15 Pilar Project OS (100% Architectural Freeze)' }}
+                                    <span x-text="getSectionNum('section-13')">09</span>. {{ $isEn ? 'Export Complete 15-Pillar Project OS Repository (100% Architectural Freeze)' : 'Ekspor Repository Lengkap 15 Pilar Project OS (100% Architectural Freeze)' }}
                                 </h3>
                                 <p class="text-zinc-700 dark:text-zinc-300 font-sans text-xs sm:text-sm leading-relaxed max-w-4xl">
                                     {{ $isEn 
@@ -2813,7 +2813,7 @@ class ProcessSecureDataset implements ShouldQueue
                 </div>
                 @endif
 
-                <!-- 14. Architecture & Security Compliance Health Auditor (10 Golden Directives: 100/100) -->
+                <!-- 8.6. Architecture & Security Compliance Health Auditor (10 Golden Directives: 100/100) -->
                 @php
                     $complianceRulesEn = [
                         [
@@ -2893,7 +2893,7 @@ class ProcessSecureDataset implements ShouldQueue
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-emerald-500 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                                14. Architecture &amp; Security Compliance Health Auditor (Golden Directives)
+                                8.6. Architecture &amp; Security Compliance Health Auditor (Golden Directives)
                             </h3>
                         </div>
                         <div class="flex items-center gap-2">
@@ -2919,8 +2919,8 @@ class ProcessSecureDataset implements ShouldQueue
                     <div x-show="subCollapses['sec-6-14-health-auditor']" @click="toggleSubSection('sec-6-14-health-auditor')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
                         <span class="flex items-center gap-2">
                             <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            <span x-show="locale === 'en'">Area 14 collapsed (10 Golden Compliance Directives). Click to expand...</span>
-                            <span x-show="locale !== 'en'">Area 14 diciutkan (10 Petunjuk Emas Kepatuhan). Klik untuk membuka...</span>
+                            <span x-show="locale === 'en'">Area 8.6 collapsed (10 Golden Compliance Directives). Click to expand...</span>
+                            <span x-show="locale !== 'en'">Area 8.6 diciutkan (10 Petunjuk Emas Kepatuhan). Klik untuk membuka...</span>
                         </span>
                         <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                     </div>
@@ -3030,7 +3030,7 @@ class ProcessSecureDataset implements ShouldQueue
                     </div>
                 </div>
 
-                <!-- 15. Interactive SLA, Infrastructure Sizing & Cloud VPS TCO Cost Simulator -->
+                <!-- 8.7. Interactive SLA, Infrastructure Sizing & Cloud VPS TCO Cost Simulator -->
                 <div id="sub-sec-6-15" class="mt-8 pt-6 border-t border-zinc-200 dark:border-zinc-800 transition-all auto-accordion-target prd-scroll-target" 
                     x-data="{
                         dau: 25000,
@@ -3121,8 +3121,8 @@ class ProcessSecureDataset implements ShouldQueue
                         <div class="flex items-center gap-2">
                             <span class="w-3 h-3 bg-sky-500 inline-block"></span>
                             <h3 class="text-xs sm:text-sm font-mono font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
-                                <span x-show="locale === 'en'">15. Interactive Cloud VPS Cost &amp; AI Token Sizing Simulator (SLA Simulator)</span>
-                                <span x-show="locale !== 'en'">15. Simulator Interaktif Biaya Server VPS &amp; Alokasi Token AI (SLA Simulator)</span>
+                                <span x-show="locale === 'en'">8.7. Interactive Cloud VPS Cost &amp; AI Token Sizing Simulator (SLA Simulator)</span>
+                                <span x-show="locale !== 'en'">8.7. Simulator Interaktif Biaya Server VPS &amp; Alokasi Token AI (SLA Simulator)</span>
                             </h3>
                         </div>
                         <div class="flex items-center gap-2">
@@ -3145,8 +3145,8 @@ class ProcessSecureDataset implements ShouldQueue
                     <div x-show="subCollapses['sec-6-15-sla-simulator']" @click="toggleSubSection('sec-6-15-sla-simulator')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-4">
                         <span class="flex items-center gap-2">
                             <svg class="w-3.5 h-3.5 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            <span x-show="locale === 'en'">Area 15 collapsed (VPS Cost &amp; AI Token SLA Simulator). Click to expand...</span>
-                            <span x-show="locale !== 'en'">Area 15 diciutkan (Simulator Biaya VPS &amp; Alokasi Token AI). Klik untuk membuka...</span>
+                            <span x-show="locale === 'en'">Area 8.7 collapsed (VPS Cost &amp; AI Token SLA Simulator). Click to expand...</span>
+                            <span x-show="locale !== 'en'">Area 8.7 diciutkan (Simulator Biaya VPS &amp; Alokasi Token AI). Klik untuk membuka...</span>
                         </span>
                         <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                     </div>

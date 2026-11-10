@@ -386,9 +386,16 @@
                             >
                                 @foreach($blueprintSections as $sec)
                                     @if($sec['group'] === $groupKey)
+                                        @php
+                                            $isStudioExclusive = in_array($sec['id'], ['section-7', 'section-8', 'section-9'], true);
+                                        @endphp
                                         <div 
                                             data-spy-sec="{{ $sec['id'] }}"
-                                            x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
+                                            @if($isStudioExclusive)
+                                                x-show="executionTrack === 'studio' && (!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase()))"
+                                            @else
+                                                x-show="!indexSearchQuery || '{{ strtolower($sec['title_id'] . ' ' . $sec['title_en'] . ' ' . $sec['subtitle_id'] . ' ' . $sec['subtitle_en'] . ' ' . $sec['badge'] . ' ' . $sec['num']) }}'.includes(indexSearchQuery.toLowerCase())"
+                                            @endif
                                             @click="jumpTo('{{ $sec['id'] }}')"
                                             :class="activeSectionId === '{{ $sec['id'] }}' 
                                                 ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400 font-bold shadow-xs' 
@@ -401,6 +408,7 @@
                                                         <span 
                                                             :class="activeSectionId === '{{ $sec['id'] }}' ? 'bg-emerald-500 text-black' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300'"
                                                             class="w-5 h-5 flex items-center justify-center font-bold text-[10px] rounded-none"
+                                                            x-text="getSectionNum('{{ $sec['id'] }}')"
                                                         >
                                                             {{ $sec['num'] }}
                                                         </span>
@@ -934,8 +942,8 @@
                                 <span x-show="locale !== 'en'">DOKUMEN SPESIFIKASI ARSITEKTUR &amp; PRD SISTEM</span>
                             </span>
                             <span class="text-[10px] font-mono px-2 py-0.5 bg-emerald-100 text-emerald-950 dark:bg-emerald-950/80 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-black">
-                                <span x-show="locale === 'en'">{{ count($blueprintSections ?? []) }} SECTIONS</span>
-                                <span x-show="locale !== 'en'">{{ count($blueprintSections ?? []) }} SEKSI</span>
+                                <span x-show="locale === 'en'"><span x-text="executionTrack === 'studio' ? '14' : '11'">{{ count($blueprintSections ?? []) }}</span> SECTIONS</span>
+                                <span x-show="locale !== 'en'"><span x-text="executionTrack === 'studio' ? '14' : '11'">{{ count($blueprintSections ?? []) }}</span> SEKSI</span>
                             </span>
                         </div>
                         <div class="text-xs text-zinc-600 dark:text-zinc-400 font-sans mt-0.5">

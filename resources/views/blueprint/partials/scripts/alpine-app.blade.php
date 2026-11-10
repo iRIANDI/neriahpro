@@ -2529,54 +2529,84 @@
                         });
                     });
                 },
+                getSectionNum(id) {
+                    if (this.executionTrack === 'studio') {
+                        const studioMap = {
+                            'section-00-execution-guide': '00',
+                            'section-1': '01',
+                            'section-1-5': '01.5',
+                            'section-2': '02',
+                            'section-3': '03',
+                            'section-3-5': '04',
+                            'section-3-8': '05',
+                            'section-4': '06',
+                            'section-5': '07',
+                            'section-6': '08',
+                            'section-13': '09',
+                            'section-7': '10',
+                            'section-8': '11',
+                            'section-9': '12',
+                            'section-10': '13'
+                        };
+                        return studioMap[id] || '';
+                    } else {
+                        const retailMap = {
+                            'section-00-execution-guide': '00',
+                            'section-1': '01',
+                            'section-1-5': '01.5',
+                            'section-2': '02',
+                            'section-3': '03',
+                            'section-3-5': '04',
+                            'section-3-8': '05',
+                            'section-4': '06',
+                            'section-5': '07',
+                            'section-6': '08',
+                            'section-13': '09',
+                            'section-10': '10'
+                        };
+                        return retailMap[id] || '';
+                    }
+                },
                 getActiveSectionNumber() {
-                    const numbers = {
-                        'section-00-execution-guide': '00',
-                        'section-1': '01',
-                        'section-1-5': '01.5',
-                        'section-2': '02',
-                        'section-3': '03',
-                        'section-3-5': '04',
-                        'section-3-8': '05',
-                        'section-4': '06',
-                        'section-5': '07',
-                        'section-6': '08',
-                        'section-7': '09',
-                        'section-8': '10',
-                        'section-9': '11',
-                        'section-10': '12',
-                        'section-13': '13'
-                    };
-                    return numbers[this.activeSectionId] || '01';
+                    return this.getSectionNum(this.activeSectionId) || '01';
                 },
                 getActiveSectionTitle() {
+                    const num = this.getActiveSectionNumber();
                     const titles = {
-                        'section-00-execution-guide': { id: '00. Peta Jalan & 3 Cara Mulai', en: '00. Roadmap & 3 Ways to Start' },
-                        'section-1': { id: '01. Executive Discovery', en: '01. Executive Discovery' },
-                        'section-1-5': { id: '01.5 Analisis ROI & Garansi', en: '01.5 Business ROI & Guarantees' },
-                        'section-2': { id: '02. RBAC & Aktor Sistem', en: '02. RBAC & System Actors' },
-                        'section-3': { id: '03. Rekayasa Fitur MVP', en: '03. Feature Engineering' },
-                        'section-3-5': { id: '04. Edukasi Developer AI', en: '04. AI Developer Hub' },
-                        'section-3-8': { id: '05. Virtual Studio Charts', en: '05. Virtual Charts Studio' },
-                        'section-4': { id: '06. Alur Kerja User Flow', en: '06. Core User Flow' },
-                        'section-5': { id: '07. Database ERD', en: '07. Database ERD Blueprint' },
-                        'section-6': { id: '08. Evaluasi Infra VPS', en: '08. Cloud VPS & Infra' },
-                        'section-7': { id: '09. Velocity Pricing', en: '09. Velocity Pricing' },
-                        'section-8': { id: '10. Timeline Sprint Gantt', en: '10. Sprint Timeline' },
-                        'section-9': { id: '11. Tata Kelola & SLA', en: '11. Governance & SLA' },
-                        'section-10': { id: '{{ $blueprint->isRetailLicense() ? "12. Kunci Scope & Lisensi" : "12. Kunci Scope & DP" }}', en: '{{ $blueprint->isRetailLicense() ? "12. Scope Freeze & License" : "12. Scope Freeze & DP" }}' },
-                        'section-13': { id: '13. Ekspor Repo Project OS', en: '13. Export Project OS Repo' }
+                        'section-00-execution-guide': { id: `${num}. Peta Jalan & 3 Cara Mulai`, en: `${num}. Roadmap & 3 Ways to Start` },
+                        'section-1': { id: `${num}. Executive Discovery`, en: `${num}. Executive Discovery` },
+                        'section-1-5': { id: `${num} Analisis ROI & Garansi`, en: `${num} Business ROI & Guarantees` },
+                        'section-2': { id: `${num}. RBAC & Aktor Sistem`, en: `${num}. RBAC & System Actors` },
+                        'section-3': { id: `${num}. Rekayasa Fitur MVP`, en: `${num}. Feature Engineering` },
+                        'section-3-5': { id: `${num}. Edukasi Developer AI`, en: `${num}. AI Developer Hub` },
+                        'section-3-8': { id: `${num}. Virtual Studio Charts`, en: `${num}. Virtual Charts Studio` },
+                        'section-4': { id: `${num}. Alur Kerja User Flow`, en: `${num}. Core User Flow` },
+                        'section-5': { id: `${num}. Database ERD`, en: `${num}. Database ERD Blueprint` },
+                        'section-6': { id: `${num}. Evaluasi Arsitektur & Infra`, en: `${num}. Cloud VPS & Infra` },
+                        'section-13': { id: `${num}. Ekspor Repo Project OS`, en: `${num}. Export Project OS Repo` },
+                        'section-7': { id: `${num}. Velocity Pricing`, en: `${num}. Velocity Pricing` },
+                        'section-8': { id: `${num}. Timeline Sprint Gantt`, en: `${num}. Sprint Timeline` },
+                        'section-9': { id: `${num}. Tata Kelola & SLA`, en: `${num}. Governance & SLA` },
+                        'section-10': { 
+                            id: this.executionTrack === 'studio' ? `${num}. Kunci Scope & DP` : `${num}. Kunci Scope & Lisensi`, 
+                            en: this.executionTrack === 'studio' ? `${num}. Scope Freeze & DP` : `${num}. Scope Freeze & License` 
+                        }
                     };
                     const s = titles[this.activeSectionId] || { id: 'Daftar Isi PRD', en: 'PRD Directory' };
                     return this.locale === 'en' ? s.en : s.id;
                 },
                 getActiveSectionIndex() {
-                    const order = [
+                    const order = this.executionTrack === 'studio' ? [
                         'section-00-execution-guide',
                         'section-1', 'section-1-5', 'section-2', 'section-3',
                         'section-3-5', 'section-3-8', 'section-4', 'section-5',
-                        'section-6', 'section-7', 'section-8', 'section-9',
-                        'section-10', 'section-13'
+                        'section-6', 'section-13', 'section-7', 'section-8', 'section-9',
+                        'section-10'
+                    ] : [
+                        'section-00-execution-guide',
+                        'section-1', 'section-1-5', 'section-2', 'section-3',
+                        'section-3-5', 'section-3-8', 'section-4', 'section-5',
+                        'section-6', 'section-13', 'section-10'
                     ];
                     const idx = order.indexOf(this.activeSectionId);
                     return idx >= 0 ? (idx + 1) : 1;

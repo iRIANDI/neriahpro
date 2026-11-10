@@ -1,7 +1,7 @@
             <section id="section-8" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 mb-8 rounded-none print-break-inside-avoid prd-scroll-target">
                 <div class="flex items-center justify-between gap-2 mb-4 border-b border-zinc-200 dark:border-zinc-800 pb-3 cursor-pointer select-none" @click="toggleSection('section-8')">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none">10</span>
+                        <span class="w-6 h-6 bg-zinc-900 dark:bg-emerald-500 text-white dark:text-black font-mono font-bold text-xs flex items-center justify-center rounded-none" x-text="getSectionNum('section-8')">11</span>
                         <div>
                             <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
                                 <span x-show="locale === 'en'">Project Timeline &amp; Milestones (Velocity Aligned)</span>
@@ -33,8 +33,8 @@
                 <div x-show="sectionCollapses['section-8']" @click="toggleSection('section-8')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-zinc-300 dark:border-zinc-800 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
                     <span class="flex items-center gap-2">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span x-show="locale === 'en'">Section 10 collapsed (Sprint Timeline &amp; Milestones). Click to expand...</span>
-                        <span x-show="locale !== 'en'">Seksi 10 diciutkan (Timeline Sprint &amp; Milestone). Klik untuk membuka...</span>
+                        <span x-show="locale === 'en'">Section <span x-text="getSectionNum('section-8')">11</span> collapsed (Sprint Timeline &amp; Milestones). Click to expand...</span>
+                        <span x-show="locale !== 'en'">Seksi <span x-text="getSectionNum('section-8')">11</span> diciutkan (Timeline Sprint &amp; Milestone). Klik untuk membuka...</span>
                     </span>
                     <span class="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND ]' : '[ + BUKA ]'">[ + EXPAND ]</span>
                 </div>

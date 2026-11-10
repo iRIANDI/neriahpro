@@ -424,6 +424,19 @@ All AI agents and developers operating in this codebase MUST strictly adhere to 
   - Algoritma auto-accordion (`evaluateAccordionStates`) yang menciutkan seksi saat melewati viewport DILARANG KERAS menciutkan seksi yang sedang menjadi target aktif pengguna (`this.activeSectionId`).
   - Sistem tidak boleh mengeksekusi kompensasi scroll (`window.scrollBy({ top: -diff })`) saat proses programmatic smooth scrolling sedang berjalan, guna mencegah scroll jumping dan pergeseran posisi landing.
 
+# Mandatory Rule: Dynamic Contiguous Section Indexing & Package-Aware Numbering (Anti-Jomplang Standard)
+- 🔢 **ZERO-GAP CONTIGUOUS SECTION NUMBERING (ANTI-JOMPLANG)**:
+  - Pada dokumen arsitektur dan PRD yang memiliki mode paket berbeda (seperti Paket Retail/Self-Dev vs Paket Dedicated Studio/Mitra), beberapa seksi disembunyikan (misal: seksi alokasi squad engineering, pricing tiers, sprint timeline, dan SLA governance).
+  - Penomoran indeks seksi (badge bab, sidebar directory, hero header grid, drawer, dan header seksi) WAJIB menggunakan fungsi dinamis (`getSectionNum(id)`) yang menghasilkan urutan angka utuh yang **selalu kontinu tanpa celah** (contoh di Retail: 00, 01, 01.5, 02, 03, 04, 05, 06, 07, 08, 09, 10; di Studio: 00, 01, 01.5, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13).
+  - DILARANG KERAS membiarkan nomor seksi melompat secara acak (misal melompat dari 08 langsung ke 12 atau 13) saat ada seksi yang disembunyikan.
+- 🗂️ **HIERARCHICAL SUB-SECTION NUMBERING STANDARD**:
+  - Sub-seksi yang berada di dalam satu bab induk (seperti sub-seksi evaluasi di dalam Bab 08 System Architecture) WAJIB menggunakan format desimal bertingkat yang rapi (`8.1`, `8.2`, `8.3`, `8.4`, `8.5`, `8.6`, `8.7`).
+  - DILARANG KERAS memberi nomor sub-seksi dengan angka bulat yang menyerupai atau mendahului nomor bab utama dokumen luar (seperti menamai sub-seksi dengan 9, 10, 11, 12, 13, 14, 15 di dalam Bab 08), karena menimbulkan disorientasi bagi pembaca dan konflik persepsi dengan bab 09, 10, 11, 12 yang sesungguhnya.
+- 🔄 **PACKAGE FILTER HARMONIZATION IN DIRECTORIES**:
+  - Seluruh komponen daftar isi (Sidebar modal, Floating Drawer, dan Hero Directory Grid) WAJIB konsisten menyaring dan menyembunyikan item eksklusif studio (`section-7`, `section-8`, `section-9`) saat berada pada mode Retail/Self-Dev (`executionTrack !== 'studio'`).
+  - Total perhitungan jumlah seksi (Total Sections badge) WAJIB dinamis (`executionTrack === 'studio' ? '14' : '11'`) agar jumlah blok yang tertera sesuai dengan jumlah blok fisik yang dapat diklik oleh pengguna.
+
+
 
 
 

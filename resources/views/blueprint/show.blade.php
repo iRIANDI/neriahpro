@@ -302,8 +302,18 @@
                     'badge' => 'HARDWARE SIZING',
                 ],
                 [
-                    'id' => 'section-7',
+                    'id' => 'section-13',
                     'num' => '09',
+                    'group' => 'infra',
+                    'title_id' => 'Ekspor Repository Project OS (15 Pilar)',
+                    'title_en' => 'Export Project OS Repository (15 Pillars)',
+                    'subtitle_id' => 'Scaffold Turnkey, 22 Berkas Arsitektur, .cursorrules & .ZIP',
+                    'subtitle_en' => 'Turnkey Scaffolding, 22 Architecture Files, .cursorrules & .ZIP',
+                    'badge' => 'FULL REPO',
+                ],
+                [
+                    'id' => 'section-7',
+                    'num' => '10',
                     'group' => 'legal',
                     'title_id' => 'Opsi Velocity Pengerjaan & Alokasi Squad Engineering',
                     'title_en' => 'Delivery Velocity, Engineering Squads & Pricing Tiers',
@@ -313,7 +323,7 @@
                 ],
                 [
                     'id' => 'section-8',
-                    'num' => '10',
+                    'num' => '11',
                     'group' => 'legal',
                     'title_id' => 'Estimasi Timeline & Rencana Sprint',
                     'title_en' => 'Estimated Timeline & Sprint Plan',
@@ -323,7 +333,7 @@
                 ],
                 [
                     'id' => 'section-9',
-                    'num' => '11',
+                    'num' => '12',
                     'group' => 'legal',
                     'title_id' => 'Tata Kelola, Kualitas & SLA',
                     'title_en' => 'Governance, Quality & SLA',
@@ -333,23 +343,13 @@
                 ],
                 [
                     'id' => 'section-10',
-                    'num' => '12',
+                    'num' => $isRetailLicense ? '10' : '13',
                     'group' => 'legal',
                     'title_id' => $blueprint->isRetailLicense() ? 'Kunci Scope & Lisensi Digital' : 'Kunci Scope & Pembayaran DP',
                     'title_en' => $blueprint->isRetailLicense() ? 'Scope Lock & Digital License' : 'Scope Lock & DP Payment',
                     'subtitle_id' => $blueprint->isRetailLicense() ? 'Segel Integritas SHA-256, Lisensi Digital Retail & Unduh Kode' : 'Segel Integritas SHA-256, Kontrak Digital & Midtrans / Voucher',
                     'subtitle_en' => $blueprint->isRetailLicense() ? 'SHA-256 Integrity Seal, Retail Digital License & Code Download' : 'SHA-256 Integrity Seal, Digital Contract & Midtrans / Voucher',
                     'badge' => $blueprint->isRetailLicense() ? 'LISENSI' : 'LEGAL & DP',
-                ],
-                [
-                    'id' => 'section-13',
-                    'num' => '13',
-                    'group' => 'infra',
-                    'title_id' => 'Ekspor Repository Project OS (15 Pilar)',
-                    'title_en' => 'Export Project OS Repository (15 Pillars)',
-                    'subtitle_id' => 'Scaffold Turnkey, 22 Berkas Arsitektur, .cursorrules & .ZIP',
-                    'subtitle_en' => 'Turnkey Scaffolding, 22 Architecture Files, .cursorrules & .ZIP',
-                    'badge' => 'FULL REPO',
                 ],
             ];
 

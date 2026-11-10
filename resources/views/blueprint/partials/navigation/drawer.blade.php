@@ -160,6 +160,7 @@
                                                     <span 
                                                         :class="activeSectionId === '{{ $sec['id'] }}' ? 'bg-emerald-500 text-black' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'"
                                                         class="w-4 h-4 flex-shrink-0 flex items-center justify-center font-bold text-[9px] rounded-none"
+                                                        x-text="getSectionNum('{{ $sec['id'] }}')"
                                                     >
                                                         {{ $sec['num'] }}
                                                     </span>

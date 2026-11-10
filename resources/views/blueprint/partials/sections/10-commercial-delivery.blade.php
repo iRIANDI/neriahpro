@@ -19,10 +19,10 @@
 @endphp
 
             <section id="section-10" class="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-2 border-emerald-600 dark:border-emerald-500 p-6 sm:p-8 mb-8 rounded-none prd-scroll-target shadow-sm">
-                <!-- Section 12 Header Accordion Bar -->
+                <!-- Section 10/13 Header Accordion Bar -->
                 <div class="flex items-center justify-between gap-2 mb-6 border-b border-zinc-200 dark:border-zinc-800 pb-3 cursor-pointer select-none" @click="toggleSection('section-10')">
                     <div class="flex items-center gap-2">
-                        <span class="w-6 h-6 bg-emerald-600 text-white font-mono font-bold text-xs flex items-center justify-center rounded-none" x-text="executionTrack === 'studio' ? '12' : '10'">12</span>
+                        <span class="w-6 h-6 bg-emerald-600 text-white font-mono font-bold text-xs flex items-center justify-center rounded-none" x-text="getSectionNum('section-10')">{{ $isRetailLicense ? '10' : '13' }}</span>
                         <div>
                             <h2 class="text-lg sm:text-xl font-black uppercase text-zinc-900 dark:text-zinc-100">
                                 @if($hasPaidRetail)
@@ -77,8 +77,8 @@
                 <div x-show="sectionCollapses['section-10']" @click="toggleSection('section-10')" class="py-2.5 px-3 bg-zinc-50 dark:bg-zinc-950/60 border border-dashed border-emerald-500/40 text-xs font-mono text-zinc-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between cursor-pointer transition select-none mb-6">
                     <span class="flex items-center gap-2">
                         <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        <span x-show="locale === 'en'">Section 12 collapsed (Scope Lock &amp; DP / License Payment). Click to open checkout form...</span>
-                        <span x-show="locale !== 'en'">Seksi 12 diciutkan (Kunci Scope &amp; Pembayaran DP/Lisensi). Klik untuk membuka formulir pembayaran...</span>
+                        <span x-show="locale === 'en'">Section <span x-text="getSectionNum('section-10')">{{ $isRetailLicense ? '10' : '13' }}</span> collapsed (Scope Lock &amp; DP / License Payment). Click to open checkout form...</span>
+                        <span x-show="locale !== 'en'">Seksi <span x-text="getSectionNum('section-10')">{{ $isRetailLicense ? '10' : '13' }}</span> diciutkan (Kunci Scope &amp; Pembayaran DP/Lisensi). Klik untuk membuka formulir pembayaran...</span>
                     </span>
                     <span class="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold" x-text="locale === 'en' ? '[ + EXPAND &amp; CHECKOUT ]' : '[ + BUKA &amp; CHECKOUT ]'">[ + EXPAND &amp; CHECKOUT ]</span>
                 </div>

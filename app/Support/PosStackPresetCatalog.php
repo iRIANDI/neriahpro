@@ -1337,6 +1337,94 @@ class PosStackPresetCatalog
                     ],
                 ],
             ],
+
+            'PRIMITIVE_AI_VISION_BIOMETRICS' => [
+                'deterministic_formulas' => [
+                    [
+                        'formula_code' => 'COSINE_DISTANCE_AND_PASSIVE_LIVENESS_CONFIDENCE',
+                        'expression' => 'dot_product = sum(u[i] * v[i]); norm_u = sqrt(sum(u[i]^2)); norm_v = sqrt(sum(v[i]^2)); cosine_similarity = dot_product / (norm_u * norm_v); cosine_distance = 1.0 - cosine_similarity; is_biometric_matched = (cosine_distance <= 0.5000); is_liveness_verified = (liveness_confidence_score >= 0.7000); is_attendance_authorized = is_biometric_matched && is_liveness_verified',
+                        'order_of_precedence' => [
+                            '1. Lakukan deteksi wajah & cropping tegak lurus via SCRFD 5-point facial landmark alignment.',
+                            '2. Uji keaslian frame tunggal menggunakan MiniFASNet Passive Liveness (FFT spectral frequency analysis) untuk mendeteksi pantulan layar gawai atau foto cetak.',
+                            '3. Ekstraksi vektor embeddings 512 dimensi via ArcFace ONNX, normalisasi L2 unit norm, dan bandingkan terhadap vektor master karyawan di PostgreSQL `pgvector` menggunakan indeks HNSW (`vector_cosine_ops`).',
+                            '4. Kunci catatan presensi dengan stempel waktu server atomik dan rekam hash SHA-256 pada rantai `AuditLog`.',
+                        ],
+                        'penny_allocation_rule' => 'Skor kemiripan kosinus (0.0000 - 1.0000) dan skor liveness disimpan dengan presisi DECIMAL(6,4). Jika skor liveness berada di zona ambigu (0.6000 s/d 0.6999), sistem memicu tantangan sekunder (random micro-blink / senyum) alih-alih penolakan langsung.',
+                    ],
+                ],
+                'saga_and_webhook_contracts' => [
+                    'transactional_outbox_events' => ['biometrics.face.enrolled.v1', 'biometrics.verification.matched.v1', 'biometrics.spoof.detected.v1', 'biometrics.data.purged_right_to_erasure.v1'],
+                    'compensating_actions' => [
+                        ['trigger' => 'BiometricSpoofAttemptDetected', 'compensation' => 'FlagSuspiciousAttendanceAndTriggerManualHrAuditAction', 'mechanism' => 'Rejects clock-in, stores forensic device fingerprint, and alerts HR without polluting facial training weights.'],
+                    ],
+                    'external_integrations' => [
+                        ['provider' => 'AI Biometric Microservice (FastAPI + ONNX Runtime)', 'inbound_security' => 'Internal mTLS / Shared HMAC-SHA256 Secret + Request Nonce', 'outbound_resilience' => 'Circuit Breaker (3 failures -> 10s open) + Fallback to Manual Supervisor Approval Queue'],
+                    ],
+                ],
+                'ui_screen_archetypes' => [
+                    [
+                        'screen' => 'PWA WebRTC Camera Biometric Shutter & Liveness HUD',
+                        'archetype' => 'ARCHETYPE_BIOMETRIC_CAMERA_HUD',
+                        'layout_contract' => 'Circular Oval Face Guide (Emerald Guide lines when face detected) + Auto-Shutter countdown + Real-Time Liveness Badge + Privacy Encryption Shield Tag (UU PDP No. 27/2022).',
+                        'keyboard_shortcuts' => ['SPACE' => 'Capture Shutter Frame', 'ESC' => 'Cancel Camera Session'],
+                        'empty_state' => 'Camera permission prompt + "Arahkan wajah Anda ke dalam lingkaran pemindai" + CTA "Izinkan Akses Kamera".',
+                        'loading_state' => 'Facial landmark detection radar sweep animation (<150ms).',
+                        'error_state' => 'High-contrast banner: "Wajah tidak cocok atau terdeteksi foto layar. Silakan lakukan pengambilan ulang dengan pencahayaan cukup."',
+                    ],
+                ],
+                'acceptance_test_scenarios' => [
+                    [
+                        'id' => 'AT-BIO-01',
+                        'given' => 'Karyawan terdaftar memiliki vektor wajah master 512 dimensi dan mencoba presensi dengan foto layar ponsel (liveness score = 0.3500)',
+                        'when' => 'Pipeline verifikasi biometrik mengevaluasi frame selfie',
+                        'then' => 'Sistem menolak dengan status `SPOOF_SUSPECTED`, clock-in digagalkan, dan catatan ancaman terekam ke log forensik.',
+                    ],
+                ],
+            ],
+
+            'PRIMITIVE_GEOSPATIAL_GEOFENCE' => [
+                'deterministic_formulas' => [
+                    [
+                        'formula_code' => 'HAVERSINE_GEOFENCE_AND_SERVER_NTP_VALIDATION',
+                        'expression' => 'dLat = radians(user_lat - office_lat); dLon = radians(user_lon - office_lon); a = sin(dLat/2)^2 + cos(radians(office_lat)) * cos(radians(user_lat)) * sin(dLon/2)^2; c = 2 * atan2(sqrt(a), sqrt(1-a)); distance_meters = 6371000 * c; is_within_radius = (distance_meters <= office_radius_meters); is_time_valid = (abs(device_timestamp - server_timestamp) <= 30); is_accuracy_acceptable = (accuracy_meters <= 50.0); is_geofence_verified = is_within_radius && is_time_valid && is_accuracy_acceptable',
+                        'order_of_precedence' => [
+                            '1. Verifikasi deviasi waktu: bandingkan timestamp perangkat dengan server NTP (`abs(device - server) <= 30s`). Tolak manipulasi jam perangkat.',
+                            '2. Validasi akurasi GPS: pastikan `accuracy_meters <= 50m` untuk mengeliminasi distorsi sinyal satelit di gedung bertingkat.',
+                            '3. Hitung jarak bola bumi menggunakan rumus Haversine atomik SQL atau PostGIS `ST_DWithin()`.',
+                            '4. Jika berada di luar radius kantor (`is_within_radius == false`), alihkan status presensi ke `OUT_OF_GEOFENCE_PENDING_APPROVAL` yang mewajibkan input alasan dinas luar & foto lingkungan kerja.',
+                        ],
+                        'penny_allocation_rule' => 'Jarak dihitung dalam satuan meter bulat (INTEGER) atau presisi 2 desimal (DECIMAL(10,2)). Tidak ada toleransi pembulatan yang mengubah status keluar/masuk batas radius resmi.',
+                    ],
+                ],
+                'saga_and_webhook_contracts' => [
+                    'transactional_outbox_events' => ['geofence.zone.created.v1', 'geofence.presence.verified.v1', 'geofence.out_of_bounds.approval_requested.v1'],
+                    'compensating_actions' => [
+                        ['trigger' => 'OutOfOfficePresenceRejectedBySupervisor', 'compensation' => 'MarkAttendanceAsAlphaOrUnpaidLeaveAction', 'mechanism' => 'Reverts attendance hours and deducts payroll cut-off accordingly.'],
+                    ],
+                    'external_integrations' => [
+                        ['provider' => 'Browser Geolocation API & PostGIS Spatial Extension', 'inbound_security' => 'Client Device Signature + Server NTP Timestamp Guard', 'outbound_resilience' => 'Offline Outbox IndexedDB queue with tamper-evident salt'],
+                    ],
+                ],
+                'ui_screen_archetypes' => [
+                    [
+                        'screen' => 'Interactive Geofence Boundary Map & Out-of-Office Approval Tray',
+                        'archetype' => 'ARCHETYPE_SPATIAL_GEOFENCE_CONSOLE',
+                        'layout_contract' => 'Full-Width Leaflet/Mapbox Vector Map + Office Geofence Circle (Emerald/Amber 100m) + Live Pin Location with Radius Ring + Side Approval Drawer for Out-of-Office Requests.',
+                        'keyboard_shortcuts' => ['/' => 'Search Office Location / Branch', 'ALT+A' => 'Approve Out-of-Office Attendance'],
+                        'empty_state' => 'Location Pin icon + "Lokasi GPS sedang dipindai..." + CTA "Aktifkan Layanan Lokasi".',
+                        'loading_state' => 'Radar pulse circle on map center + GPS accuracy indicator pulse.',
+                        'error_state' => 'Warning banner: "Anda berada di luar radius kantor (145 meter). Mohon sertakan alasan dinas luar kantor untuk persetujuan atasan."',
+                    ],
+                ],
+                'acceptance_test_scenarios' => [
+                    [
+                        'id' => 'AT-GEO-01',
+                        'given' => 'Radius kantor adalah 100 meter dan karyawan melakukan presensi pada jarak 180 meter dengan alasan kunjungan klien',
+                        'when' => 'Engine geofencing memproses koordinat GPS presensi',
+                        'then' => 'Status presensi dicatat sebagai `OUT_OF_GEOFENCE_PENDING_APPROVAL`, notifikasi persetujuan dikirim ke atasan langsung, dan slip gaji belum mengunci jam kerja hingga disetujui.',
+                    ],
+                ],
+            ],
         ];
     }
 }

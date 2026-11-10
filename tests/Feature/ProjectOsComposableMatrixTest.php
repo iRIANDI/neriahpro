@@ -33,12 +33,12 @@ class ProjectOsComposableMatrixTest extends TestCase
         ]);
     }
 
-    public function test_seeder_populates_twelve_sectors_twelve_primitives_and_rule_packs_with_strict_ulids(): void
+    public function test_seeder_populates_twelve_sectors_fourteen_primitives_and_rule_packs_with_strict_ulids(): void
     {
         $this->seed(ProjectOsMatrixSeeder::class);
 
         $this->assertSame(12, PosSector::query()->count());
-        $this->assertSame(12, PosPrimitive::query()->count());
+        $this->assertSame(14, PosPrimitive::query()->count());
         $this->assertSame(7, PosRulePack::query()->count());
 
         $sector = PosSector::query()->where('code', 'SECTOR_01_COMMERCE_OMNICHANNEL')->with('primitives')->firstOrFail();
@@ -50,6 +50,15 @@ class ProjectOsComposableMatrixTest extends TestCase
         $this->assertNotEmpty($primitive->schema_blueprints);
         $this->assertNotEmpty($primitive->state_machines);
         $this->assertNotEmpty($primitive->concurrency_contracts);
+
+        // Verify Biometric Vision and Spatial Geofencing primitives
+        $bioPrimitive = PosPrimitive::query()->where('code', 'PRIMITIVE_AI_VISION_BIOMETRICS')->firstOrFail();
+        $this->assertSame('AI_VISION', $bioPrimitive->category);
+        $this->assertNotEmpty($bioPrimitive->schema_blueprints);
+
+        $geoPrimitive = PosPrimitive::query()->where('code', 'PRIMITIVE_GEOSPATIAL_GEOFENCE')->firstOrFail();
+        $this->assertSame('SPATIAL_LOCATION', $geoPrimitive->category);
+        $this->assertNotEmpty($geoPrimitive->state_machines);
     }
 
     public function test_composite_business_resolves_cross_sector_primitives_automatically(): void
@@ -125,7 +134,7 @@ class ProjectOsComposableMatrixTest extends TestCase
         $this->get('/api/blueprint/matrix-catalog')
             ->assertStatus(200)
             ->assertJsonCount(12, 'catalog.sectors')
-            ->assertJsonCount(12, 'catalog.primitives');
+            ->assertJsonCount(14, 'catalog.primitives');
 
         $this->get(route('blueprint.download-schema-json', $blueprint->slug))
             ->assertStatus(200)

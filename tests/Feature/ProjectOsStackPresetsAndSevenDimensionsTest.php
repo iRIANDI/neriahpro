@@ -57,7 +57,7 @@ class ProjectOsStackPresetsAndSevenDimensionsTest extends TestCase
         $this->assertNotEmpty($s1->inter_layer_type_contract);
 
         $primitives = PosPrimitive::query()->get();
-        $this->assertCount(12, $primitives);
+        $this->assertCount(14, $primitives);
 
         foreach ($primitives as $primitive) {
             $this->assertNotEmpty(
@@ -180,7 +180,7 @@ class ProjectOsStackPresetsAndSevenDimensionsTest extends TestCase
         $catalogResp = $this->getJson('/api/blueprint/matrix-catalog');
         $catalogResp->assertStatus(200)
             ->assertJsonCount(12, 'catalog.sectors')
-            ->assertJsonCount(12, 'catalog.primitives')
+            ->assertJsonCount(14, 'catalog.primitives')
             ->assertJsonCount(9, 'catalog.stack_presets')
             ->assertJsonCount(9, 'catalog.stack_comparison_matrix');
 

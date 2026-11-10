@@ -42,7 +42,7 @@ class ProjectOsTenPillarsTest extends TestCase
         $advisory = PrdGeneratorService::generateWorldClassStandardAdvisory('Test Enterprise');
 
         $this->assertArrayHasKey('strategic_pillars', $advisory);
-        $this->assertCount(5, $advisory['strategic_pillars']);
+        $this->assertCount(6, $advisory['strategic_pillars']);
         $this->assertArrayHasKey('implementation_roadmap', $advisory);
         $this->assertCount(3, $advisory['implementation_roadmap']);
 

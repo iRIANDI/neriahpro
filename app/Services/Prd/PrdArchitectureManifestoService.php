@@ -50,6 +50,26 @@ class PrdArchitectureManifestoService
         $scaleLower = strtolower($extraContext['skala_pengguna'] ?? '');
         $archPrefLower = strtolower($extraContext['architecture_preference'] ?? '');
 
+        $corpusDetection = strtolower($businessName . ' ' . $masalah . ' ' . json_encode($mvpItems) . ' ' . $alurKerja . ' ' . json_encode($extraContext));
+        $isBiometricsRequested = str_contains($corpusDetection, 'biometrik') ||
+                                 str_contains($corpusDetection, 'biometric') ||
+                                 str_contains($corpusDetection, 'wajah') ||
+                                 str_contains($corpusDetection, 'face attendance') ||
+                                 str_contains($corpusDetection, 'face recognition') ||
+                                 str_contains($corpusDetection, 'liveness') ||
+                                 str_contains($corpusDetection, 'anti-spoofing') ||
+                                 str_contains($corpusDetection, 'retinaface') ||
+                                 str_contains($corpusDetection, 'arcface');
+
+        $isSpatialRequested = str_contains($corpusDetection, 'geofence') ||
+                              str_contains($corpusDetection, 'geofencing') ||
+                              str_contains($corpusDetection, 'radius') ||
+                              str_contains($corpusDetection, 'postgis') ||
+                              str_contains($corpusDetection, 'haversine') ||
+                              str_contains($corpusDetection, 'mock location') ||
+                              str_contains($corpusDetection, 'fake gps') ||
+                              str_contains($corpusDetection, 'dinas luar');
+
         $isDecoupledRequested = str_contains($targetPlatformLower, 'decoupled') ||
                                 str_contains($targetPlatformLower, 'headless') ||
                                 str_contains($targetPlatformLower, 'microservices') ||
@@ -302,33 +322,51 @@ class PrdArchitectureManifestoService
             ],
             'ai_database_blueprint' => [
                 'engine' => 'PostgreSQL 16+ with pgvector & Strict ULID standard',
-                'engine_badge' => 'AI_READY_PGVECTOR',
-                'features' => [
-                    'Ekstensi pgvector: Menyimpan vector embeddings (1536-dim / 3072-dim) langsung berdampingan dengan data relasional bisnis tanpa butuh vector DB terpisah (seperti Pinecone/Milvus).',
-                    'Indeks HNSW (Hierarchical Navigable Small World): Pencarian similaritas semantik dan RAG dokumen berkecepatan sub-millisecond O(log N).',
-                    'JSONB Dynamic Indexing: Mendukung penyimpanan context history fleksibel untuk metadata percakapan dan dokumen agen AI cerdas.',
-                    'Strict ULID Primary Key: Menjamin partisi data terdistribusi dan keystone cursor pagination O(1) tanpa sequence lock.',
+                'engine_badge' => ($isBiometricsRequested || $isSpatialRequested) ? 'AI_BIOMETRIC_SPATIAL_READY' : 'AI_READY_PGVECTOR',
+                'features' => array_merge(
+                    [
+                        'Ekstensi pgvector: Menyimpan vector embeddings (1536-dim / 3072-dim teks & 512-dim ArcFace biometrik) langsung berdampingan dengan data relasional bisnis tanpa butuh vector DB terpisah (seperti Pinecone/Milvus).',
+                        'Indeks HNSW (Hierarchical Navigable Small World): Pencarian similaritas semantik dan RAG dokumen berkecepatan sub-millisecond O(log N).',
+                        'JSONB Dynamic Indexing: Mendukung penyimpanan context history fleksibel untuk metadata percakapan dan dokumen agen AI cerdas.',
+                        'Strict ULID Primary Key: Menjamin partisi data terdistribusi dan keystone cursor pagination O(1) tanpa sequence lock.',
+                    ],
+                    $isBiometricsRequested ? [
+                        'Ekstensi pgvector Biometrik Wajah 512-D: Indeks HNSW (vector_cosine_ops, threshold <= 0.50) untuk verifikasi presensi wajah <10ms dan perlindungan anti-spoofing pasif (MiniFASNet FFT).',
+                        'Kepatuhan UU PDP No. 27/2022 (Data Pribadi Spesifik): Foto selfie terenkripsi AES-256 pada disk privat & hak penghapusan permanen (Right to Erasure) saat terminasi karyawan.',
+                    ] : [],
+                    $isSpatialRequested ? [
+                        'Ekstensi Spasial PostGIS & Formula Haversine: Validasi batas geofencing kantor (ST_DWithin) presisi radius meter dan alur persetujuan dinas luar kantor berjenjang.',
+                        'Proteksi Anti-Fake GPS & NTP Time Drift: Verifikasi deviasi waktu perangkat vs server (<= 30 detik) dan filter akurasi radius GPS (< 50 meter) mencegah pemalsuan presensi.',
+                    ] : []
+                ),
+            ],
+            'recommended_tools' => array_merge(
+                $isDecoupledRequested ? [
+                    ['category' => 'Web Consumer Layer', 'name' => 'Next.js 15 App Router (React 19 + Turbopack)', 'desc' => 'Edge SSR, ISR sub-20ms TTFB, Server Components, Web Vitals SEO Sempurna'],
+                    ['category' => 'Mobile Clients Layer', 'name' => 'Flutter 3.x / React Native Expo', 'desc' => 'Cross-Platform Native Apps, SQLite Offline-First, WorkManager Sync'],
+                    ['category' => 'Backend API Engine', 'name' => 'Headless Laravel 13 (OpenAPI 3.1 & Queues)', 'desc' => 'Strict ACID Transactions, Eloquent ORM, Action Handlers, Sanctum/JWT Auth'],
+                    ['category' => 'Admin & Operations', 'name' => 'Filament PHP v5 Enterprise Suite', 'desc' => 'Dasbor kendali instan, Filter Keyset, Export PDF/Excel, RBAC Shield'],
+                    ['category' => 'API Contract & Docs', 'name' => 'OpenAPI 3.1 & Scalar Interactive Reference', 'desc' => 'Kontrak API type-safe, autogenerasi TypeScript types (Zod), zero ambiguity'],
+                    ['category' => 'AI Database Engine', 'name' => 'PostgreSQL 16+ (pgvector' . ($isSpatialRequested ? ' + PostGIS)' : ')'), 'desc' => 'Vector embeddings, HNSW semantic search, JSONB documents, ULID standard'],
+                    ['category' => 'In-Memory Cache & Broker', 'name' => 'Redis 7+ & Kafka/RabbitMQ Event Broker', 'desc' => 'Zero-latency sessions, distributed rate limiting, asynchronous event messaging'],
+                    ['category' => 'Hosting & Cloud Storage', 'name' => 'Cloudflare Pages (Frontend) + Dedicated VPS (API) + R2', 'desc' => '300+ Edge POPs global + 100% Resource Isolation + $0 Egress Bandwidth Storage'],
+                    ['category' => 'AI Acceleration Engine', 'name' => 'Enterprise LLM API SDK (Gemini / Anthropic / OpenAI)', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
+                ] : [
+                    ['category' => 'Backend Core', 'name' => 'Laravel 13 Modern Monolith', 'desc' => 'PHP 8.5+ Property Hooks, Eloquent ORM, Action Handlers, Queues'],
+                    ['category' => 'Admin & Operations', 'name' => 'Filament PHP v5 Enterprise', 'desc' => 'Dasbor kendali instan, Filter Keyset, Export PDF/Excel, RBAC Shield'],
+                    ['category' => 'Frontend Layer', 'name' => 'Island Architecture (React 19 + Framer Motion)', 'desc' => 'Interaktivitas fluid 60fps, micro-animations, Canva-style canvas capability'],
+                    ['category' => 'AI Database Engine', 'name' => 'PostgreSQL 16+ (pgvector' . ($isSpatialRequested ? ' + PostGIS)' : ')'), 'desc' => 'Vector embeddings, HNSW semantic search, JSONB documents, ULID standard'],
+                    ['category' => 'In-Memory Cache & Broker', 'name' => 'Redis / Predis', 'desc' => 'Zero-latency sessions, distributed lock, persistent queue processing'],
+                    ['category' => 'Infrastructure & Runtime', 'name' => 'Dedicated VPS via Nixpacks & Docker', 'desc' => 'Container isolation, Nginx HTTP/2, automated SSL, Zero-downtime deploy'],
+                    ['category' => 'AI Acceleration Engine', 'name' => 'Enterprise LLM API SDK (Gemini / Anthropic / OpenAI)', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
                 ],
-            ],
-            'recommended_tools' => $isDecoupledRequested ? [
-                ['category' => 'Web Consumer Layer', 'name' => 'Next.js 15 App Router (React 19 + Turbopack)', 'desc' => 'Edge SSR, ISR sub-20ms TTFB, Server Components, Web Vitals SEO Sempurna'],
-                ['category' => 'Mobile Clients Layer', 'name' => 'Flutter 3.x / React Native Expo', 'desc' => 'Cross-Platform Native Apps, SQLite Offline-First, WorkManager Sync'],
-                ['category' => 'Backend API Engine', 'name' => 'Headless Laravel 13 (OpenAPI 3.1 & Queues)', 'desc' => 'Strict ACID Transactions, Eloquent ORM, Action Handlers, Sanctum/JWT Auth'],
-                ['category' => 'Admin & Operations', 'name' => 'Filament PHP v5 Enterprise Suite', 'desc' => 'Dasbor kendali instan, Filter Keyset, Export PDF/Excel, RBAC Shield'],
-                ['category' => 'API Contract & Docs', 'name' => 'OpenAPI 3.1 & Scalar Interactive Reference', 'desc' => 'Kontrak API type-safe, autogenerasi TypeScript types (Zod), zero ambiguity'],
-                ['category' => 'AI Database Engine', 'name' => 'PostgreSQL 16+ (pgvector)', 'desc' => 'Vector embeddings, HNSW semantic search, JSONB documents, ULID standard'],
-                ['category' => 'In-Memory Cache & Broker', 'name' => 'Redis 7+ & Kafka/RabbitMQ Event Broker', 'desc' => 'Zero-latency sessions, distributed rate limiting, asynchronous event messaging'],
-                ['category' => 'Hosting & Cloud Storage', 'name' => 'Cloudflare Pages (Frontend) + Dedicated VPS (API) + R2', 'desc' => '300+ Edge POPs global + 100% Resource Isolation + $0 Egress Bandwidth Storage'],
-                ['category' => 'AI Acceleration Engine', 'name' => 'Enterprise LLM API SDK (Gemini / Anthropic / OpenAI)', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
-            ] : [
-                ['category' => 'Backend Core', 'name' => 'Laravel 13 Modern Monolith', 'desc' => 'PHP 8.5+ Property Hooks, Eloquent ORM, Action Handlers, Queues'],
-                ['category' => 'Admin & Operations', 'name' => 'Filament PHP v5 Enterprise', 'desc' => 'Dasbor kendali instan, Filter Keyset, Export PDF/Excel, RBAC Shield'],
-                ['category' => 'Frontend Layer', 'name' => 'Island Architecture (React 19 + Framer Motion)', 'desc' => 'Interaktivitas fluid 60fps, micro-animations, Canva-style canvas capability'],
-                ['category' => 'AI Database Engine', 'name' => 'PostgreSQL 16+ (pgvector)', 'desc' => 'Vector embeddings, HNSW semantic search, JSONB documents, ULID standard'],
-                ['category' => 'In-Memory Cache & Broker', 'name' => 'Redis / Predis', 'desc' => 'Zero-latency sessions, distributed lock, persistent queue processing'],
-                ['category' => 'Infrastructure & Runtime', 'name' => 'Dedicated VPS via Nixpacks & Docker', 'desc' => 'Container isolation, Nginx HTTP/2, automated SSL, Zero-downtime deploy'],
-                ['category' => 'AI Acceleration Engine', 'name' => 'Enterprise LLM API SDK (Gemini / Anthropic / OpenAI)', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
-            ],
+                $isBiometricsRequested ? [
+                    ['category' => 'AI Vision & Biometrics Sidecar', 'name' => 'Python FastAPI + ONNX Runtime (SCRFD + MiniFASNet + ArcFace)', 'desc' => 'Microservice CPU-optimized (<150ms latensi, <250MB RAM), Passive Liveness anti-spoofing, 512d face embeddings'],
+                ] : [],
+                $isSpatialRequested ? [
+                    ['category' => 'Geospatial & Geofencing Engine', 'name' => 'PostgreSQL 16 (PostGIS) + Haversine SQL', 'desc' => 'ST_DWithin boundary check, Anti-Fake GPS & NTP server drift protection (<=30s)'],
+                ] : []
+            ),
             'server_hardware_sizing' => PrdGeneratorService::calculateServerHardwareSizing($businessName, $masalah, $mvpItems, $extraContext),
         ];
     }

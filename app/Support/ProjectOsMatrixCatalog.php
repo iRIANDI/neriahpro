@@ -24,7 +24,7 @@ class ProjectOsMatrixCatalog
             $presetsReady = ! Schema::hasTable('pos_stack_presets')
                 || \App\Models\PosStackPreset::query()->count() >= 9;
             $ultimateColsReady = ! Schema::hasColumn('pos_primitives', 'deterministic_formulas')
-                || PosPrimitive::query()->whereNotNull('deterministic_formulas')->count() >= 12;
+                || PosPrimitive::query()->whereNotNull('deterministic_formulas')->count() >= 14;
             $sectorUiColsReady = ! Schema::hasColumn('pos_sectors', 'ui_ux_archetypes')
                 || PosSector::query()->whereNotNull('ui_ux_archetypes')->count() >= 12;
             $dayTwoColsReady = ! Schema::hasColumn('pos_sectors', 'day_two_ops_contract')
@@ -34,7 +34,7 @@ class ProjectOsMatrixCatalog
 
             if (
                 PosSector::query()->count() >= 12
-                && PosPrimitive::query()->count() >= 12
+                && PosPrimitive::query()->count() >= 14
                 && PosRulePack::query()->count() >= 7
                 && $presetsReady
                 && $ultimateColsReady
@@ -234,10 +234,10 @@ class ProjectOsMatrixCatalog
                     'Alur verifikasi & rekonsiliasi klaim asuransi / penjamin (BPJS / Swasta)',
                 ],
                 'default_compliance_standards' => ['Permenkes No. 24/2022 (RME)', 'SATUSEHAT FHIR HL7 Interoperability', 'UU PDP Data Kesehatan Spesifik', 'OWASP ASVS L3'],
-                'detection_keywords' => ['rumah sakit', 'klinik', 'dokter', 'pasien', 'rekam medis', 'emr', 'rme', 'apotek', 'farmasi', 'obat', 'resep', 'laboratorium', 'telemedicine', 'kesehatan', 'medis', 'bpjs kesehatan'],
+                'detection_keywords' => ['rumah sakit', 'klinik', 'dokter', 'pasien', 'rekam medis', 'emr', 'rme', 'apotek', 'farmasi', 'obat', 'resep', 'laboratorium', 'telemedicine', 'kesehatan', 'medis', 'bpjs kesehatan', 'biometrik pasien', 'presensi dokter'],
                 'is_active' => true,
                 'mandatory_primitives' => ['PRIMITIVE_CLINICAL_EMR_AUDIT', 'PRIMITIVE_TIME_SLOT_ENGINE', 'PRIMITIVE_INVENTORY_LEDGER', 'PRIMITIVE_CATALOG_SKU'],
-                'optional_primitives' => ['PRIMITIVE_DOUBLE_ENTRY_LEDGER', 'PRIMITIVE_APPROVAL_WORKFLOW'],
+                'optional_primitives' => ['PRIMITIVE_DOUBLE_ENTRY_LEDGER', 'PRIMITIVE_APPROVAL_WORKFLOW', 'PRIMITIVE_AI_VISION_BIOMETRICS'],
             ],
             [
                 'code' => 'SECTOR_04_FINTECH_LEDGER',
@@ -321,10 +321,10 @@ class ProjectOsMatrixCatalog
                     'Penjadwalan preventive maintenance kendaraan berbasis ambang odometer/jam kerja mesin',
                 ],
                 'default_compliance_standards' => ['PM Perhubungan Penyelenggaraan Angkutan Barang', 'ISO 28000 Supply Chain Security', 'UU PDP No. 27/2022', 'OWASP ASVS L2'],
-                'detection_keywords' => ['logistik', 'ekspedisi', 'kargo', 'cargo', 'kurir', 'pengiriman', 'armada', 'fleet', 'resi', 'awb', 'waybill', 'manifest', 'freight', 'forwarding', 'trucking', 'gudang transit', 'last mile'],
+                'detection_keywords' => ['logistik', 'ekspedisi', 'kargo', 'cargo', 'kurir', 'pengiriman', 'armada', 'fleet', 'resi', 'awb', 'waybill', 'manifest', 'freight', 'forwarding', 'trucking', 'gudang transit', 'last mile', 'geofence', 'geofencing', 'radius hub', 'waypoint gps'],
                 'is_active' => true,
                 'mandatory_primitives' => ['PRIMITIVE_LOGISTICS_MANIFEST_POD', 'PRIMITIVE_INVENTORY_LEDGER'],
-                'optional_primitives' => ['PRIMITIVE_DOUBLE_ENTRY_LEDGER', 'PRIMITIVE_APPROVAL_WORKFLOW'],
+                'optional_primitives' => ['PRIMITIVE_DOUBLE_ENTRY_LEDGER', 'PRIMITIVE_APPROVAL_WORKFLOW', 'PRIMITIVE_GEOSPATIAL_GEOFENCE'],
             ],
             [
                 'code' => 'SECTOR_07_EDTECH_MEMBERSHIP',
@@ -437,10 +437,10 @@ class ProjectOsMatrixCatalog
                     'Anti-scalping QR/pass check-in sekali pakai dengan tanda tangan kriptografis HMAC-SHA256',
                 ],
                 'default_compliance_standards' => ['UU Hak Cipta & Royalti Digital', 'Pajak Hiburan Daerah & PPh 23 Royalti', 'UU PDP No. 27/2022', 'OWASP ASVS L2'],
-                'detection_keywords' => ['tiket', 'ticketing', 'konser', 'event organizer', 'eo', 'stadion', 'kursi', 'seat', 'media', 'berita', 'portal berita', 'streaming', 'kreator', 'royalti', 'talenta', 'paywall', 'penyiaran'],
+                'detection_keywords' => ['tiket', 'ticketing', 'konser', 'event organizer', 'eo', 'stadion', 'kursi', 'seat', 'media', 'berita', 'portal berita', 'streaming', 'kreator', 'royalti', 'talenta', 'paywall', 'penyiaran', 'face checkin', 'gate biometrik'],
                 'is_active' => true,
                 'mandatory_primitives' => ['PRIMITIVE_HIGH_CONCURRENCY_TICKETING', 'PRIMITIVE_TIME_SLOT_ENGINE', 'PRIMITIVE_SUBSCRIPTION_COHORT'],
-                'optional_primitives' => ['PRIMITIVE_DOUBLE_ENTRY_LEDGER'],
+                'optional_primitives' => ['PRIMITIVE_DOUBLE_ENTRY_LEDGER', 'PRIMITIVE_AI_VISION_BIOMETRICS'],
             ],
             [
                 'code' => 'SECTOR_11_HRIS_INTERNAL_OPS',
@@ -462,14 +462,16 @@ class ProjectOsMatrixCatalog
                 'blueprint_invariants' => [
                     'Hierarki struktur organisasi & matriks persetujuan (approval matrix) berbasis jabatan dan plafon nominal',
                     'Manajemen jadwal shift/roster, lembur, cuti, dan validasi absensi geofence',
+                    'Validasi presensi biometrik wajah (ArcFace 512d pgvector) dengan Passive Liveness anti-spoofing (MiniFASNet FFT) di bawah 150ms',
+                    'Geofencing radius kantor (Haversine & PostGIS) dengan proteksi manipulasi waktu (NTP drift <= 30s) dan alur persetujuan dinas luar kantor otomatis',
                     'Mesin kalkulasi payroll deterministik (gaji pokok, tunjangan tetap/tidak tetap, potongan, PPh 21 TER, BPJS TK & Kesehatan) dengan snapshot slip immutable',
                     'Alur klaim reimbursement berjenjang & pelacakan serah-terima aset inventaris kantor (BAST aset)',
                 ],
-                'default_compliance_standards' => ['UU Ketenagakerjaan / PP Pengupahan', 'PMK Tarif Efektif Rata-Rata (TER) PPh 21', 'Regulasi BPJS Ketenagakerjaan & Kesehatan', 'UU PDP Data Karyawan'],
-                'detection_keywords' => ['hris', 'hrd', 'sdm', 'karyawan', 'pegawai', 'payroll', 'gaji', 'penggajian', 'absensi', 'presensi', 'shift', 'roster', 'cuti', 'lembur', 'reimbursement', 'pph 21', 'bpjs', 'aset kantor'],
+                'default_compliance_standards' => ['UU Ketenagakerjaan / PP Pengupahan', 'PMK Tarif Efektif Rata-Rata (TER) PPh 21', 'Regulasi BPJS Ketenagakerjaan & Kesehatan', 'UU PDP No. 27/2022 Data Pribadi Spesifik'],
+                'detection_keywords' => ['hris', 'hrd', 'sdm', 'karyawan', 'pegawai', 'payroll', 'gaji', 'penggajian', 'absensi', 'presensi', 'shift', 'roster', 'cuti', 'lembur', 'reimbursement', 'pph 21', 'bpjs', 'aset kantor', 'biometrik', 'biometric', 'face attendance', 'presensi wajah', 'wajah', 'geofence', 'geofencing', 'gps', 'radius kantor', 'liveness', 'anti spoofing', 'odoo attendance', 'dinas luar', 'mock gps'],
                 'is_active' => true,
                 'mandatory_primitives' => ['PRIMITIVE_HRIS_PAYROLL_ROSTER', 'PRIMITIVE_APPROVAL_WORKFLOW'],
-                'optional_primitives' => ['PRIMITIVE_DOUBLE_ENTRY_LEDGER'],
+                'optional_primitives' => ['PRIMITIVE_AI_VISION_BIOMETRICS', 'PRIMITIVE_GEOSPATIAL_GEOFENCE', 'PRIMITIVE_DOUBLE_ENTRY_LEDGER'],
             ],
             [
                 'code' => 'SECTOR_12_GOVTECH_NONPROFIT',
@@ -1820,6 +1822,261 @@ class ProjectOsMatrixCatalog
                         'name' => 'audit_program_fund_accountability',
                         'description' => 'Memeriksa rasio dana terkumpul vs tersalurkan serta kelengkapan bukti dampak per program yayasan.',
                         'parameters' => ['program_code' => 'string'],
+                    ],
+                ],
+                'is_active' => true,
+            ],
+
+            // 13. PRIMITIVE_AI_VISION_BIOMETRICS
+            [
+                'code' => 'PRIMITIVE_AI_VISION_BIOMETRICS',
+                'name' => [
+                    'id' => 'Biometrik Wajah AI, Passive Liveness & Vektor pgvector 512D',
+                    'en' => 'AI Facial Biometrics, Passive Liveness & pgvector 512D Vector Engine',
+                ],
+                'category' => 'AI_VISION',
+                'description' => [
+                    'id' => 'Ekstraksi embedding wajah 512 dimensi (ArcFace ONNX), deteksi anti-spoofing pasif (MiniFASNet FFT), indeks pencarian kosinus HNSW pgvector, dan enkripsi data biometrik AES-256 (UU PDP No. 27/2022).',
+                    'en' => '512-dimensional face embedding extraction (ArcFace ONNX), passive anti-spoofing liveness (MiniFASNet FFT), pgvector HNSW cosine index, and AES-256 biometric encryption under PDP Act.',
+                ],
+                'detection_keywords' => ['biometrik', 'biometric', 'wajah', 'face recognition', 'face attendance', 'absensi wajah', 'liveness', 'anti-spoofing', 'anti spoofing', 'arcface', 'scrfd', 'pgvector', 'retinaface', 'vektor wajah', 'odoo attendance', 'presensi selfie', 'facenox', 'compreface'],
+                'schema_blueprints' => [
+                    [
+                        'table' => 'biometric_face_vectors',
+                        'tenant_scoped' => true,
+                        'soft_deletes' => true,
+                        'columns' => [
+                            ['name' => 'id', 'type' => 'ULID', 'primary' => true],
+                            ['name' => 'organization_id', 'type' => 'ULID', 'foreign' => 'organizations.id', 'index' => true],
+                            ['name' => 'user_id', 'type' => 'ULID', 'foreign' => 'users.id', 'index' => true],
+                            ['name' => 'subject_type', 'type' => 'VARCHAR(48)', 'nullable' => false],
+                            ['name' => 'subject_id', 'type' => 'ULID', 'nullable' => false, 'index' => true],
+                            ['name' => 'model_version', 'type' => 'VARCHAR(32)', 'nullable' => false],
+                            ['name' => 'vector_dim', 'type' => 'INTEGER', 'nullable' => false],
+                            ['name' => 'embedding_vector', 'type' => 'JSONB', 'nullable' => false],
+                            ['name' => 'liveness_score_baseline', 'type' => 'DECIMAL(6,4)', 'nullable' => false],
+                            ['name' => 'quality_score', 'type' => 'DECIMAL(6,4)', 'nullable' => false],
+                            ['name' => 'encrypted_sample_disk_path', 'type' => 'VARCHAR(255)', 'nullable' => false],
+                            ['name' => 'status', 'type' => 'VARCHAR(24)', 'enum_ref' => 'BiometricVectorStatus'],
+                        ],
+                        'unique_constraints' => [
+                            ['name' => 'biometric_org_subject_model_unique', 'rule' => 'UNIQUE (organization_id, subject_id, model_version)'],
+                        ],
+                    ],
+                    [
+                        'table' => 'biometric_verification_logs',
+                        'tenant_scoped' => true,
+                        'soft_deletes' => false,
+                        'columns' => [
+                            ['name' => 'id', 'type' => 'ULID', 'primary' => true],
+                            ['name' => 'organization_id', 'type' => 'ULID', 'foreign' => 'organizations.id', 'index' => true],
+                            ['name' => 'subject_id', 'type' => 'ULID', 'nullable' => false, 'index' => true],
+                            ['name' => 'verification_channel', 'type' => 'VARCHAR(32)', 'nullable' => false],
+                            ['name' => 'cosine_similarity', 'type' => 'DECIMAL(6,4)', 'nullable' => false],
+                            ['name' => 'is_similarity_matched', 'type' => 'BOOLEAN', 'nullable' => false],
+                            ['name' => 'liveness_score', 'type' => 'DECIMAL(6,4)', 'nullable' => false],
+                            ['name' => 'is_liveness_passed', 'type' => 'BOOLEAN', 'nullable' => false],
+                            ['name' => 'liveness_method', 'type' => 'VARCHAR(32)', 'nullable' => false],
+                            ['name' => 'latency_ms', 'type' => 'INTEGER', 'nullable' => false],
+                            ['name' => 'device_fingerprint_hash', 'type' => 'CHAR(64)', 'nullable' => false],
+                            ['name' => 'verification_status', 'type' => 'VARCHAR(32)', 'enum_ref' => 'BiometricVerificationStatus'],
+                            ['name' => 'audit_hash_sha256', 'type' => 'CHAR(64)', 'nullable' => false],
+                        ],
+                        'unique_constraints' => [],
+                    ],
+                ],
+                'state_machines' => [
+                    [
+                        'entity' => 'BiometricVector',
+                        'enum_class' => 'App\\Enums\\BiometricVectorStatus',
+                        'initial_state' => 'DRAFT_ENROLLMENT',
+                        'states' => ['DRAFT_ENROLLMENT', 'ACTIVE_VERIFIED', 'REVOKED_FORGOTTEN'],
+                        'transitions' => [
+                            [
+                                'from' => ['DRAFT_ENROLLMENT'],
+                                'to' => 'ACTIVE_VERIFIED',
+                                'action' => 'ActivateBiometricVectorAction',
+                                'guards' => ['LivenessBaselineAboveThresholdGuard', 'ImageQualitySharpnessGuard'],
+                                'side_effects' => ['SealBiometricEncryptionKeyAction', 'EmitAuditTrailAction'],
+                            ],
+                            [
+                                'from' => ['ACTIVE_VERIFIED'],
+                                'to' => 'REVOKED_FORGOTTEN',
+                                'action' => 'PurgeBiometricRightToErasureAction',
+                                'guards' => ['UuPdpConsentRevokedOrResignedGuard'],
+                                'side_effects' => ['CryptographicWipeVectorAndRawSampleFileAction', 'RecordAuditTrailAction'],
+                            ],
+                        ],
+                    ],
+                ],
+                'concurrency_contracts' => [
+                    [
+                        'operation' => 'Biometric Facial Similarity Matching & Liveness Check',
+                        'mechanism' => 'POSTGRES_PGVECTOR_HNSW_INDEX (Cosine metric <=> threshold 0.50) + IN_MEMORY_RATELIMIT (10 req/min per device)',
+                        'timeout_seconds' => 3,
+                        'fallback_action' => "If vector matching latency exceeds 2500ms or AI sidecar is unreachable, route clock-in payload to 'PENDING_MANUAL_HR_VERIFICATION' queue without blocking employee clock-in.",
+                    ],
+                ],
+                'rbac_permissions' => [
+                    ['action' => 'biometrics.enroll', 'allowed' => ['EMPLOYEE', 'HR_ADMIN', 'TENANT_OWNER']],
+                    ['action' => 'biometrics.purge_right_to_erasure', 'allowed' => ['TENANT_OWNER', 'DATA_PROTECTION_OFFICER'], 'requires_reason' => true, 'audit_logged' => true],
+                ],
+                'edge_case_playbooks' => [
+                    [
+                        'scenario' => 'Karyawan mencoba melakukan absensi menggunakan foto wajah di layar smartphone atau foto cetak resolusi tinggi.',
+                        'resolution_rule' => 'Algoritma MiniFASNet Passive Liveness mendeteksi spektrum frekuensi FFT tinggi (karakteristik moire layar/kertas) dan mengembalikan is_liveness_passed = false (score < 0.70). Sistem otomatis menolak presensi dengan status SPOOF_SUSPECTED, mencatat hash fingerprint perangkat, dan menerbitkan notifikasi audit keamanan ke HR.',
+                    ],
+                    [
+                        'scenario' => 'Karyawan mengundurkan diri (resign) dan meminta hak penghapusan data biometrik sesuai UU PDP No. 27/2022 Pasal 8.',
+                        'resolution_rule' => 'PurgeBiometricRightToErasureAction secara kriptografis menimpa (overwrite) embedding_vector, menghapus berkas foto privat dari storage disk, dan menandai status REVOKED_FORGOTTEN dengan segel audit SHA-256 tanpa merusak integritas buku kas penggajian historis.',
+                    ],
+                ],
+                'gemini_tool_declarations' => [
+                    [
+                        'name' => 'verify_biometric_face_vector',
+                        'description' => 'Memeriksa vektor wajah selfie terhadap vektor master karyawan di pgvector serta mengevaluasi skor keaslian passive liveness.',
+                        'parameters' => ['subject_id' => 'string', 'vector_json' => 'string', 'liveness_score' => 'number'],
+                    ],
+                    [
+                        'name' => 'purge_biometric_vector_right_to_erasure',
+                        'description' => 'Menghapus data biometrik secara permanen sesuai amanat UU PDP No. 27/2022 hak penghapusan data pribadi.',
+                        'parameters' => ['subject_id' => 'string', 'reason' => 'string'],
+                    ],
+                ],
+                'is_active' => true,
+            ],
+
+            // 14. PRIMITIVE_GEOSPATIAL_GEOFENCE
+            [
+                'code' => 'PRIMITIVE_GEOSPATIAL_GEOFENCE',
+                'name' => [
+                    'id' => 'Geofencing Spasial, Validasi Anti-Fake GPS & Radius Presensi',
+                    'en' => 'Spatial Geofencing, Anti-Fake GPS Verification & Presence Radius Engine',
+                ],
+                'category' => 'SPATIAL_LOCATION',
+                'description' => [
+                    'id' => 'Validasi radius presensi kantor (Haversine & PostGIS ST_DWithin), deteksi manipulasi waktu (Server NTP Drift <30s), filter mock location, dan persetujuan bertingkat dinas luar kantor.',
+                    'en' => 'Office presence radius validation (Haversine & PostGIS ST_DWithin), server NTP time-drift protection (<30s), mock location filtering, and out-of-office tiered approval workflows.',
+                ],
+                'detection_keywords' => ['geofence', 'geofencing', 'gps', 'lokasi', 'radius', 'koordinat', 'haversine', 'postgis', 'mock location', 'fake gps', 'dinas luar', 'luar kantor', 'presensi mobile', 'pwa gps', 'pelacakan lokasi', 'titik kantor', 'st_dwithin'],
+                'schema_blueprints' => [
+                    [
+                        'table' => 'geofence_zones',
+                        'tenant_scoped' => true,
+                        'soft_deletes' => false,
+                        'columns' => [
+                            ['name' => 'id', 'type' => 'ULID', 'primary' => true],
+                            ['name' => 'organization_id', 'type' => 'ULID', 'foreign' => 'organizations.id', 'index' => true],
+                            ['name' => 'zone_code', 'type' => 'VARCHAR(32)', 'nullable' => false],
+                            ['name' => 'name', 'type' => 'JSONB', 'nullable' => false],
+                            ['name' => 'latitude', 'type' => 'DECIMAL(10,7)', 'nullable' => false],
+                            ['name' => 'longitude', 'type' => 'DECIMAL(10,7)', 'nullable' => false],
+                            ['name' => 'radius_meters', 'type' => 'INTEGER', 'nullable' => false],
+                            ['name' => 'polygon_geojson', 'type' => 'JSONB', 'nullable' => true],
+                            ['name' => 'zone_type', 'type' => 'VARCHAR(32)', 'nullable' => false],
+                            ['name' => 'is_strict', 'type' => 'BOOLEAN', 'nullable' => false],
+                            ['name' => 'is_active', 'type' => 'BOOLEAN', 'nullable' => false],
+                        ],
+                        'unique_constraints' => [
+                            ['name' => 'geofence_org_zone_code_unique', 'rule' => 'UNIQUE (organization_id, zone_code)'],
+                        ],
+                    ],
+                    [
+                        'table' => 'geofence_presence_logs',
+                        'tenant_scoped' => true,
+                        'soft_deletes' => false,
+                        'columns' => [
+                            ['name' => 'id', 'type' => 'ULID', 'primary' => true],
+                            ['name' => 'organization_id', 'type' => 'ULID', 'foreign' => 'organizations.id', 'index' => true],
+                            ['name' => 'geofence_zone_id', 'type' => 'ULID', 'foreign' => 'geofence_zones.id', 'nullable' => true, 'index' => true],
+                            ['name' => 'subject_id', 'type' => 'ULID', 'nullable' => false, 'index' => true],
+                            ['name' => 'latitude', 'type' => 'DECIMAL(10,7)', 'nullable' => false],
+                            ['name' => 'longitude', 'type' => 'DECIMAL(10,7)', 'nullable' => false],
+                            ['name' => 'accuracy_radius_meters', 'type' => 'DECIMAL(8,2)', 'nullable' => false],
+                            ['name' => 'distance_calculated_meters', 'type' => 'DECIMAL(10,2)', 'nullable' => false],
+                            ['name' => 'is_inside_geofence', 'type' => 'BOOLEAN', 'nullable' => false],
+                            ['name' => 'device_timestamp', 'type' => 'TIMESTAMP', 'nullable' => false],
+                            ['name' => 'server_timestamp', 'type' => 'TIMESTAMP', 'nullable' => false],
+                            ['name' => 'time_deviation_seconds', 'type' => 'INTEGER', 'nullable' => false],
+                            ['name' => 'is_mock_provider', 'type' => 'BOOLEAN', 'nullable' => false],
+                            ['name' => 'calculated_velocity_kmh', 'type' => 'DECIMAL(8,2)', 'nullable' => false],
+                            ['name' => 'presence_status', 'type' => 'VARCHAR(32)', 'enum_ref' => 'GeofencePresenceStatus'],
+                            ['name' => 'approval_request_id', 'type' => 'ULID', 'nullable' => true],
+                            ['name' => 'reason_text', 'type' => 'TEXT', 'nullable' => true],
+                        ],
+                        'unique_constraints' => [],
+                    ],
+                ],
+                'state_machines' => [
+                    [
+                        'entity' => 'GeofencePresenceLog',
+                        'enum_class' => 'App\\Enums\\GeofencePresenceStatus',
+                        'initial_state' => 'EVALUATING',
+                        'states' => ['EVALUATING', 'IN_GEOFENCE_VALID', 'OUT_OF_GEOFENCE_PENDING_APPROVAL', 'OUT_OF_GEOFENCE_APPROVED', 'OUT_OF_GEOFENCE_REJECTED', 'MOCK_GPS_FLAGGED_BLOCKED'],
+                        'transitions' => [
+                            [
+                                'from' => ['EVALUATING'],
+                                'to' => 'IN_GEOFENCE_VALID',
+                                'action' => 'AuthorizeWithinGeofencePresenceAction',
+                                'guards' => ['DistanceWithinZoneRadiusGuard', 'DeviceServerTimeDriftBelow30sGuard', 'GpsAccuracyBelow50mGuard'],
+                                'side_effects' => ['UnlockStandardShiftCreditAction', 'RecordAuditTrailAction'],
+                            ],
+                            [
+                                'from' => ['EVALUATING'],
+                                'to' => 'OUT_OF_GEOFENCE_PENDING_APPROVAL',
+                                'action' => 'RouteToSupervisorOutOfOfficeApprovalAction',
+                                'guards' => ['HasValidOutOfOfficeReasonTextGuard'],
+                                'side_effects' => ['CreateSupervisorApprovalRequestAction', 'SendWhatsAppSupervisorAlertAction'],
+                            ],
+                            [
+                                'from' => ['OUT_OF_GEOFENCE_PENDING_APPROVAL'],
+                                'to' => 'OUT_OF_GEOFENCE_APPROVED',
+                                'action' => 'ApproveOutOfOfficePresenceAction',
+                                'guards' => ['SupervisorOrHrApprovalGuard'],
+                                'side_effects' => ['CreditWorkShiftHoursAction', 'SealApprovalHashAction'],
+                            ],
+                            [
+                                'from' => ['OUT_OF_GEOFENCE_PENDING_APPROVAL'],
+                                'to' => 'OUT_OF_GEOFENCE_REJECTED',
+                                'action' => 'RejectOutOfOfficePresenceAction',
+                                'guards' => ['SupervisorOrHrApprovalGuard'],
+                                'side_effects' => ['MarkAsUnpaidLeaveAction', 'NotifyEmployeeOfRejectionAction'],
+                            ],
+                        ],
+                    ],
+                ],
+                'concurrency_contracts' => [
+                    [
+                        'operation' => 'Presence Geolocation Calculation & Drift Detection',
+                        'mechanism' => 'ATOMIC_HAVERSINE_SQL_EVALUATION + REDIS_THROTTLE (1 presence submission per 30s per user)',
+                        'timeout_seconds' => 3,
+                        'fallback_action' => "If GPS accuracy is degraded (>50m due to indoor concrete interference), prompt client with 'OFFICE_WIFI_BSSID_FALLBACK' or 'DYNAMIC_QR_FALLBACK'.",
+                    ],
+                ],
+                'rbac_permissions' => [
+                    ['action' => 'geofence.manage_zones', 'allowed' => ['HR_ADMIN', 'TENANT_OWNER']],
+                    ['action' => 'geofence.approve_out_of_office', 'allowed' => ['DIRECT_SUPERVISOR', 'HR_ADMIN', 'TENANT_OWNER'], 'audit_logged' => true],
+                ],
+                'edge_case_playbooks' => [
+                    [
+                        'scenario' => 'Karyawan memundurkan jam sistem smartphone 15 menit atau menggunakan aplikasi Fake GPS Mock Location Provider.',
+                        'resolution_rule' => 'Engine membandingkan device_timestamp dengan server_timestamp (NTP Pool). Jika selisih waktu > 30 detik atau flag is_mock_provider bernilai true atau kecepatan perpindahan posisi melebihi 120 km/jam, sistem seketika menolak request dengan status MOCK_GPS_FLAGGED_BLOCKED.',
+                    ],
+                    [
+                        'scenario' => 'Karyawan berada di dalam lobi lantai 1 gedung pencakar langit sehingga akurasi GPS memburuk menjadi 120 meter (melebihi batas aman 50m).',
+                        'resolution_rule' => 'Sistem tidak langsung menolak, melainkan memberikan opsi fallback sekunder: Verifikasi BSSID Wi-Fi resmi kantor yang cocok, atau pemindaian Dynamic QRIS/Token pada layar resepsionis kantor.',
+                    ],
+                ],
+                'gemini_tool_declarations' => [
+                    [
+                        'name' => 'calculate_haversine_distance_meters',
+                        'description' => 'Menghitung jarak bola bumi antara koordinat pengguna dengan titik pusat kantor serta mengevaluasi status batas geofence.',
+                        'parameters' => ['user_lat' => 'number', 'user_lon' => 'number', 'office_lat' => 'number', 'office_lon' => 'number', 'radius_meters' => 'integer'],
+                    ],
+                    [
+                        'name' => 'validate_gps_anti_mock_teleportation',
+                        'description' => 'Mengevaluasi keaslian GPS, deviasi waktu server NTP, dan anomali kecepatan perpindahan posisi geografis.',
+                        'parameters' => ['device_ts' => 'integer', 'server_ts' => 'integer', 'accuracy_meters' => 'number', 'velocity_kmh' => 'number'],
                     ],
                 ],
                 'is_active' => true,

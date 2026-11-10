@@ -184,26 +184,28 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                    <!-- 1. .cursorrules / CLAUDE.md -->
-                    <a 
-                        href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'locale' => $isEn ? 'en' : 'id']) }}" 
-                        :href="'{{ route('blueprint.download-cursorrules', $blueprint->slug) }}?locale=' + (locale || 'id')" 
-                        @click="showExportHubModal = false" 
-                        class="p-3 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900/80 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 transition flex flex-col justify-between group"
-                        x-show="!exportHubFilter || 'cursorrules claude agent rules ide prompt'.includes(exportHubFilter.toLowerCase())"
+                    <!-- 1. AI Rules Hub (6 Popular Engines) -->
+                    <div 
+                        @click="showExportHubModal = false; openAiAgentRulesModal('antigravity')" 
+                        class="p-3 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900/80 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-500 transition flex flex-col justify-between group cursor-pointer"
+                        x-show="!exportHubFilter || 'cursorrules claude agent rules ide prompt antigravity gemini codex windsurf copilot'.includes(exportHubFilter.toLowerCase())"
                     >
                         <div>
                             <div class="flex items-center justify-between gap-1 mb-1 font-mono">
-                                <span class="text-xs font-black text-emerald-600 dark:text-emerald-400 group-hover:underline">.cursorrules / CLAUDE.md</span>
-                                <span class="px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-950 dark:text-emerald-300 font-bold text-[9px]">RULES</span>
+                                <span class="text-xs font-black text-emerald-600 dark:text-emerald-400 group-hover:underline">AI RULES (6 ENGINES)</span>
+                                <span class="px-1.5 py-0.2 bg-emerald-100 dark:bg-emerald-950 text-emerald-950 dark:text-emerald-300 font-bold text-[9px]">STUDIO</span>
                             </div>
                             <p class="text-[11px] font-sans text-zinc-600 dark:text-zinc-400">
-                                <span x-show="locale === 'en'">Standard system directives for Cursor, Claude Code, Windsurf, &amp; Antigravity.</span>
-                                <span x-show="locale !== 'en'">Aturan perilaku AI coding agent anti-halusinasi untuk Cursor, Claude Code, dan Antigravity.</span>
+                                <span x-show="locale === 'en'">Antigravity (AGENTS.md), Claude Code (CLAUDE.md), OpenAI (CODEX.md), Cursor, Windsurf, &amp; Copilot.</span>
+                                <span x-show="locale !== 'en'">Aturan sistem untuk Antigravity (AGENTS.md), Claude (CLAUDE.md), OpenAI (CODEX.md), Cursor, Windsurf, &amp; Copilot.</span>
                             </p>
                         </div>
-                        <div class="mt-2.5 text-[10px] font-mono text-zinc-500 font-bold">UNDUH FILE &rarr;</div>
-                    </a>
+                        <div class="mt-2.5 text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-between">
+                            <span x-show="locale === 'en'">OPEN RULES STUDIO &rarr;</span>
+                            <span x-show="locale !== 'en'">BUKA RULES STUDIO &rarr;</span>
+                            <span class="text-zinc-500 text-[9px]">ZIP / DIRECT</span>
+                        </div>
+                    </div>
 
                     <!-- 2. EXECUTION.MD -->
                     <a 

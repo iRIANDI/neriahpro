@@ -464,6 +464,7 @@
     @include('blueprint.partials.modals.tweak-segment-modal')
     @include('blueprint.partials.modals.fullscreen-diagram-modal')
     @include('blueprint.partials.modals.architecture-advisory-modal')
+    @include('blueprint.partials.modals.ai-agent-rules-modal')
 
     <!-- FOOTER -->
     @include('blueprint.partials.footer')

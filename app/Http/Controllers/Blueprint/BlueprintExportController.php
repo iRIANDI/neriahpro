@@ -372,6 +372,15 @@ class BlueprintExportController extends Controller
             ]);
         }
 
+        if (in_array($format, ['rules-bundle', 'all-rules-zip', 'bundle', 'ai-bundle', 'ai-rules-zip'], true)) {
+            $zipPath = \App\Services\Prd\AiAgentRulesExporterService::createRulesZipBundle($blueprint, $prd, $univSchema, $isEn);
+            $bundleFilename = ($blueprint->slug ?: 'project') . '-AI-RULES-PACK.zip';
+
+            return response()->download($zipPath, $bundleFilename, [
+                'Content-Type' => 'application/zip',
+            ])->deleteFileAfterSend(true);
+        }
+
         [$content, $filename] = match ($format) {
             'enterprise-menu' => [
                 PosEnterpriseGuaranteeCatalog::renderEnterpriseMenuMarkdown(
@@ -465,18 +474,17 @@ class BlueprintExportController extends Controller
                     : ScaffoldGeneratorService::generateMcpJsonFile($blueprint),
                 '.mcp.json',
             ],
-            'claude' => [
-                PrdGeneratorService::toCursorrules($blueprint, $prd),
-                'CLAUDE.md',
+            'claude' => \App\Services\Prd\AiAgentRulesExporterService::renderAgentRules('claude', $blueprint, $prd, $univSchema, $isEn),
+            'agents', 'antigravity', 'gemini' => \App\Services\Prd\AiAgentRulesExporterService::renderAgentRules('antigravity', $blueprint, $prd, $univSchema, $isEn),
+            'codex', 'openai', 'chatgpt' => \App\Services\Prd\AiAgentRulesExporterService::renderAgentRules('codex', $blueprint, $prd, $univSchema, $isEn),
+            'windsurf' => \App\Services\Prd\AiAgentRulesExporterService::renderAgentRules('windsurf', $blueprint, $prd, $univSchema, $isEn),
+            'copilot', 'github-copilot' => \App\Services\Prd\AiAgentRulesExporterService::renderAgentRules('copilot', $blueprint, $prd, $univSchema, $isEn),
+            'rules-readme' => [
+                \App\Services\Prd\AiAgentRulesExporterService::renderAiRulesReadme($blueprint, $isEn),
+                'README_AI_RULES.md',
             ],
-            'agents' => [
-                ProjectOsBlueprintCompilerService::renderUnifiedAgentsMarkdown($univSchema),
-                'AGENTS.md',
-            ],
-            default => [
-                PrdGeneratorService::toCursorrules($blueprint, $prd),
-                '.cursorrules',
-            ],
+            'cursor', 'cursorrules' => \App\Services\Prd\AiAgentRulesExporterService::renderAgentRules('cursor', $blueprint, $prd, $univSchema, $isEn),
+            default => \App\Services\Prd\AiAgentRulesExporterService::renderAgentRules('cursor', $blueprint, $prd, $univSchema, $isEn),
         };
 
         return response($content, 200, [

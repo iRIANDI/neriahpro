@@ -379,15 +379,133 @@
                                         <span x-show="locale !== 'en'">Unduh PRD (.MD)</span>
                                     </button>
 
-                                    <a 
-                                        href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}"
-                                        class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/50 font-mono font-bold text-xs uppercase tracking-wider py-3 px-3 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
-                                        :title="locale === 'en' ? 'Download .cursorrules / CLAUDE.md for AI Coding Agent' : 'Unduh .cursorrules / CLAUDE.md untuk AI Coding Agent'"
-                                    >
-                                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                                        <span x-show="locale === 'en'">Download .cursorrules</span>
-                                        <span x-show="locale !== 'en'">Unduh .cursorrules</span>
-                                    </a>
+                                    <!-- Multi-Agent AI Rules Hub Button & Dropdown -->
+                                    <div class="relative" x-data="{ openAgentMenu: false }" @click.outside="openAgentMenu = false">
+                                        <div class="flex items-stretch w-full shadow-sm">
+                                            <button 
+                                                type="button"
+                                                @click="openAiAgentRulesModal('antigravity')"
+                                                class="flex-1 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/50 font-mono font-bold text-xs uppercase tracking-wider py-3 px-2 text-center rounded-none transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                                :title="locale === 'en' ? 'Open AI Rules Hub (Antigravity, Claude, OpenAI, Cursor, etc.)' : 'Buka Hub Aturan AI (Antigravity, Claude, OpenAI, Cursor, dll.)'"
+                                            >
+                                                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                                <span x-show="locale === 'en'">AI RULES (6 ENGINES)</span>
+                                                <span x-show="locale !== 'en'">AI RULES (6 ENGINES)</span>
+                                            </button>
+                                            <button 
+                                                type="button"
+                                                @click="openAgentMenu = !openAgentMenu"
+                                                class="px-2 bg-emerald-50 dark:bg-zinc-800 hover:bg-emerald-100 dark:hover:bg-zinc-700 text-emerald-700 dark:text-emerald-400 border-y border-r border-emerald-500/50 rounded-none transition flex items-center justify-center cursor-pointer"
+                                                :title="locale === 'en' ? 'Quick select AI Agent format' : 'Pilih cepat format AI Agent'"
+                                            >
+                                                <svg class="w-3.5 h-3.5 transition-transform" :class="openAgentMenu ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                            </button>
+                                        </div>
+
+                                        <!-- Dropdown Menu -->
+                                        <div 
+                                            x-show="openAgentMenu" 
+                                            x-cloak 
+                                            x-transition:enter="transition ease-out duration-100"
+                                            x-transition:enter-start="opacity-0 scale-95"
+                                            x-transition:enter-end="opacity-100 scale-100"
+                                            x-transition:leave="transition ease-in duration-75"
+                                            x-transition:leave-start="opacity-100 scale-100"
+                                            x-transition:leave-end="opacity-0 scale-95"
+                                            class="absolute left-0 right-0 sm:right-auto sm:w-72 mt-1 z-30 bg-white dark:bg-zinc-950 border-2 border-emerald-500 rounded-none shadow-2xl py-1 text-xs font-mono"
+                                        >
+                                            <div class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+                                                <span>CHOOSE AI AGENT ENGINE</span>
+                                                <span class="text-emerald-600 dark:text-emerald-400 font-bold">6 ENGINES</span>
+                                            </div>
+
+                                            <a 
+                                                href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'antigravity']) }}"
+                                                class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                            >
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 bg-cyan-500 rounded-none"></span>
+                                                    <span class="font-bold">Google Antigravity &amp; Gemini</span>
+                                                </div>
+                                                <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">AGENTS.md</span>
+                                            </a>
+
+                                            <a 
+                                                href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'claude']) }}"
+                                                class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                            >
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 bg-amber-500 rounded-none"></span>
+                                                    <span class="font-bold">Anthropic Claude Code</span>
+                                                </div>
+                                                <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">CLAUDE.md</span>
+                                            </a>
+
+                                            <a 
+                                                href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'codex']) }}"
+                                                class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                            >
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 bg-emerald-500 rounded-none"></span>
+                                                    <span class="font-bold">OpenAI Codex &amp; ChatGPT</span>
+                                                </div>
+                                                <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">CODEX.md</span>
+                                            </a>
+
+                                            <a 
+                                                href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'cursor']) }}"
+                                                class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                            >
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 bg-indigo-500 rounded-none"></span>
+                                                    <span class="font-bold">Cursor AI IDE</span>
+                                                </div>
+                                                <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">.cursorrules</span>
+                                            </a>
+
+                                            <a 
+                                                href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'windsurf']) }}"
+                                                class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                            >
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 bg-teal-500 rounded-none"></span>
+                                                    <span class="font-bold">Codeium Windsurf</span>
+                                                </div>
+                                                <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">.windsurfrules</span>
+                                            </a>
+
+                                            <a 
+                                                href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'copilot']) }}"
+                                                class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                            >
+                                                <div class="flex items-center gap-2">
+                                                    <span class="w-2 h-2 bg-purple-500 rounded-none"></span>
+                                                    <span class="font-bold">GitHub Copilot</span>
+                                                </div>
+                                                <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">copilot-instructions.md</span>
+                                            </a>
+
+                                            <div class="p-2 bg-zinc-50 dark:bg-zinc-900/80 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-1.5">
+                                                <a 
+                                                    href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'rules-bundle']) }}"
+                                                    class="w-full py-1.5 px-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-center text-[11px] uppercase tracking-wider transition rounded-none flex items-center justify-center gap-1.5 shadow-sm"
+                                                >
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                                    <span>DOWNLOAD ALL (.ZIP)</span>
+                                                </a>
+
+                                                <button 
+                                                    type="button"
+                                                    @click="openAgentMenu = false; openAiAgentRulesModal('antigravity')"
+                                                    class="w-full py-1.5 px-2 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-bold text-center text-[10px] uppercase tracking-wider transition rounded-none flex items-center justify-center gap-1.5 cursor-pointer"
+                                                >
+                                                    <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                    <span x-show="locale === 'en'">OPEN FULL RULES STUDIO &rarr;</span>
+                                                    <span x-show="locale !== 'en'">BUKA STUDIO RULES LENGKAP &rarr;</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <a 
                                         href="{{ route('blueprint.export-scaffold', $blueprint->slug) }}"
@@ -828,15 +946,133 @@
                                 <span x-show="locale !== 'en'">Unduh PRD (.MD)</span>
                             </button>
 
-                            <a 
-                                href="{{ route('blueprint.download-cursorrules', $blueprint->slug) }}"
-                                class="bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/50 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-4 text-center rounded-none transition flex items-center justify-center gap-2 shadow-sm"
-                                :title="locale === 'en' ? 'Download .cursorrules / CLAUDE.md for AI Coding Agent' : 'Unduh .cursorrules / CLAUDE.md untuk AI Coding Agent'"
-                            >
-                                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                                <span x-show="locale === 'en'">Download .cursorrules</span>
-                                <span x-show="locale !== 'en'">Unduh .cursorrules</span>
-                            </a>
+                            <!-- Multi-Agent AI Rules Hub Button & Dropdown -->
+                            <div class="relative" x-data="{ openAgentMenuBottom: false }" @click.outside="openAgentMenuBottom = false">
+                                <div class="flex items-stretch w-full shadow-sm">
+                                    <button 
+                                        type="button"
+                                        @click="openAiAgentRulesModal('antigravity')"
+                                        class="flex-1 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-emerald-700 dark:text-emerald-400 border border-emerald-500/50 font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-3 text-center rounded-none transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                        :title="locale === 'en' ? 'Open AI Rules Hub (Antigravity, Claude, OpenAI, Cursor, etc.)' : 'Buka Hub Aturan AI (Antigravity, Claude, OpenAI, Cursor, dll.)'"
+                                    >
+                                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                        <span x-show="locale === 'en'">AI RULES (6 ENGINES)</span>
+                                        <span x-show="locale !== 'en'">AI RULES (6 ENGINES)</span>
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        @click="openAgentMenuBottom = !openAgentMenuBottom"
+                                        class="px-2.5 bg-emerald-50 dark:bg-zinc-800 hover:bg-emerald-100 dark:hover:bg-zinc-700 text-emerald-700 dark:text-emerald-400 border-y border-r border-emerald-500/50 rounded-none transition flex items-center justify-center cursor-pointer"
+                                        :title="locale === 'en' ? 'Quick select AI Agent format' : 'Pilih cepat format AI Agent'"
+                                    >
+                                        <svg class="w-3.5 h-3.5 transition-transform" :class="openAgentMenuBottom ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                </div>
+
+                                <!-- Dropdown Menu -->
+                                <div 
+                                    x-show="openAgentMenuBottom" 
+                                    x-cloak 
+                                    x-transition:enter="transition ease-out duration-100"
+                                    x-transition:enter-start="opacity-0 scale-95"
+                                    x-transition:enter-end="opacity-100 scale-100"
+                                    x-transition:leave="transition ease-in duration-75"
+                                    x-transition:leave-start="opacity-100 scale-100"
+                                    x-transition:leave-end="opacity-0 scale-95"
+                                    class="absolute left-0 right-0 sm:right-auto sm:w-72 mt-1 z-30 bg-white dark:bg-zinc-950 border-2 border-emerald-500 rounded-none shadow-2xl py-1 text-xs font-mono"
+                                >
+                                    <div class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-wider flex items-center justify-between">
+                                        <span>CHOOSE AI AGENT ENGINE</span>
+                                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">6 ENGINES</span>
+                                    </div>
+
+                                    <a 
+                                        href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'antigravity']) }}"
+                                        class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-cyan-500 rounded-none"></span>
+                                            <span class="font-bold">Google Antigravity &amp; Gemini</span>
+                                        </div>
+                                        <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">AGENTS.md</span>
+                                    </a>
+
+                                    <a 
+                                        href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'claude']) }}"
+                                        class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-amber-500 rounded-none"></span>
+                                            <span class="font-bold">Anthropic Claude Code</span>
+                                        </div>
+                                        <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">CLAUDE.md</span>
+                                    </a>
+
+                                    <a 
+                                        href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'codex']) }}"
+                                        class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-emerald-500 rounded-none"></span>
+                                            <span class="font-bold">OpenAI Codex &amp; ChatGPT</span>
+                                        </div>
+                                        <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">CODEX.md</span>
+                                    </a>
+
+                                    <a 
+                                        href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'cursor']) }}"
+                                        class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-indigo-500 rounded-none"></span>
+                                            <span class="font-bold">Cursor AI IDE</span>
+                                        </div>
+                                        <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">.cursorrules</span>
+                                    </a>
+
+                                    <a 
+                                        href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'windsurf']) }}"
+                                        class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-teal-500 rounded-none"></span>
+                                            <span class="font-bold">Codeium Windsurf</span>
+                                        </div>
+                                        <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">.windsurfrules</span>
+                                    </a>
+
+                                    <a 
+                                        href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'copilot']) }}"
+                                        class="px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center justify-between transition border-b border-zinc-100 dark:border-zinc-900"
+                                    >
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 bg-purple-500 rounded-none"></span>
+                                            <span class="font-bold">GitHub Copilot</span>
+                                        </div>
+                                        <span class="text-[9px] px-1 py-0.2 bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">copilot-instructions.md</span>
+                                    </a>
+
+                                    <div class="p-2 bg-zinc-50 dark:bg-zinc-900/80 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-1.5">
+                                        <a 
+                                            href="{{ route('blueprint.download-cursorrules', ['slug' => $blueprint->slug, 'format' => 'rules-bundle']) }}"
+                                            class="w-full py-1.5 px-2 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-center text-[11px] uppercase tracking-wider transition rounded-none flex items-center justify-center gap-1.5 shadow-sm"
+                                        >
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                            <span>DOWNLOAD ALL (.ZIP)</span>
+                                        </a>
+
+                                        <button 
+                                            type="button"
+                                            @click="openAgentMenuBottom = false; openAiAgentRulesModal('antigravity')"
+                                            class="w-full py-1.5 px-2 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700 text-white font-bold text-center text-[10px] uppercase tracking-wider transition rounded-none flex items-center justify-center gap-1.5 cursor-pointer"
+                                        >
+                                            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            <span x-show="locale === 'en'">OPEN FULL RULES STUDIO &rarr;</span>
+                                            <span x-show="locale !== 'en'">BUKA STUDIO RULES LENGKAP &rarr;</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
                             <button 
                                 type="button" 

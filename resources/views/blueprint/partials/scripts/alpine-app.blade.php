@@ -634,6 +634,34 @@
                 showExecutionGuideModal: false,
                 showAiSuiteModal: false,
                 showExportHubModal: false,
+                showAiAgentRulesModal: false,
+                aiAgentRulesTab: 'antigravity',
+                aiAgentRulesDropdownOpen: false,
+                openAiAgentRulesModal(tab = 'antigravity') {
+                    this.aiAgentRulesTab = tab;
+                    this.showAiAgentRulesModal = true;
+                    this.aiAgentRulesDropdownOpen = false;
+                },
+                copyTextToClipboard(text, title = 'COPIED') {
+                    this.copyExecutionPrompt(text, title);
+                },
+                async copyAgentRulesDirectly(agentKey, slug) {
+                    try {
+                        const res = await fetch(`/blueprint/${slug}/download-cursorrules?format=${agentKey}`);
+                        if (!res.ok) throw new Error('Network error');
+                        const text = await res.text();
+                        this.copyExecutionPrompt(text, 'RULES ' + agentKey.toUpperCase() + ' DISALIN');
+                    } catch (e) {
+                        console.error('Failed to fetch rules directly:', e);
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: 'GAGAL MENYALIN',
+                                message: 'Tidak dapat memuat berkas rules secara langsung. Silakan gunakan tombol unduh.'
+                            });
+                        }
+                    }
+                },
                 exportHubFilter: '',
                 aiSuiteFilter: '',
                 executionGuideTab: 'choice-a',

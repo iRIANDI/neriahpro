@@ -119,4 +119,22 @@ class FullscreenLoaderTest extends TestCase
         $this->assertStringContainsString('COMMERCIAL // SPRINT CAPACITY', $html);
         $this->assertStringContainsString('Menyiapkan Ringkasan Pemesanan...', $html);
     }
+
+    public function test_fullscreen_loader_does_not_leak_html_amp_entity_into_script(): void
+    {
+        app()->setLocale('en');
+
+        $html = Blade::render('<x-fullscreen-loader feature="project_os" />');
+
+        preg_match('/<script>(.*?)<\/script>/s', $html, $matches);
+        $scriptContent = $matches[1] ?? '';
+
+        $this->assertNotEmpty($scriptContent);
+        // Ensure progress step string literals do not contain raw &amp; HTML entities
+        $this->assertStringNotContainsString('"VERIFYING INTEGRITY &amp;', $scriptContent);
+        $this->assertStringNotContainsString("'VERIFYING INTEGRITY &amp;", $scriptContent);
+        $this->assertStringNotContainsString('&AMP;', $scriptContent);
+
+        app()->setLocale('id');
+    }
 }

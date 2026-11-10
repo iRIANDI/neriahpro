@@ -259,7 +259,7 @@
             subtitleEl.textContent = subtitleEl.getAttribute('data-subtitle-en');
         }
         if (stepEl && isClientEn) {
-            stepEl.textContent = stepEl.getAttribute('data-step-en');
+            stepEl.textContent = String(stepEl.getAttribute('data-step-en') || '').replace(/&amp;/gi, '&');
         }
     } catch(e) {}
 
@@ -275,18 +275,23 @@
         bar.style.width = targetPct + '%';
         pctEl.textContent = targetPct + '%';
         if (stepText && stepEl) {
-            stepEl.textContent = stepText;
+            // Prevent any accidental HTML entity escaping from leaking into textContent
+            stepEl.textContent = String(stepText).replace(/&amp;/gi, '&');
         }
     };
 
+    const textStage1 = @json($isEn ? 'HYDRATING INTERACTIVE MODULES...' : 'MEMUAT MODUL INTERAKTIF...');
+    const textStage2 = @json($isEn ? 'VERIFYING INTEGRITY & SECURITY...' : 'MEMVERIFIKASI INTEGRITAS KOMPONEN...');
+    const textStage3 = @json($isEn ? 'READY // LAUNCHING VIEW...' : 'SIAP // MENAMPILKAN HALAMAN...');
+
     // Stage 1: Quick burst to 55%
     setTimeout(() => {
-        updateProgress(55, '{{ $isEn ? "HYDRATING INTERACTIVE MODULES..." : "MEMUAT MODUL INTERAKTIF..." }}');
+        updateProgress(55, textStage1);
     }, 120);
 
     // Stage 2: Advance to 85%
     setTimeout(() => {
-        updateProgress(85, '{{ $isEn ? "VERIFYING INTEGRITY & SECURITY..." : "MEMVERIFIKASI INTEGRITAS KOMPONEN..." }}');
+        updateProgress(85, textStage2);
     }, 320);
 
     // 4. Smooth Dismissal Controller (Ensures Zero Pop-in)
@@ -295,7 +300,7 @@
         if (isDismissed) return;
         isDismissed = true;
 
-        updateProgress(100, '{{ $isEn ? "READY // LAUNCHING VIEW..." : "SIAP // MENAMPILKAN HALAMAN..." }}');
+        updateProgress(100, textStage3);
 
         setTimeout(() => {
             const targetLoader = document.getElementById('neriah-fullscreen-loader');

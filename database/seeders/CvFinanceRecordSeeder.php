@@ -69,3 +69,4 @@ class CvFinanceRecordSeeder extends Seeder
         }
     }
 }
+

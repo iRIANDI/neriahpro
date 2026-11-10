@@ -200,16 +200,35 @@ class LlmGatewayService
 
         try {
             if ($provider === 'deepseek') {
-                return $this->callDeepSeekCopilot(
-                    $messages,
-                    $systemPrompt,
-                    $apiKey,
-                    $sessionId,
-                    $options,
-                    $ragChunks,
-                    $startTime,
-                    $trace
-                );
+                try {
+                    return $this->callDeepSeekCopilot(
+                        $messages,
+                        $systemPrompt,
+                        $apiKey,
+                        $sessionId,
+                        $options,
+                        $ragChunks,
+                        $startTime,
+                        $trace
+                    );
+                } catch (\Throwable $deepseekEx) {
+                    $altKey = $this->getApiKey('gemini');
+                    if (! empty($altKey)) {
+                        Log::warning("DeepSeek call failed ({$deepseekEx->getMessage()}), auto-failing over to Gemini Copilot.");
+
+                        return $this->callGeminiCopilot(
+                            $messages,
+                            $systemPrompt,
+                            $altKey,
+                            $sessionId,
+                            $options,
+                            $ragChunks,
+                            $startTime,
+                            $trace
+                        );
+                    }
+                    throw $deepseekEx;
+                }
             }
 
             return $this->callGeminiCopilot(
@@ -373,13 +392,23 @@ class LlmGatewayService
 
         $tools = GeminiToolRegistry::getOpenAiTools();
 
+        // DeepSeek official API endpoint only accepts 'deepseek-chat' (V3) or 'deepseek-reasoner' (R1)
+        $resolvedModel = match ($model) {
+            'deepseek-reasoner', 'deepseek-r1' => 'deepseek-reasoner',
+            default => 'deepseek-chat',
+        };
+
         $payload = [
-            'model' => $model,
+            'model' => $resolvedModel,
             'messages' => $apiMessages,
-            'tools' => $tools,
             'temperature' => 0.2,
             'max_tokens' => 4096,
         ];
+
+        // DeepSeek Reasoner does not support function calling (tools)
+        if (! empty($tools) && $resolvedModel !== 'deepseek-reasoner') {
+            $payload['tools'] = $tools;
+        }
 
         $response = Http::timeout(45)
             ->withHeaders([

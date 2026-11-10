@@ -315,4 +315,34 @@ class AiAgentModuleTest extends TestCase
         $this->assertArrayHasKey('quick_prompts', $guideResult);
         $this->assertCount(6, $guideResult['features']);
     }
+
+    public function test_gemini_tool_registry_openai_tools_have_strict_valid_json_schema_for_deepseek(): void
+    {
+        $openAiTools = GeminiToolRegistry::getOpenAiTools();
+        $this->assertNotEmpty($openAiTools);
+
+        foreach ($openAiTools as $tool) {
+            $this->assertEquals('function', $tool['type']);
+            $this->assertNotEmpty($tool['function']['name']);
+            $params = $tool['function']['parameters'] ?? [];
+
+            if (! empty($params)) {
+                $this->assertEquals('object', $params['type'], "Tool {$tool['function']['name']} parameters type must be object");
+
+                if (isset($params['properties'])) {
+                    // DeepSeek Bug Prevention: properties map itself MUST NOT have key 'type'
+                    $this->assertArrayNotHasKey(
+                        'type',
+                        $params['properties'],
+                        "Tool {$tool['function']['name']} has invalid 'type' key directly inside properties map, which triggers DeepSeek HTTP 400"
+                    );
+
+                    foreach ($params['properties'] as $propName => $propDef) {
+                        $this->assertIsArray($propDef, "Property {$propName} in {$tool['function']['name']} must be array definition");
+                        $this->assertArrayHasKey('type', $propDef, "Property {$propName} in {$tool['function']['name']} must specify type");
+                    }
+                }
+            }
+        }
+    }
 }

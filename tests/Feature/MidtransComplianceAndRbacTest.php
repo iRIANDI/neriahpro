@@ -58,9 +58,12 @@ class MidtransComplianceAndRbacTest extends TestCase
         $this->assertTrue(\App\Filament\Resources\DomainHostingAssets\DomainHostingAssetResource::canViewAny());
         $this->assertTrue(\App\Filament\Pages\SprintTimelinePage::canAccess());
 
-        // 2. Client Transactions, Services Catalog & Legal Compliance MUST be viewable by reviewer
+        // 2. Client Transactions & Legal Compliance MUST be viewable by reviewer (Product Catalog & CV Finance are forbidden)
         $this->assertTrue(\App\Filament\Resources\Transactions\TransactionResource::canViewAny());
-        $this->assertTrue(\App\Filament\Resources\Products\ProductResource::canViewAny());
+        $this->assertFalse(\App\Filament\Resources\Products\ProductResource::canViewAny());
+        $this->assertFalse(\App\Filament\Pages\CvProFinanceReportPage::canAccess());
+        $this->assertFalse(\App\Filament\Pages\CvProFinanceReportPage::shouldRegisterNavigation());
+        $this->assertFalse(\App\Filament\Resources\Products\ProductResource::shouldRegisterNavigation());
         $this->assertTrue(\App\Filament\Resources\LegalPolicies\LegalPolicyResource::canViewAny());
         $this->assertTrue(\App\Filament\Resources\LeadContacts\LeadContactResource::canViewAny());
 
@@ -124,14 +127,16 @@ class MidtransComplianceAndRbacTest extends TestCase
         $response->assertSee('Daftar Blueprint Proyek');
         $response->assertSee('Kontrak Perjanjian Digital');
         $response->assertSee('Riwayat Transaksi Midtrans');
-        $response->assertSee('Katalog Produk');
         $response->assertSee('Kebijakan Refund');
         $response->assertSee('Aset Domain');
         $response->assertSee('Database CRM Leads Klien');
         $response->assertSee('MIDTRANS REVIEWER');
 
-        // All CV features MUST be completely absent
+        // Product Catalog and CV features MUST be completely absent for reviewer
+        $response->assertDontSee('Katalog Produk');
+        $response->assertDontSee('Katalog Produk & Layanan');
         $response->assertDontSee('Career & CV Pro');
+        $response->assertDontSee('Keuangan CV Pro');
         $response->assertDontSee('Kelola CV & Resume');
         $response->assertDontSee('Interview Sessions');
         $response->assertDontSee('Paket & Kuota CV Pro');
@@ -143,7 +148,7 @@ class MidtransComplianceAndRbacTest extends TestCase
     }
 
     /**
-     * Test that Midtrans reviewer is forbidden (403) from directly accessing CV resource routes.
+     * Test that Midtrans reviewer is forbidden (403) from directly accessing CV resource routes and Product Catalog.
      */
     public function test_midtrans_reviewer_direct_access_to_cv_resources_is_forbidden(): void
     {
@@ -159,6 +164,14 @@ class MidtransComplianceAndRbacTest extends TestCase
 
         // Direct access to Interview Sessions
         $response = $this->actingAs($reviewer)->get('/admin/interview-sessions');
+        $response->assertStatus(403);
+
+        // Direct access to CV Finance Report Page
+        $response = $this->actingAs($reviewer)->get('/admin/cv-pro-finance');
+        $response->assertStatus(403);
+
+        // Direct access to Products Catalog
+        $response = $this->actingAs($reviewer)->get('/admin/products');
         $response->assertStatus(403);
     }
 

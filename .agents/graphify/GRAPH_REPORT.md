@@ -131,14 +131,14 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 
 > 🛡️ **Role & Scope Isolation (Midtrans Merchant Compliance & Web Developer Contracting OS)**:
 > - **Super Admin (`yoseph.iriandi.tambunan@gmail.com`)**: Akses $100\%$ tanpa batas ke seluruh Resource, Spatie Shield RBAC, dan Global Settings.
-> - **Midtrans Reviewer (`reviewer.midtrans@neriahpro.com` / `midtrans_reviewer`)**: Diisolasi secara ketat dan aman melalui trait `AuditableByMidtransReviewer` (Read-Only) untuk mengaudit seluruh siklus transaksi web developer dengan klien:
->   - **Project OS**: `VisionBlueprintResource` (Spesifikasi PRD/ERD), `DocumentResource` (Surat Kontrak Kerja Sama Digital SPK & Scope Lock), `DomainHostingAssetResource` (Aset Domain & Server VPS klien).
->   - **Commerce & Billing**: `TransactionResource` (Mutasi pembayaran Down Payment 50% via Midtrans Snap, status settlement, order ID), `ProductResource` (Katalog paket layanan web development resmi & pricing IDR).
+> - **Midtrans Reviewer (`reviewer.midtrans@neriahpro.com` / `midtrans_reviewer`)**: Diisolasi secara ketat dan aman (Read-Only) untuk mengaudit siklus transaksi web developer Project OS dengan klien:
+>   - **Project OS**: `VisionBlueprintResource` (Spesifikasi PRD/ERD), `DocumentResource` (Surat Kontrak Kerja Sama Digital SPK & Scope Lock), `DomainHostingAssetResource` (Aset Domain & Server VPS klien), `SprintTimelinePage` (Kapasitas Sprint & Anti-Collision Gantt Timeline).
+>   - **Commerce & Billing**: `TransactionResource` (Mutasi pembayaran Down Payment 50% via Midtrans Snap, status settlement, order ID).
 >   - **Contracts & Legal**: `LegalPolicyResource` (Syarat & Ketentuan kontrak kerja sama, Kebijakan Privasi, dan Kebijakan Refund).
 >   - **Marketing & Klien**: `LeadContactResource` (Database CRM prospek klien yang masuk dari form onboarding).
->   - *Proteksi Read-Only*: Reviewer tidak dapat membuat record baru atau menghapus data live produksi (`canCreate`, `canEdit`, `canDelete`, `canDeleteAny` = false).
->   - *Modul Terisolasi*: Modul internal/sekunder (`CvProPlanResource`, `ResumeResource`, `InterviewSessionResource`, `EmailCampaignResource`, `SecurityThreatResource`, `CmsPageResource`, `ManageSettings`, Shield RBAC) disembunyikan sepenuhnya dari reviewer.
-> - **Dashboard Widgets**: `ProjectOsComplianceWidget` (6 pilar arsitektur Project OS & verifikasi Midtrans) serta `FrontpageQuickLaunchWidget` (portal cepat frontpage ke `/`, `/blueprint`, `/cv-pro`, `/pricing`, `/cart`, onboarding lead, dan session info) menggantikan default Account & Info widgets Filament.
+>   - *Proteksi Read-Only & Scope Terisolasi*: Reviewer tidak dapat membuat record baru atau menghapus data live produksi (`canCreate`, `canEdit`, `canDelete`, `canDeleteAny` = false).
+>   - *Modul Terlarang & Disembunyikan Total*: `ProductResource` (Katalog Produk & Layanan), `CvProFinanceReportPage` (Keuangan CV Pro), `CvProPlanResource`, `ResumeResource`, `InterviewSessionResource`, `EmailCampaignResource`, `SecurityThreatResource`, `CmsPageResource`, `ManageSettings`, dan Shield RBAC disembunyikan $100\%$ dan diblokir direct access (403 Forbidden).
+> - **Dashboard Widgets**: `ProjectOsComplianceWidget` (6 pilar arsitektur Project OS & verifikasi Midtrans) serta `FrontpageQuickLaunchWidget` (portal cepat frontpage ke `/`, `/blueprint`, `/cart`, onboarding lead, dan session info) menggantikan default Account & Info widgets Filament.
 
 ---
 

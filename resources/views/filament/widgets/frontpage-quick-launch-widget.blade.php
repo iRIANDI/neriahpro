@@ -411,14 +411,14 @@
                     <div class="fql-card-desc">Audit mutasi pembayaran DP klien, order ID Midtrans Snap, status settlement, dan total IDR.</div>
                 </a>
 
-                <!-- Reviewer Card 5: Products & Services Catalog -->
-                <a href="{{ $adminBase }}/products" class="fql-card" onmouseover="this.style.borderColor='#0284c7'" onmouseout="this.style.borderColor=''">
+                <!-- Reviewer Card 5: Sprint Capacity & Anti-Collision Gantt Timeline -->
+                <a href="{{ $adminBase }}/sprint-timeline" class="fql-card" onmouseover="this.style.borderColor='#10b981'" onmouseout="this.style.borderColor=''">
                     <div class="fql-card-top">
-                        <span class="fql-card-tag" style="color: #0284c7;">COMMERCE & BILLING</span>
-                        <span style="font-size: 12px; color: #0284c7;">→</span>
+                        <span class="fql-card-tag" style="color: #10b981;">KAPASITAS SPRINT</span>
+                        <span style="font-size: 12px; color: #10b981;">→</span>
                     </div>
-                    <div class="fql-card-title">Katalog Produk & Layanan</div>
-                    <div class="fql-card-desc">Paket jasa web development resmi (Modern Monolith, PRD Architecture, Contract E-Sign) & tarif IDR.</div>
+                    <div class="fql-card-title">Sprint Capacity & Gantt Timeline</div>
+                    <div class="fql-card-desc">Audit alokasi jadwal sprint terisolasi, anti-collision timeline batch 1-3, dan ketersediaan slot developer.</div>
                 </a>
 
                 <!-- Reviewer Card 6: Legal Policies & Refund -->

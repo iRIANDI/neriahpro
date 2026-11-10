@@ -1036,17 +1036,27 @@ class GeminiToolRegistry
     }
 
     /**
-     * Normalisasi tipe parameter huruf besar Gemini ('OBJECT', 'STRING') ke schema OpenAI ('object', 'string').
+     * Normalisasi tipe parameter huruf besar Gemini ('OBJECT', 'STRING') ke schema OpenAI / DeepSeek ('object', 'string').
      */
-    protected static function normalizeOpenAiParameters(array $params): array
+    protected static function normalizeOpenAiParameters(array $schema): array
     {
         $normalized = [];
 
-        foreach ($params as $k => $v) {
+        foreach ($schema as $k => $v) {
             if ($k === 'type' && is_string($v)) {
                 $normalized[$k] = strtolower($v);
+            } elseif ($k === 'properties' && is_array($v)) {
+                $props = [];
+                foreach ($v as $propName => $propDef) {
+                    $props[$propName] = is_array($propDef)
+                        ? self::normalizeOpenAiParameters($propDef)
+                        : $propDef;
+                }
+                $normalized['properties'] = empty($props) ? (object) [] : $props;
+            } elseif ($k === 'items' && is_array($v)) {
+                $normalized['items'] = self::normalizeOpenAiParameters($v);
             } elseif (is_array($v)) {
-                $normalized[$k] = self::normalizeOpenAiParameters($v);
+                $normalized[$k] = $v;
             } else {
                 $normalized[$k] = $v;
             }
@@ -1056,7 +1066,7 @@ class GeminiToolRegistry
             $normalized['type'] = 'object';
         }
 
-        if (isset($normalized['properties']) && empty($normalized['properties'])) {
+        if (isset($normalized['properties']) && is_array($normalized['properties']) && empty($normalized['properties'])) {
             $normalized['properties'] = (object) [];
         }
 

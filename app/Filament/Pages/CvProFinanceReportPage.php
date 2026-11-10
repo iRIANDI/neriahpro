@@ -28,6 +28,26 @@ class CvProFinanceReportPage extends Page
 
     protected string $view = 'filament.pages.cv-pro-finance-report-page';
 
+    public static function canAccess(): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        // Midtrans reviewer dan klien dilarang keras mengakses laporan keuangan
+        if ($user->hasAnyRole(['midtrans_reviewer', 'client_retail', 'client_partner', 'client'])) {
+            return false;
+        }
+
+        return $user->hasAnyRole(['super_admin', 'developer', 'investor']) || $user->can('view_cv_pro_finance');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess();
+    }
+
     public string $search = '';
 
     public string $statusFilter = 'all'; // all | paid | pending
@@ -346,3 +366,4 @@ class CvProFinanceReportPage extends Page
         }, 200, $headers);
     }
 }
+

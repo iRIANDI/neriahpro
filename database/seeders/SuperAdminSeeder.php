@@ -264,6 +264,7 @@ class SuperAdminSeeder extends Seeder
         }
 
         // Assign Project OS & Compliance Audit permissions to midtrans_reviewer
+        // NOTE: midtrans_reviewer strictly does NOT have access to Product Catalog & CV Pro Finance
         $reviewerPermissions = [
             'ViewAny:VisionBlueprint',
             'View:VisionBlueprint',
@@ -275,8 +276,6 @@ class SuperAdminSeeder extends Seeder
             'View:DomainHostingAsset',
             'ViewAny:Transaction',
             'View:Transaction',
-            'ViewAny:Product',
-            'View:Product',
             'ViewAny:LegalPolicy',
             'View:LegalPolicy',
             'ViewAny:LeadContact',
@@ -287,6 +286,22 @@ class SuperAdminSeeder extends Seeder
             $perm = Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
             if (! $reviewerRole->hasPermissionTo($perm)) {
                 $reviewerRole->givePermissionTo($perm);
+            }
+        }
+
+        // Strictly revoke Product & CV Finance permissions from midtrans_reviewer
+        $forbiddenReviewerPermissions = [
+            'ViewAny:Product',
+            'View:Product',
+            'Create:Product',
+            'Update:Product',
+            'Delete:Product',
+            'view_cv_pro_finance',
+        ];
+        foreach ($forbiddenReviewerPermissions as $forbiddenPerm) {
+            $p = Permission::where('name', $forbiddenPerm)->where('guard_name', 'web')->first();
+            if ($p && $reviewerRole->hasPermissionTo($p)) {
+                $reviewerRole->revokePermissionTo($p);
             }
         }
 

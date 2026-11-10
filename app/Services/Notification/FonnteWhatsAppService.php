@@ -196,3 +196,4 @@ class FonnteWhatsAppService
         return self::sendMessage($adminPhone, implode("\n", $lines));
     }
 }
+

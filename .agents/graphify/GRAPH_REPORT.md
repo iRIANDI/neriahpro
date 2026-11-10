@@ -340,6 +340,11 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
      - Default / Beranda: `NERIAH PRO // LIFE SOLUTION APPS` ("Menyiapkan Layanan Digital Neriah Pro...").
   4. *Solid Brutalist Standard*: 100% Dark & Light mode compliance (`bg-white dark:bg-zinc-950`), WCAG AAA high-contrast text, aksen garis presisi emerald/amber, tanpa gradien norak, dan larangan mutlak bentuk kapsul (`rounded-none` / `rounded-xs`).
 
+- **Dynamic Global Navigation & Footer Manager & Midtrans Review Flag Isolation (`ManageSettings` & React Islands)**:
+  1. *Dynamic Backend Pre-Population*: Tab `Navigation & Footer` di Filament Admin (`ManageSettings`) terisi otomatis secara terstruktur (`navigation_format` & `footer_format`, disinkronkan ke alias `main_navigation` & `footer_links`) sehingga admin dapat mengelola link navigasi dan kolom footer secara dinamis tanpa layar kosong.
+  2. *Strict Midtrans Audit & Flag Suppression*: Ketika modul CV Pro dinonaktifkan (`feature_enable_cv_pro = false`) atau ketika Mode Audit Midtrans aktif (`midtrans_compliance_strict_mode = true`), seluruh link CV Pro di `FooterIsland.jsx`, `GlobalNavigationIsland.jsx`, dan `ArchitecturePricingIsland.jsx` diisolasi dan dihilangkan 100% dari antarmuka publik, mencegah kebocoran link CV Pro selama fase review Midtrans.
+  3. *Self-Healing Migration*: Dilengkapi migrasi `2026_11_10_220000_seed_default_navigation_and_footer_settings` dan fallback runtime di `ManageSettings::mount()` untuk menjamin data navigasi dan footer selalu tersedia dan ter-cache forever dengan invalidasi event-driven.
+
 - **`App\Http\Middleware\SetAppLocale`**:
   Mendeteksi dan menetapkan bahasa aktif (`id` / `en`) secara transparan dari query string, sesi, atau cookie `neriah_locale`.
 - **`App\Support\CountryZoneHelper`**:

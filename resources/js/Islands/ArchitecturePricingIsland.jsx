@@ -365,7 +365,7 @@ export default function ArchitecturePricingIsland({
   const countryList = normalizeCountryZones(countries || COUNTRY_ZONES_TEMPLATE);
 
   // Dynamic feature flag & admin toggle for CV Pro module switcher
-  const isCvProEnabled = Boolean(featureFlags?.enable_cv_pro) && Boolean(featureFlags?.pricing_show_cv_tab);
+  const isCvProEnabled = !featureFlags?.midtrans_mode && Boolean(featureFlags?.enable_cv_pro) && Boolean(featureFlags?.pricing_show_cv_tab);
   const [activeTab, setActiveTab] = useState('software'); // 'software' | 'cv'
 
   // Pricing Section Tab: 'retail' | 'project' | 'sectoral' | 'matrix' | 'faq'

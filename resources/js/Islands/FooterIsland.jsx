@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Layers, ShieldCheck, ArrowUpRight, MessageCircle, X, ExternalLink, FileText, Lock, RefreshCcw, MapPin, Mail, Clock } from 'lucide-react';
 
 export default function FooterIsland({ 
@@ -14,8 +14,19 @@ export default function FooterIsland({
   ownerTitle = 'Independent Full-Stack Developer & Software Architect'
 }) {
   const currentYear = new Date().getFullYear();
-  const isBlueprintEnabled = featureFlags?.blueprint_enabled !== false;
-  const isCvProEnabled = featureFlags?.cv_pro_enabled !== false;
+  const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
+  const isCvProEnabled = !isMidtransStrict && Boolean(
+    featureFlags?.enable_cv_pro !== false &&
+    featureFlags?.cv_pro_enabled !== false &&
+    featureFlags?.enable_cv_pro !== 0 &&
+    featureFlags?.enable_cv_pro !== '0'
+  );
+  const isBlueprintEnabled = Boolean(
+    featureFlags?.enable_vision_blueprint !== false &&
+    featureFlags?.blueprint_enabled !== false &&
+    featureFlags?.enable_vision_blueprint !== 0 &&
+    featureFlags?.enable_vision_blueprint !== '0'
+  );
   const hasAnyPillar = isBlueprintEnabled || isCvProEnabled;
   const effectiveEmail = supportEmail || 'support@neriahpro.com';
   let rawWa = (whatsappNumber || '6281380448253').toString().replace(/\D/g, '');
@@ -37,6 +48,51 @@ export default function FooterIsland({
     ? (whatsappTemplateEn || 'Hello Yoseph Iriandi, I would like to inquire about software development and digital architecture services at Neriah Pro.')
     : (whatsappTemplateId || 'Halo Yoseph Iriandi, saya ingin konsultasi terkait layanan pengembangan software dan arsitektur digital di Neriah Pro.');
   const waChatUrl = `https://wa.me/${cleanWaNumber}?text=${encodeURIComponent(waMessage)}`;
+
+  // Parse dynamic footer configuration from backend admin settings
+  const dynamicFooter = useMemo(() => {
+    if (!settings) return null;
+    let customCopyright = null;
+    let customColumns = [];
+
+    if (Array.isArray(settings)) {
+      for (const block of settings) {
+        if (block?.type === 'simple_footer' && block?.data?.copyright_text) {
+          customCopyright = block.data.copyright_text;
+        } else if (block?.type === 'multi_column_footer' && block?.data) {
+          if (block.data.copyright_text) customCopyright = block.data.copyright_text;
+          if (Array.isArray(block.data.columns)) {
+            customColumns.push(...block.data.columns);
+          }
+        } else if (block?.title && Array.isArray(block?.links)) {
+          customColumns.push(block);
+        }
+      }
+    } else if (typeof settings === 'object') {
+      if (settings.copyright_text) customCopyright = settings.copyright_text;
+      if (Array.isArray(settings.columns)) {
+        customColumns = settings.columns;
+      }
+    }
+
+    if (!customCopyright && customColumns.length === 0) return null;
+
+    // Filter columns and strictly suppress disabled features (CV Pro / Blueprint)
+    const sanitizedColumns = customColumns.map(col => ({
+      title: col.title || '',
+      links: (col.links || []).filter(link => {
+        const url = (link.url || link.href || '').toLowerCase();
+        if (url.includes('cv-pro') && !isCvProEnabled) return false;
+        if (url.includes('blueprint') && !isBlueprintEnabled) return false;
+        return true;
+      })
+    })).filter(col => col.links.length > 0 || col.title);
+
+    return {
+      copyrightText: customCopyright,
+      columns: sanitizedColumns.length > 0 ? sanitizedColumns : null,
+    };
+  }, [settings, isCvProEnabled, isBlueprintEnabled]);
 
   // State for in-page Legal Policies Accordion above footer
   const [openPolicyTab, setOpenPolicyTab] = useState(null); // 'terms' | 'privacy' | 'refund' | null
@@ -409,104 +465,151 @@ export default function FooterIsland({
             </div>
           </div>
 
-          {/* Solutions Hub */}
-          {hasAnyPillar && (
-            <div className="md:col-span-2">
-              <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-                {isEn ? 'Solutions' : 'Aplikasi'}
-              </h4>
-              <ul className="space-y-2.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
-                {isBlueprintEnabled && (
+          {/* Dynamic or Default Footer Columns */}
+          {dynamicFooter?.columns ? (
+            dynamicFooter.columns.map((col, idx) => (
+              <div key={idx} className="md:col-span-2">
+                <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
+                  {col.title}
+                </h4>
+                <ul className="space-y-2.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
+                  {col.links.map((link, lIdx) => {
+                    const url = link.url || link.href || '#';
+                    const isTerms = url === '/terms' || url === '#terms';
+                    const isPrivacy = url === '/privacy-policy' || url === '#privacy';
+                    const isRefund = url === '/refund-policy' || url === '#refund';
+                    if (isTerms || isPrivacy || isRefund) {
+                      const tab = isTerms ? 'terms' : (isPrivacy ? 'privacy' : 'refund');
+                      return (
+                        <li key={lIdx}>
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePolicy(tab)}
+                            className="hover:text-emerald-500 transition-colors flex items-center gap-1 text-left cursor-pointer"
+                          >
+                            <span className={openPolicyTab === tab ? 'text-emerald-500 font-bold underline' : ''}>
+                              {link.label}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    }
+                    return (
+                      <li key={lIdx}>
+                        <a href={url} className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                          <span>{link.label}</span>
+                          {(url.startsWith('http') || url.startsWith('/explore') || url.startsWith('/blueprint') || url.startsWith('/cv-pro')) && (
+                            <ArrowUpRight className="w-3 h-3 text-zinc-400" />
+                          )}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))
+          ) : (
+            <>
+              {/* Solutions Hub */}
+              {hasAnyPillar && (
+                <div className="md:col-span-2">
+                  <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
+                    {isEn ? 'Solutions' : 'Aplikasi'}
+                  </h4>
+                  <ul className="space-y-2.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
+                    {isBlueprintEnabled && (
+                      <li>
+                        <a href="/blueprint" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                          <span>Project OS (PRD)</span>
+                          <ArrowUpRight className="w-3 h-3 text-zinc-400" />
+                        </a>
+                      </li>
+                    )}
+                    {isCvProEnabled && (
+                      <li>
+                        <a href="/cv-pro" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
+                          <span>CV Pro Studio</span>
+                          <ArrowUpRight className="w-3 h-3 text-zinc-400" />
+                        </a>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              {/* Legal & Compliance Links (Toggles Accordion Above) */}
+              <div className="md:col-span-2">
+                <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
+                  {isEn ? 'Legal & Policy' : 'Legal & Regulasi'}
+                </h4>
+                <ul className="space-y-2.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
                   <li>
-                    <a href="/blueprint" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                      <span>Project OS (PRD)</span>
-                      <ArrowUpRight className="w-3 h-3 text-zinc-400" />
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePolicy('terms')}
+                      className="hover:text-emerald-500 transition-colors flex items-center gap-1 text-left cursor-pointer"
+                    >
+                      <span className={openPolicyTab === 'terms' ? 'text-emerald-500 font-bold underline' : ''}>
+                        {isEn ? 'Terms of Service' : 'Syarat & Ketentuan'}
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePolicy('privacy')}
+                      className="hover:text-emerald-500 transition-colors flex items-center gap-1 text-left cursor-pointer"
+                    >
+                      <span className={openPolicyTab === 'privacy' ? 'text-emerald-500 font-bold underline' : ''}>
+                        {isEn ? 'Privacy Policy' : 'Kebijakan Privasi'}
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePolicy('refund')}
+                      className="hover:text-emerald-500 transition-colors flex items-center gap-1 text-left cursor-pointer"
+                    >
+                      <span className={openPolicyTab === 'refund' ? 'text-emerald-500 font-bold underline' : ''}>
+                        {isEn ? 'Refund & Warranty' : 'Kebijakan Refund'}
+                      </span>
+                    </button>
+                  </li>
+                  <li>
+                    <a href="/smart-guide" className="hover:text-emerald-500 transition-colors flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
+                      <span>{isEn ? 'Smart Client Guide' : 'Panduan & Hak Klien'}</span>
                     </a>
                   </li>
-                )}
-                {isCvProEnabled && (
-                  <li>
-                    <a href="/cv-pro" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
-                      <span>CV Pro Studio</span>
-                      <ArrowUpRight className="w-3 h-3 text-zinc-400" />
-                    </a>
+                </ul>
+              </div>
+
+              {/* Technical Architecture Standards */}
+              <div className="md:col-span-2">
+                <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
+                  {isEn ? 'Developer Skills' : 'Keahlian Rekayasa'}
+                </h4>
+                <ul className="space-y-2.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
+                  <li className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-500"></span>
+                    <span>Full-Stack Web Systems</span>
                   </li>
-                )}
-              </ul>
-            </div>
+                  <li className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-500"></span>
+                    <span>PostgreSQL &amp; Strict ULID</span>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-500"></span>
+                    <span>Midtrans API &amp; Webhooks</span>
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 bg-emerald-500"></span>
+                    <span>Clean Code &amp; Linux VPS</span>
+                  </li>
+                </ul>
+              </div>
+            </>
           )}
-
-          {/* Legal & Compliance Links (Toggles Accordion Above) */}
-          <div className="md:col-span-2">
-            <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-              {isEn ? 'Legal & Policy' : 'Legal & Regulasi'}
-            </h4>
-            <ul className="space-y-2.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => handleTogglePolicy('terms')}
-                  className="hover:text-emerald-500 transition-colors flex items-center gap-1 text-left cursor-pointer"
-                >
-                  <span className={openPolicyTab === 'terms' ? 'text-emerald-500 font-bold underline' : ''}>
-                    {isEn ? 'Terms of Service' : 'Syarat & Ketentuan'}
-                  </span>
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => handleTogglePolicy('privacy')}
-                  className="hover:text-emerald-500 transition-colors flex items-center gap-1 text-left cursor-pointer"
-                >
-                  <span className={openPolicyTab === 'privacy' ? 'text-emerald-500 font-bold underline' : ''}>
-                    {isEn ? 'Privacy Policy' : 'Kebijakan Privasi'}
-                  </span>
-                </button>
-              </li>
-              <li>
-                <button
-                  type="button"
-                  onClick={() => handleTogglePolicy('refund')}
-                  className="hover:text-emerald-500 transition-colors flex items-center gap-1 text-left cursor-pointer"
-                >
-                  <span className={openPolicyTab === 'refund' ? 'text-emerald-500 font-bold underline' : ''}>
-                    {isEn ? 'Refund & Warranty' : 'Kebijakan Refund'}
-                  </span>
-                </button>
-              </li>
-              <li>
-                <a href="/smart-guide" className="hover:text-emerald-500 transition-colors flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
-                  <span>{isEn ? 'Smart Client Guide' : 'Panduan & Hak Klien'}</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Technical Architecture Standards */}
-          <div className="md:col-span-2">
-            <h4 className="font-mono font-bold uppercase tracking-widest text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-              {isEn ? 'Developer Skills' : 'Keahlian Rekayasa'}
-            </h4>
-            <ul className="space-y-2.5 font-mono text-xs text-zinc-600 dark:text-zinc-400">
-              <li className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>Full-Stack Web Systems</span>
-              </li>
-              <li className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>PostgreSQL &amp; Strict ULID</span>
-              </li>
-              <li className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>Midtrans API &amp; Webhooks</span>
-              </li>
-              <li className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-emerald-500"></span>
-                <span>Clean Code &amp; Linux VPS</span>
-              </li>
-            </ul>
-          </div>
 
           {/* Direct Office Address & Fast Connect */}
           <div className="md:col-span-3">
@@ -593,7 +696,7 @@ export default function FooterIsland({
         {/* Bottom Legal & Copyright Bar (Toggles Accordion Above) */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-500 dark:text-zinc-400">
           <div>
-            <p>&copy; {currentYear} NERIAH PRO by {ownerName}. {isEn ? 'Professional Independent Developer Services.' : 'Layanan Rekayasa Software Mandiri.'}</p>
+            <p>{dynamicFooter?.copyrightText || `© ${currentYear} NERIAH PRO by ${ownerName}. ${isEn ? 'Professional Independent Developer Services.' : 'Layanan Rekayasa Software Mandiri.'}`}</p>
             <div className="flex flex-wrap items-center gap-4 mt-2 text-[11px]">
               <button
                 type="button"

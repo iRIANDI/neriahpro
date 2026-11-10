@@ -456,6 +456,35 @@ class CvProFeatureTest extends TestCase
         $responseDisabled->assertStatus(200);
         $responseDisabled->assertSee('"enable_cv_pro":false', false);
     }
+
+    public function test_footer_and_pages_suppress_cv_pro_when_disabled_or_midtrans_strict(): void
+    {
+        // 1. When CV Pro is disabled
+        \App\Models\CmsGlobalSetting::updateOrCreate(
+            ['key' => 'feature_enable_cv_pro'],
+            ['value' => false]
+        );
+        \Illuminate\Support\Facades\Cache::flush();
+
+        $responseDisabled = $this->get('/');
+        $responseDisabled->assertStatus(200);
+        $responseDisabled->assertSee('"enable_cv_pro":false', false);
+
+        // 2. When Midtrans strict mode is active
+        \App\Models\CmsGlobalSetting::updateOrCreate(
+            ['key' => 'feature_enable_cv_pro'],
+            ['value' => true]
+        );
+        \App\Models\CmsGlobalSetting::updateOrCreate(
+            ['key' => 'midtrans_compliance_strict_mode'],
+            ['value' => true]
+        );
+        \Illuminate\Support\Facades\Cache::flush();
+
+        $responseStrict = $this->get('/');
+        $responseStrict->assertStatus(200);
+        $responseStrict->assertSee('"midtrans_mode":true', false);
+    }
 }
 
 

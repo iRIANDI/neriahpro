@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Cpu, 
@@ -27,11 +27,21 @@ import {
 
 export default function GlobalNavigationIsland({ settings, featureFlags, cartData, authUser, brandLogoUrl }) {
   const isMidtransStrict = Boolean(featureFlags?.midtrans_mode);
-  const isCvProEnabled = !isMidtransStrict && (featureFlags?.enable_cv_pro !== false);
-  const isBlueprintEnabled = featureFlags?.enable_vision_blueprint !== false;
+  const isCvProEnabled = !isMidtransStrict && Boolean(
+    featureFlags?.enable_cv_pro !== false &&
+    featureFlags?.cv_pro_enabled !== false &&
+    featureFlags?.enable_cv_pro !== 0 &&
+    featureFlags?.enable_cv_pro !== '0'
+  );
+  const isBlueprintEnabled = Boolean(
+    featureFlags?.enable_vision_blueprint !== false &&
+    featureFlags?.blueprint_enabled !== false &&
+    featureFlags?.enable_vision_blueprint !== 0 &&
+    featureFlags?.enable_vision_blueprint !== '0'
+  );
   const isContractEnabled = featureFlags?.enable_digital_contract !== false;
   const isClientOnboardingEnabled = featureFlags?.enable_client_onboarding !== false;
-  const isPricingEnabled = !isMidtransStrict && (featureFlags?.enable_pricing !== false) && isCvProEnabled;
+  const isPricingEnabled = featureFlags?.enable_pricing !== false;
   const hasAnyService = isBlueprintEnabled || isCvProEnabled || isContractEnabled || isClientOnboardingEnabled;
 
   const [scrolled, setScrolled] = useState(false);
@@ -238,6 +248,50 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
     ...(hasAnyService ? [{ label: lang === 'id' ? 'Layanan HUB' : 'Service Hub', href: '/#services' }] : []),
   ];
 
+  // Extract custom dynamic navigation links from settings if defined in backend admin
+  const dynamicNavLinks = useMemo(() => {
+    if (!settings) return null;
+    let rawLinks = [];
+    if (Array.isArray(settings)) {
+      for (const block of settings) {
+        if (block?.type === 'simple_nav' && Array.isArray(block?.data?.links)) {
+          rawLinks.push(...block.data.links);
+        } else if (block?.type === 'mega_menu_nav' && Array.isArray(block?.data?.menus)) {
+          for (const m of block.data.menus) {
+            if (Array.isArray(m?.links)) {
+              rawLinks.push(...m.links);
+            }
+          }
+        } else if (block?.label && block?.url) {
+          rawLinks.push(block);
+        }
+      }
+    } else if (typeof settings === 'object') {
+      if (Array.isArray(settings.links)) {
+        rawLinks = settings.links;
+      }
+    }
+
+    if (rawLinks.length === 0) return null;
+
+    return rawLinks
+      .map(item => {
+        const rawLabel = item.label || item.title || '';
+        const rawUrl = item.url || item.href || '/';
+        return {
+          label: rawLabel,
+          href: rawUrl,
+          highlight: Boolean(item.highlight || rawUrl.includes('pricing#retail') || rawUrl.includes('blueprint')),
+        };
+      })
+      .filter(item => {
+        const url = (item.href || '').toLowerCase();
+        if (url.includes('cv-pro') && !isCvProEnabled) return false;
+        if (url.includes('blueprint') && !isBlueprintEnabled) return false;
+        return true;
+      });
+  }, [settings, isCvProEnabled, isBlueprintEnabled]);
+
   return (
     <>
       <div 
@@ -307,21 +361,47 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
           {/* Desktop Navigation Links (Curated for High Retention) */}
           <div className="hidden md:flex items-center gap-7 font-mono text-xs uppercase tracking-wider font-bold">
-            <a href="/" className={`transition ${currentPath === '/' ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
-              {lang === 'id' ? 'Beranda' : 'Home'}
-            </a>
+            {dynamicNavLinks ? (
+              dynamicNavLinks.map((item, idx) => {
+                const isActive = currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href));
+                return (
+                  <a
+                    key={idx}
+                    href={item.href}
+                    className={`transition flex items-center gap-1.5 ${
+                      isActive 
+                        ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' 
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    {item.highlight && (
+                      <span className="px-1 py-0.2 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[9px] font-bold">
+                        ACTIVE
+                      </span>
+                    )}
+                  </a>
+                );
+              })
+            ) : (
+              <>
+                <a href="/" className={`transition ${currentPath === '/' ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
+                  {lang === 'id' ? 'Beranda' : 'Home'}
+                </a>
 
-            {isBlueprintEnabled && (
-              <a href="/pricing#retail" className={`transition flex items-center gap-1.5 ${currentPath === '/blueprint' ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
-                <span>Project OS (PRD)</span>
-                <span className="px-1 py-0.2 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[9px] font-bold">ACTIVE</span>
-              </a>
+                {isBlueprintEnabled && (
+                  <a href="/pricing#retail" className={`transition flex items-center gap-1.5 ${currentPath === '/blueprint' ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
+                    <span>Project OS (PRD)</span>
+                    <span className="px-1 py-0.2 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[9px] font-bold">ACTIVE</span>
+                  </a>
+                )}
+
+                <a href="/pricing" className={`transition flex items-center gap-1.5 ${currentPath.startsWith('/pricing') ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
+                  <span>{lang === 'id' ? 'Paket & Investasi' : 'Pricing'}</span>
+                  <span className="px-1 py-0.2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-bold">PROMO</span>
+                </a>
+              </>
             )}
-
-            <a href="/pricing" className={`transition flex items-center gap-1.5 ${currentPath.startsWith('/pricing') ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
-              <span>{lang === 'id' ? 'Paket & Investasi' : 'Pricing'}</span>
-              <span className="px-1 py-0.2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-bold">PROMO</span>
-            </a>
 
             {/* Dropdown: Layanan HUB (Only visible if at least one service is enabled) */}
             {hasAnyService && (
@@ -803,26 +883,47 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                 )}
               </div>
 
-              <a href="/" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 ${currentPath === '/' ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
-                {lang === 'id' ? 'Beranda' : 'Home'}
-              </a>
+              {dynamicNavLinks ? (
+                dynamicNavLinks.map((item, idx) => (
+                  <a
+                    key={idx}
+                    href={item.href}
+                    className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between ${
+                      currentPath === item.href ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    {item.highlight && (
+                      <span className="px-1.5 py-0.2 bg-emerald-500 text-black text-[9px] font-black">
+                        ACTIVE
+                      </span>
+                    )}
+                  </a>
+                ))
+              ) : (
+                <>
+                  <a href="/" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 ${currentPath === '/' ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
+                    {lang === 'id' ? 'Beranda' : 'Home'}
+                  </a>
 
-              {isBlueprintEnabled && (
-                <a href="/pricing#retail" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
-                  <span>Project OS (PRD Generator)</span>
-                  <span className="px-1.5 py-0.2 bg-emerald-500 text-black text-[9px] font-black">ACTIVE</span>
-                </a>
-              )}
+                  {isBlueprintEnabled && (
+                    <a href="/pricing#retail" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
+                      <span>Project OS (PRD Generator)</span>
+                      <span className="px-1.5 py-0.2 bg-emerald-500 text-black text-[9px] font-black">ACTIVE</span>
+                    </a>
+                  )}
 
-              <a href="/pricing" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between ${currentPath.startsWith('/pricing') ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
-                <span>{lang === 'id' ? 'Paket & Investasi Layanan' : 'Pricing & Packages'}</span>
-                <span className="px-1.5 py-0.5 bg-emerald-500 text-black text-[9px] font-black">PROMO</span>
-              </a>
+                  <a href="/pricing" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between ${currentPath.startsWith('/pricing') ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
+                    <span>{lang === 'id' ? 'Paket & Investasi Layanan' : 'Pricing & Packages'}</span>
+                    <span className="px-1.5 py-0.5 bg-emerald-500 text-black text-[9px] font-black">PROMO</span>
+                  </a>
 
-              {isCvProEnabled && (
-                <a href="/cv-pro" className="block py-2 text-purple-600 dark:text-purple-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                  Studio CV Pro &rarr;
-                </a>
+                  {isCvProEnabled && (
+                    <a href="/cv-pro" className="block py-2 text-purple-600 dark:text-purple-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
+                      Studio CV Pro &rarr;
+                    </a>
+                  )}
+                </>
               )}
 
               {/* Mobile Client Portal / Auth Access */}

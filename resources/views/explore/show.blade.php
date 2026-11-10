@@ -247,7 +247,7 @@
     </main>
 
     @react('FooterIsland', [
-        'settings' => $getSettingVal('footer_links', null),
+        'settings' => $getSettingVal('footer_format') ?: $getSettingVal('footer_links', null),
         'featureFlags' => $featureFlags,
         'whatsappNumber' => $getSettingVal('company_whatsapp', '6281380448253'),
         'supportEmail' => $getSettingVal('developer_support_email', 'support@neriahpro.com'),

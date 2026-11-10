@@ -57,6 +57,56 @@ class ManageSettings extends Page implements HasForms
     {
         $dbSettings = CmsGlobalSetting::all()->pluck('value', 'key')->toArray();
 
+        $defaultNavigation = [
+            [
+                'type' => 'simple_nav',
+                'data' => [
+                    'links' => [
+                        ['label' => 'Home', 'url' => '/'],
+                        ['label' => 'Project OS (PRD)', 'url' => '/pricing#retail'],
+                        ['label' => 'Pricing', 'url' => '/pricing'],
+                        ['label' => 'Services Hub', 'url' => '/#services'],
+                    ]
+                ]
+            ]
+        ];
+
+        $defaultFooter = [
+            [
+                'type' => 'multi_column_footer',
+                'data' => [
+                    'copyright_text' => '2026 NERIAH PRO by Yoseph Iriandi. Professional Independent Developer Services.',
+                    'columns' => [
+                        [
+                            'title' => 'Solutions',
+                            'links' => [
+                                ['label' => 'Project OS (PRD)', 'url' => '/blueprint'],
+                                ['label' => 'CV Pro Studio', 'url' => '/cv-pro'],
+                            ]
+                        ],
+                        [
+                            'title' => 'Legal & Policy',
+                            'links' => [
+                                ['label' => 'Terms of Service', 'url' => '/terms'],
+                                ['label' => 'Privacy Policy', 'url' => '/privacy-policy'],
+                                ['label' => 'Refund & Warranty Policy', 'url' => '/refund-policy'],
+                                ['label' => 'Smart Client Guide', 'url' => '/smart-guide'],
+                            ]
+                        ],
+                        [
+                            'title' => 'Developer Skills',
+                            'links' => [
+                                ['label' => 'Full-Stack Web Systems', 'url' => '/explore'],
+                                ['label' => 'PostgreSQL & Strict ULID', 'url' => '/pricing#retail'],
+                                ['label' => 'Midtrans API & Webhooks', 'url' => '/terms'],
+                                ['label' => 'Clean Code & Linux VPS', 'url' => '/smart-guide'],
+                            ]
+                        ],
+                    ]
+                ]
+            ]
+        ];
+
         $defaults = [
             'company_whatsapp' => '6281380448253',
             'company_whatsapp_template_id' => 'Halo Yoseph Iriandi, saya ingin konsultasi terkait layanan pengembangan software dan arsitektur digital di Neriah Pro.',
@@ -162,6 +212,10 @@ class ManageSettings extends Page implements HasForms
             'enable_admin_whatsapp_notifications' => true,
             'admin_notification_whatsapp' => '081380448253',
             'fonnte_api_token' => env('FONNTE_API_TOKEN', ''),
+            'navigation_format' => $defaultNavigation,
+            'footer_format' => $defaultFooter,
+            'main_navigation' => $defaultNavigation,
+            'footer_links' => $defaultFooter,
         ];
 
         // Filter out null or empty strings from database so defaults prevail
@@ -170,6 +224,14 @@ class ManageSettings extends Page implements HasForms
             if ($v !== null && $v !== '') {
                 $filteredDb[$k] = $v;
             }
+        }
+
+        // Defensive fallback for navigation & footer when empty or legacy ['enabled' => true]
+        if (empty($filteredDb['navigation_format']) || !is_array($filteredDb['navigation_format']) || isset($filteredDb['navigation_format']['enabled']) || count($filteredDb['navigation_format']) === 0) {
+            $filteredDb['navigation_format'] = $defaultNavigation;
+        }
+        if (empty($filteredDb['footer_format']) || !is_array($filteredDb['footer_format']) || isset($filteredDb['footer_format']['enabled']) || count($filteredDb['footer_format']) === 0) {
+            $filteredDb['footer_format'] = $defaultFooter;
         }
 
         $settings = array_replace_recursive($defaults, $filteredDb);
@@ -977,57 +1039,110 @@ class ManageSettings extends Page implements HasForms
                             ->id('navigation-footer')
                             ->icon('heroicon-m-bars-3-bottom-left')
                             ->schema([
-                                Builder::make('navigation_format')
-                                    ->label('Main Navigation')
-                                    ->blocks([
-                                        Builder\Block::make('simple_nav')
-                                            ->label('Simple Navigation')
-                                            ->icon('heroicon-m-bars-3')
-                                            ->schema([
-                                                Repeater::make('links')->schema([
-                                                    TextInput::make('label')->required(),
-                                                    TextInput::make('url')->required(),
-                                                ])->columns(2)
-                                            ]),
-                                        Builder\Block::make('mega_menu_nav')
-                                            ->label('Mega Menu Navigation')
-                                            ->icon('heroicon-m-queue-list')
-                                            ->schema([
-                                                Repeater::make('menus')->schema([
-                                                    TextInput::make('title')->required(),
-                                                    Repeater::make('links')->schema([
-                                                        TextInput::make('label')->required(),
-                                                        TextInput::make('url')->required(),
-                                                    ])->columns(2)
-                                                ])
-                                            ]),
-                                    ])
-                                    ->maxItems(1),
-                                    
-                                Builder::make('footer_format')
-                                    ->label('Footer Configuration')
-                                    ->blocks([
-                                        Builder\Block::make('simple_footer')
-                                            ->label('Simple Footer')
-                                            ->icon('heroicon-m-document-minus')
-                                            ->schema([
-                                                TextInput::make('copyright_text')->required(),
-                                            ]),
-                                        Builder\Block::make('multi_column_footer')
-                                            ->label('Multi-Column Footer')
-                                            ->icon('heroicon-m-view-columns')
-                                            ->schema([
-                                                TextInput::make('copyright_text')->required(),
-                                                Repeater::make('columns')->schema([
-                                                    TextInput::make('title')->required(),
-                                                    Repeater::make('links')->schema([
-                                                        TextInput::make('label')->required(),
-                                                        TextInput::make('url')->required(),
-                                                    ])->columns(2)
-                                                ])
-                                            ]),
-                                    ])
-                                    ->maxItems(1),
+                                Section::make('Global Top Navigation')
+                                    ->description('Konfigurasi link menu navigasi utama di bagian atas website (Desktop & Mobile).')
+                                    ->schema([
+                                        Builder::make('navigation_format')
+                                            ->label('Struktur Navigasi Utama')
+                                            ->blocks([
+                                                Builder\Block::make('simple_nav')
+                                                    ->label('Simple Navigation (Flat Links)')
+                                                    ->icon('heroicon-m-bars-3')
+                                                    ->schema([
+                                                        Repeater::make('links')
+                                                            ->label('Daftar Link Navigasi')
+                                                            ->schema([
+                                                                TextInput::make('label')
+                                                                    ->label('Label Menu')
+                                                                    ->placeholder('misal: Beranda / Home')
+                                                                    ->required(),
+                                                                TextInput::make('url')
+                                                                    ->label('URL / Route Tujuan')
+                                                                    ->placeholder('misal: / atau /pricing')
+                                                                    ->required(),
+                                                            ])
+                                                            ->columns(2)
+                                                    ]),
+                                                Builder\Block::make('mega_menu_nav')
+                                                    ->label('Mega Menu Navigation (Grouped Menus)')
+                                                    ->icon('heroicon-m-queue-list')
+                                                    ->schema([
+                                                        Repeater::make('menus')
+                                                            ->label('Grup Menu')
+                                                            ->schema([
+                                                                TextInput::make('title')
+                                                                    ->label('Judul Grup')
+                                                                    ->placeholder('misal: Layanan / Services')
+                                                                    ->required(),
+                                                                Repeater::make('links')
+                                                                    ->label('Sub-Link')
+                                                                    ->schema([
+                                                                        TextInput::make('label')
+                                                                            ->label('Label')
+                                                                            ->placeholder('misal: Project OS (PRD)')
+                                                                            ->required(),
+                                                                        TextInput::make('url')
+                                                                            ->label('URL Tujuan')
+                                                                            ->placeholder('misal: /pricing#retail')
+                                                                            ->required(),
+                                                                    ])
+                                                                    ->columns(2)
+                                                            ])
+                                                    ]),
+                                            ])
+                                            ->maxItems(1)
+                                            ->helperText('Pilih Simple Navigation untuk link datar standar, atau Mega Menu untuk grup link bertingkat.'),
+                                    ]),
+
+                                Section::make('Global Website Footer')
+                                    ->description('Konfigurasi teks hak cipta (copyright) dan kolom tautan footer di seluruh halaman.')
+                                    ->schema([
+                                        Builder::make('footer_format')
+                                            ->label('Struktur Footer Global')
+                                            ->blocks([
+                                                Builder\Block::make('simple_footer')
+                                                    ->label('Simple Footer (Copyright Only)')
+                                                    ->icon('heroicon-m-document-minus')
+                                                    ->schema([
+                                                        TextInput::make('copyright_text')
+                                                            ->label('Teks Hak Cipta (Copyright)')
+                                                            ->placeholder('misal: 2026 NERIAH PRO by Yoseph Iriandi. All Rights Reserved.')
+                                                            ->required(),
+                                                    ]),
+                                                Builder\Block::make('multi_column_footer')
+                                                    ->label('Multi-Column Footer (Columns + Copyright)')
+                                                    ->icon('heroicon-m-view-columns')
+                                                    ->schema([
+                                                        TextInput::make('copyright_text')
+                                                            ->label('Teks Hak Cipta (Copyright)')
+                                                            ->placeholder('misal: 2026 NERIAH PRO by Yoseph Iriandi. Professional Independent Developer Services.')
+                                                            ->required(),
+                                                        Repeater::make('columns')
+                                                            ->label('Kolom Footer')
+                                                            ->schema([
+                                                                TextInput::make('title')
+                                                                    ->label('Judul Kolom')
+                                                                    ->placeholder('misal: Solutions / Legal & Policy')
+                                                                    ->required(),
+                                                                Repeater::make('links')
+                                                                    ->label('Tautan di Kolom Ini')
+                                                                    ->schema([
+                                                                        TextInput::make('label')
+                                                                            ->label('Label Tautan')
+                                                                            ->placeholder('misal: Project OS (PRD)')
+                                                                            ->required(),
+                                                                        TextInput::make('url')
+                                                                            ->label('URL Tujuan')
+                                                                            ->placeholder('misal: /blueprint')
+                                                                            ->required(),
+                                                                    ])
+                                                                    ->columns(2)
+                                                            ])
+                                                    ]),
+                                            ])
+                                            ->maxItems(1)
+                                            ->helperText('Pilih Multi-Column Footer untuk menampilkan kolom tautan Solutions, Legal, dan Developer Skills secara dinamis.'),
+                                    ]),
                             ]),
                             
                         Tabs\Tab::make('SEO Schema Markup')
@@ -1493,6 +1608,14 @@ class ManageSettings extends Page implements HasForms
                 ['key' => $key],
                 ['value' => $safeValue]
             );
+        }
+
+        // Sync dual-keys for navigation and footer backward compatibility
+        if (isset($data['navigation_format'])) {
+            CmsGlobalSetting::updateOrCreate(['key' => 'main_navigation'], ['value' => $data['navigation_format']]);
+        }
+        if (isset($data['footer_format'])) {
+            CmsGlobalSetting::updateOrCreate(['key' => 'footer_links'], ['value' => $data['footer_format']]);
         }
 
         // Flush schema & global cache forever immediately

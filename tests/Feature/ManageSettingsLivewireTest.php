@@ -128,4 +128,50 @@ class ManageSettingsLivewireTest extends TestCase
         $this->assertEquals('6591234567', CmsGlobalSetting::getVal('company_whatsapp'));
         $this->assertEquals('+6281380448253', CmsGlobalSetting::getVal('developer_phone'));
     }
+
+    public function test_navigation_and_footer_format_mount_with_defaults_and_save_successfully(): void
+    {
+        $superadmin = User::where('email', 'yoseph.iriandi.tambunan@gmail.com')->firstOrFail();
+        $this->actingAs($superadmin);
+
+        $test = Livewire::test(ManageSettings::class);
+        $test->assertSuccessful();
+
+        $navFormat = $test->get('data.navigation_format');
+        $footerFormat = $test->get('data.footer_format');
+
+        $this->assertIsArray($navFormat);
+        $this->assertNotEmpty($navFormat);
+        $navBlocks = array_values($navFormat);
+        $this->assertEquals('simple_nav', $navBlocks[0]['type']);
+
+        $this->assertIsArray($footerFormat);
+        $this->assertNotEmpty($footerFormat);
+        $footerBlocks = array_values($footerFormat);
+        $this->assertEquals('multi_column_footer', $footerBlocks[0]['type']);
+
+        // Custom update
+        $customNav = [
+            'block-1' => [
+                'type' => 'simple_nav',
+                'data' => [
+                    'links' => [
+                        'item-1' => ['label' => 'Beranda Utama', 'url' => '/'],
+                        'item-2' => ['label' => 'Katalog Harga', 'url' => '/pricing'],
+                    ]
+                ]
+            ]
+        ];
+
+        $test->set('data.navigation_format', $customNav)
+            ->call('submit')
+            ->assertHasNoErrors()
+            ->assertSuccessful();
+
+        $savedNav = CmsGlobalSetting::getVal('navigation_format');
+        $this->assertNotEmpty($savedNav);
+        $savedBlocks = array_values($savedNav);
+        $this->assertEquals('simple_nav', $savedBlocks[0]['type']);
+        $this->assertEquals($savedNav, CmsGlobalSetting::getVal('main_navigation'));
+    }
 }

@@ -74,7 +74,7 @@
 
 <!-- Global Navigation Island -->
 @react('GlobalNavigationIsland', [
-    'settings' => $getSettingVal('main_navigation', null),
+    'settings' => $getSettingVal('navigation_format') ?: $getSettingVal('main_navigation', null),
     'featureFlags' => $featureFlags,
     'cartData' => $cartData,
     'authUser' => $authUser,

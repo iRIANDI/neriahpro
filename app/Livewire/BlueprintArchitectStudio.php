@@ -833,6 +833,60 @@ class BlueprintArchitectStudio extends Component
         $this->currentVersion = (string) ($res['to_version'] ?? $this->currentVersion);
     }
 
+    public function loadChangeRequestSnapshot(string $crId): void
+    {
+        $cr = PosChangeRequest::query()->find($crId);
+        if (! $cr) {
+            return;
+        }
+
+        $this->latestDeltaResult = [
+            'id' => $cr->id,
+            'from_version' => $cr->from_version,
+            'to_version' => $cr->to_version,
+            'title' => $cr->title,
+            'change_summary' => $cr->change_summary,
+            'added_primitives' => $cr->added_primitives ?? [],
+            'added_tables' => $cr->added_tables ?? [],
+            'added_decision_rules' => $cr->added_decision_rules ?? [],
+            'delta_migrations_sql' => $cr->delta_migrations_sql,
+            'delta_graph_diff' => $cr->delta_graph_diff,
+            'delta_tool_declarations' => $cr->delta_tool_declarations ?? [],
+            'regression_test_scenarios' => $cr->regression_test_scenarios ?? [],
+            'surgical_delta_prompt' => $cr->surgical_delta_prompt,
+            'paid_change_order' => [
+                'delta_man_hours' => $cr->delta_man_hours,
+                'delta_working_days' => $cr->delta_working_days,
+                'delta_quotation_idr' => (float) $cr->delta_quotation_idr,
+                'formatted_delta_quotation' => 'Rp ' . number_format((float) $cr->delta_quotation_idr, 0, ',', '.'),
+                'addendum_status' => $cr->addendum_status,
+            ],
+        ];
+        $this->deltaTitle = (string) $cr->title;
+        $this->deltaSummary = (string) $cr->change_summary;
+        $this->currentVersion = (string) $cr->to_version;
+
+        $this->dispatch('notify', [
+            'type' => 'info',
+            'title' => 'Snapshot Versi ' . $cr->to_version . ' Dimuat',
+            'message' => 'Detail migrasi aditif, graph diff, dan prompt delta berhasil dipanggil kembali ke studio.',
+        ]);
+    }
+
+    public function restoreBaselineVersion(): void
+    {
+        $this->currentVersion = 'v1.0';
+        $this->latestDeltaResult = [];
+        $this->deltaTitle = '';
+        $this->deltaSummary = '';
+
+        $this->dispatch('notify', [
+            'type' => 'success',
+            'title' => 'Baseline v1.0 Aktif',
+            'message' => 'Kanvas dikembalikan ke acuan arsitektur v1.0 tanpa merusak riwayat delta yang tersimpan.',
+        ]);
+    }
+
     public function runDriftVerification(BlueprintSlopScannerService $scanner): void
     {
         $snippetScan = $this->verifyTerminalInput !== ''
@@ -1070,6 +1124,9 @@ class BlueprintArchitectStudio extends Component
             'rescueCreditData' => $rescueCreditData,
             'rescueMitraCredit' => $rescueCreditData,
             'vibeCoderGuidedSteps' => $vibeCoderGuidedSteps,
+            'changeRequests' => $this->posProjectId
+                ? PosChangeRequest::query()->where('pos_project_id', $this->posProjectId)->orderBy('created_at', 'desc')->get()
+                : ($this->blueprintId ? PosChangeRequest::query()->where('vision_blueprint_id', $this->blueprintId)->orderBy('created_at', 'desc')->get() : collect()),
             'disclosureStages' => PosProgressiveDisclosureCatalog::disclosureStages(),
             'tierEntitlementMatrix' => PosProgressiveDisclosureCatalog::tierEntitlementMatrix(),
         ])->layout('components.layouts.studio', [

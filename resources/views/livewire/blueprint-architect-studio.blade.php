@@ -1525,9 +1525,21 @@
                             <span class="font-mono text-[11px] font-black uppercase text-zinc-950 dark:text-zinc-100">
                                 1. Day-30 Iterative Change Request ({{ $currentVersion }} &rarr; Next Minor)
                             </span>
-                            <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black">
-                                SURGICAL DELTA
-                            </span>
+                            <div class="flex items-center gap-1.5">
+                                @if($currentVersion !== 'v1.0')
+                                    <button
+                                        type="button"
+                                        wire:click="restoreBaselineVersion"
+                                        class="px-2 py-0.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-950 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 border border-zinc-400 dark:border-zinc-600 font-mono text-[9px] font-black cursor-pointer rounded-none"
+                                        title="{{ $isEnLoc ? 'Reset view back to v1.0 baseline' : 'Kembalikan tampilan ke acuan baseline v1.0' }}"
+                                    >
+                                        ↺ {{ $isEnLoc ? 'Baseline v1.0' : 'Baseline v1.0' }}
+                                    </button>
+                                @endif
+                                <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black">
+                                    SURGICAL DELTA
+                                </span>
+                            </div>
                         </div>
                         <input
                             type="text"
@@ -1576,6 +1588,50 @@
                                 </div>
                             @endif
                             <pre class="p-2.5 bg-zinc-950 text-emerald-200 border border-zinc-800 rounded-xs text-[10px] font-mono overflow-x-auto max-h-52 studio-scroll">{{ $latestDeltaResult['surgical_delta_prompt'] }}</pre>
+                        @endif
+
+                        @if(isset($changeRequests) && $changeRequests->isNotEmpty())
+                            <div class="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-mono text-[10px] font-black uppercase tracking-wider text-zinc-950 dark:text-zinc-100">
+                                        📜 {{ $isEnLoc ? 'Delta Version History & Snapshots' : 'Riwayat Versi Delta & Snapshot' }} ({{ $changeRequests->count() }})
+                                    </span>
+                                    <span class="font-mono text-[9px] text-zinc-500">
+                                        {{ $isEnLoc ? 'Tamper-Evident SHA-256 Audit Trail' : 'Rekam Jejak Kriptografis SHA-256' }}
+                                    </span>
+                                </div>
+                                <div class="space-y-1.5 max-h-48 overflow-y-auto studio-scroll">
+                                    @foreach($changeRequests as $cr)
+                                        <div class="p-2 border {{ $currentVersion === $cr->to_version ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500' : 'bg-zinc-50 dark:bg-zinc-950 border-zinc-300 dark:border-zinc-800' }} rounded-none flex items-center justify-between gap-2 font-mono text-[10px]">
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="font-black px-1.5 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-[9px]">
+                                                        {{ $cr->from_version }} &rarr; {{ $cr->to_version }}
+                                                    </span>
+                                                    <span class="font-bold text-zinc-950 dark:text-zinc-100 truncate">
+                                                        {{ $cr->title }}
+                                                    </span>
+                                                    @if($cr->addendum_status === 'APPROVED')
+                                                        <span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-950 border border-emerald-400 text-[8px] font-black">
+                                                            APPROVED
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="text-zinc-600 dark:text-zinc-400 text-[9px] mt-0.5 truncate">
+                                                    {{ $cr->created_at?->format('d M Y H:i') }} &bull; +{{ $cr->delta_man_hours }} Jam &bull; Rp {{ number_format((float)$cr->delta_quotation_idr, 0, ',', '.') }}
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                wire:click="loadChangeRequestSnapshot('{{ $cr->id }}')"
+                                                class="shrink-0 px-2.5 py-1 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-zinc-200 dark:hover:bg-white dark:text-zinc-950 font-black text-[9px] cursor-pointer rounded-none"
+                                            >
+                                                {{ $currentVersion === $cr->to_version ? ($isEnLoc ? 'Active Snapshot' : 'Snapshot Aktif') : ($isEnLoc ? 'Load Snapshot' : 'Muat Snapshot') }}
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
                         @endif
                     </div>
 

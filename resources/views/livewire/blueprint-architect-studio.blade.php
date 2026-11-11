@@ -2609,7 +2609,7 @@
                         <div class="p-3 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
                             <div class="flex items-center justify-between">
                                 <span class="font-black uppercase text-zinc-950 dark:text-zinc-100">
-                                    🏛️ MASTER 20-PILLAR PARIPURNA MATRIX ({{ count($twentyPillars ?? []) }}/20 LOCKED)
+                                    🏛️ {{ $isEnLoc ? 'MASTER 20-PILLAR COMPLETE MATRIX' : 'MATRIKS 20 PILAR PARIPURNA' }} ({{ count($twentyPillars ?? []) }}/20 LOCKED)
                                 </span>
                                 <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-black">
                                     100% ZERO-SLOP

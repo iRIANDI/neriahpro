@@ -480,7 +480,7 @@ export default function ArchitecturePricingIsland({
 
   const formatPillar = (text) => {
     if (typeof text !== 'string') return text;
-    const splitRegex = /(Pillars?\s+P?\d+[–\-]P?\d+|Pilars?\s+P?\d+[–\-]P?\d+|P\d+[–\-]P\d+|Pillars?\s+P?\d+|Pilars?\s+P?\d+|P0[1-9]|P1[0-9]|P20|PARIPURNA\s+20[\s\-]PIL[L]?ARS?|20[\s\-]PIL[L]?ARS?|20\s+Pil[l]?ars?)/i;
+    const splitRegex = /(Pillars?\s+P?\d+[–\-]P?\d+|Pilars?\s+P?\d+[–\-]P?\d+|P\d+[–\-]P\d+|Pillars?\s+P?\d+|Pilars?\s+P?\d+|P0[1-9]|P1[0-9]|P20|COMPLETE\s+20[\s\-]PIL[L]?ARS?|PARIPURNA\s+20[\s\-]PIL[L]?ARS?|20[\s\-]PIL[L]?ARS?|20\s+Pil[l]?ars?)/i;
 
     return text.split(splitRegex).map((part, i) => {
       if (!part) return null;
@@ -494,7 +494,7 @@ export default function ArchitecturePricingIsland({
       else if (/P12[–\-]P15/i.test(clean)) tooltipKey = 'P12_P15';
       else if (/P16[–\-]P17/i.test(clean)) tooltipKey = 'P16_P17';
       else if (/P18[–\-]P20/i.test(clean)) tooltipKey = 'P18_P20';
-      else if (/20[\s\-]Pil/i.test(clean)) tooltipKey = '20_ALL';
+      else if (/20[\s\-]Pil/i.test(clean) || /COMPLETE\s+20/i.test(clean) || /PARIPURNA\s+20/i.test(clean)) tooltipKey = '20_ALL';
       else {
         const numMatch = clean.match(/(?:Pil[l]?ar\s+P?0?|P0?)([1-9]|1\d|20)\b/i);
         if (numMatch) {
@@ -971,7 +971,7 @@ export default function ArchitecturePricingIsland({
       category: 'SATU_PINTU',
       q: isEn ? 'Are Instant Architectural Blueprint packages 100% self-service without Neriah Pro coding?' : 'Apakah paket Instant Architectural Blueprint 100% self-service tanpa keterlibatan koding Neriah Pro?',
       a: isEn
-        ? 'Yes, absolutely. Instant Architectural Blueprint packages (Spark, Starter, Single-App Pass, Pro Agentic, Agency White-Label, Ultimate OS) are pure digital architectural specifications and engineering deliverables (26-parameter PRD, PostgreSQL Strict ULID DDL SQL, Mermaid diagrams, Jira/Linear WBS, Decoupled 2026+ matrix, OpenAPI 3.1 contracts, and 20 Paripurna Pillars). They are designed for you, your in-house engineering team, freelancers, or AI coding agents to build the software independently. Neriah Pro does NOT write application code for these self-service packages. If you need Neriah Pro engineers to build, code, and deploy your software turnkey, select our Custom Engineering Studio contracts (Full MVP Monolith or UMKM Starter).'
+        ? 'Yes, absolutely. Instant Architectural Blueprint packages (Spark, Starter, Single-App Pass, Pro Agentic, Agency White-Label, Ultimate OS) are pure digital architectural specifications and engineering deliverables (26-parameter PRD, PostgreSQL Strict ULID DDL SQL, Mermaid diagrams, Jira/Linear WBS, Decoupled 2026+ matrix, OpenAPI 3.1 contracts, and 20 Master Engineering Pillars). They are designed for you, your in-house engineering team, freelancers, or AI coding agents to build the software independently. Neriah Pro does NOT write application code for these self-service packages. If you need Neriah Pro engineers to build, code, and deploy your software turnkey, select our Custom Engineering Studio contracts (Full MVP Monolith or UMKM Starter).'
         : 'Ya, benar 100%. Paket Instant Architectural Blueprint (Spark, Starter, Single-App Pass, Pro Agentic, Agency White-Label, Ultimate OS) adalah produk spesifikasi arsitektur digital mandiri (PRD 26 parameter, skema DDL PostgreSQL Strict ULID, Diagram Mermaid, WBS sprint Jira-ready, matriks Decoupled 2026+, kontrak OpenAPI 3.1, dan 20 Pilar Paripurna). Seluruh aset ini diperuntukkan bagi Anda, tim programmer in-house, freelancer, atau AI coding agent Anda untuk membangun dan mengoding aplikasinya sendiri. Neriah Pro sama sekali TIDAK terlibat dalam penulisan koding untuk paket self-service ini. Apabila Anda membutuhkan tim arsitek dan engineer Neriah Pro untuk mengoding, menguji, dan mendeploy aplikasi sampai siap pakai di server VPS, silakan pilih Layanan Custom Engineering Studio kami (Full MVP Monolith atau UMKM Starter).'
     },
     {
@@ -1005,10 +1005,10 @@ export default function ArchitecturePricingIsland({
     {
       category: 'AI_MCP_SECURITY',
       q: isEn
-        ? 'What are the "20 Pillars of Software Factory OS v12.0 Paripurna" included in Neriah Pro Project OS?'
+        ? 'What are the "20 Complete Pillars of Software Factory OS v12.0" included in Neriah Pro Project OS?'
         : 'Apa itu "20 Pilar Software Factory OS v12.0 Paripurna" yang menjadi standar rekayasa Project OS Neriah Pro?',
       a: isEn
-        ? 'Project OS v12.0 expands our core 10 Pillars into 20 Paripurna Engineering Pillars: (1–10) 26-Parameter PRD, Clean Solid Brutalist UI/UX, Docker PHP 8.5/PG16/Redis Stack, 100+ Realistic ID Domain Seeders, AI Agent Directives (.cursorrules/AGENTS.md), Automated Pest/Playwright Contract Suite, GitHub Actions + deploy.sh CI/CD, Health Probes (/healthz), Encrypted Disaster Recovery Drills, and Scalar OpenAPI 3.1 Docs; PLUS (11–20) 12 Sectoral × 36 Visual UI Cockpits, Zone B 60fps Scrollytelling Presets, Dual-Persona Studio & Co-Design Room, 7-Phase Prompt Sequencer & CLI /init, Live 2-Way MCP Server Bridge, NeriahPro AgentShield & Living CVE Autopatch, Multi-Graph Schema.org + /llms.txt GEO Authority, UU PDP AES-256 + HMAC-SHA256 Blind Index Vault, Offline Outbox PWA Background Sync, and Post-BAST 90-Day SLA Triage + Multi-Entity Holding Consolidation.'
+        ? 'Project OS v12.0 expands our core 10 Pillars into 20 Comprehensive Engineering Pillars: (1–10) 26-Parameter PRD, Clean Solid Brutalist UI/UX, Docker PHP 8.5/PG16/Redis Stack, 100+ Realistic ID Domain Seeders, AI Agent Directives (.cursorrules/AGENTS.md), Automated Pest/Playwright Contract Suite, GitHub Actions + deploy.sh CI/CD, Health Probes (/healthz), Encrypted Disaster Recovery Drills, and Scalar OpenAPI 3.1 Docs; PLUS (11–20) 12 Sectoral × 36 Visual UI Cockpits, Zone B 60fps Scrollytelling Presets, Dual-Persona Studio & Co-Design Room, 7-Phase Prompt Sequencer & CLI /init, Live 2-Way MCP Server Bridge, NeriahPro AgentShield & Living CVE Autopatch, Multi-Graph Schema.org + /llms.txt GEO Authority, UU PDP AES-256 + HMAC-SHA256 Blind Index Vault, Offline Outbox PWA Background Sync, and Post-BAST 90-Day SLA Triage + Multi-Entity Holding Consolidation.'
         : 'Project OS v12.0 memperluas 10 Pilar inti menjadi 20 Pilar Rekayasa Paripurna: (1–10) PRD 26 Parameter, UI/UX Clean Solid Brutalism, Docker PHP 8.5/PG16/Redis, 100+ Seeder Data Realistis Indonesia, Direktif AI (.cursorrules/AGENTS.md), Suite Uji Kontrak Pest/Playwright, CI/CD GitHub Actions + deploy.sh, Health Probes (/healthz), Backup Terenkripsi & DR Runbook, serta Scalar OpenAPI 3.1; DITAMBAH (11–20) 12 Sektor × 36 Visual UI Kokpit, Zona B 6 Preset Scrollytelling 60fps, Dual-Persona Studio & Co-Design Room, 7-Fase Prompt & CLI /init, Jembatan Live MCP 2-Arah, NeriahPro AgentShield & Living CVE Autopatch, Schema.org Multi-Graph + GEO /llms.txt, Brankas Privasi UU PDP Blind Index HMAC-SHA256, Offline Outbox PWA Anti-Sinyal-Buruk, serta Garansi SLA 90 Hari Pasca-BAST + Konsolidasi Holding Multi-Cabang.'
     },
     {
@@ -1632,7 +1632,7 @@ export default function ArchitecturePricingIsland({
                   priceSub: `${totalHours} ${isEn ? 'Man-Hours' : 'Jam Kerja'} (${workingDays} ${isEn ? 'Work Days' : 'Hari Kerja'})`,
                   badge: isEn ? 'TURNKEY MILESTONE SLA' : 'PEMBAYARAN BERTAHAP SLA',
                   desc: isEn
-                    ? '100% Coded & Deployed directly by Yoseph Iriandi (Lead Software Architect): 20 Paripurna Pillars, SPK SHA-256 Scope Lock, Live Staging & 90-Day Post-BAST SLA Warranty.'
+                    ? '100% Coded & Deployed directly by Yoseph Iriandi (Lead Software Architect): 20 Complete Pillars, SPK SHA-256 Scope Lock, Live Staging & 90-Day Post-BAST SLA Warranty.'
                     : '100% Koding & Deployment langsung oleh Yoseph Iriandi (Lead Software Architect): 20 Pilar Paripurna, Kontrak SPK SHA-256, Live Staging & Garansi SLA 90 Hari.',
                 },
                 umkm_starter: {
@@ -2616,7 +2616,7 @@ export default function ArchitecturePricingIsland({
                           TIER 04 // ULTIMATE ARCHITECTURE
                         </span>
                         <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[9px] font-black">
-                          {formatPillar(isEn ? 'PARIPURNA 20-PILLAR OS V12.0' : 'PARIPURNA 20 PILAR OS V12.0')}
+                          {formatPillar(isEn ? 'COMPLETE 20-PILLAR OS V12.0' : '20 PILAR PARIPURNA OS V12.0')}
                         </span>
                       </div>
 
@@ -4151,9 +4151,9 @@ return match (true) {
                   param: isEn ? '05. 20 Pillars of Software Factory OS v12.0 & 14 Core Primitives' : '05. 20 Pilar Software Factory OS v12.0 & 14 Primitif Inti (Biometrik & Geofence)',
                   sparkGrant: isEn ? 'Spark: Pillar 1–2 Audit | Verified CSR Grant: Complete 20 Pillars & Primitives (Subsidized)' : 'Spark: Audit Pilar 1–2 | Hibah CSR Terverifikasi: Lengkap 20 Pilar & Primitif (Subsidi)',
                   starterPass: isEn ? 'Starter: 5 Core Pillars | Single-App UMKM Pass: 20 Pillars & Selected Primitives' : 'Starter: 5 Pilar Inti | Single-App UMKM Pass: 20 Pilar & Primitif Terpilih',
-                  proAgencyUlt: isEn ? '✅ Complete 20 Paripurna Pillars & 14 Primitives (Biometric Vision & Spatial Geofence)' : '✅ Spesifikasi Lengkap 20 Pilar & 14 Primitif Inti (Visi Biometrik & Geofence Spasial)',
+                  proAgencyUlt: isEn ? '✅ Complete 20 Master Pillars & 14 Primitives (Biometric Vision & Spatial Geofence)' : '✅ Spesifikasi Lengkap 20 Pilar Paripurna & 14 Primitif Inti (Visi Biometrik & Geofence Spasial)',
                   advisoryUmkm: isEn ? 'Advisory: 20-Pillar Blueprint + WBS | UMKM: Core Transactional & Geofence Pillars Live' : 'Advisory: Cetak Biru 20 Pilar + WBS | UMKM: Pilar Transaksi & Geofence Live',
-                  fullMvp: isEn ? '✅ 100% All 20 Paripurna Pillars & 14 Primitives Coded, Verified & Deployed to Production' : '✅ 100% Seluruh 20 Pilar & 14 Primitif Dikodingkan & Live di Server Produksi',
+                  fullMvp: isEn ? '✅ 100% All 20 Master Pillars & 14 Primitives Coded, Verified & Deployed to Production' : '✅ 100% Seluruh 20 Pilar Paripurna & 14 Primitif Dikodingkan & Live di Server Produksi',
                 },
                 {
                   cat: 'ARCHITECTURE',
@@ -4417,7 +4417,7 @@ return match (true) {
                     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6 pb-4 border-b-2 border-zinc-200 dark:border-zinc-800">
                       <div>
                         <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-zinc-950 text-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 border border-zinc-800 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
-                          <span>PROJECT OS V12.0 PARIPURNA</span>
+                          <span>{isEn ? 'PROJECT OS V12.0 MASTER EDITION' : 'PROJECT OS V12.0 EDISI PARIPURNA'}</span>
                           <span>&bull;</span>
                           <span>{isEn ? '28 EVALUATION PARAMETERS × 20 PILLARS' : '28 PARAMETER EVALUASI × 20 PILAR REKAYASA'}</span>
                         </div>
@@ -4665,7 +4665,7 @@ return match (true) {
                 >
                   <div className="text-center mb-6">
                     <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-zinc-950 text-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 border border-zinc-800 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
-                      <span>KNOWLEDGE BASE &amp; FAQ V12.0 PARIPURNA</span>
+                      <span>{isEn ? 'KNOWLEDGE BASE &amp; FAQ V12.0 COMPLETE' : 'KNOWLEDGE BASE &amp; FAQ V12.0 PARIPURNA'}</span>
                       <span>&bull;</span>
                       <span>{faqs.length} {isEn ? 'VERIFIED ANSWERS' : 'JAWABAN TERVERIFIKASI'}</span>
                     </div>

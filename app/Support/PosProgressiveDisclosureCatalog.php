@@ -140,7 +140,7 @@ final class PosProgressiveDisclosureCatalog
                 'allow_cli_export_zip' => true,
                 'zero_leak_policy' => [
                     'id' => 'Akses penuh 7 Fase Prompt AI, Canary IP Watermark Seal, 20 Pilar Paripurna & CLI /init Bundle.',
-                    'en' => 'Full access to all 7 AI Prompt Phases, Canary IP Watermark Seal, 20 Paripurna Pillars & CLI /init Bundle.',
+                    'en' => 'Full access to all 7 AI Prompt Phases, Canary IP Watermark Seal, 20 Complete Pillars & CLI /init Bundle.',
                 ],
             ],
             'AGENCY_PARTNER' => [

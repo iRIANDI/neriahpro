@@ -505,10 +505,10 @@ class PosCommercialBridgeService
             'navigation_shell' => $navShellCode,
             'output_locale' => $outputLocale,
             'jurisdiction_code' => $jurisdictionCode,
-            'milestone_escrow_policy' => [
+            'milestone_disbursement_policy' => [
                 'enabled' => true,
                 'gate_rule' => 'Each Termin disbursement is cryptographically locked to Phase Verification Gate (Exit Code 0) & SHA-256 Scope Hash.',
-                'escrow_splits' => $terminScheme === '50_50' ? '50% Kickoff / 50% UAT+BAST' : '30% Kickoff / 50% Staging Milestone / 20% UAT+BAST',
+                'termin_splits' => $terminScheme === '50_50' ? '50% Kickoff / 50% UAT+BAST' : '30% Kickoff / 50% Staging Milestone / 20% UAT+BAST',
             ],
             'recommended_packages' => [
                 'retail_tier_id' => $recommendedRetailTier,

@@ -1182,7 +1182,7 @@ class PosStackPresetCatalog
                 'saga_and_webhook_contracts' => [
                     'transactional_outbox_events' => ['logistics.waybill.dispatched.v1', 'logistics.waybill.pod_verified.v1', 'logistics.cod.collected.v1'],
                     'compensating_actions' => [
-                        ['trigger' => 'DeliveryFailedMaxAttemptsReached', 'compensation' => 'InitiateReturnToSenderManifestSaga', 'mechanism' => 'Transitions waybill to `RETURN_IN_TRANSIT` and holds COD escrow settlement automatically.'],
+                        ['trigger' => 'DeliveryFailedMaxAttemptsReached', 'compensation' => 'InitiateReturnToSenderManifestSaga', 'mechanism' => 'Transitions waybill to `RETURN_IN_TRANSIT` and holds COD settlement automatically.'],
                     ],
                     'external_integrations' => [
                         ['provider' => '3PL Courier Webhook / GPS Fleet Telemetry', 'inbound_security' => 'HMAC-SHA256 + `webhook_inbound_logs` timestamp & event deduplication', 'outbound_resilience' => 'Async Outbox + Backoff [10s, 60s, 300s, 1800s]'],

@@ -466,8 +466,8 @@ class VectorEmbeddingService
             ],
             [
                 'id' => 'pilar-8-commercialization-scopelock',
-                'title' => 'Pilar 8: Commercialization, Escrow Termin (DP 50%) & SHA-256 Scope Lock',
-                'content' => 'Pencegahan scope creep melalui Scope Lock digital berstempel SHA-256 dan tanda tangan Canvas Signature Pad. Sistem pembayaran escrow termin Midtrans Snap (DP 50% untuk memulai sprint, Pelunasan 50% setelah lolos UAT) terhubung ke webhook idempoten.',
+                'title' => 'Pilar 8: Commercialization, Milestone Termin (DP 50%) & SHA-256 Scope Lock',
+                'content' => 'Pencegahan scope creep melalui Scope Lock digital berstempel SHA-256 dan tanda tangan Canvas Signature Pad. Sistem pembayaran bertahap Midtrans Snap (DP 50% untuk memulai sprint, Pelunasan 50% setelah lolos UAT) terhubung ke webhook idempoten.',
                 'category' => '10 Pilar Software Factory OS',
             ],
             [

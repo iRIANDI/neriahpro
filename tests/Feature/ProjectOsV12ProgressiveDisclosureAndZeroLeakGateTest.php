@@ -114,7 +114,6 @@ class ProjectOsV12ProgressiveDisclosureAndZeroLeakGateTest extends TestCase
             ->set('centerTab', 'proposal_wow')
             ->assertSet('entitlementTier', 'FREE_SANDBOX')
             ->assertSee('Bahaya Over-Planning (Scope Paralysis)')
-            ->assertSee('Potong DP 100%')
             ->set('ideaDetectionInput', 'Aplikasi klinik gigi rekam medis dan apotek farmasi')
             ->call('runIdeaAutoDetection')
             ->assertSet('sectorCode', 'SECTOR_02_HEALTHCARE_CLINICAL')
@@ -123,7 +122,8 @@ class ProjectOsV12ProgressiveDisclosureAndZeroLeakGateTest extends TestCase
             ->assertSet('selectedFoundationStageCode', 'stage_1_migrations')
             ->call('convertRetailToMitraRescue')
             ->assertSet('engagementMode', 'MITRA_TURNKEY_PROJECT')
-            ->assertSet('centerTab', 'commercial_mitra');
+            ->assertSet('centerTab', 'commercial_mitra')
+            ->assertSee('POTONG DP 100%');
     }
 
     public function test_ai_tool_45_evaluate_entitlement_and_scope_paralysis_guard_executes_cleanly(): void
@@ -204,7 +204,7 @@ class ProjectOsV12ProgressiveDisclosureAndZeroLeakGateTest extends TestCase
         $this->assertStringContainsString("isEn ? 'RETAIL VERSION' : 'VERSI RETAIL'", $jsx);
         $this->assertStringContainsString("isEn ? 'PARTNER PROJECT VERSION' : 'VERSI MITRA PROYEK'", $jsx);
         $this->assertStringContainsString("isEn ? 'RETAIL SAAS // ONE-STOP V12.0' : 'RETAIL SAAS // SATU PINTU V12.0'", $jsx);
-        $this->assertStringContainsString("isEn ? 'MITRA TURNKEY // ESCROW WBS V12.0' : 'MITRA TURNKEY // ESCROW RAB V12.0'", $jsx);
+        $this->assertStringContainsString("isEn ? 'MITRA TURNKEY // MILESTONE WBS V12.0' : 'MITRA TURNKEY // MILESTONE RAB V12.0'", $jsx);
     }
 
     public function test_impact_grant_inquiry_requires_legal_decree_and_stores_isolated_vault_document_without_zombies(): void

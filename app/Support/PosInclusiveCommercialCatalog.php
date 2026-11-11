@@ -13,7 +13,7 @@ namespace App\Support;
  * 3. Tier-1 Global Native Localization (ID, EN, ZH-CN, JA, AR with automatic RTL dir="rtl", ES, DE) & Jurisdiction-Aware Compliance
  * 4. Inclusive Hybrid Value-Metric Pricing Catalog (Sandbox, Impact/NGO CSR Grant, Single-App UMKM, Pro, Agency White-Label, Turnkey)
  * 5. 5 High-Retention Flywheel Hooks (Living CVE Alerts + Auto-Patch Prompt, Instant No-Login Builder, Active Vault, Viral Certified Badge, 70:30 Community Marketplace)
- * 6. 5-Layer Banking-Grade IP & Platform Security (AES-256 Envelope Vault, Zero-Width Unicode Canary Watermark, 1-Click MCP Token Revoke, Chained SHA-256 Audit, Milestone Escrow)
+ * 6. 5-Layer Banking-Grade IP & Platform Security (AES-256 Envelope Vault, Zero-Width Unicode Canary Watermark, 1-Click MCP Token Revoke, Chained SHA-256 Audit, Milestone Payments)
  */
 class PosInclusiveCommercialCatalog
 {
@@ -572,7 +572,7 @@ class PosInclusiveCommercialCatalog
                     ],
                     'panes' => [
                         ['span' => 7, 'label' => '7-COL MILESTONE & UAT', 'widgets' => ['7-Phase Progress Bar', 'Interactive UAT Checklist', 'Live Staging Preview Link']],
-                        ['span' => 5, 'label' => '5-COL SPK, BAST & TERMIN', 'widgets' => ['SHA-256 Scope Seal', 'Sign Digital BAST', 'Escrow Termin Payment']],
+                        ['span' => 5, 'label' => '5-COL SPK, BAST & TERMIN', 'widgets' => ['SHA-256 Scope Seal', 'Sign Digital BAST', 'Milestone Termin Payment']],
                     ],
                 ],
                 [
@@ -1679,8 +1679,8 @@ class PosInclusiveCommercialCatalog
                 ],
                 [
                     'number' => 5,
-                    'code' => 'MILESTONE_ESCROW_PAYMENT_GATE',
-                    'badge' => 'VERIFIED ESCROW',
+                    'code' => 'MILESTONE_PAYMENT_GATE',
+                    'badge' => 'VERIFIED MILESTONE',
                     'title' => [
                         'id' => 'Proteksi Pembayaran Termin Terkunci Verification Gate & Scope Hash',
                         'en' => 'Milestone Payment Protection Locked to Verification Gate & Scope Hash',

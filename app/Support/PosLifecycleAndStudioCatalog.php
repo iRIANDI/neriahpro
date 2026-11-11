@@ -198,7 +198,7 @@ class PosLifecycleAndStudioCatalog
                 ],
             ],
             'SECTOR_04_FINTECH_LEDGER' => [
-                'matrix_name' => 'Tiered Maker-Checker Approval, Late Installment Penalty & Escrow Fee Matrix',
+                'matrix_name' => 'Tiered Maker-Checker Approval, Late Installment Penalty & Settlement Fee Matrix',
                 'rules' => [
                     [
                         'rule_id' => 'DEC-FIN-01',
@@ -207,7 +207,7 @@ class PosLifecycleAndStudioCatalog
                         'condition_b' => 'beneficiary_risk_tier != "WHITELISTED_INTERNAL"',
                         'condition_c' => 'approvals_collected < 2',
                         'action_code' => 'REQUIRE_DUAL_CFO_DIRECTOR_SIGN_OFF',
-                        'exact_formula' => 'required_approvers = 2; hold_escrow_balance = disbursement_amount',
+                        'exact_formula' => 'required_approvers = 2; hold_disbursement_balance = disbursement_amount',
                         'fallback_behavior' => 'Transaksi < Rp 50 Juta cukup 1 Finance Manager approver.',
                     ],
                     [
@@ -465,7 +465,7 @@ PHP;
                 'example' => 'Mid-server-YOUR_PRODUCTION_KEY',
                 'type' => 'non_empty_secret',
                 'required' => true,
-                'group' => 'PAYMENT_GATEWAY_ESCROW',
+                'group' => 'PAYMENT_GATEWAY_MIDTRANS',
                 'desc' => 'Server Key Midtrans Snap & verifikasi signature HMAC-SHA512 webhook_inbound_logs.',
             ];
             $variables[] = [
@@ -473,7 +473,7 @@ PHP;
                 'example' => 'true',
                 'type' => 'boolean',
                 'required' => true,
-                'group' => 'PAYMENT_GATEWAY_ESCROW',
+                'group' => 'PAYMENT_GATEWAY_MIDTRANS',
                 'desc' => 'Saklar mode produksi Midtrans.',
             ];
         }

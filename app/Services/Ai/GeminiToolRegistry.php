@@ -634,7 +634,7 @@ class GeminiToolRegistry
             ],
             [
                 'name' => 'manage_ip_canary_watermark_and_vault_security',
-                'description' => 'Kelola 5-Layer Banking-Grade IP & Platform Security: dekode sidik jari forensik Zero-Width Unicode Canary Watermark 64-bit dari teks Markdown bocor (verify_canary), cabut/rotasi token MCP 1-klik (revoke_mcp_token), atau inspeksi matriks keamanan AES-256 Vault & Escrow (inspect_layers).',
+                'description' => 'Kelola 5-Layer Banking-Grade IP & Platform Security: dekode sidik jari forensik Zero-Width Unicode Canary Watermark 64-bit dari teks Markdown bocor (verify_canary), cabut/rotasi token MCP 1-klik (revoke_mcp_token), atau inspeksi matriks keamanan AES-256 Vault & Milestone (inspect_layers).',
                 'parameters' => [
                     'type' => 'OBJECT',
                     'properties' => [

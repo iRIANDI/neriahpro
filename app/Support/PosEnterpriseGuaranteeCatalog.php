@@ -573,7 +573,7 @@ class PosEnterpriseGuaranteeCatalog
                     'Meja Layanan Sengketa Transaksi (Chargeback/Dispute) & Bukti Investigasi',
                 ],
                 'DIV_02_CORE_OPERATIONS' => [
-                    'Mesin Clearing & Settlement Otomatis (Escrow Hold -> Split Disbursement)',
+                    'Mesin Clearing & Settlement Otomatis (Hold Settlement -> Split Disbursement)',
                     'Manajemen Pencairan Kredit/Pembiayaan, Agunan & Kolektibilitas (DPD)',
                     'Mesin Akrual Bunga/Bagi Hasil Harian & Penagihan Terjadwal',
                     'Antrean Kepatuhan AML / Fraud Velocity Alert & Pembekuan Akun Sementara',

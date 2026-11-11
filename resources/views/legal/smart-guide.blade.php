@@ -422,9 +422,9 @@
                 </h2>
                 <p class="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-3xl">
                     @if($isEn)
-                        Neriah Pro operates under the 20 Pillars Software Factory OS v12.0 framework, ensuring enterprise-grade stability, zero-downtime deployment, mathematical O(1) database scalability, Midtrans Snap Escrow (50/50), 14 Core Composable Primitives, Tri-Hybrid Context Engine (CAG, RAG, KAG, 51 Native Tools), and isolated custom workspace auto-save.
+                        Neriah Pro operates under the 20 Pillars Software Factory OS v12.0 framework, ensuring enterprise-grade stability, zero-downtime deployment, mathematical O(1) database scalability, Midtrans Snap Milestone Payments (50% DP &amp; 50% Completion), 14 Core Composable Primitives, Tri-Hybrid Context Engine (CAG, RAG, KAG, 51 Native Tools), and isolated custom workspace auto-save.
                     @else
-                        Neriah Pro menerapkan standar 20 Pilar Software Factory OS v12.0 untuk menjamin kestabilan produksi, skalabilitas database O(1) berbasis PostgreSQL 16 Strict ULID, Escrow Midtrans Snap (50/50 &amp; 3-Milestone), 14 Primitif Inti (termasuk Biometrik ArcFace &amp; Geofence Spasial), Mesin Konteks AI Tri-Hybrid (CAG, RAG, KAG, 51 Native Tools), dan auto-save folder scaffolding kustom terisolasi di cloud per proyek.
+                        Neriah Pro menerapkan standar 20 Pilar Software Factory OS v12.0 untuk menjamin kestabilan produksi, skalabilitas database O(1) berbasis PostgreSQL 16 Strict ULID, Pembayaran Bertahap Midtrans Snap (DP 50% Kickoff &amp; Pelunasan 50%), 14 Primitif Inti (termasuk Biometrik ArcFace &amp; Geofence Spasial), Mesin Konteks AI Tri-Hybrid (CAG, RAG, KAG, 51 Native Tools), dan auto-save folder scaffolding kustom terisolasi di cloud per proyek.
                     @endif
                 </p>
             </div>
@@ -566,11 +566,11 @@
                 <!-- Pilar 13 -->
                 <div class="border border-zinc-300 dark:border-zinc-800 p-3.5 bg-zinc-50 dark:bg-zinc-900/60 space-y-1.5">
                     <div class="flex items-center justify-between font-mono">
-                        <span class="font-black text-zinc-900 dark:text-white uppercase">P13: Turnkey Escrow Midtrans</span>
-                        <span class="text-[9px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-950 text-amber-950 dark:text-amber-200 font-bold">Escrow</span>
+                        <span class="font-black text-zinc-900 dark:text-white uppercase">{{ $isEn ? 'P13: Midtrans Milestone Gateway' : 'P13: Pembayaran Termin Midtrans' }}</span>
+                        <span class="text-[9px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-950 text-amber-950 dark:text-amber-200 font-bold">Milestone</span>
                     </div>
                     <p class="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                        Escrow pembayaran termin Midtrans Snap (50% DP Kickoff &amp; 50% BAST Sign-off atau 30%/50%/20%) dengan webhook idempoten.
+                        {{ $isEn ? 'Official milestone payments via Midtrans Snap (50% DP Kickoff & 50% BAST Sign-off) with idempotent anti-duplicate webhooks.' : 'Pembayaran termin resmi Midtrans Snap (50% DP Kickoff & 50% Pelunasan pasca uji terima BAST) dengan webhook idempoten.' }}
                     </p>
                 </div>
 

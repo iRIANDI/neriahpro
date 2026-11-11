@@ -1010,7 +1010,7 @@
                 <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Deployment script zero-downtime 6 skenario: 1 (UI/Blade/PHP), 2 (Migrasi Aman), 3 (Hancur &amp; Bangun DB Staging), 4 (Composer/Filament), 5 (Dump Autoload), 6 (Build Frontend Vite).</div>
             </div>
             <div class="sg-subcard">
-                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #f59e0b;">PILAR 08: SHA-256 SCOPE LOCK &amp; ESCROW</div>
+                <div style="font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700; color: #f59e0b;">PILAR 08: SHA-256 SCOPE LOCK &amp; PEMBAYARAN TERMIN</div>
                 <div style="font-size: 12px; color: var(--sg-text-body); margin-top: 4px;">Pencegahan scope creep melalui Scope Lock digital berstempel SHA-256 dan Canvas Signature Pad. Sistem pembayaran termin Midtrans Snap (DP 50% &amp; Pelunasan 50%).</div>
             </div>
             <div class="sg-subcard">
@@ -2006,15 +2006,15 @@
         </div>
     </div>
 
-    <!-- 21. Section V14: 7 SaaS Tiers, Turnkey Escrow, 36 UI + 6 Scroll, 20 Pillars, 26 FAQs, Tri-Hybrid AI & Scaffolding Auto-Save -->
-    <div id="sec-v14-technologies-v12" class="sg-card" x-show="matchesSearch('v12.0 v14 teknologi 7 saas tiers turnkey escrow 36 ui 6 scroll presets 20 pilar 26 faqs tri-hybrid cag rag kag 49 native tools scaffolding auto-save custom workspace')">
+    <!-- 21. Section V14: 7 SaaS Tiers, Turnkey Milestone, 36 UI + 6 Scroll, 20 Pillars, 26 FAQs, Tri-Hybrid AI & Scaffolding Auto-Save -->
+    <div id="sec-v14-technologies-v12" class="sg-card" x-show="matchesSearch('v12.0 v14 teknologi 7 saas tiers turnkey milestone 36 ui 6 scroll presets 20 pilar 26 faqs tri-hybrid cag rag kag 49 native tools scaffolding auto-save custom workspace')">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--sg-border); padding-bottom: 12px; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
             <div>
                 <div class="sg-badge-confidential">
                     🚀 ARSITEKTUR REKAYASA MUTAKHIR // PROJECT OS V12.0
                 </div>
                 <h3 style="font-size: 16px; font-weight: 800; color: var(--sg-text-title); margin: 6px 0 0 0;">
-                    21. Ekosistem Paripurna V12.0: 7 SaaS Tiers, Turnkey Escrow, 36 UI + 6 Scroll, 20 Pilar, 28 FAQs, Tri-Hybrid AI (14 Primitif, 51 Tools) &amp; Auto-Save Workspace
+                    21. Ekosistem Paripurna V12.0: 7 SaaS Tiers, Turnkey Milestone, 36 UI + 6 Scroll, 20 Pilar, 28 FAQs, Tri-Hybrid AI (14 Primitif, 51 Tools) &amp; Auto-Save Workspace
                 </h3>
             </div>
             <div style="display: flex; gap: 6px; align-items: center;">
@@ -2025,7 +2025,7 @@
         </div>
 
         <p style="font-size: 12px; color: var(--sg-text-body); line-height: 1.6; margin-bottom: 16px;">
-            Pembaruan teknologi v12.0 menyempurnakan seluruh spektrum rekayasa Project OS dari sisi komersial (7 SaaS Tiers &amp; Turnkey Escrow 50/50), desain antarmuka industri (36 Cockpit Operasional + 6 Preset Scrollytelling), fondasi 20 Pilar Paripurna, 14 Composable Core Primitives (termasuk Visi Biometrik Wajah &amp; Geofence Spasial Anti-Fake GPS), 28 FAQ teruji, Tri-Hybrid AI Memory (CAG O(1), RAG Dense/Sparse RRF, KAG Graph Rules, 51 Native Tools), hingga auto-save folder scaffolding kustom per-proyek yang terisolasi di cloud.
+            Pembaruan teknologi v12.0 menyempurnakan seluruh spektrum rekayasa Project OS dari sisi komersial (7 SaaS Tiers &amp; Turnkey Milestone 50/50), desain antarmuka industri (36 Cockpit Operasional + 6 Preset Scrollytelling), fondasi 20 Pilar Paripurna, 14 Composable Core Primitives (termasuk Visi Biometrik Wajah &amp; Geofence Spasial Anti-Fake GPS), 28 FAQ teruji, Tri-Hybrid AI Memory (CAG O(1), RAG Dense/Sparse RRF, KAG Graph Rules, 51 Native Tools), hingga auto-save folder scaffolding kustom per-proyek yang terisolasi di cloud.
         </p>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px;">
@@ -2042,17 +2042,17 @@
                 </div>
             </div>
 
-            <!-- Subcard 2: Turnkey Escrow -->
+            <!-- Subcard 2: Turnkey Milestone -->
             <div class="sg-subcard" style="border-left: 3px solid #f59e0b;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                    <strong style="color: #d97706; font-size: 12px; text-transform: uppercase;">02. TURNKEY ESCROW V12.0</strong>
+                    <strong style="color: #d97706; font-size: 12px; text-transform: uppercase;">02. TURNKEY MILESTONE V12.0</strong>
                     <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3);">MIDTRANS SNAP</span>
                 </div>
                 <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
-                    <div>• <strong>Termin 50/50 &amp; 3-Milestone</strong>: 50% DP Kickoff, 50% Pelunasan via UAT Sign-off atau Escrow 30%/50%/20%.</div>
+                    <div>• <strong>Termin 50/50 &amp; Pembayaran Bertahap</strong>: 50% DP Kickoff, 50% Pelunasan via UAT Sign-off pasca BAST resmi.</div>
                     <div>• <strong>Scope Lock SHA-256</strong>: Mencegah sengketa scope-creep dengan segel hash digital.</div>
                     <div>• <strong>Managed Capacity</strong>: Dibatasi ketat 2–3 proyek paralel/batch (Anti-Collision).</div>
-                    <div>• <strong>Garansi SLA 90 Hari</strong>: Bug-warranty pasca-BAST langsung ditangani Lead Architect.</div>
+                    <div>• <strong>Garansi SLA 90 Hari</strong>: Bug-warranty pasca-BAST langsung ditangani Lead Architect Yoseph Iriandi.</div>
                 </div>
             </div>
 
@@ -2142,7 +2142,7 @@ function smartGuideApp() {
                 nav_v11_paripurna: 'SEO/GEO /llms.txt, UU PDP & 20 Pilar (v11.0)',
                 nav_v12_disclosure: 'Progressive Disclosure, Zero-Leak Gate & Anti-Over-Planning (v12.0)',
                 nav_v13_multilang: 'Multi-Bahasa Tier 1 & Normalisasi Domain (v13.0)',
-                nav_v14_tech: 'Teknologi V12: 7 Tiers, Escrow, 36 UI, 20 Pilar & AI (v12.0)',
+                nav_v14_tech: 'Teknologi V12: 7 Tiers, Milestone, 36 UI, 20 Pilar & AI (v12.0)',
                 search_placeholder: 'Cari topik / formula margin...',
                 confidential_badge: 'DOKUMEN RAHASIA // EKSEKUTIF, FOUNDER & CALON INVESTOR DUE DILIGENCE',
                 access_verified: 'Akses Terverifikasi',
@@ -2282,7 +2282,7 @@ function smartGuideApp() {
                 nav_v11_paripurna: 'SEO/GEO /llms.txt, UU PDP & 20 Pillars (v11.0)',
                 nav_v12_disclosure: 'Progressive Disclosure, Zero-Leak Gate & Anti-Over-Planning (v12.0)',
                 nav_v13_multilang: 'Multi-Language Tier 1 & Domain Standards (v13.0)',
-                nav_v14_tech: 'V12 Tech: 7 Tiers, Escrow, 36 UI, 20 Pillars & AI (v12.0)',
+                nav_v14_tech: 'V12 Tech: 7 Tiers, Milestone, 36 UI, 20 Pillars & AI (v12.0)',
                 search_placeholder: 'Search topic / margin formula...',
                 confidential_badge: 'CONFIDENTIAL // EXECUTIVE, FOUNDER & INVESTOR DUE DILIGENCE',
                 access_verified: 'Verified Access',

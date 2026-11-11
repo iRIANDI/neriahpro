@@ -173,7 +173,7 @@ class PosDayTwoProductionCatalog
             'SECTOR_07_EDTECH_MEMBERSHIP' => ['Tahun Akademik / Batch Aktif Pertama', 'Komponen Bobot Penilaian Default (Tugas 30%, UTS 30%, UAS 40%)', 'Status Presensi (H/I/S/A) & Template Sertifikat'],
             'SECTOR_08_PROFESSIONAL_PSA' => ['Pipeline Milestone Proyek Standar (Discovery, Build, UAT, Go-Live)', 'Kategori Rate Card Jam Kerja (Senior, Mid, Associate)', 'Template Kontrak SPK & Faktur Termin'],
             'SECTOR_09_FOOD_BEVERAGE' => ['2 Stasiun KDS Default (Dapur Panas & Bar Minuman)', 'Zona Meja Dine-In + Grup Modifier Cepat (Level Gula/Es)', 'Kas Kasir Shift & Profil Pajak PB1 Restoran 10%'],
-            'SECTOR_10_MEDIA_TICKETING' => ['Zona Tiket Default (VIP, Festival, Early Bird) + Hold TTL 10 Menit', 'Konfigurasi Scanner Gate Check-In & Skema Bagi Hasil Kreator', 'Akun Escrow Penampungan Penjualan Tiket'],
+            'SECTOR_10_MEDIA_TICKETING' => ['Zona Tiket Default (VIP, Festival, Early Bird) + Hold TTL 10 Menit', 'Konfigurasi Scanner Gate Check-In & Skema Bagi Hasil Kreator', 'Akun Penampungan Penjualan Tiket'],
             'SECTOR_11_HRIS_INTERNAL_OPS' => ['3 Shift Kerja Default (Pagi, Sore, Non-Shift) + Kalender Libur Nasional', 'Tabel Tarif PPh21 TER (Kategori A/B/C) & Persentase BPJS TK/Kesehatan', 'Komponen Slip Gaji Pokok, Tunjangan, & Lembur'],
             'SECTOR_12_GOVTECH_NONPROFIT' => ['25 Akun CoA Yayasan Standar ISAK 35 (Dana Terikat vs Tidak Terikat)', 'Program Penyaluran Awal & Template Kwitansi Donasi SHA-256', 'Alur Persetujuan Pencairan Dana 2-Pengurus'],
         ];

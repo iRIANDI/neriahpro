@@ -155,8 +155,8 @@ class GeoAuthorityGeneratorService
                         'acceptedAnswer' => [
                             '@type' => 'Answer',
                             'text' => $locale === 'en'
-                                ? 'Retail SaaS tiers (Spark Free 2x/mo Audit, Starter Rp 99,000, UMKM Pass Rp 299,000, Pro Agentic Rp 399,000, Agency 5-Seat Rp 990,000, Ultimate Rp 1,490,000, CSR Grant Rp 0 Verified) provide instant architecture blueprints and AI prompts for your own developers; Mitra Turnkey builds and deploys the entire application under a SHA-256 Scope Lock, Escrow Milestones, Digital BAST, and 90-day Bug Warranty.'
-                                : 'Paket SaaS Retail (Spark Gratis 2x/bln, Starter Rp 99.000, UMKM Pass Rp 299.000, Pro Agentic Rp 399.000, Agency 5-Seat Rp 990.000, Ultimate Rp 1.490.000, Hibah CSR Rp 0 Terverifikasi) menerbitkan cetak biru arsitektur instan untuk tim developer Anda; sedangkan Mitra Proyek mengerjakan aplikasi 100% terima beres dengan kunci kontrak SHA-256, Termin Escrow, BAST Digital, dan Garansi Bug SLA 90 hari.',
+                                ? 'Retail SaaS tiers (Spark Free 2x/mo Audit, Starter Rp 99,000, UMKM Pass Rp 299,000, Pro Agentic Rp 399,000, Agency 5-Seat Rp 990,000, Ultimate Rp 1,490,000, CSR Grant Rp 0 Verified) provide instant architecture blueprints and AI prompts for your own developers; Mitra Turnkey builds and deploys the entire application under a SHA-256 Scope Lock, Milestone Payments (50% DP & 50% Pelunasan via Midtrans Snap), Digital BAST, and 90-day Bug Warranty.'
+                                : 'Paket SaaS Retail (Spark Gratis 2x/bln, Starter Rp 99.000, UMKM Pass Rp 299.000, Pro Agentic Rp 399.000, Agency 5-Seat Rp 990.000, Ultimate Rp 1.490.000, Hibah CSR Rp 0 Terverifikasi) menerbitkan cetak biru arsitektur instan untuk tim developer Anda; sedangkan Mitra Proyek mengerjakan aplikasi 100% terima beres dengan kunci kontrak SHA-256, Termin Pembayaran Bertahap (DP 50% & Pelunasan 50% via Midtrans Snap), BAST Digital, dan Garansi Bug SLA 90 hari.',
                         ],
                     ],
                     [
@@ -207,7 +207,7 @@ class GeoAuthorityGeneratorService
                 '',
                 '## Satu Pintu Commercial Tracks',
                 '- **Retail Self-Service SaaS (Coded by Client/AI IDE)**: Spark Guest Audit (IDR 0, 2x/month, Phase 1–2 teaser), Starter AI Architect (IDR 99,000), Single-App UMKM Pass (IDR 299,000), Pro Agentic Blueprint (IDR 399,000), Agency White-Label 5-Seat (IDR 990,000), Ultimate OS + 1-on-1 Architect Call (IDR 1,490,000), Impact/NGO CSR Grant (70%–100% verified subsidy).',
-                '- **Mitra Turnkey Engineering Studio (100% Coded by Neriah Pro)**: Blueprint Advisory (IDR 2,500,000 — 100% credited to DP), UMKM Digital Starter (IDR 3,750,000 subsidized), Custom Full Monolith/Polyglot MVP (Algorithmic Man-Hour RAB, 30/50/20 Milestone Escrow, SHA-256 SPK Scope Lock, Given-When-Then UAT, Digital BAST, 90-Day Bug Warranty).',
+                '- **Mitra Turnkey Engineering Studio (100% Coded by Yoseph Iriandi)**: Blueprint Advisory (IDR 2,500,000 — 100% credited to DP), UMKM Digital Starter (IDR 3,750,000 subsidized), Custom Full Monolith/Polyglot MVP (Algorithmic Man-Hour RAB, Milestone Payments DP 50% & Pelunasan 50% via Midtrans Snap, SHA-256 SPK Scope Lock, Given-When-Then UAT, Digital BAST, 90-Day Bug Warranty).',
                 '',
                 '## 12 Functional Sectors & Statutory Standards',
             ];

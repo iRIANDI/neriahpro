@@ -184,8 +184,8 @@ export const PILLAR_TOOLTIPS = {
   P12_P15: {
     title: { id: 'PILAR P12–P15 // KOMERSIAL & HUKUM', en: 'PILLARS P12–P15 // COMMERCIAL & LEGAL' },
     desc: {
-      id: 'Gerbang komersial: Kunci lisensi Satu Pintu, escrow Midtrans termin aman, segel scope SHA-256, dan garansi SLA 90 hari.',
-      en: 'Commercial gate: One-Stop license lock, milestone escrow payment, SHA-256 scope seal, and 90-day SLA bug warranty.'
+      id: 'Gerbang komersial: Kunci lisensi Satu Pintu, pembayaran termin Midtrans aman (DP 50% & Pelunasan), segel scope SHA-256, dan garansi SLA 90 hari.',
+      en: 'Commercial gate: One-Stop license lock, secure Midtrans milestone payments (50% DP & Completion), SHA-256 scope seal, and 90-day SLA bug warranty.'
     }
   },
   P16_P17: {
@@ -287,10 +287,10 @@ export const PILLAR_TOOLTIPS = {
     }
   },
   '13': {
-    title: { id: 'PILAR P13 // TURNKEY ESCROW MIDTRANS', en: 'PILLAR P13 // TURNKEY MIDTRANS ESCROW' },
+    title: { id: 'PILAR P13 // PEMBAYARAN TERMIN MIDTRANS', en: 'PILLAR P13 // TURNKEY MIDTRANS MILESTONE GATEWAY' },
     desc: {
-      id: 'Pembayaran termin aman Midtrans Snap (50/50 atau 3-Milestone) dengan webhook idempoten anti-transaksi ganda.',
-      en: 'Secure milestone escrow payments via Midtrans Snap (50/50 or 3-milestone) with idempotent anti-duplicate webhooks.'
+      id: 'Pembayaran termin aman Midtrans Snap (50% DP Kickoff & 50% Pelunasan) dengan webhook idempoten anti-transaksi ganda.',
+      en: 'Secure milestone payments via Midtrans Snap (50% DP Kickoff & 50% completion) with idempotent anti-duplicate webhooks.'
     }
   },
   '14': {
@@ -1049,10 +1049,10 @@ export default function ArchitecturePricingIsland({
     },
     {
       category: 'SLA_GARANSI_HUKUM',
-      q: isEn ? 'How does the Escrow Milestone / Down Payment (DP) work for Full MVP Development?' : 'Bagaimana skema pembayaran Escrow Bertahap / Uang Muka (DP) untuk Full MVP?',
+      q: isEn ? 'How do Milestone Payments and Down Payment (DP) work for Turnkey Development?' : 'Bagaimana skema pembayaran Bertahap / Uang Muka (DP) untuk Full MVP?',
       a: isEn
-        ? 'We enforce Scope Locking and Digital Legal Contracts (SPK SHA-256). Clients can settle via 3-Stage Escrow Milestones (30% DP Kickoff [Phase 1–2], 50% Live Staging Verification [Phase 3–5], and 20% Final BAST Handover [Phase 6–7]) or 50%/50% Termin via Midtrans Snap / Official Bank Transfer.'
-        : 'Kami menerapkan transparansi penuh dengan Kontrak Hukum Digital (SPK SHA-256) dan Scope Locking. Klien dilindungi skema Escrow 3-Termin Bertahap (DP 30% Kickoff [Fase 1–2], Termin 50% Verifikasi Live Staging [Fase 3–5], dan Pelunasan 20% Serah Terima BAST [Fase 6–7]) atau skema 50%/50% via Midtrans Snap / Transfer Bank resmi.'
+        ? 'We enforce Scope Locking and Digital Developer Service Agreements (SPK SHA-256). Clients settle securely via official Midtrans Snap Payment Gateway using a 50%/50% Milestone scheme: 50% DP Kickoff (Phase 1–2) upon contract agreement and 50% final balance after live staging UAT verification and official BAST handover (Phase 3–7).'
+        : 'Kami menerapkan transparansi penuh dengan Kesepakatan Layanan Pengembang (SPK SHA-256) dan Scope Locking. Klien bertransaksi aman via Midtrans Payment Gateway resmi menggunakan skema termin 50%/50%: DP 50% Kickoff (Fase 1–2) saat kontrak disepakati dan Pelunasan 50% setelah lolos verifikasi UAT live staging serta serah terima BAST (Fase 3–7).'
     },
     {
       category: 'SLA_GARANSI_HUKUM',
@@ -1619,7 +1619,7 @@ export default function ArchitecturePricingIsland({
               ];
 
               const mitraWizardPackages = [
-                { key: 'full_mvp', label: `${isEn ? 'Custom Full Turnkey MVP (Escrow RAB)' : 'Custom Full Turnkey MVP (Escrow RAB Algoritmik)'} — Rp ${formatIdrPlain(estimatedRabIdr)}` },
+                { key: 'full_mvp', label: `${isEn ? 'Custom Full Turnkey MVP (Milestone RAB)' : 'Custom Full Turnkey MVP (RAB Algoritmik Bertahap)'} — Rp ${formatIdrPlain(estimatedRabIdr)}` },
                 { key: 'umkm_starter', label: `${isEn ? 'UMKM Digital Starter (50% Subsidy)' : 'UMKM Digital Starter (Subsidi 50%)'} — Rp ${pricingSettings.umkm_price || '3.750.000'}` },
                 { key: 'blueprint_advisory', label: `${isEn ? '1-on-1 Principal Architect Advisory (100% DP Credit)' : '1-on-1 Advisory Blueprint (Potong DP 100%)'} — Rp ${pricingSettings.advisory_price || '2.500.000'}` },
               ];
@@ -1630,10 +1630,10 @@ export default function ArchitecturePricingIsland({
                   shortName: isEn ? 'Custom Full Turnkey MVP' : 'Custom Full Turnkey MVP',
                   priceStr: `Rp ${formatIdrPlain(estimatedRabIdr)}`,
                   priceSub: `${totalHours} ${isEn ? 'Man-Hours' : 'Jam Kerja'} (${workingDays} ${isEn ? 'Work Days' : 'Hari Kerja'})`,
-                  badge: isEn ? 'TURNKEY ESCROW SLA' : 'TERIMA BERES ESCROW',
+                  badge: isEn ? 'TURNKEY MILESTONE SLA' : 'PEMBAYARAN BERTAHAP SLA',
                   desc: isEn
-                    ? '100% Coded & Deployed by Neriah Pro Senior Team: 20 Paripurna Pillars, SPK SHA-256 Scope Lock, Live Staging & 90-Day Post-BAST SLA.'
-                    : '100% Dikodingkan & Dideploy Tim Senior Neriah Pro: 20 Pilar Paripurna, Kontrak SPK SHA-256, Live Staging & Garansi SLA 90 Hari.',
+                    ? '100% Coded & Deployed directly by Yoseph Iriandi (Lead Software Architect): 20 Paripurna Pillars, SPK SHA-256 Scope Lock, Live Staging & 90-Day Post-BAST SLA Warranty.'
+                    : '100% Koding & Deployment langsung oleh Yoseph Iriandi (Lead Software Architect): 20 Pilar Paripurna, Kontrak SPK SHA-256, Live Staging & Garansi SLA 90 Hari.',
                 },
                 umkm_starter: {
                   key: 'umkm_starter',
@@ -1705,7 +1705,7 @@ export default function ArchitecturePricingIsland({
                         { step: '01', label: isEn ? 'Path, 12 Sectors & 36 Visual UI' : 'Pilih Jalur, 12 Sektor & 36 UI Visual', active: true },
                         { step: '02', label: isEn ? 'Dual-Persona Storyboard / 3-Pane' : 'Mode Bisnis Awam / 3-Pane Arsitek', active: false },
                         { step: '03', label: isEn ? 'License / Grant / SPK SHA-256' : 'Lisensi / Hibah CSR / SPK SHA-256', active: false },
-                        { step: '04', label: isEn ? '7-Phase Prompts / Escrow Staging' : '7 Fase AI / Escrow & Live Staging', active: false },
+                        { step: '04', label: isEn ? '7-Phase Prompts / Live Staging' : '7 Fase AI / Live Staging & UAT', active: false },
                         { step: '05', label: isEn ? 'Canary IP Seal / UAT & BAST' : 'Segel Canary IP / UAT & BAST Digital', active: false },
                       ].map((st) => (
                         <div key={st.step} className={`px-3 py-2 flex items-center gap-2 ${st.active ? 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200 font-black' : 'text-zinc-700 dark:text-zinc-400 font-bold'}`}>
@@ -2101,7 +2101,7 @@ export default function ArchitecturePricingIsland({
                             <div className="space-y-3">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black uppercase">
-                                  {isEn ? 'MITRA TURNKEY // ESCROW WBS V12.0' : 'MITRA TURNKEY // ESCROW RAB V12.0'}
+                                  {isEn ? 'MITRA TURNKEY // MILESTONE WBS V12.0' : 'MITRA TURNKEY // MILESTONE RAB V12.0'}
                                 </span>
                                 <span className="font-mono text-[10px] font-bold text-zinc-700 dark:text-zinc-300 tabular-nums">
                                   Rp {formatIdrPlain(hourlyRate)}/{isEn ? 'hr' : 'jam'} &bull; {activeStack.mult}x
@@ -2134,7 +2134,7 @@ export default function ArchitecturePricingIsland({
                                 </p>
                               </div>
 
-                              {/* 2. RINCIAN TERMIN ESCROW / PEMBAYARAN DINAMIS */}
+                              {/* 2. RINCIAN TERMIN PEMBAYARAN BERTAHAP / MIDTRANS GATEWAY */}
                               {wizardMitraTier === 'full_mvp' ? (
                                 <div className="grid grid-cols-3 gap-1.5 font-mono text-[10px] tabular-nums">
                                   <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
@@ -2259,7 +2259,7 @@ export default function ArchitecturePricingIsland({
                     id: 'project',
                     num: '02',
                     title: isEn ? 'Mitra & Studio' : 'Mitra & Studio',
-                    sub: 'TURNKEY ESCROW V12.0',
+                    sub: 'TURNKEY MILESTONE V12.0',
                     icon: Rocket,
                   },
                   {
@@ -2656,7 +2656,7 @@ export default function ArchitecturePricingIsland({
                           'Pillars P04–P06 (UI/UX & Logic): 36 Operational Cockpits + 6 60fps Scrollytelling Presets (Zone A + B)',
                           'Pillars P07–P08 (AI Engine): KAG Knowledge Graph + CAG Prompt Caching + 51 Native Tools Calling',
                           'Pillars P09–P11 (Security): AgentShield Red-Team, SHA-256 Audit Trail Chain & UU PDP Vault (Biometric Right to Erasure)',
-                          'Pillars P12–P15 (SaaS & Escrow): One-Stop Commercial Gate, Escrow Midtrans Snap & 90-Day SLA Warranty',
+                          'Pillars P12–P15 (SaaS & SLA): One-Stop Commercial Gate, Midtrans Milestone Gateway (50/50) & 90-Day SLA Warranty',
                           'Pillars P16–P17 (Authority): 12-Sector Schema.org JSON-LD & Native /llms.txt AI Citation Engine',
                           'Pillars P18–P20 (DevOps & SOP): Offline PWA Outbox, Pre-Migration pg_dump Guard & 1-Click Rollback',
                           'Executive 1-on-1 Call: 60-Minute Direct Strategic Advisory with Principal Architect Yoseph Iriandi',
@@ -2666,7 +2666,7 @@ export default function ArchitecturePricingIsland({
                           'Pilar P04–P06 (Desain UI/UX): 36 Cockpit Operasional + 6 Preset Scrollytelling 60fps (Zona A & B)',
                           'Pilar P07–P08 (Mesin AI): KAG Knowledge Graph + CAG Prompt Caching + 51 Native Tool Calling',
                           'Pilar P09–P11 (Keamanan Siber): AgentShield Red-Team, Rantai Audit SHA-256 & Brankas UU PDP PII (Hak Dilupakan Biometrik)',
-                          'Pilar P12–P15 (Komersial & Legal): Gerbang Satu Pintu, Escrow Midtrans Snap & Garansi SLA 90 Hari',
+                          'Pilar P12–P15 (Komersial & Legal): Gerbang Satu Pintu, Pembayaran Bertahap Midtrans Snap & Garansi SLA 90 Hari',
                           'Pilar P16–P17 (Otoritas Digital): Schema.org Multi-Graph JSON-LD & Mesin Sitasi AI /llms.txt',
                           'Pilar P18–P20 (DevOps & SOP): Offline PWA Outbox, Guard pg_dump Pra-Migrasi & 1-Click Rollback',
                           'Sesi Eksekutif 1-on-1: 60 Menit Konsultasi Arsitektur Langsung bersama Principal Architect Yoseph Iriandi',
@@ -2879,12 +2879,12 @@ export default function ArchitecturePricingIsland({
                     <span>{isEn ? 'NERIAH PRO STUDIO // TURNKEY CONTRACTS' : 'NERIAH PRO STUDIO // KONTRAK TURNKEY'}</span>
                   </div>
                   <h2 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2 font-sans">
-                    {isEn ? 'Turnkey Software Engineering by Senior Architects' : 'Kontrak Rekayasa Software & Kode oleh Tim Senior Architect'}
+                    {isEn ? 'Turnkey Software Engineering by Independent Lead Architect Yoseph Iriandi' : 'Kontrak Rekayasa Software & Kode oleh Lead Architect Yoseph Iriandi'}
                   </h2>
                   <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed max-w-2xl mx-auto mb-4">
                     {isEn
-                      ? 'Full turnkey production development across all 20 Pillars of Software Factory OS v12.0. Includes Midtrans Snap Escrow (50/50 & 3-Milestone), SHA-256 Scope Lock, dedicated VPS hardening, isolated sprint batches (Anti-Collision), and a full 90-day SLA bug warranty.'
-                      : 'Pengerjaan kode produksi turnkey (20 Pilar Software Factory OS v12.0) langsung oleh tim Senior Architect Neriah Pro. Dilengkapi Escrow Midtrans Snap (50/50 & 3-Milestone), Kunci Lingkup SHA-256, kapasitas sprint terisolasi (Anti-Collision), dedicated cloud VPS, dan garansi bug SLA 90 hari penuh.'}
+                      ? 'Full turnkey production development across all 20 Pillars of Software Factory OS v12.0 built directly by Yoseph Iriandi (Independent Lead Architect). Includes Midtrans Snap Milestone Payments (50% DP Kickoff & 50% UAT Completion), SHA-256 Scope Lock, dedicated VPS hardening, isolated sprint batches (Anti-Collision), and a full 90-day SLA bug warranty.'
+                      : 'Pengerjaan kode produksi turnkey (20 Pilar Software Factory OS v12.0) langsung oleh Yoseph Iriandi (Lead Software Architect). Dilengkapi Pembayaran Bertahap Midtrans Snap (DP 50% Kickoff & Pelunasan 50% pasca UAT), Kunci Lingkup SHA-256, kapasitas sprint terisolasi (Anti-Collision), dedicated cloud VPS, dan garansi bug SLA 90 hari penuh.'}
                   </p>
                   <div className="inline-flex flex-wrap items-center justify-center gap-2 text-[11px] font-mono font-bold text-zinc-700 dark:text-zinc-300">
                     <span className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700">
@@ -3054,31 +3054,31 @@ export default function ArchitecturePricingIsland({
                           'Pillars P04–P06 (UI/UX & Logic): 36 Operational Cockpits + 60fps Scrollytelling Presets & ACID Ledger',
                           'Pillars P07–P08 (AI Context): KAG Knowledge Graph + CAG Prompt Caching + 51 Native Tools & MCP',
                           'Pillars P09–P11 (Cybersecurity): AgentShield Red-Team, SHA-256 Audit Trail Chain & UU PDP Vault (Biometric Erasure)',
-                          'Pillars P12–P15 (Commercial & SLA): One-Stop Gate, Turnkey Escrow Snap, Scope Lock & 90-Day SLA Bug-Warranty',
+                          'Pillars P12–P15 (Commercial & SLA): One-Stop Gate, Midtrans Milestone Gateway, Scope Lock & 90-Day SLA Bug-Warranty',
                           'Pillars P16–P17 (Authority): 12-Sector Multi-Graph Schema.org JSON-LD & Native /llms.txt AI Citation Engine',
                           'Pillars P18–P20 (DevOps & SOP): Offline PWA Outbox Sync, Pre-Migration pg_dump Guard & Client A4 SOP Pack',
                           'Pillar P04 (Synthetic Seeder): 100+ Realistic records pre-seeded for instant staging test',
                           'Automated Testing Suite: ApiContractTest Pest & Playwright browser automation with 100% green pass',
                           'Zero-Downtime CI/CD: 1-Click deployment pipeline with GitHub Actions & automated rollback',
                           'Anti-Collision Sprint Slot: Dedicated engineer focus reserved in Batch 1, 2, or Q1 capacity',
-                          'Turnkey Payment Protection: Midtrans Snap escrow with idempotent anti-duplicate webhooks',
+                          'Turnkey Payment Protection: Midtrans Snap milestone gateway with idempotent anti-duplicate webhooks',
                           'Live Customer Dashboard: Real-time Master Gantt timeline, phase completion & staging access',
                           'Full Handover & Zero Lock-in: 100% private GitHub repository & dedicated VPS root credentials',
-                          '90-Day Priority Bug Warranty: Post-BAST SLA maintenance executed directly by Principal Architect',
+                          '90-Day Priority Bug Warranty: Post-BAST SLA maintenance executed directly by Principal Architect Yoseph Iriandi',
                           'Change Request (CR) Portal: Standardized addendum module for transparent scope evolution',
                         ] : [
                           'Pilar P01–P03 (Arsitektur Inti): PRD 26 Parameter, 14 Primitif (Biometrik MiniFASNet & Geofence Haversine), PG16 Strict ULID & Docker Multi-Stack Kit',
                           'Pilar P04–P06 (UI/UX & Logika): 36 Cockpit Operasional, Scrollytelling 60fps & ACID Ledger',
                           'Pilar P07–P08 (Konteks AI Cerdas): KAG Knowledge Graph + CAG Prompt Caching + 51 Native Tools & MCP',
                           'Pilar P09–P11 (Keamanan Siber): AgentShield Red-Team, Rantai Audit SHA-256 & Brankas Privasi UU PDP (Hak Dilupakan Biometrik)',
-                          'Pilar P12–P15 (Komersial & Garansi): Gerbang Satu Pintu, Escrow Midtrans, Segel Scope & SLA 90 Hari',
+                          'Pilar P12–P15 (Komersial & Garansi): Gerbang Satu Pintu, Pembayaran Bertahap Midtrans, Segel Scope & SLA 90 Hari',
                           'Pilar P16–P17 (Otoritas Digital): Schema.org Multi-Graph 12 Sektor & Mesin Sitasi AI GEO /llms.txt',
                           'Pilar P18–P20 (DevOps & SOP): Offline PWA Outbox Sync, Guard pg_dump Pra-Migrasi & Buku SOP A4',
                           'Pilar P04 (Data Realistis): Synthetic Mock Data Seeder 100+ baris data realistis staging',
                           'Uji Mutu Otomatis: ApiContractTest Pest & Otomasi Browser Playwright E2E dengan 100% lulus',
                           'Jalur CI/CD Zero-Downtime: Pipeline deploy 1-klik GitHub Actions & skrip rollback otomatis',
                           'Kapasitas Sprint Terkelola: Slot waktu terisolasi di Batch 1, 2, atau Q1 dengan Anti-Collision Engine',
-                          'Proteksi Pembayaran Escrow: Midtrans Snap bertahap dengan webhook idempoten anti-transaksi ganda',
+                          'Proteksi Pembayaran Bertahap: Midtrans Snap (DP 50% & Pelunasan) dengan webhook idempoten anti-transaksi ganda',
                           'Dashboard Klien Real-Time: Pantau Master Gantt timeline, progres milestone & akses staging langsung',
                           'Serah Terima Penuh (Zero Lock-in): 100% kepemilikan repo GitHub privat & kredensial root VPS klien',
                           'Garansi SLA 90 Hari: Perbaikan bug prioritas pasca-BAST langsung oleh Principal Architect',
@@ -3910,7 +3910,7 @@ return match (true) {
                             {isEn ? '20 CANONICAL ARCHITECTURE PILLARS — 100% LOCK & FREEZE MATRIX V12.0' : 'MATRIKS 20 PILAR UTAMA PROJECT OS V12.0 — 100% LOCK & FREEZE'}
                           </span>
                           <span className="font-mono text-[10px] font-bold text-emerald-900 dark:text-emerald-300">
-                            {isEn ? 'Unified Causal Chain: 7 Retail SaaS Tiers & Turnkey Escrow' : 'Rantai Kausalitas Satu Pintu: 7 SaaS Tiers & Turnkey Escrow'}
+                            {isEn ? 'Unified Causal Chain: 7 Retail SaaS Tiers & Turnkey Milestones' : 'Rantai Kausalitas Satu Pintu: 7 SaaS Tiers & Turnkey Milestones'}
                           </span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-2">
@@ -3927,7 +3927,7 @@ return match (true) {
                             { no: '10', id: 'Rantai Audit SHA-256 Kriptografis', en: 'Cryptographic SHA-256 Audit Trail Chain', artifact: 'AuditLog::record' },
                             { no: '11', id: 'Brankas Privasi UU PDP & Blind Index O(1)', en: 'UU PDP Privacy Vault & Blind Index O(1)', artifact: 'HasEncryptedPiiWithBlindIndex.php' },
                             { no: '12', id: 'Gerbang Lisensi Komersial Satu Pintu', en: 'One-Stop Commercial SaaS Gate', artifact: 'SatuPintuEntitlementLock.php' },
-                            { no: '13', id: 'Turnkey Escrow Midtrans Snap (50/50)', en: 'Turnkey Escrow Midtrans Snap (50/50)', artifact: 'MidtransEscrowPaymentService.php' },
+                            { no: '13', id: 'Pembayaran Bertahap Midtrans Snap (DP 50% & Pelunasan)', en: 'Midtrans Snap Milestone Gateway (50/50)', artifact: 'MidtransMilestonePaymentService.php' },
                             { no: '14', id: 'RAB Jam Kerja & Segel Lingkup SHA-256', en: 'Algorithmic Fair RAB & SHA-256 Scope Lock', artifact: 'SHA-256 Scope Lock SPK' },
                             { no: '15', id: 'BAST Digital & Garansi Bug SLA 90 Hari', en: 'Digital BAST & 90-Day SLA Bug-Warranty', artifact: 'DigitalBastService.php' },
                             { no: '16', id: 'Multi-Graph Schema.org JSON-LD (12 Sektor)', en: 'Multi-Graph Schema.org JSON-LD (12 Sectors)', artifact: 'MultiGraphSchemaOrgService.php' },
@@ -4106,7 +4106,7 @@ return match (true) {
                 { id: 'ARCHITECTURE', label: isEn ? '2. DB ULID, Stack & Scale' : '2. DB ULID, Stack & Skala' },
                 { id: 'UI_UX', label: isEn ? '3. 12-Sector 36 UI & 6 Scroll' : '3. 12 Sektor 36 UI & 6 Scroll' },
                 { id: 'AI_SECURITY', label: isEn ? '4. AI 51 Tools, KAG, CAG, RAG & Shield' : '4. AI 51 Tool, KAG, CAG, RAG & Shield' },
-                { id: 'SEO_GEO_V12', label: isEn ? '5. 20 Pillars, SEO/GEO, UU PDP & Escrow' : '5. 20 Pilar, SEO/GEO, UU PDP & Escrow' },
+                { id: 'SEO_GEO_V12', label: isEn ? '5. 20 Pillars, SEO/GEO, UU PDP & SLA Warranty' : '5. 20 Pilar, SEO/GEO, UU PDP & Garansi SLA' },
               ];
 
               const matrixRows = [
@@ -4117,7 +4117,7 @@ return match (true) {
                   starterPass: isEn ? '100% Self-Service by Your Team / AI IDE (Zero Neriah Pro Coding)' : '100% Mandiri oleh Tim Anda / AI IDE (Zero Neriah Pro Coding)',
                   proAgencyUlt: isEn ? '100% Self-Service + 7-Phase Prompt Sequencer (Ultimate: +60m Call)' : '100% Mandiri + 7-Fase Prompt AI (Ultimate: +Sesi Telepon 60m)',
                   advisoryUmkm: isEn ? 'Advisory: Client Dev Team | UMKM Starter: 100% Coded by Neriah Pro' : 'Advisory: Tim Dev Klien | UMKM Starter: 100% Dikodingkan Neriah Pro',
-                  fullMvp: isEn ? '✅ 100% Turnkey Coded, Tested & Deployed by Neriah Pro Senior Team' : '✅ 100% Dikodingkan, Diuji & Dideploy Penuh oleh Tim Senior Neriah Pro',
+                  fullMvp: isEn ? '✅ 100% Turnkey Coded, Tested & Deployed directly by Yoseph Iriandi (Lead Architect)' : '✅ 100% Dikodingkan, Diuji & Dideploy Langsung oleh Yoseph Iriandi (Lead Architect)',
                 },
                 {
                   cat: 'COMMERCIAL',
@@ -4126,7 +4126,7 @@ return match (true) {
                   starterPass: isEn ? 'Starter (Rp 99K): Phase 1–3 | Single-App Pass (Rp 299K): 1 App Full Lock' : 'Starter (Rp 99rb): Fase 1–3 | Single-App Pass (Rp 299rb): Kunci Penuh 1 Aplikasi',
                   proAgencyUlt: isEn ? 'Pro (Rp 399K) / Agency 5-Seat (Rp 990K) / Ultimate (Rp 1.49M): Full Unlock' : 'Pro (Rp 399rb) / Agency 5-Kursi (Rp 990rb) / Ultimate (Rp 1,49 Jt): Terbuka Penuh',
                   advisoryUmkm: isEn ? 'Advisory (Rp 2.5M, 100% DP Credit) | UMKM Starter (Rp 3.75M, 50% Subsidy)' : 'Advisory (Rp 2,5 Jt, Potong DP 100%) | UMKM Starter (Rp 3,75 Jt, Subsidi 50%)',
-                  fullMvp: isEn ? '✅ Algorithmic Man-Hours Escrow (30% DP / 50% Staging / 20% BAST)' : '✅ Escrow Jam Kerja Algoritmik (DP 30% / Staging 50% / BAST 20%)',
+                  fullMvp: isEn ? '✅ Algorithmic Man-Hours Milestones (50% DP / 50% UAT & BAST)' : '✅ Pembayaran Bertahap Jam Kerja Algoritmik (DP 50% / Pelunasan UAT 50%)',
                 },
                 {
                   cat: 'COMMERCIAL',
@@ -4535,7 +4535,7 @@ return match (true) {
                             <th className="py-3.5 px-3 font-black text-emerald-950 dark:text-emerald-200 bg-emerald-200/70 dark:bg-emerald-950/80 min-w-[220px]">
                               <div>Full Turnkey MVP (Mitra)</div>
                               <div className="text-[9px] font-bold text-emerald-900 dark:text-emerald-300 mt-0.5">
-                                {isEn ? 'Escrow RAB + 90-Day SLA' : 'Escrow RAB + Garansi SLA 90 Hari'}
+                                {isEn ? 'Milestone RAB + 90-Day SLA' : 'RAB Bertahap + Garansi SLA 90 Hari'}
                               </div>
                             </th>
                           </tr>
@@ -4634,7 +4634,7 @@ return match (true) {
                 { id: 'UI_UX_12_SEKTOR', label: isEn ? '12 Sectors, 36 UI & Scrollytelling' : '12 Sektor, 36 UI & Scrollytelling' },
                 { id: 'SEO_GEO_UU_PDP', label: isEn ? 'SEO/GEO, UU PDP & Offline PWA' : 'SEO/GEO, UU PDP & Offline PWA' },
                 { id: 'AI_MCP_SECURITY', label: isEn ? 'AI 49 Tools, MCP & AgentShield' : 'AI 49 Tool, MCP & AgentShield' },
-                { id: 'SLA_GARANSI_HUKUM', label: isEn ? 'Escrow, 90-Day SLA & Rollback' : 'Escrow, Garansi SLA 90 Hari & Rollback' },
+                { id: 'SLA_GARANSI_HUKUM', label: isEn ? 'Milestones, 90-Day SLA & Rollback' : 'Termin, Garansi SLA 90 Hari & Rollback' },
               ];
 
               const filteredFaqs = faqs
@@ -4652,7 +4652,7 @@ return match (true) {
                 UI_UX_12_SEKTOR: isEn ? '12 SECTORS & DUAL-ZONE UI' : '12 SEKTOR & DUAL-ZONE UI',
                 SEO_GEO_UU_PDP: isEn ? 'SEO/GEO, UU PDP & PWA' : 'SEO/GEO, UU PDP & PWA',
                 AI_MCP_SECURITY: isEn ? 'AI, MCP & AGENTSHIELD' : 'AI, MCP & AGENTSHIELD',
-                SLA_GARANSI_HUKUM: isEn ? 'ESCROW, 90-DAY SLA & OPS' : 'ESCROW, SLA 90 HARI & OPS',
+                SLA_GARANSI_HUKUM: isEn ? 'MILESTONES, 90-DAY SLA & OPS' : 'TERMIN, SLA 90 HARI & OPS',
               };
 
               return (

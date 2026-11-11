@@ -178,7 +178,7 @@ final class PosSeoGeoAndZeroFailureCatalog
             'SECTOR_08_PROFESSIONAL_PSA' => [
                 'sector_code' => 'SECTOR_08_PROFESSIONAL_PSA',
                 'schema_types' => ['ProfessionalService', 'Service', 'OfferCatalog'],
-                'statutory_standards' => ['SPK/PKS SHA-256 Scope Lock', 'PPh 23 Jasa Profesional', 'Digital BAST & SLA Escrow'],
+                'statutory_standards' => ['SPK/PKS SHA-256 Scope Lock', 'PPh 23 Jasa Profesional', 'Digital BAST & SLA Milestone'],
                 'offline_pwa_critical' => false,
                 'tldr' => [
                     'id' => 'Arsitektur Jasa Profesional, Agensi & Konsultan Hukum (PSA) NeriahPro Project OS mengintegrasikan Kanban milestone dengan stopwatch jam kerja melayang anti-putus, konversi timesheet otomatis ke invoice termin & PPh 23, brankas dokumen klien terisolasi, serta persetujuan BAST Digital SHA-256.',

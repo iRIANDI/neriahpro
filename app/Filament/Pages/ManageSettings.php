@@ -1639,7 +1639,7 @@ class ManageSettings extends Page implements HasForms
                     'updated_keys_count' => count($data),
                     'timestamp' => now()->toIso8601String(),
                 ],
-                description: 'Super Admin memperbarui konfigurasi sistem global, 7 SaaS Tiers V12.0, escrow rules, dan schema.org cache.',
+                description: 'Super Admin memperbarui konfigurasi sistem global, 7 SaaS Tiers V12.0, milestone rules, dan schema.org cache.',
                 eventCategory: 'configuration_update'
             );
         }

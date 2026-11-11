@@ -53,12 +53,12 @@ const WhatsAppIcon = ({ className = 'w-4 h-4' }) => (
 
 export const DEFAULT_RATES_TO_IDR = {
   IDR: 1,
-  USD: 16000,
-  EUR: 17200,
-  SGD: 11900,
-  GBP: 20200,
-  AUD: 10500,
-  JPY: 104,
+  USD: 16250,
+  EUR: 17550,
+  SGD: 12150,
+  GBP: 20650,
+  AUD: 10600,
+  JPY: 107,
 };
 
 export const CURRENCY_SYMBOLS = {
@@ -519,12 +519,58 @@ export default function ArchitecturePricingIsland({
     };
   }, [activeLang, selectedCurrency, currentLocale]);
 
+  const [liveRatesOverride, setLiveRatesOverride] = useState(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (currencyData?.rates_to_idr && Number(currencyData.rates_to_idr.USD) > 10000) {
+      try {
+        localStorage.setItem('neriah_last_known_fx_rates', JSON.stringify(currencyData.rates_to_idr));
+      } catch (e) {}
+      return;
+    }
+
+    // If currencyData prop was empty, load last known rates from localStorage & fetch live backend snapshot
+    try {
+      const cached = localStorage.getItem('neriah_last_known_fx_rates');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && Number(parsed.USD) > 10000) {
+          setLiveRatesOverride(parsed);
+        }
+      }
+    } catch (e) {}
+
+    fetch('/api/currency/rates')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.rates_to_idr && Number(data.rates_to_idr.USD) > 10000) {
+          setLiveRatesOverride(data.rates_to_idr);
+          try {
+            localStorage.setItem('neriah_last_known_fx_rates', JSON.stringify(data.rates_to_idr));
+          } catch (e) {}
+        }
+      })
+      .catch(() => {});
+  }, [currencyData]);
+
   const activeRatesToIdr = useMemo(() => {
+    let cachedRates = {};
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('neriah_last_known_fx_rates');
+        if (raw) cachedRates = JSON.parse(raw) || {};
+      } catch (e) {}
+    }
+
     return {
       ...DEFAULT_RATES_TO_IDR,
-      ...(currencyData?.rates_to_idr || {})
+      ...cachedRates,
+      ...(currencyData?.rates_to_idr || {}),
+      ...(liveRatesOverride || {}),
     };
-  }, [currencyData]);
+  }, [currencyData, liveRatesOverride]);
 
   const formatPrice = (rawVal, options = {}) => {
     const {
@@ -2539,7 +2585,7 @@ export default function ArchitecturePricingIsland({
                     </span>
                   ) : (
                     <span>
-                      1 {selectedCurrency} ≈ Rp {parseCleanIdr(activeRatesToIdr[selectedCurrency] || 16000).toLocaleString(isEn ? 'en-US' : 'id-ID')} &bull;{' '}
+                      1 {selectedCurrency} ≈ Rp {parseCleanIdr(activeRatesToIdr[selectedCurrency] || DEFAULT_RATES_TO_IDR[selectedCurrency] || 16250).toLocaleString(isEn ? 'en-US' : 'id-ID')} &bull;{' '}
                       <span className="text-emerald-700 dark:text-emerald-400 font-bold">
                         {isEn ? 'Rounded display • Exact IDR tax & BI settlement' : 'Tampilan dibulatkan • Pajak & bayar eksak IDR (BI)'}
                       </span>
@@ -5515,7 +5561,7 @@ return match (true) {
                     <div className="p-3 bg-zinc-100 dark:bg-zinc-800/80 border-l-2 border-emerald-600 dark:border-emerald-400 text-zinc-800 dark:text-zinc-200 font-mono text-[10px] space-y-1">
                       <div className="font-black text-emerald-800 dark:text-emerald-400 flex items-center justify-between">
                         <span>🌐 {isEn ? `INTERNATIONAL CLIENT BILLING (${selectedCurrency})` : `PENAGIHAN KLIEN REGIONAL (${selectedCurrency})`}</span>
-                        <span className="font-bold">1 {selectedCurrency} ≈ Rp {parseCleanIdr(activeRatesToIdr[selectedCurrency] || 16000).toLocaleString(isEn ? 'en-US' : 'id-ID')}</span>
+                        <span className="font-bold">1 {selectedCurrency} ≈ Rp {parseCleanIdr(activeRatesToIdr[selectedCurrency] || DEFAULT_RATES_TO_IDR[selectedCurrency] || 16250).toLocaleString(isEn ? 'en-US' : 'id-ID')}</span>
                       </div>
                       <p className="leading-relaxed text-zinc-600 dark:text-zinc-400">
                         {isEn

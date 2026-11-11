@@ -11,18 +11,20 @@ class CurrencyExchangeService
 {
     public const CACHE_KEY = 'neriah_currency_exchange_rates_v1';
     public const CACHE_TTL_SECONDS = 3600; // 1 Hour
+    public const DB_SNAPSHOT_KEY = 'last_known_fx_rates_snapshot';
+    public const DB_LAST_USD_KEY = 'last_realtime_usd_to_idr';
 
     /**
-     * Fallback standard market rates (IDR per 1 Foreign Currency Unit).
+     * Emergency cold-boot market rates (used ONLY before the first real-time DB snapshot is stored).
      */
     public const DEFAULT_RATES = [
         'IDR' => 1.0,
-        'USD' => 16000.0,
-        'EUR' => 17200.0,
-        'SGD' => 12000.0,
-        'GBP' => 20500.0,
-        'AUD' => 10500.0,
-        'JPY' => 105.0,
+        'USD' => 16250.0,
+        'EUR' => 17550.0,
+        'SGD' => 12150.0,
+        'GBP' => 20650.0,
+        'AUD' => 10600.0,
+        'JPY' => 107.0,
     ];
 
     public const CURRENCY_SYMBOLS = [
@@ -47,66 +49,248 @@ class CurrencyExchangeService
 
     /**
      * Get all supported currencies with real-time exchange rates against IDR.
+     * Priority hierarchy:
+     *   1. Live Real-Time FX Feed (auto-persisted to Database CmsGlobalSetting on every success)
+     *   2. Database Last-Known Real-Time FX Snapshot (`last_known_fx_rates_snapshot` / `last_realtime_usd_to_idr`)
+     *   3. Emergency cold-boot baseline (only if DB has never been seeded yet)
      */
     public static function getAllRates(): array
     {
         return Cache::remember(self::CACHE_KEY, self::CACHE_TTL_SECONDS, function (): array {
-            $rates = self::DEFAULT_RATES;
-            $source = 'Standard Market Baseline';
-
-            // Check database overrides first
-            try {
-                $overrideUsd = CmsGlobalSetting::getVal('usd_to_idr_rate', null);
-                if ($overrideUsd && (float) $overrideUsd > 1000) {
-                    $rates['USD'] = (float) $overrideUsd;
-                }
-            } catch (\Throwable) {
-                // Ignore DB error during early boot/migrations
-            }
-
-            // Attempt fetching live real-time rate feed (Graceful 2.5s timeout)
-            try {
-                $response = Http::timeout(2.5)->get('https://open.er-api.com/v6/latest/USD');
-                if ($response->successful()) {
-                    $apiData = $response->json();
-                    $apiRates = $apiData['rates'] ?? [];
-                    $idrPerUsd = (float) ($apiRates['IDR'] ?? 0);
-
-                    if ($idrPerUsd > 10000) {
-                        $rates['USD'] = round($idrPerUsd, 2);
-                        if (!empty($apiRates['EUR']) && $apiRates['EUR'] > 0) {
-                            $rates['EUR'] = round($idrPerUsd / (float) $apiRates['EUR'], 2);
-                        }
-                        if (!empty($apiRates['SGD']) && $apiRates['SGD'] > 0) {
-                            $rates['SGD'] = round($idrPerUsd / (float) $apiRates['SGD'], 2);
-                        }
-                        if (!empty($apiRates['GBP']) && $apiRates['GBP'] > 0) {
-                            $rates['GBP'] = round($idrPerUsd / (float) $apiRates['GBP'], 2);
-                        }
-                        if (!empty($apiRates['AUD']) && $apiRates['AUD'] > 0) {
-                            $rates['AUD'] = round($idrPerUsd / (float) $apiRates['AUD'], 2);
-                        }
-                        if (!empty($apiRates['JPY']) && $apiRates['JPY'] > 0) {
-                            $rates['JPY'] = round($idrPerUsd / (float) $apiRates['JPY'], 2);
-                        }
-                        $source = 'Real-Time Open FX Market Feed';
-                    }
-                }
-            } catch (\Throwable $e) {
-                Log::info('Currency exchange live fetch fallback used: ' . $e->getMessage());
-            }
-
-            return [
-                'base' => 'IDR',
-                'source' => $source,
-                'timestamp' => now()->toIso8601String(),
-                'formatted_date' => now()->format('d M Y, H:i') . ' WIB',
-                'rates' => $rates,
-                'rates_to_idr' => $rates,
-                'symbols' => self::CURRENCY_SYMBOLS,
-                'names' => self::CURRENCY_NAMES,
-            ];
+            return self::resolveAndPersistRates();
         });
+    }
+
+    /**
+     * Force-refresh live FX rates from external market feed, persist to DB, and update cache.
+     */
+    public static function syncLiveRatesToDatabase(): array
+    {
+        Cache::forget(self::CACHE_KEY);
+        $payload = self::resolveAndPersistRates();
+        Cache::put(self::CACHE_KEY, $payload, self::CACHE_TTL_SECONDS);
+
+        return $payload;
+    }
+
+    /**
+     * Resolve rates from Live Feed -> Database Last-Known Real-Time Snapshot -> Cold Baseline.
+     */
+    protected static function resolveAndPersistRates(): array
+    {
+        $rates = self::DEFAULT_RATES;
+        $source = 'Emergency Cold-Boot Baseline';
+        $lastSyncAt = null;
+
+        // 1. Load Last-Known Real-Time FX Snapshot from Database first (prevents jumping to static baseline)
+        $dbSnapshot = self::loadLastKnownDatabaseRates();
+        if ($dbSnapshot !== null) {
+            $rates = $dbSnapshot['rates'];
+            $source = $dbSnapshot['source'];
+            $lastSyncAt = $dbSnapshot['updated_at'] ?? null;
+        }
+
+        // 2. Fetch fresh Real-Time Market FX Feed & immediately persist to Database
+        $liveResult = self::fetchLiveMarketRates();
+        if ($liveResult !== null) {
+            $rates = $liveResult['rates'];
+            $source = $liveResult['source'];
+            $lastSyncAt = now()->toIso8601String();
+            self::persistSnapshotToDatabase($rates, $source, $lastSyncAt);
+        }
+
+        // 3. Apply explicit Admin Override (`usd_to_idr_rate`) if configured in CmsGlobalSetting
+        try {
+            $overrideUsd = CmsGlobalSetting::getVal('usd_to_idr_rate', null);
+            if ($overrideUsd && is_numeric($overrideUsd) && (float) $overrideUsd > 10000) {
+                $rates = self::scaleRatesByUsd($rates, (float) $overrideUsd);
+                $source = 'Admin Configured FX Rate Override';
+            }
+        } catch (\Throwable) {
+            // Ignore DB error during early boot/migrations
+        }
+
+        return [
+            'base' => 'IDR',
+            'source' => $source,
+            'last_realtime_sync_at' => $lastSyncAt ?? now()->toIso8601String(),
+            'timestamp' => now()->toIso8601String(),
+            'formatted_date' => now()->format('d M Y, H:i') . ' WIB',
+            'rates' => $rates,
+            'rates_to_idr' => $rates,
+            'symbols' => self::CURRENCY_SYMBOLS,
+            'names' => self::CURRENCY_NAMES,
+        ];
+    }
+
+    /**
+     * Load the last known real-time FX snapshot from CmsGlobalSetting database table.
+     */
+    public static function loadLastKnownDatabaseRates(): ?array
+    {
+        try {
+            $snapshot = CmsGlobalSetting::getVal(self::DB_SNAPSHOT_KEY, null);
+            if (is_array($snapshot) && !empty($snapshot['rates']) && is_array($snapshot['rates'])) {
+                $savedUsd = (float) ($snapshot['rates']['USD'] ?? 0);
+                if ($savedUsd > 10000) {
+                    $mergedRates = self::DEFAULT_RATES;
+                    foreach (array_keys(self::DEFAULT_RATES) as $code) {
+                        if ($code === 'IDR') {
+                            $mergedRates['IDR'] = 1.0;
+                            continue;
+                        }
+                        if (!empty($snapshot['rates'][$code]) && (float) $snapshot['rates'][$code] > 0) {
+                            $mergedRates[$code] = round((float) $snapshot['rates'][$code], 2);
+                        }
+                    }
+
+                    return [
+                        'rates' => $mergedRates,
+                        'source' => 'Database Last-Known Real-Time FX',
+                        'updated_at' => $snapshot['updated_at'] ?? null,
+                    ];
+                }
+            }
+
+            $lastUsd = CmsGlobalSetting::getVal(self::DB_LAST_USD_KEY, null);
+            if (is_numeric($lastUsd) && (float) $lastUsd > 10000) {
+                return [
+                    'rates' => self::scaleRatesByUsd(self::DEFAULT_RATES, (float) $lastUsd),
+                    'source' => 'Database Last-Known Real-Time USD Baseline',
+                    'updated_at' => null,
+                ];
+            }
+        } catch (\Throwable) {
+            // Database not ready or migrating
+        }
+
+        return null;
+    }
+
+    /**
+     * Persist the latest real-time FX snapshot and USD rate into CmsGlobalSetting database.
+     */
+    public static function persistSnapshotToDatabase(array $rates, string $source = 'Real-Time Open FX Market Feed', ?string $timestamp = null): void
+    {
+        try {
+            $usdRate = round((float) ($rates['USD'] ?? 0), 2);
+            if ($usdRate <= 10000) {
+                return;
+            }
+
+            $syncTime = $timestamp ?? now()->toIso8601String();
+            CmsGlobalSetting::setVal(self::DB_LAST_USD_KEY, $usdRate);
+            CmsGlobalSetting::setVal(self::DB_SNAPSHOT_KEY, [
+                'rates' => $rates,
+                'usd_to_idr' => $usdRate,
+                'source' => $source,
+                'updated_at' => $syncTime,
+            ]);
+        } catch (\Throwable $e) {
+            Log::debug('Could not persist FX snapshot to database: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Proportionally scale multi-currency rates when only a single USD->IDR rate is provided.
+     */
+    protected static function scaleRatesByUsd(array $baseRates, float $targetUsdRate): array
+    {
+        $currentUsd = (float) ($baseRates['USD'] ?? self::DEFAULT_RATES['USD']);
+        $ratio = $currentUsd > 0 ? ($targetUsdRate / $currentUsd) : 1.0;
+
+        $scaled = $baseRates;
+        $scaled['IDR'] = 1.0;
+        $scaled['USD'] = round($targetUsdRate, 2);
+
+        foreach (['EUR', 'SGD', 'GBP', 'AUD', 'JPY'] as $code) {
+            $baseVal = (float) ($baseRates[$code] ?? self::DEFAULT_RATES[$code]);
+            $scaled[$code] = round($baseVal * $ratio, 2);
+        }
+
+        return $scaled;
+    }
+
+    /**
+     * Fetch live exchange rates from primary and backup public FX feeds.
+     */
+    protected static function fetchLiveMarketRates(): ?array
+    {
+        // Primary Feed: Open ER API
+        try {
+            $response = Http::timeout(2.5)->get('https://open.er-api.com/v6/latest/USD');
+            if (!$response->successful() && app()->environment(['local', 'testing'])) {
+                $response = Http::withoutVerifying()->timeout(2.5)->get('https://open.er-api.com/v6/latest/USD');
+            }
+            if ($response->successful()) {
+                $parsed = self::parseUsdBaseApiRates($response->json('rates') ?? []);
+                if ($parsed !== null) {
+                    return [
+                        'rates' => $parsed,
+                        'source' => 'Real-Time Open FX Market Feed',
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            if (app()->environment(['local', 'testing'])) {
+                try {
+                    $retry = Http::withoutVerifying()->timeout(2.5)->get('https://open.er-api.com/v6/latest/USD');
+                    if ($retry->successful()) {
+                        $parsed = self::parseUsdBaseApiRates($retry->json('rates') ?? []);
+                        if ($parsed !== null) {
+                            return [
+                                'rates' => $parsed,
+                                'source' => 'Real-Time Open FX Market Feed',
+                            ];
+                        }
+                    }
+                } catch (\Throwable) {
+                }
+            }
+            Log::info('Primary FX feed fallback triggered: ' . $e->getMessage());
+        }
+
+        // Secondary Backup Feed: Fawazahmed0 Currency API via JSDelivr Global CDN
+        try {
+            $backup = Http::timeout(2.5)->get('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+            if ($backup->successful()) {
+                $usdMap = array_change_key_case((array) ($backup->json('usd') ?? []), CASE_UPPER);
+                $parsed = self::parseUsdBaseApiRates($usdMap);
+                if ($parsed !== null) {
+                    return [
+                        'rates' => $parsed,
+                        'source' => 'Real-Time Global CDN FX Feed',
+                    ];
+                }
+            }
+        } catch (\Throwable) {
+            // Both live feeds unreachable; caller will use Database Last-Known Real-Time FX Snapshot
+        }
+
+        return null;
+    }
+
+    /**
+     * Convert a USD-base rates table (`['IDR' => 16250, 'EUR' => 0.92, ...]`) into IDR-per-unit table.
+     */
+    protected static function parseUsdBaseApiRates(array $apiRates): ?array
+    {
+        $idrPerUsd = (float) ($apiRates['IDR'] ?? 0);
+        if ($idrPerUsd <= 10000) {
+            return null;
+        }
+
+        $rates = self::DEFAULT_RATES;
+        $rates['IDR'] = 1.0;
+        $rates['USD'] = round($idrPerUsd, 2);
+
+        foreach (['EUR', 'SGD', 'GBP', 'AUD', 'JPY'] as $code) {
+            if (!empty($apiRates[$code]) && (float) $apiRates[$code] > 0) {
+                $rates[$code] = round($idrPerUsd / (float) $apiRates[$code], 2);
+            }
+        }
+
+        return $rates;
     }
 
     /**
@@ -120,7 +304,7 @@ class CurrencyExchangeService
         }
 
         $all = self::getAllRates();
-        return (float) ($all['rates'][$currency] ?? (self::DEFAULT_RATES[$currency] ?? 16000.0));
+        return (float) ($all['rates'][$currency] ?? (self::DEFAULT_RATES[$currency] ?? 16250.0));
     }
 
     /**

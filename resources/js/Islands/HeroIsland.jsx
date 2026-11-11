@@ -328,23 +328,53 @@ export default function HeroIsland({
                 <div className="space-y-3 mb-8 text-xs font-sans text-zinc-700 dark:text-zinc-300">
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Product Requirements Document (PRD)</strong> lengkap 20+ halaman berstandar Fortune 500 (User Stories, Non-Functional Req, RBAC).</span>
+                    <span>
+                      {isEn ? (
+                        <><strong>Product Requirements Document (PRD):</strong> Comprehensive 20+ page Fortune 500-grade spec (User Stories, Non-Functional Req, RBAC Matrix).</>
+                      ) : (
+                        <><strong>Product Requirements Document (PRD)</strong> lengkap 20+ halaman berstandar Fortune 500 (User Stories, Non-Functional Req, RBAC).</>
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>PostgreSQL Strict ULID DDL</strong> skema basis data terdistribusi tahan jutaan transaksi (Zero conflict, O(1) performance).</span>
+                    <span>
+                      {isEn ? (
+                        <><strong>PostgreSQL Strict ULID DDL:</strong> Distributed database schema engineered for millions of transactions (Zero conflict, O(1) performance).</>
+                      ) : (
+                        <><strong>PostgreSQL Strict ULID DDL</strong> skema basis data terdistribusi tahan jutaan transaksi (Zero conflict, O(1) performance).</>
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Scaffold Starter Repository ZIP</strong> siap koding (Laravel 13, Filament v5, Inertia/Livewire 4).</span>
+                    <span>
+                      {isEn ? (
+                        <><strong>Scaffold Starter Repository ZIP:</strong> Production-ready starter code (Laravel 13, Filament v5, Inertia/Livewire 4).</>
+                      ) : (
+                        <><strong>Scaffold Starter Repository ZIP</strong> siap koding (Laravel 13, Filament v5, Inertia/Livewire 4).</>
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>AI Coding Directives (.cursorrules)</strong> panduan prompt anti-halusinasi untuk Cursor &amp; Claude Code.</span>
+                    <span>
+                      {isEn ? (
+                        <><strong>AI Coding Directives (.cursorrules):</strong> Anti-hallucination prompt guardrails for Cursor &amp; Claude Code.</>
+                      ) : (
+                        <><strong>AI Coding Directives (.cursorrules)</strong> panduan prompt anti-halusinasi untuk Cursor &amp; Claude Code.</>
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>100% Instant Delivery:</strong> Bayar via QRIS/Midtrans, langsung unduh di Portal Klien dalam hitungan menit.</span>
+                    <span>
+                      {isEn ? (
+                        <><strong>100% Instant Delivery:</strong> Secure payment via QRIS/Midtrans, instant download in Client Portal within minutes.</>
+                      ) : (
+                        <><strong>100% Instant Delivery:</strong> Bayar via QRIS/Midtrans, langsung unduh di Portal Klien dalam hitungan menit.</>
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -371,7 +401,7 @@ export default function HeroIsland({
                   {isEn ? 'PATH 02 // PROFESSIONAL DEVELOPER SERVICES' : 'JALUR 02 // LAYANAN REKAYASA PENGEMBANG MANDIRI'}
                 </div>
                 <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2">
-                  Independent Software Architect
+                  {isEn ? 'Independent Software Architect' : 'Studio Arsitek Perangkat Lunak'}
                 </h3>
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-5 leading-relaxed">
                   {isEn 
@@ -401,27 +431,63 @@ export default function HeroIsland({
                 <div className="space-y-3 mb-8 text-xs font-sans text-zinc-700 dark:text-zinc-300">
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Dedicated Fullstack &amp; DevOps Engineering:</strong> Menulis 100% kode produksi mencakup seluruh 10 Pilar Software Factory OS.</span>
+                    <span>
+                      {isEn ? (
+                        <><strong>Dedicated Fullstack &amp; DevOps Engineering:</strong> Writing 100% production code covering all 10 Software Factory OS Pillars.</>
+                      ) : (
+                        <><strong>Dedicated Fullstack &amp; DevOps Engineering:</strong> Menulis 100% kode produksi mencakup seluruh 10 Pilar Software Factory OS.</>
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Managed Capacity &amp; Anti-Collision:</strong> Slot terisolasi per batch (Batch 1, 2, Q1) dengan pelacakan Master Gantt di Customer Portal.</span>
+                    <span>
+                      {isEn ? (
+                        <><strong>Managed Capacity &amp; Anti-Collision:</strong> Isolated sprint slot per batch (Batch 1, 2, Q1) with live Master Gantt tracking.</>
+                      ) : (
+                        <><strong>Managed Capacity &amp; Anti-Collision:</strong> Slot terisolasi per batch (Batch 1, 2, Q1) dengan pelacakan Master Gantt di Customer Portal.</>
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Termin Pembayaran Bertahap:</strong> DP 50% saat penguncian kontrak &amp; 50% pelunasan setelah lolos User Acceptance Test (UAT).</span>
+                    <span>
+                      {isEn ? (
+                        <><strong>Milestone-Based Payments:</strong> 50% advance deposit upon scope lock &amp; 50% final balance after passing UAT.</>
+                      ) : (
+                        <><strong>Termin Pembayaran Bertahap:</strong> DP 50% saat penguncian kontrak &amp; 50% pelunasan setelah lolos User Acceptance Test (UAT).</>
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Kesepakatan Layanan Pengembang (Developer Service Agreement)</strong> resmi dengan NDA kerahasiaan dan serah terima source code 100% (No Lock-in).</span>
+                    <span>
+                      {isEn ? (
+                        <><strong>Developer Service Agreement (DSA):</strong> Binding contract with strict mutual NDA and 100% source code ownership (Zero Lock-in).</>
+                      ) : (
+                        <><strong>Kesepakatan Layanan Pengembang (Developer Service Agreement)</strong> resmi dengan NDA kerahasiaan dan serah terima source code 100% (No Lock-in).</>
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Full Deployment Siap Pakai</strong> ke Cloud Production VPS (Docker/Nixpacks, Nginx HTTP/2, SSL, Domain).</span>
+                    <span>
+                      {isEn ? (
+                        <><strong>Turnkey Production Deployment:</strong> Configured for high-speed Cloud VPS (Docker/Nixpacks, Nginx HTTP/2, SSL, Custom Domain).</>
+                      ) : (
+                        <><strong>Full Deployment Siap Pakai</strong> ke Cloud Production VPS (Docker/Nixpacks, Nginx HTTP/2, SSL, Domain).</>
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    <span><strong>Garansi Bebas Bug &amp; Pemeliharaan</strong> berkala pasca-rilis dengan response time maksimal 2 jam kerja.</span>
+                    <span>
+                      {isEn ? (
+                        <><strong>Zero-Bug SLA Warranty &amp; Maintenance:</strong> Post-launch support and regular updates with maximum 2-hour business response time.</>
+                      ) : (
+                        <><strong>Garansi Bebas Bug &amp; Pemeliharaan</strong> berkala pasca-rilis dengan response time maksimal 2 jam kerja.</>
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>

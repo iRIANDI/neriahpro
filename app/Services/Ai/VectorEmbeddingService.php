@@ -411,6 +411,9 @@ class VectorEmbeddingService
                 ->orWhere('source_id', 'LIKE', 'inclusive-v8-%')
                 ->orWhere('source_id', 'LIKE', 'agentshield-v9-%')
                 ->orWhere('source_id', 'LIKE', 'tier1-multilang-%')
+                ->orWhere('source_id', 'LIKE', 'dual-zone-v10-%')
+                ->orWhere('source_id', 'LIKE', 'saas-v10-%')
+                ->orWhere('source_id', 'LIKE', 'biometrics-geofence-v12-%')
                 ->delete();
         }
 
@@ -1055,16 +1058,18 @@ class VectorEmbeddingService
                 .'4. Standar Wajib Universal Input Hygiene: Email hanya karakter resmi `[a-zA-Z0-9._%+\\-@]`; nominal angka memakai pemisah ribuan regional (`1.500.000` ID vs `1,500,000` EN); nomor telepon wajib dropdown Country Zone dari `config/country_zones.php` dan **otomatis menghapus angka `0` di awal ketikan pertama** (`0812...` -> `812...` -> `+62812...`).';
 
             $embedding = $this->generateEmbedding("Project OS v10.0 Dual-Zone UI Scrollytelling Aniwall 5 Iron Animation Laws & Input Hygiene\n{$v10Content}");
-            AiKnowledgeVector::create([
-                'title' => 'Project OS v10.0: Dual-Zone UI (UX_F1..UX_F6), Verified Aniwall, 5 Iron Animation Laws & Input Hygiene',
-                'source_type' => 'dual_zone_aniwall_saas_v10',
-                'source_id' => $v10DualZoneSourceId,
-                'content' => "### Project OS v10.0: Dual-Zone UI, Verified Aniwall & Universal Input Hygiene\n\n{$v10Content}",
-                'embedding' => $embedding,
-                'metadata' => [
-                    'category' => 'Project OS v10.0 Dual-Zone UX & Input Hygiene',
-                ],
-            ]);
+            AiKnowledgeVector::updateOrCreate(
+                ['source_id' => $v10DualZoneSourceId],
+                [
+                    'title' => 'Project OS v10.0: Dual-Zone UI (UX_F1..UX_F6), Verified Aniwall, 5 Iron Animation Laws & Input Hygiene',
+                    'source_type' => 'dual_zone_aniwall_saas_v10',
+                    'content' => "### Project OS v10.0: Dual-Zone UI, Verified Aniwall & Universal Input Hygiene\n\n{$v10Content}",
+                    'embedding' => $embedding,
+                    'metadata' => [
+                        'category' => 'Project OS v10.0 Dual-Zone UX & Input Hygiene',
+                    ],
+                ]
+            );
             $syncedSections++;
             $totalChunks++;
         }
@@ -1080,16 +1085,18 @@ class VectorEmbeddingService
                 .implode("\n", $saasLines);
 
             $embedding = $this->generateEmbedding("Project OS v10.0 6 Critical SaaS Commercial Modules Billing Affiliate Multi-Seat Impact Grant SEO Explore Health Pulse\n{$v10SaasContent}");
-            AiKnowledgeVector::create([
-                'title' => 'Project OS v10.0: 6 Modul Komersial SaaS (Billing IDR/USD, Affiliate Finder\'s Fee, Multi-Seat White-Label, Impact Grant, SEO /explore & Health Pulse)',
-                'source_type' => 'dual_zone_aniwall_saas_v10',
-                'source_id' => $v10SaasSourceId,
-                'content' => "### Project OS v10.0: 6 Modul Komersial & Pertumbuhan SaaS\n\n{$v10SaasContent}",
-                'embedding' => $embedding,
-                'metadata' => [
-                    'category' => 'Project OS v10.0 SaaS Commercial Engine',
-                ],
-            ]);
+            AiKnowledgeVector::updateOrCreate(
+                ['source_id' => $v10SaasSourceId],
+                [
+                    'title' => 'Project OS v10.0: 6 Modul Komersial SaaS (Billing IDR/USD, Affiliate Finder\'s Fee, Multi-Seat White-Label, Impact Grant, SEO /explore & Health Pulse)',
+                    'source_type' => 'dual_zone_aniwall_saas_v10',
+                    'content' => "### Project OS v10.0: 6 Modul Komersial & Pertumbuhan SaaS\n\n{$v10SaasContent}",
+                    'embedding' => $embedding,
+                    'metadata' => [
+                        'category' => 'Project OS v10.0 SaaS Commercial Engine',
+                    ],
+                ]
+            );
             $syncedSections++;
             $totalChunks++;
         }

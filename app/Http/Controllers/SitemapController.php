@@ -71,7 +71,7 @@ class SitemapController extends Controller
                     'priority' => '0.88',
                 ];
             }
-            foreach (PosDualZoneFrontendAndSaasCatalog::baselineTwelveSectorReceipts('id') as $item) {
+            foreach (PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog('id') as $item) {
                 if (! empty($item['seo_slug']) && ! empty($item['sector_code'])) {
                     $urls[] = [
                         'loc' => $baseUrl.'/explore/'.strtolower($item['sector_code']).'/'.$item['seo_slug'],

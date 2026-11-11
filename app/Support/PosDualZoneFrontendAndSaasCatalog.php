@@ -617,9 +617,9 @@ class PosDualZoneFrontendAndSaasCatalog
                 }
             }
 
-            foreach (self::baselineTwelveSectorReceipts($loc) as $seed) {
-                $items[] = $seed;
-            }
+            // Production Ready: Pure real BAST-verified testimonials from database.
+            // When pos_verified_testimonials has 0 published records, this returns []
+            // so the Wall of Love area is completely clean and hidden.
 
             return $items;
         });

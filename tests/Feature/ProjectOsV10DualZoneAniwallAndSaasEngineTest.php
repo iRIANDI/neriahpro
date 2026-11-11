@@ -36,6 +36,7 @@ use Database\Seeders\ProjectOsMatrixSeeder;
 use Database\Seeders\SuperAdminSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -489,9 +490,32 @@ class ProjectOsV10DualZoneAniwallAndSaasEngineTest extends TestCase
 
         $this->get('/explore/sector_12_govtech_nonprofit')->assertOk();
 
+        // Seed a published verified testimonial to test programmatic detail page & OG image
+        $sampleTestimonial = PosVerifiedTestimonial::create([
+            'pos_project_id' => null,
+            'vision_blueprint_id' => $bp->id,
+            'user_id' => $buyer->id,
+            'sector_code' => 'SECTOR_12_GOVTECH_NONPROFIT',
+            'stack_code' => 'M1 Laravel 13 + Flux UI',
+            'public_ux_preset' => PosDualZoneFrontendAndSaasCatalog::UX_F1,
+            'operational_ui_variant' => 'UI_12A_NGO_DONATION_LEDGER',
+            'verification_trigger' => 'MITRA_BAST_SIGNED',
+            'client_name' => 'Dr. Haryanto',
+            'client_role' => ['id' => 'Direktur Eksekutif', 'en' => 'Executive Director'],
+            'client_company' => 'Yayasan Nusantara Bersatu',
+            'quote' => ['id' => 'Sistem ledger donasi transparan', 'en' => 'Transparent donation ledger system'],
+            'case_study_summary' => ['id' => 'Ringkasan studi kasus', 'en' => 'Case study summary'],
+            'architecture_receipt_json' => ['ulid_tables_count' => 18, 'concurrency_locks_count' => 4, 'token_saved_percent' => 70],
+            'anonymized_blueprint_json' => ['seo_slug' => 'yayasan-nusantara-bersatu'],
+            'is_published' => true,
+            'verified_at' => now(),
+        ]);
+        Cache::forget('project_os:verified_testimonials_aniwall:v10:id');
+        Cache::forget('project_os:verified_testimonials_aniwall:v10:en');
+
         $catalogFirst = PosDualZoneFrontendAndSaasCatalog::getVerifiedTestimonialsCatalog('id')[0];
         $firstSectorSlug = strtolower($catalogFirst['sector_code']);
-        $firstItemSlug = $catalogFirst['seo_slug'];
+        $firstItemSlug = $catalogFirst['seo_slug'] ?? 'yayasan-nusantara-bersatu';
 
         $this->get("/explore/{$firstSectorSlug}/{$firstItemSlug}")
             ->assertOk()
@@ -508,11 +532,11 @@ class ProjectOsV10DualZoneAniwallAndSaasEngineTest extends TestCase
 
     public function test_40_ai_native_tools_rbac_isolation_smart_guide_v10_bilingual_and_sha256_audit_chain(): void
     {
-        // 1. 45 Native AI Tool Declarations + RAG/CAG/KAG v12.0 Knowledge Sync
+        // 1. 51 Native AI Tool Declarations (incl. Biometrics & Geofence) + RAG/CAG/KAG v12.0 Knowledge Sync
         $declarations = GeminiToolRegistry::getDeclarations();
-        $this->assertCount(45, $declarations);
+        $this->assertCount(51, $declarations);
 
-        $syncRes = app(VectorEmbeddingService::class)->syncSystemKnowledgeBase(false);
+        $syncRes = app(VectorEmbeddingService::class)->syncSystemKnowledgeBase(true);
         $this->assertSame('success', $syncRes['status']);
         $this->assertGreaterThanOrEqual(
             2,
@@ -535,6 +559,29 @@ class ProjectOsV10DualZoneAniwallAndSaasEngineTest extends TestCase
         ], null, $superAdmin);
         $this->assertTrue((bool) ($t37['success'] ?? false));
         $this->assertSame(PosDualZoneFrontendAndSaasCatalog::UX_F3, $t37['selected_public_ux_preset']);
+
+        // Seed a published verified testimonial record to test list_aniwall tool
+        PosVerifiedTestimonial::create([
+            'pos_project_id' => null,
+            'vision_blueprint_id' => null,
+            'user_id' => $superAdmin->id,
+            'sector_code' => 'SECTOR_12_GOVTECH_NONPROFIT',
+            'stack_code' => 'M1 Laravel 13 + Flux UI',
+            'public_ux_preset' => PosDualZoneFrontendAndSaasCatalog::UX_F1,
+            'operational_ui_variant' => 'UI_12A_NGO_DONATION_LEDGER',
+            'verification_trigger' => 'MITRA_BAST_SIGNED',
+            'client_name' => 'Dr. Haryanto',
+            'client_role' => ['id' => 'Direktur Eksekutif', 'en' => 'Executive Director'],
+            'client_company' => 'Yayasan Nusantara Bersatu',
+            'quote' => ['id' => 'Sistem ledger donasi transparan', 'en' => 'Transparent donation ledger system'],
+            'case_study_summary' => ['id' => 'Ringkasan studi kasus', 'en' => 'Case study summary'],
+            'architecture_receipt_json' => ['ulid_tables_count' => 18, 'concurrency_locks_count' => 4, 'token_saved_percent' => 70],
+            'anonymized_blueprint_json' => ['seo_slug' => 'yayasan-nusantara-bersatu'],
+            'is_published' => true,
+            'verified_at' => now(),
+        ]);
+        Cache::forget('project_os:verified_testimonials_aniwall:v10:id');
+        Cache::forget('project_os:verified_testimonials_aniwall:v10:en');
 
         $t38 = $engine->execute('manage_verified_testimonials_aniwall', [
             'action' => 'list_aniwall',

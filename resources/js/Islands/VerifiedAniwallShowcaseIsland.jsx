@@ -317,87 +317,94 @@ export default function VerifiedAniwallShowcaseIsland({
                 </div>
 
                 {/* PART B: CRYPTOGRAPHICALLY VERIFIED ANIWALL (PRIMITIVE_VERIFIED_SOCIAL_PROOF) */}
-                <div className="space-y-6 pt-6 border-t border-zinc-200 dark:border-zinc-800">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                        <div>
-                            <span className="inline-block px-2.5 py-1 text-[11px] font-mono font-black uppercase tracking-widest bg-zinc-900 text-white dark:bg-zinc-800 dark:text-emerald-300 border border-zinc-700 rounded-none mb-2">
-                                PRIMITIVE_VERIFIED_SOCIAL_PROOF // ZERO FAKE TESTIMONIALS
-                            </span>
-                            <h3 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white">
-                                {isEn
-                                    ? 'BAST-Linked & Telemetry-Backed Architecture Wall of Love'
-                                    : 'Infinite Kinetic Aniwall — Testimoni Terverifikasi BAST & Telemetri Proyek Nyata'}
-                            </h3>
-                        </div>
-                        <div className="font-mono text-xs font-bold text-zinc-800 dark:text-zinc-300 tabular-nums">
-                            {filteredItems.length} {isEn ? 'Verified Architecture Receipts' : 'Struk Arsitektur Terverifikasi'}
-                        </div>
-                    </div>
-
-                    {/* 12-Sector Instant Filter Bar (Sharp Non-Capsule Buttons) */}
-                    <div className="flex flex-wrap gap-1.5">
-                        {Object.entries(SECTOR_SHORT_LABELS).map(([code, labels]) => {
-                            const active = selectedSector === code;
-                            return (
-                                <button
-                                    key={code}
-                                    type="button"
-                                    onClick={() => setSelectedSector(code)}
-                                    className={`px-3 py-1.5 text-xs font-mono font-bold transition rounded-none border ${
-                                        active
-                                            ? 'bg-emerald-600 text-black border-emerald-700 font-black'
-                                            : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 border-zinc-300 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
-                                    }`}
-                                >
-                                    {isEn ? labels.en : labels.id}
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {/* Kinetic Aniwall Lanes (Marquee when ALL + motion enabled; Crisp Grid when filtered or reduced-motion) */}
-                    {selectedSector === 'ALL' && isHydratedVisible && !reducedMotion && filteredItems.length >= 6 ? (
-                        <div className="space-y-4 overflow-hidden">
-                            <div className="npro-aniwall-lane overflow-hidden py-1">
-                                <div className="npro-aniwall-track-left gap-4">
-                                    {[...filteredItems.slice(0, 6), ...filteredItems.slice(0, 6)].map((item, idx) => (
-                                        <VerifiedReceiptCard
-                                            key={`lane1-${item.id}-${idx}`}
-                                            item={item}
-                                            isEn={isEn}
-                                            onInspect={() => setInspectedItem(item)}
-                                            fixedWidth
-                                        />
-                                    ))}
-                                </div>
+                {/* Rendered strictly when authentic BAST-verified testimonials exist */}
+                {Array.isArray(testimonials) && testimonials.length > 0 && (
+                    <div className="space-y-6 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                            <div>
+                                <span className="inline-block px-2.5 py-1 text-[11px] font-mono font-black uppercase tracking-widest bg-zinc-900 text-white dark:bg-zinc-800 dark:text-emerald-300 border border-zinc-700 rounded-none mb-2">
+                                    PRIMITIVE_VERIFIED_SOCIAL_PROOF // ZERO FAKE TESTIMONIALS
+                                </span>
+                                <h3 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white">
+                                    {isEn
+                                        ? 'BAST-Linked & Telemetry-Backed Architecture Wall of Love'
+                                        : 'Infinite Kinetic Aniwall — Testimoni Terverifikasi BAST & Telemetri Proyek Nyata'}
+                                </h3>
                             </div>
-                            <div className="npro-aniwall-lane overflow-hidden py-1">
-                                <div className="npro-aniwall-track-right gap-4">
-                                    {[...filteredItems.slice(6, 12), ...filteredItems.slice(6, 12)].map((item, idx) => (
-                                        <VerifiedReceiptCard
-                                            key={`lane2-${item.id}-${idx}`}
-                                            item={item}
-                                            isEn={isEn}
-                                            onInspect={() => setInspectedItem(item)}
-                                            fixedWidth
-                                        />
-                                    ))}
-                                </div>
+                            <div className="font-mono text-xs font-bold text-zinc-800 dark:text-zinc-300 tabular-nums">
+                                {filteredItems.length} {isEn ? 'Verified Architecture Receipts' : 'Struk Arsitektur Terverifikasi'}
                             </div>
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {filteredItems.map((item) => (
-                                <VerifiedReceiptCard
-                                    key={item.id}
-                                    item={item}
-                                    isEn={isEn}
-                                    onInspect={() => setInspectedItem(item)}
-                                />
-                            ))}
+
+                        {/* 12-Sector Instant Filter Bar (Sharp Non-Capsule Buttons) */}
+                        <div className="flex flex-wrap gap-1.5">
+                            {Object.entries(SECTOR_SHORT_LABELS).map(([code, labels]) => {
+                                const active = selectedSector === code;
+                                return (
+                                    <button
+                                        key={code}
+                                        type="button"
+                                        onClick={() => setSelectedSector(code)}
+                                        className={`px-3 py-1.5 text-xs font-mono font-bold transition rounded-none border ${
+                                            active
+                                                ? 'bg-emerald-600 text-black border-emerald-700 font-black'
+                                                : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 border-zinc-300 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
+                                        }`}
+                                    >
+                                        {isEn ? labels.en : labels.id}
+                                    </button>
+                                );
+                            })}
                         </div>
-                    )}
-                </div>
+
+                        {/* Kinetic Aniwall Lanes (Marquee when ALL + motion enabled; Crisp Grid when filtered or reduced-motion) */}
+                        {selectedSector === 'ALL' && isHydratedVisible && !reducedMotion && filteredItems.length >= 6 ? (
+                            <div className="space-y-4 overflow-hidden">
+                                <div className="npro-aniwall-lane overflow-hidden py-1">
+                                    <div className="npro-aniwall-track-left gap-4">
+                                        {[...filteredItems.slice(0, 6), ...filteredItems.slice(0, 6)].map((item, idx) => (
+                                            <VerifiedReceiptCard
+                                                key={`lane1-${item.id}-${idx}`}
+                                                item={item}
+                                                isEn={isEn}
+                                                onInspect={() => setInspectedItem(item)}
+                                                fixedWidth
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="npro-aniwall-lane overflow-hidden py-1">
+                                    <div className="npro-aniwall-track-right gap-4">
+                                        {[...filteredItems.slice(6, 12), ...filteredItems.slice(6, 12)].map((item, idx) => (
+                                            <VerifiedReceiptCard
+                                                key={`lane2-${item.id}-${idx}`}
+                                                item={item}
+                                                isEn={isEn}
+                                                onInspect={() => setInspectedItem(item)}
+                                                fixedWidth
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : filteredItems.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {filteredItems.map((item) => (
+                                    <VerifiedReceiptCard
+                                        key={item.id}
+                                        item={item}
+                                        isEn={isEn}
+                                        onInspect={() => setInspectedItem(item)}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="p-8 border border-dashed border-zinc-300 dark:border-zinc-800 text-center font-mono text-xs text-zinc-500 rounded-xs">
+                                {isEn ? 'No verified receipts for this sector yet.' : 'Belum ada struk terverifikasi untuk sektor ini.'}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* MODAL: INSPECT ANONYMIZED BLUEPRINT ARCHITECTURE (Zero Native Dialog) */}

@@ -50,22 +50,28 @@ class PosDualZoneFrontendAndSaasCatalog
         $presets = [
             self::UX_F1 => [
                 'code' => self::UX_F1,
-                'short_badge' => 'STICKY SCROLLYTELLING',
+                'short_badge' => 'SPLINE & STICKY SCROLLYTELLING',
                 'name' => [
-                    'id' => 'Apple-Style Sticky Scrollytelling',
-                    'en' => 'Apple-Style Sticky Scrollytelling',
+                    'id' => 'Spline Camera & Sticky Narrative Scrollytelling',
+                    'en' => 'Spline Camera & Sticky Narrative Scrollytelling',
                 ],
-                'local_tech_stack' => 'GSAP ScrollTrigger + Lenis Smooth Scroll + IntersectionObserver (@vite local bundle)',
+                'local_tech_stack' => 'GSAP ScrollTrigger (scrub: 1.2) + Lenis Smooth Scroll + Hybrid HUD CustomEvent Bridge (@vite local bundle)',
                 'npm_packages' => ['gsap', 'lenis'],
                 'summary' => [
-                    'id' => 'Elemen visual utama terkunci (pinned) di tengah layar saat pengguna menggulir ke bawah dan bertransformasi tahap demi tahap mengikuti narasi progres.',
-                    'en' => 'Center stage visual pins smoothly on scroll and transforms step-by-step synchronized with narrative milestones.',
+                    'id' => 'Kanvas/visual utama terkunci mulus (pinned) sementara scroll HTML menggerakkan jalur kamera/tahap visual secara inersia (scrub: 1.2) tersinkronisasi dua arah dengan HUD semantik ramah SEO.',
+                    'en' => 'Pinned visual stage & camera rig scrubbed smoothly via HTML scroll proxy (scrub: 1.2 inertia) bidirectionally synced with an SEO-safe semantic HUD.',
                 ],
                 'best_sectors' => ['SECTOR_12_GOVTECH_NONPROFIT', 'SECTOR_05_INDUSTRIAL_MRP'],
+                'scrollytelling_choreography' => [
+                    'scroll_proxy_selector' => '#scroll-proxy-container',
+                    'camera_or_stage_curve' => 'THREE.CatmullRomCurve3 / GPU translate3d Pinning (scrub: 1.2, lerp: 0.10)',
+                    'hud_event_bridge' => 'window.dispatchEvent(new CustomEvent("pos:camera-waypoint", { detail: { index, slug } }))',
+                    'asset_pipeline' => 'Forever-Cached JSON data-props + Local WebP / Optional Draco .glb + KTX2',
+                ],
                 'miniature_wireframe_stages' => [
-                    ['step' => '01', 'label_id' => 'Hulu / Pondasi', 'label_en' => 'Origin / Foundation', 'metric' => '100% SHA-256'],
-                    ['step' => '02', 'label_id' => 'Proses & Verifikasi', 'label_en' => 'Execution & Audit', 'metric' => 'CLS 0.00'],
-                    ['step' => '03', 'label_id' => 'Dampak Nyata / Serah Terima', 'label_en' => 'Verified Impact / Handover', 'metric' => '< 0.8s FCP'],
+                    ['step' => '01', 'label_id' => 'Hulu / Pondasi (Waypoint 01)', 'label_en' => 'Origin / Foundation (Waypoint 01)', 'metric' => '100% SHA-256', 'camera_xyz' => [0, 1, 12]],
+                    ['step' => '02', 'label_id' => 'Proses & Audit (Waypoint 02)', 'label_en' => 'Execution & Audit (Waypoint 02)', 'metric' => 'CLS 0.00 • Scrub 1.2', 'camera_xyz' => [-2, -6, 2]],
+                    ['step' => '03', 'label_id' => 'Dampak Nyata / BAST (Waypoint 03)', 'label_en' => 'Verified Impact / Handover (Waypoint 03)', 'metric' => '< 0.8s FCP', 'camera_xyz' => [2, -12, -8]],
                 ],
                 'extra_man_hours' => 14,
             ],
@@ -83,31 +89,43 @@ class PosDualZoneFrontendAndSaasCatalog
                     'en' => 'Asymmetric Bento grid with cursor border spotlight and bidirectional hardware-accelerated Wall of Love (pause on hover).',
                 ],
                 'best_sectors' => ['SECTOR_04_FINTECH_LEDGER', 'SECTOR_08_PROFESSIONAL_PSA'],
+                'scrollytelling_choreography' => [
+                    'scroll_proxy_selector' => '[data-aniwall-viewport]',
+                    'camera_or_stage_curve' => 'Bidirectional CSS @keyframes translate3d(x,0,0) + IntersectionObserver viewport gate',
+                    'hud_event_bridge' => 'window.dispatchEvent(new CustomEvent("pos:aniwall-filter", { detail: { sectorCode } }))',
+                    'asset_pipeline' => 'Cache::rememberForever SHA-256 BAST Receipts + Inline Local SVG',
+                ],
                 'miniature_wireframe_stages' => [
-                    ['step' => 'B1', 'label_id' => 'Bento Telemetry Hero', 'label_en' => 'Bento Telemetry Hero', 'metric' => '60-120 FPS'],
-                    ['step' => 'B2', 'label_id' => 'Aniwall Marquee 2-Arah', 'label_en' => 'Bidirectional Aniwall', 'metric' => 'Pause Hover'],
-                    ['step' => 'B3', 'label_id' => 'Receipt Blueprint Modal', 'label_en' => 'Blueprint Receipt Modal', 'metric' => 'ULID Linked'],
+                    ['step' => 'B1', 'label_id' => 'Bento Telemetry Hero', 'label_en' => 'Bento Telemetry Hero', 'metric' => '60-120 FPS', 'camera_xyz' => [0, 0, 10]],
+                    ['step' => 'B2', 'label_id' => 'Aniwall Marquee 2-Arah', 'label_en' => 'Bidirectional Aniwall', 'metric' => 'Pause Hover', 'camera_xyz' => [0, -4, 10]],
+                    ['step' => 'B3', 'label_id' => 'Receipt Blueprint Modal', 'label_en' => 'Blueprint Receipt Modal', 'metric' => 'ULID Linked', 'camera_xyz' => [0, -8, 10]],
                 ],
                 'extra_man_hours' => 12,
             ],
             self::UX_F3 => [
                 'code' => self::UX_F3,
-                'short_badge' => 'SPATIAL 360° & FLOORPLAN',
+                'short_badge' => 'HYBRID WEBGL2 & SPATIAL 360°',
                 'name' => [
-                    'id' => 'Immersive Spatial, 360° & Interactive Floorplan Explorer',
-                    'en' => 'Immersive Spatial, 360° & Interactive Floorplan Explorer',
+                    'id' => 'Hybrid Island WebGL2, BVH Raycasting & Interactive Spatial Explorer',
+                    'en' => 'Hybrid Island WebGL2, BVH Raycasting & Interactive Spatial Explorer',
                 ],
-                'local_tech_stack' => 'Three.js / Interactive SVG Layering + High-Res Local WebP (@vite)',
-                'npm_packages' => ['three'],
+                'local_tech_stack' => 'React Three Fiber (R3F) + Drei (MeshTransmissionMaterial, Bvh, SDF Text) + Draco .glb / KTX2 + GSAP ScrollTrigger (@vite)',
+                'npm_packages' => ['three', '@react-three/fiber', '@react-three/drei', 'three-mesh-bvh', 'gsap', 'lenis'],
                 'summary' => [
-                    'id' => 'Eksplorasi ruang interaktif: klik denah meja restoran, kursi konser/VIP, kamar resort, atau lapangan olahraga secara visual real-time.',
-                    'en' => 'Interactive spatial explorer: click live restaurant tables, concert VIP seats, resort suites, or sports courts directly on SVG/WebGL floorplans.',
+                    'id' => 'Arsitektur Hybrid Island 3-Lapis setara pemenang Awwwards: kanvas tunggal WebGL2 (refraksi shader, BVH raycasting O(log N) di GPU, teks 3D SDF, kompresi Draco/KTX2 VRAM) dipadukan denah SVG/360° & HUD Flux UI ramah SEO.',
+                    'en' => 'Awwwards-grade 3-Layer Hybrid Island: single-canvas WebGL2 (transmission shader refraction, O(log N) GPU BVH raycasting, Troika SDF 3D text, Draco/KTX2 VRAM pipeline) paired with interactive SVG/360° floorplans & SEO-safe Flux UI HUD.',
                 ],
                 'best_sectors' => ['SECTOR_02_HOSPITALITY_SPACE', 'SECTOR_09_FOOD_BEVERAGE', 'SECTOR_10_MEDIA_TICKETING'],
+                'scrollytelling_choreography' => [
+                    'scroll_proxy_selector' => '#scroll-proxy-container',
+                    'camera_or_stage_curve' => 'Single-Canvas R3F dpr=[1,1.5] + THREE.CatmullRomCurve3 + <Bvh firstHitOnly> O(log N) GPU Raycast',
+                    'hud_event_bridge' => 'window.dispatchEvent(new CustomEvent("pos:focus-artifact", { detail: { ulid, slotCode } }))',
+                    'asset_pipeline' => 'Filament v5 3D Asset CMS -> Queued @gltf-transform/cli (Draco + Meshopt + KTX2 VRAM) -> Immutable Brotli',
+                ],
                 'miniature_wireframe_stages' => [
-                    ['step' => 'S1', 'label_id' => 'Peta Kursi / Meja SVG', 'label_en' => 'Interactive SVG Seat Map', 'metric' => 'Live Lock'],
-                    ['step' => 'S2', 'label_id' => 'Pratinjau Sudut Pandang', 'label_en' => 'Spatial Viewpoint', 'metric' => 'WebP Local'],
-                    ['step' => 'S3', 'label_id' => 'Kunci Slot Anti-Bentrok', 'label_en' => 'Atomic Slot Hold', 'metric' => 'Redis TTL'],
+                    ['step' => 'S1', 'label_id' => 'Kanvas WebGL2 / Denah BVH', 'label_en' => 'WebGL2 Canvas / BVH Map', 'metric' => 'O(log N) BVH', 'camera_xyz' => [0, 1, 12]],
+                    ['step' => 'S2', 'label_id' => 'Refraksi Shader & KTX2 VRAM', 'label_en' => 'Transmission Shader & KTX2', 'metric' => 'DPR [1, 1.5]', 'camera_xyz' => [-2, -6, 4]],
+                    ['step' => 'S3', 'label_id' => 'Kunci Slot Anti-Bentrok HUD', 'label_en' => 'HUD Atomic Slot Hold', 'metric' => 'Redis TTL', 'camera_xyz' => [2, -12, -4]],
                 ],
                 'extra_man_hours' => 18,
             ],
@@ -125,10 +143,16 @@ class PosDualZoneFrontendAndSaasCatalog
                     'en' => 'Zero-reload shared-element product transitions, instant slide-over cart drawer, and side-by-side SKU spec comparison.',
                 ],
                 'best_sectors' => ['SECTOR_01_COMMERCE_OMNICHANNEL'],
+                'scrollytelling_choreography' => [
+                    'scroll_proxy_selector' => '[data-lookbook-stage]',
+                    'camera_or_stage_curve' => 'Native View Transitions API + Aspect-4:5 Locked Editorial Grid',
+                    'hud_event_bridge' => 'window.dispatchEvent(new CustomEvent("pos:quick-cart-open", { detail: { skuUlid } }))',
+                    'asset_pipeline' => 'Local AVIF/WebP Aspect-Locked Srcset + 0ms Optimistic Cart State',
+                ],
                 'miniature_wireframe_stages' => [
-                    ['step' => 'L1', 'label_id' => 'Editorial Lookbook Grid', 'label_en' => 'Editorial Lookbook Grid', 'metric' => 'Aspect 4:5'],
-                    ['step' => 'L2', 'label_id' => 'Quick-View Spec Compare', 'label_en' => 'Quick-View Spec Compare', 'metric' => '0ms Optimistic'],
-                    ['step' => 'L3', 'label_id' => 'Slide-Over Checkout', 'label_en' => 'Slide-Over Checkout', 'metric' => 'QRIS/VA'],
+                    ['step' => 'L1', 'label_id' => 'Editorial Lookbook Grid', 'label_en' => 'Editorial Lookbook Grid', 'metric' => 'Aspect 4:5', 'camera_xyz' => [0, 0, 10]],
+                    ['step' => 'L2', 'label_id' => 'Quick-View Spec Compare', 'label_en' => 'Quick-View Spec Compare', 'metric' => '0ms Optimistic', 'camera_xyz' => [0, -5, 10]],
+                    ['step' => 'L3', 'label_id' => 'Slide-Over Checkout', 'label_en' => 'Slide-Over Checkout', 'metric' => 'QRIS/VA', 'camera_xyz' => [0, -10, 10]],
                 ],
                 'extra_man_hours' => 12,
             ],
@@ -146,10 +170,16 @@ class PosDualZoneFrontendAndSaasCatalog
                     'en' => 'Visitors drag live mathematical sliders on the landing page (cargo volumetric tariff, medical package estimator, or payroll/ROI calculator) with regional thousand separators.',
                 ],
                 'best_sectors' => ['SECTOR_03_HEALTHCARE_CLINICAL', 'SECTOR_06_LOGISTICS_FLEET', 'SECTOR_11_HRIS_INTERNAL_OPS'],
+                'scrollytelling_choreography' => [
+                    'scroll_proxy_selector' => '[data-simulator-stage]',
+                    'camera_or_stage_curve' => 'Deterministic Client Formula Sliders + 60fps Canvas Telemetry Bar',
+                    'hud_event_bridge' => 'window.dispatchEvent(new CustomEvent("pos:simulator-lock-quote", { detail: { payload } }))',
+                    'asset_pipeline' => 'Forever-Cached Tariff/Rate Matrix JSON + Tabular-Nums Formatter',
+                ],
                 'miniature_wireframe_stages' => [
-                    ['step' => 'T1', 'label_id' => 'Slider Parameter Real-Time', 'label_en' => 'Live Parameter Sliders', 'metric' => 'Tabular-Nums'],
-                    ['step' => 'T2', 'label_id' => 'Rincian Biaya Transparan', 'label_en' => 'Transparent Breakdown', 'metric' => '1.000 / 1,000'],
-                    ['step' => 'T3', 'label_id' => 'Konversi Booking / Resi', 'label_en' => 'Instant Booking CTA', 'metric' => 'E.164 Ready'],
+                    ['step' => 'T1', 'label_id' => 'Slider Parameter Real-Time', 'label_en' => 'Live Parameter Sliders', 'metric' => 'Tabular-Nums', 'camera_xyz' => [0, 0, 10]],
+                    ['step' => 'T2', 'label_id' => 'Rincian Biaya Transparan', 'label_en' => 'Transparent Breakdown', 'metric' => '1.000 / 1,000', 'camera_xyz' => [0, -5, 10]],
+                    ['step' => 'T3', 'label_id' => 'Konversi Booking / Resi', 'label_en' => 'Instant Booking CTA', 'metric' => 'E.164 Ready', 'camera_xyz' => [0, -10, 10]],
                 ],
                 'extra_man_hours' => 10,
             ],
@@ -167,10 +197,16 @@ class PosDualZoneFrontendAndSaasCatalog
                     'en' => 'Visualizes learning journeys as an interactive SVG skill-tree, SHA-256 verifiable badges, and cohort milestone leaderboards.',
                 ],
                 'best_sectors' => ['SECTOR_07_EDTECH_MEMBERSHIP'],
+                'scrollytelling_choreography' => [
+                    'scroll_proxy_selector' => '[data-pathway-tree]',
+                    'camera_or_stage_curve' => 'Scroll-Driven SVG stroke-dashoffset Dagre/Tree Path + Milestone Reveal',
+                    'hud_event_bridge' => 'window.dispatchEvent(new CustomEvent("pos:pathway-node-inspect", { detail: { nodeUlid } }))',
+                    'asset_pipeline' => 'Inline Vector Skill-Tree DAG + Local SVG QR Certificate Verifier',
+                ],
                 'miniature_wireframe_stages' => [
-                    ['step' => 'G1', 'label_id' => 'Pohon Kurikulum SVG', 'label_en' => 'Interactive SVG Skill-Tree', 'metric' => 'Node Unlock'],
-                    ['step' => 'G2', 'label_id' => 'Lencana & Sertifikat Hash', 'label_en' => 'Hash-Verified Badges', 'metric' => 'SHA-256'],
-                    ['step' => 'G3', 'label_id' => 'Pendaftaran Kohort Instan', 'label_en' => 'Cohort Enrollment', 'metric' => 'O(1) Cursor'],
+                    ['step' => 'G1', 'label_id' => 'Pohon Kurikulum SVG', 'label_en' => 'Interactive SVG Skill-Tree', 'metric' => 'Node Unlock', 'camera_xyz' => [0, 0, 10]],
+                    ['step' => 'G2', 'label_id' => 'Lencana & Sertifikat Hash', 'label_en' => 'Hash-Verified Badges', 'metric' => 'SHA-256', 'camera_xyz' => [0, -5, 10]],
+                    ['step' => 'G3', 'label_id' => 'Pendaftaran Kohort Instan', 'label_en' => 'Cohort Enrollment', 'metric' => 'O(1) Cursor', 'camera_xyz' => [0, -10, 10]],
                 ],
                 'extra_man_hours' => 14,
             ],
@@ -245,9 +281,9 @@ class PosDualZoneFrontendAndSaasCatalog
         $haystack = mb_strtolower($corpusText);
 
         if ($haystack !== '') {
-            if (preg_match('/(scrollytelling|cerita perjalanan|story|donasi|yayasan|filantropi|tahap pembangunan|konstruksi)/u', $haystack)) {
+            if (preg_match('/(scrollytelling|cerita perjalanan|story|donasi|yayasan|filantropi|tahap pembangunan|konstruksi|catmullrom|camera spline|narasi scroll)/u', $haystack)) {
                 $chosenCode = self::UX_F1;
-            } elseif (preg_match('/(denah|floorplan|360|kursi|seat|meja restoran|lapangan|stadion|villa|resort)/u', $haystack)) {
+            } elseif (preg_match('/(denah|floorplan|360|kursi|seat|meja restoran|lapangan|stadion|villa|resort|webgl|r3f|react three fiber|three\.js|glb|ktx2|bvh|mesh transmission|igloo|3d interaktif)/u', $haystack)) {
                 $chosenCode = self::UX_F3;
             } elseif (preg_match('/(lookbook|fashion|katalog produk|drawer cart|perbandingan spesifikasi|quick-view)/u', $haystack)) {
                 $chosenCode = self::UX_F4;
@@ -419,6 +455,12 @@ class PosDualZoneFrontendAndSaasCatalog
         $opVariantCode = (string) ($opArray['selected_variant_code'] ?? $opArray['code'] ?? 'UI_01A_POS_SPLIT_TERMINAL');
         $navShellCode = (string) ($opArray['navigation_shell_code'] ?? $opArray['navigation_shell'] ?? 'SIDEBAR_ERP_DENSE');
 
+        $hybridScrollyArchitecture = self::hybridIslandScrollytellingArchitecture($selectedPublicPreset['code'], $loc);
+        $frontendBlueprintContract = self::frontendExecutionBlueprintContract($sectorCode, [
+            'selected_variant_code' => $opVariantCode,
+            'navigation_shell_code' => $navShellCode,
+        ], $selectedPublicPreset, $loc);
+
         return [
             'architecture_paradigm' => 'DUAL_ZONE_SEPARATED_UI_V10',
             'zone_a_operational_backstage' => [
@@ -434,6 +476,7 @@ class PosDualZoneFrontendAndSaasCatalog
                 'scrollytelling_banned' => true,
                 'strict_prohibitions' => [
                     'NO_SCROLLYTELLING_OR_PARALLAX',
+                    'NO_WEBGL_CANVAS_IN_BACKOFFICE',
                     'NO_CAPSULE_PILL_BUTTONS',
                     'NO_MULTI_COLOR_GRADIENTS',
                     'NO_OFFSET_PAGINATION',
@@ -452,8 +495,10 @@ class PosDualZoneFrontendAndSaasCatalog
                 'tech_blueprint' => $selectedPublicPreset['local_tech_stack'],
                 'npm_packages' => $selectedPublicPreset['npm_packages'],
                 'summary' => $selectedPublicPreset['localized_summary'],
+                'scrollytelling_choreography' => $selectedPublicPreset['scrollytelling_choreography'] ?? [],
                 'miniature_wireframe_stages' => $selectedPublicPreset['miniature_wireframe_stages'],
                 'extra_man_hours' => $selectedPublicPreset['extra_man_hours'],
+                'hybrid_island_scrollytelling_architecture' => $hybridScrollyArchitecture,
                 'verified_social_proof_primitive' => [
                     'code' => self::PRIMITIVE_SOCIAL_PROOF,
                     'component' => 'VerifiedTestimonialAniwall',
@@ -465,9 +510,166 @@ class PosDualZoneFrontendAndSaasCatalog
                     ],
                 ],
             ],
+            'hybrid_island_scrollytelling_architecture' => $hybridScrollyArchitecture,
+            'frontend_execution_blueprint_contract' => $frontendBlueprintContract,
             'five_iron_animation_laws' => self::fiveIronAnimationLaws($loc),
             'input_hygiene_contract' => self::inputHygieneContract($loc),
             'available_public_ux_presets' => array_values($allPublicPresets),
+        ];
+    }
+
+    /**
+     * 3-Layer Hybrid Island Overlay & Scrollytelling Architecture (Awwwards Igloo-Grade WebGL2 / GPU Engine
+     * adapted safely for Laravel 13 + Filament v5 + React 19 Islands + Livewire 4 / Flux UI without sacrificing SEO or WCAG).
+     *
+     * @return array<string, mixed>
+     */
+    public static function hybridIslandScrollytellingArchitecture(?string $selectedUxCode = null, string $locale = 'id'): array
+    {
+        $loc = $locale === 'en' ? 'en' : 'id';
+        $uxCode = self::normalizePublicUxPreset($selectedUxCode);
+        $isSpatialWebGlPrimary = in_array($uxCode, [self::UX_F1, self::UX_F3], true);
+
+        return [
+            'blueprint_version' => '12.1.0-HYBRID-ISLAND-SCROLLYTELLING',
+            'paradigm_name' => '3_LAYER_HYBRID_ISLAND_OVERLAY',
+            'active_preset_code' => $uxCode,
+            'webgl_single_canvas_recommended' => $isSpatialWebGlPrimary,
+            'why_pure_webgl_is_rejected' => $loc === 'en'
+                ? 'Pure full-screen WebGL UIs destroy Googlebot/SSR indexability, /llms.txt GEO authority, WCAG keyboard/screen-reader accessibility, and native form autofill. Project OS enforces a 3-Layer Hybrid Island Overlay where WebGL/GPU visual stages sit at z-0 while semantic Livewire/Flux UI HUD & Schema.org sit at z-10.'
+                : 'UI WebGL murni 100% merusak indeksasi SEO Googlebot, otoritas sitasi /llms.txt GEO, aksesibilitas pembaca layar/keyboard WCAG, serta autofill form. Project OS mewajibkan Arsitektur Hybrid Island 3-Lapis: kanvas WebGL/GPU berada di z-0, sedangkan HUD semantik Livewire/Flux UI & Schema.org berada di z-10.',
+            'layer_1_backend_3d_asset_cms' => [
+                'layer_code' => 'LAYER_1_FILAMENT_V5_ASSET_PIPELINE',
+                'ulid_table' => 'pos_showcase_3d_assets',
+                'ulid_columns' => [
+                    'id CHAR(26) PRIMARY KEY (ULID)',
+                    'organization_id CHAR(26) INDEX',
+                    'slug VARCHAR(140) UNIQUE',
+                    'title JSONB ({id, en} via TranslatableTabs)',
+                    'summary JSONB ({id, en} via TranslatableTabs)',
+                    'model_glb_path VARCHAR(255) (Draco + Meshopt compressed)',
+                    'surface_ktx2_path VARCHAR(255) (BasisU GPU VRAM compressed)',
+                    'poster_webp_path VARCHAR(255) (Tier-3 static fallback)',
+                    'surface_tint_hex CHAR(7) DEFAULT #DFF6FF',
+                    'roughness DECIMAL(4,2) DEFAULT 0.18',
+                    'ior DECIMAL(4,2) DEFAULT 1.45',
+                    'camera_waypoint_json JSONB ({x, y, z, lookAt})',
+                    'sort_order INTEGER INDEX',
+                ],
+                'filament_v5_resource' => 'Showcase3dAssetResource (Filament\\Schemas\\Schema + TranslatableTabs::make() — ZERO LocaleSwitcher)',
+                'queued_compression_job' => 'TranscodeShowcaseGlbToDracoKtx2Job on queue:low-batch (@gltf-transform/cli draco + meshopt + uastc ktx2)',
+                'zero_db_scroll_hydration' => 'Cache::rememberForever("pos:zone_b:showcase_assets:{org}:{loc}") injected into Blade data-props="{{ Js::from($cachedAssets) }}" + auto-flush on saved/deleted hooks (0 SQL queries during scroll)',
+                'edge_delivery_headers' => 'Cache-Control: public, max-age=31536000, immutable + Brotli (.br) for .glb, .ktx2, .woff2',
+            ],
+            'layer_2_single_canvas_scrollytelling_engine' => [
+                'layer_code' => 'LAYER_2_SINGLE_CANVAS_R3F_GSAP_RIG',
+                'mount_topology' => 'fixed inset-0 z-0 w-screen h-screen overflow-hidden pointer-events-none (canvas interactive hits routed via BVH)',
+                'canvas_budget' => [
+                    'single_webgl2_context' => true,
+                    'dpr_clamp' => '[1, 1.5]',
+                    'gl_flags' => ['antialias' => false, 'powerPreference' => 'high-performance', 'stencil' => false],
+                    'frustum_culling' => true,
+                    'merged_postprocessing_pass' => 'EffectComposer disableNormalPass (single merged Bloom + subtle ChromaticAberration pass)',
+                ],
+                'five_60fps_engineering_pillars' => [
+                    'PILLAR_A_SDF_3D_TYPOGRAPHY' => 'Troika SDF <Text> (@react-three/drei) shifting UV coordinates in GPU shader — 0ms DOM layout thrashing on scramble/reveal.',
+                    'PILLAR_B_TRANSMISSION_REFRACTION' => 'MeshTransmissionMaterial (IOR, chromaticAberration, anisotropic frost roughness, KTX2 normalMap) or crisp GPU shader surface.',
+                    'PILLAR_C_SPLINE_SCROLL_CAMERA_RIG' => 'Memoized THREE.CatmullRomCurve3 camera path scrubbed by #scroll-proxy-container via GSAP ScrollTrigger (scrub: 1.2) + Lenis + state.camera.position.lerp(point, 0.1).',
+                    'PILLAR_D_BVH_SPATIAL_RAYCASTING' => '<Bvh firstHitOnly> (three-mesh-bvh) reducing pointer raycast complexity from O(N) triangles to O(log N) spatial tree lookups.',
+                    'PILLAR_E_VRAM_DIRECT_DRACO_KTX2' => 'Draco/Meshopt .glb geometry + KTX2 textures decompressed directly in GPU VRAM (75–85% lower memory footprint) + 2D-packed GPGPU particle LUTs.',
+                ],
+            ],
+            'layer_3_accessible_hud_and_event_bridge' => [
+                'layer_code' => 'LAYER_3_SEMANTIC_FLUX_HUD_AND_SEO_SHIELD',
+                'hud_wrapper_classes' => 'relative z-10 pointer-events-none (interactive children explicitly set pointer-events-auto)',
+                'brutalist_hud_surface_contract' => [
+                    'geometry' => 'rounded-none / rounded-xs ONLY (STRICT BAN on rounded-xl and rounded-full from raw templates)',
+                    'light_mode_surface' => 'bg-white/95 text-zinc-950 border border-zinc-300 backdrop-blur-md (WCAG AAA >= 7:1)',
+                    'dark_mode_surface' => 'dark:bg-zinc-950/90 dark:text-zinc-100 dark:border-zinc-800 backdrop-blur-md (WCAG AAA >= 7:1)',
+                ],
+                'bidirectional_custom_events' => [
+                    'hud_to_canvas_waypoint' => 'window.dispatchEvent(new CustomEvent("pos:camera-waypoint", { detail: { index, slug } }))',
+                    'hud_to_canvas_focus' => 'window.dispatchEvent(new CustomEvent("pos:focus-artifact", { detail: { ulid, slotCode } }))',
+                    'canvas_to_hud_step_sync' => 'window.dispatchEvent(new CustomEvent("pos:active-stage-changed", { detail: { stepIndex, progress } }))',
+                ],
+                'seo_geo_and_wcag_guarantees' => [
+                    'Semantic <main id="scroll-proxy-container"> with indexable <section data-scene-step="N"> headings & copy',
+                    'Full Multi-Graph Schema.org JSON-LD + /llms.txt GEO Authority intact',
+                    '100% Keyboard Tab order, ARIA landmarks, & native Flux UI / Livewire 4 form validation',
+                ],
+            ],
+            'adaptive_gpu_degradation_governor' => [
+                'governor_code' => 'AUTO_3_TIER_GPU_FALLBACK',
+                'tiers' => [
+                    [
+                        'tier' => 'TIER_1_HIGH_WEBGL2_TRANSMISSION',
+                        'condition' => 'Desktop / Apple Silicon / High-tier GPU >= 55 FPS, >= 6 CPU threads, prefers-reduced-motion: no-preference',
+                        'behavior' => 'Full Single-Canvas R3F + MeshTransmissionMaterial (samples: 6) + Bvh + merged EffectComposer at dpr [1, 1.5].',
+                    ],
+                    [
+                        'tier' => 'TIER_2_MEDIUM_MATCAP_60FPS',
+                        'condition' => 'Mid-range mobile / integrated GPU (35–54 FPS or 4 CPU threads)',
+                        'behavior' => 'Disable EffectComposer & transmission multi-sampling; switch to pre-baked KTX2 Matcap + dpr=1.0 to lock rock-solid 60 FPS.',
+                    ],
+                    [
+                        'tier' => 'TIER_3_LOW_STATIC_WEBP_REDUCED_MOTION',
+                        'condition' => 'prefers-reduced-motion: reduce, navigator.connection.saveData, < 4 threads, or webglcontextlost event',
+                        'behavior' => 'Unmount WebGL context cleanly and render aspect-locked local Poster WebP + crisp CSS sticky narrative with 0% jank.',
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Complete Deterministic Frontend Blueprint Execution Contract across Zone A (Operational) & Zone B (Public Scrollytelling).
+     *
+     * @param  array<string, mixed>  $zoneAContract
+     * @param  array<string, mixed>  $selectedPublicPreset
+     * @return array<string, mixed>
+     */
+    public static function frontendExecutionBlueprintContract(
+        string $sectorCode,
+        array $zoneAContract,
+        array $selectedPublicPreset,
+        string $locale = 'id'
+    ): array {
+        $loc = $locale === 'en' ? 'en' : 'id';
+        $uiCode = (string) ($zoneAContract['selected_variant_code'] ?? 'UI_01A_POS_SPLIT_TERMINAL');
+        $shellCode = (string) ($zoneAContract['navigation_shell_code'] ?? 'SIDEBAR_ERP_DENSE');
+        $uxCode = (string) ($selectedPublicPreset['code'] ?? self::UX_F2);
+
+        return [
+            'contract_version' => '12.1.0-FRONTEND-BLUEPRINT-LOCK',
+            'sector_code' => $sectorCode,
+            'island_hydration_matrix' => [
+                'app_shell_ssr' => 'Laravel 13 Blade + Multi-Graph Schema.org JSON-LD + Critical CSS (FCP < 0.8s)',
+                'zone_a_operational_engine' => "Livewire 4 (#[Locked] state) + Flux UI + Filament v5 Schema inside {$shellCode} ({$uiCode})",
+                'zone_b_public_scrolly_engine' => "React 19 Lazy Island / Alpine GPU Rig ({$uxCode}) hydrated via Forever-Cached data-props JSON + CustomEvent HUD Bridge",
+                'realtime_sync_bus' => 'Laravel Reverb Private Channel organization.{ulid}.{module} + BroadcastChannel Dual-Screen (STRICT BAN on wire:poll.<30s)',
+            ],
+            'core_web_vitals_and_frame_budget' => [
+                'fcp_budget' => '< 0.8s (SSR HTML + IntersectionObserver / React.lazy code-split)',
+                'lcp_budget' => '< 1.5s (Preloaded local hero WebP / poster frame before .glb/.ktx2 worker decode)',
+                'cls_budget' => '0.00 (Explicit aspect-ratio & min-h-[100dvh] container locks)',
+                'inp_budget' => '< 80ms (O(log N) BVH raycast + non-blocking Web Worker Draco decode)',
+                'initial_js_chunk_cap' => '< 180 KB gzipped (Three.js / R3F isolated strictly in dynamic import() Zone-B chunk)',
+            ],
+            'design_system_anti_slop_tokens' => [
+                'border_radius_lock' => 'rounded-none, rounded-xs (2px), rounded-sm (4px) — ZERO rounded-full / ZERO rounded-xl',
+                'surface_palette_lock' => 'Solid monochrome zinc-50/white & zinc-900/zinc-950 with crisp border-zinc-300 dark:border-zinc-800 — ZERO gaudy multi-color gradients',
+                'wcag_contrast_lock' => 'Minimum 7:1 AAA body/badge contrast in both Light & Dark modes (e.g. bg-emerald-100 text-emerald-950 border-emerald-400 / dark:bg-emerald-950/90 dark:text-emerald-200)',
+                'enterprise_table_lock' => 'O(1) cursorPaginate() + sticky header + left/right frozen columns + row density switcher + dual Grid/List view + instant "X" search clear',
+                'dialog_and_feedback_lock' => 'window.showToast() + backdrop-blur Alpine/Flux modals — ZERO native window.alert()/confirm()/prompt()',
+            ],
+            'memory_and_lifecycle_cleanup_rules' => [
+                'Memoize THREE.CatmullRomCurve3 & geometry buffers via useMemo() — never instantiate curves inside useFrame()',
+                'Revert GSAP ScrollTrigger contexts via gsap.context().revert() and destroy Lenis + CustomEvent listeners on unmount',
+                'Attach webglcontextlost & webglcontextrestored listeners to seamlessly trigger Tier-3 Poster WebP fallback without white-screen crashes',
+            ],
+            'summary_directive' => $loc === 'en'
+                ? "Zone A locks {$uiCode} inside {$shellCode} (0% WebGL/parallax, O(1) cursor tables), while Zone B executes {$uxCode} via the 3-Layer Hybrid Island Overlay (Forever-Cached data-props, 60–120fps GPU/WebGL rig, accessible Flux UI HUD, and 3-Tier Adaptive GPU Fallback)."
+                : "Zona A mengunci {$uiCode} di dalam {$shellCode} (0% WebGL/parallax, tabel O(1) cursor), sedangkan Zona B mengeksekusi {$uxCode} melalui Arsitektur Hybrid Island 3-Lapis (Forever-Cached data-props, rig GPU/WebGL 60–120fps, HUD Flux UI ramah SEO/WCAG, serta 3-Tier Adaptive GPU Fallback).",
         ];
     }
 
@@ -952,16 +1154,23 @@ class PosDualZoneFrontendAndSaasCatalog
 
         $zoneA = $dual['zone_a_operational_backstage'] ?? [];
         $zoneB = $dual['zone_b_public_frontstage'] ?? [];
+        $hybrid = $dual['hybrid_island_scrollytelling_architecture']
+            ?? self::hybridIslandScrollytellingArchitecture((string) ($zoneB['public_ux_preset_code'] ?? self::UX_F2), $loc);
+        $feBlueprint = $dual['frontend_execution_blueprint_contract'] ?? [];
+        $choreography = $zoneB['scrollytelling_choreography'] ?? [];
 
-        $md = "# PROJECT OS v10.0 — DUAL-ZONE UI ARCHITECTURE, 5 IRON ANIMATION LAWS & UNIVERSAL INPUT HYGIENE\n\n";
+        $md = "# PROJECT OS v12.1 — DUAL-ZONE UI ARCHITECTURE, 3-LAYER HYBRID ISLAND SCROLLYTELLING & INPUT HYGIENE\n\n";
         $md .= "## 1. Dual-Zone UI Separation Policy\n";
         $md .= "- **Zone A — Operational Back-Stage (`{$zoneA['ui_variant_code']}` / `{$zoneA['navigation_shell']}`)**:\n";
         $md .= "  - Policy: `{$zoneA['animation_policy']}`\n";
         $md .= "  - Surfaces: Admin Filament v5, Cashier POS, Clinical SOAP EMR, Double-Entry Ledger, Inventory Dispatch.\n";
-        $md .= "  - Strict Ban: ZERO scrollytelling, ZERO parallax, ZERO scroll-hijacking on operational workspaces.\n";
+        $md .= "  - Strict Ban: ZERO scrollytelling, ZERO WebGL canvas, ZERO parallax, ZERO scroll-hijacking on operational workspaces.\n";
         $md .= "- **Zone B — Public Front-Stage (`{$zoneB['public_ux_preset_code']}` — {$zoneB['name']})**:\n";
         $md .= "  - Summary: {$zoneB['summary']}\n";
         $md .= "  - Tech Blueprint: `{$zoneB['tech_blueprint']}`\n";
+        if (! empty($choreography['camera_or_stage_curve'])) {
+            $md .= "  - Scrollytelling Choreography: `{$choreography['camera_or_stage_curve']}` | HUD Event Bus: `{$choreography['hud_event_bridge']}`\n";
+        }
         $md .= "  - Surfaces: Landing Page, Public Catalog, Donation Campaign, Event Showcase, Verified Aniwall (`PRIMITIVE_VERIFIED_SOCIAL_PROOF`).\n\n";
 
         $md .= "## 2. Five Iron Laws of Enterprise Anti-Slop Animation\n";
@@ -973,7 +1182,35 @@ class PosDualZoneFrontendAndSaasCatalog
         $md .= "- **Strict Email Input**: Regex `{$hygiene['email']['allowed_chars_regex']}` — strip illegal characters & spaces on keystroke/paste + RFC validation.\n";
         $md .= "- **Regional Thousand Separator**: ID/EU (`1.500.000` dot `.`), EN/US/Global (`1,500,000` comma `,`) with `tabular-nums` alignment.\n";
         $md .= "- **Country Zone Phone Input**: Source `{$hygiene['phone_country_zone']['source_of_truth']}` — **immediately strip leading `0` on first keystroke** (`0812...` -> `812...`) and store canonical E.164 (`+62812...`).\n";
-        $md .= "- **Anti-Slop Geometry**: Sharp/subtle corners (`rounded-none`, `rounded-xs`, `rounded-sm`, max `rounded-md`), ZERO `rounded-full`, ZERO multi-color gradients, ZERO `window.alert()`, 100% Light & Dark WCAG AA/AAA.\n";
+        $md .= "- **Anti-Slop Geometry**: Sharp/subtle corners (`rounded-none`, `rounded-xs`, `rounded-sm`, max `rounded-md`), ZERO `rounded-full` / ZERO `rounded-xl`, ZERO multi-color gradients, ZERO `window.alert()`, 100% Light & Dark WCAG AA/AAA.\n";
+
+        $md .= "\n## 4. 3-Layer Hybrid Island Scrollytelling & WebGL2 Asset Pipeline (`{$hybrid['paradigm_name']}`)\n";
+        $md .= "- **Why Pure WebGL UI Is Rejected**: {$hybrid['why_pure_webgl_is_rejected']}\n";
+        $md .= "- **Layer 1 — Backend & Filament v5 3D/Scrolly Asset CMS**:\n";
+        $md .= "  - ULID Table: `{$hybrid['layer_1_backend_3d_asset_cms']['ulid_table']}` (`CHAR(26)` ULID PK) managed via `{$hybrid['layer_1_backend_3d_asset_cms']['filament_v5_resource']}`.\n";
+        $md .= "  - Queued Transcoder: `{$hybrid['layer_1_backend_3d_asset_cms']['queued_compression_job']}`.\n";
+        $md .= "  - Zero-SQL Scroll Payload: `{$hybrid['layer_1_backend_3d_asset_cms']['zero_db_scroll_hydration']}`.\n";
+        $md .= "- **Layer 2 — Single-Canvas Scrollytelling / R3F Engine**:\n";
+        $md .= "  - Mount: `{$hybrid['layer_2_single_canvas_scrollytelling_engine']['mount_topology']}` with `dpr={$hybrid['layer_2_single_canvas_scrollytelling_engine']['canvas_budget']['dpr_clamp']}` & `{$hybrid['layer_2_single_canvas_scrollytelling_engine']['canvas_budget']['merged_postprocessing_pass']}`.\n";
+        foreach (($hybrid['layer_2_single_canvas_scrollytelling_engine']['five_60fps_engineering_pillars'] ?? []) as $pKey => $pDesc) {
+            $md .= "  - **[{$pKey}]**: {$pDesc}\n";
+        }
+        $md .= "- **Layer 3 — Accessible Livewire 4 / Flux UI HUD & Bidirectional Event Bridge**:\n";
+        $md .= "  - Wrapper: `{$hybrid['layer_3_accessible_hud_and_event_bridge']['hud_wrapper_classes']}` | Surface: `{$hybrid['layer_3_accessible_hud_and_event_bridge']['brutalist_hud_surface_contract']['geometry']}`.\n";
+        $md .= "  - Waypoint Event Bus: `{$hybrid['layer_3_accessible_hud_and_event_bridge']['bidirectional_custom_events']['hud_to_canvas_waypoint']}`.\n";
+        $md .= "- **Adaptive 3-Tier GPU Degradation Governor (`{$hybrid['adaptive_gpu_degradation_governor']['governor_code']}`)**:\n";
+        foreach (($hybrid['adaptive_gpu_degradation_governor']['tiers'] ?? []) as $tierRow) {
+            $md .= "  - **[{$tierRow['tier']}]** ({$tierRow['condition']}): {$tierRow['behavior']}\n";
+        }
+
+        if (! empty($feBlueprint['core_web_vitals_and_frame_budget'])) {
+            $cwv = $feBlueprint['core_web_vitals_and_frame_budget'];
+            $md .= "\n## 5. Deterministic Frontend Execution & Core Web Vitals Budget\n";
+            $md .= "- **FCP**: `{$cwv['fcp_budget']}` | **LCP**: `{$cwv['lcp_budget']}` | **CLS**: `{$cwv['cls_budget']}` | **INP**: `{$cwv['inp_budget']}` | **JS Initial Chunk**: `{$cwv['initial_js_chunk_cap']}`.\n";
+            foreach (($feBlueprint['memory_and_lifecycle_cleanup_rules'] ?? []) as $memRule) {
+                $md .= "- **Lifecycle Rule**: {$memRule}\n";
+            }
+        }
 
         return $md;
     }

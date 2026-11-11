@@ -1376,11 +1376,11 @@
                             </div>
                         @endif
 
-                        <!-- v10.0 ZONE B PUBLIC FRONT-STAGE UX SELECTOR (UX_F1..UX_F6) + 5 IRON ANIMATION LAWS -->
-                        <div class="pt-2.5 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+                        <!-- v12.1 ZONE B PUBLIC FRONT-STAGE UX SELECTOR (UX_F1..UX_F6) + 3-LAYER HYBRID ISLAND SCROLLYTELLING CONTRACT -->
+                        <div class="pt-2.5 border-t border-zinc-200 dark:border-zinc-800 space-y-2.5">
                             <div class="flex flex-wrap items-center justify-between gap-2">
                                 <div class="font-mono text-[10px] font-black uppercase text-cyan-900 dark:text-cyan-300">
-                                    V10.0 ZONE B — PUBLIC FRONT-STAGE UX PRESET (6 ARCHETYPES • ZERO-JANK 60FPS GPU)
+                                    V12.1 ZONE B — PUBLIC FRONT-STAGE &amp; 3-LAYER HYBRID ISLAND SCROLLYTELLING (60–120FPS GPU)
                                 </div>
                                 <span class="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black">
                                     PUBLIC UX: {{ $publicUxPreset }}
@@ -1399,6 +1399,45 @@
                                     </button>
                                 @endforeach
                             </div>
+
+                            @php
+                                $activeStudioPubUx = ($publicUxPresets ?? [])[$publicUxPreset] ?? reset($publicUxPresets);
+                                $studioChoreo = is_array($activeStudioPubUx) ? ($activeStudioPubUx['scrollytelling_choreography'] ?? []) : [];
+                                $studioStages = is_array($activeStudioPubUx) ? ($activeStudioPubUx['miniature_wireframe_stages'] ?? []) : [];
+                            @endphp
+                            @if(!empty($studioChoreo) || !empty($studioStages))
+                                <div class="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2 font-mono text-[10px]">
+                                    <div class="flex flex-wrap items-center justify-between gap-1.5">
+                                        <span class="font-black text-zinc-950 dark:text-zinc-100">
+                                            🧊 3-LAYER HYBRID ISLAND OVERLAY: L1 Filament 3D/Asset CMS (0 SQL) • L2 Single-Canvas GPU/WebGL • L3 Flux UI HUD (z-10 SEO Safe)
+                                        </span>
+                                        <span class="px-1.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 text-[9px] font-black">
+                                            AUTO 3-TIER GPU FALLBACK
+                                        </span>
+                                    </div>
+                                    @if(!empty($studioStages))
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                                            @foreach($studioStages as $st)
+                                                <div class="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none">
+                                                    <div class="flex items-center justify-between text-[9px] font-black text-emerald-950 dark:text-emerald-300">
+                                                        <span>STEP {{ $st['step'] ?? '01' }}</span>
+                                                        <span>{{ $st['metric'] ?? '' }}</span>
+                                                    </div>
+                                                    <div class="text-[10px] font-sans font-bold text-zinc-900 dark:text-zinc-200 mt-0.5">
+                                                        {{ ($outputLocale ?? 'id') === 'en' ? ($st['label_en'] ?? '') : ($st['label_id'] ?? '') }}
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    @if(!empty($studioChoreo['camera_or_stage_curve']))
+                                        <div class="text-[9px] text-zinc-700 dark:text-zinc-300 space-y-0.5 pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                                            <div><strong class="text-zinc-950 dark:text-zinc-100">RIG:</strong> {{ $studioChoreo['camera_or_stage_curve'] }}</div>
+                                            <div><strong class="text-zinc-950 dark:text-zinc-100">HUD EVENT BUS:</strong> {{ $studioChoreo['hud_event_bridge'] ?? '' }}</div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                     </div>
 

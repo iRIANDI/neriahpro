@@ -44,11 +44,11 @@ class BlueprintSlopScannerService
             'label' => 'Primary Key 100% Strict ULID & Keyset Cursor O(1)',
             'passed' => empty($nonUlidTables) && count($tables) > 0,
             'detail' => empty($nonUlidTables)
-                ? count($tables) . ' tabel terverifikasi menggunakan CHAR(26) ULID & ON DELETE RESTRICT.'
-                : 'Tabel belum ULID: ' . implode(', ', $nonUlidTables),
+                ? count($tables).' tabel terverifikasi menggunakan CHAR(26) ULID & ON DELETE RESTRICT.'
+                : 'Tabel belum ULID: '.implode(', ', $nonUlidTables),
         ];
         if (! empty($nonUlidTables)) {
-            $violations[] = 'Tabel berikut belum memakai PK ULID: ' . implode(', ', $nonUlidTables);
+            $violations[] = 'Tabel berikut belum memakai PK ULID: '.implode(', ', $nonUlidTables);
         }
 
         // Check 2: Sectoral UI/UX Archetype Contract
@@ -115,7 +115,7 @@ class BlueprintSlopScannerService
             'passed' => empty($slopFound),
             'detail' => empty($slopFound)
                 ? 'Bebas dari instruksi CDN pihak ketiga, dialog browser murahan, dan kapsul rounded-full.'
-                : 'Ditemukan referensi mencurigakan: ' . implode(', ', $slopFound),
+                : 'Ditemukan referensi mencurigakan: '.implode(', ', $slopFound),
         ];
 
         // Check 6: Day-2 Production Layers (Thermal/A4 Print, Tenant Zero-State, Snapshot, Staged Import, 4-Lane Queue & Private Disk)
@@ -176,18 +176,18 @@ class BlueprintSlopScannerService
             $violations[] = 'Kompilasi ulang blueprint ke v7.0 untuk menyertakan 5 Elemen Dunia Nyata & 15 Pilar Architectural Freeze.';
         }
 
-        // Check 9: Project OS v10.0 — Dual-Zone UI Architecture (Zone A Operational + Zone B Public UX), 5 Iron Animation Laws & Universal Input Hygiene
+        // Check 9: Project OS v10.0+ — Dual-Zone UI Architecture (Zone A Operational + Zone B 3-Layer Hybrid Island Scrollytelling), 5 Iron Animation Laws & Universal Input Hygiene
         $hasDualZoneV10 = ! empty($schema['dual_zone_ui_contract']['zone_b_public_frontstage']['public_ux_preset_code'])
             && count((array) ($schema['dual_zone_ui_contract']['five_iron_animation_laws'] ?? [])) === 5
             && ! empty($schema['input_hygiene_contract']['phone_country_zone']['strip_leading_zero_on_first_keystroke']);
         $checks[] = [
             'id' => 'SCAN_09_DUAL_ZONE_UI_AND_INPUT_HYGIENE',
             'code' => 'SCAN_09_DUAL_ZONE_UI_AND_INPUT_HYGIENE',
-            'label' => 'Dual-Zone UI (Zone A Crisp + Zone B UX_F1..UX_F6), 5 Hukum Besi Animasi Anti-Slop & Universal Input Hygiene',
+            'label' => 'Dual-Zone UI (Zone A Crisp + Zone B 3-Layer Hybrid Island Scrollytelling UX_F1..UX_F6), 5 Hukum Besi Animasi Anti-Slop & Universal Input Hygiene',
             'passed' => $hasDualZoneV10,
             'detail' => $hasDualZoneV10
-                ? 'Zone B ' . ($schema['dual_zone_ui_contract']['zone_b_public_frontstage']['public_ux_preset_code'] ?? 'UX_F2') . ', 5 Hukum Besi Animasi GPU/CLS=0, & Hygiene Email/Ribuan/Country-Zone (hapus 0 depan) aktif.'
-                : 'Kompilasi ulang blueprint ke v10.0 untuk menyertakan Dual-Zone UI Contract & Universal Input Hygiene.',
+                ? 'Zone B '.($schema['dual_zone_ui_contract']['zone_b_public_frontstage']['public_ux_preset_code'] ?? 'UX_F2').' (3-Layer Hybrid Island Overlay + 3-Tier GPU Fallback), 5 Hukum Besi Animasi GPU/CLS=0, & Hygiene Email/Ribuan/Country-Zone aktif.'
+                : 'Kompilasi ulang blueprint ke v10.0+ untuk menyertakan Dual-Zone UI Contract & Universal Input Hygiene.',
         ];
         if (! $hasDualZoneV10) {
             $violations[] = 'Kompilasi ulang blueprint ke v10.0 untuk menyertakan Dual-Zone UI (Zone A + Zone B UX_F1..F6) & Universal Input Hygiene.';
@@ -198,7 +198,7 @@ class BlueprintSlopScannerService
 
         $autoFixPrompt = empty($violations)
             ? "✅ Blueprint '{$blueprint->nama_bisnis}' LULUS 100% audit kepatuhan Project OS v7.0 (15 Master Pillars Architectural Freeze, Zero Drift & Zero Slop). Lanjutkan eksekusi via Topological Sub-Chunked Prompts Part 1.0–7.0."
-            : "# AUTO-FIX BLUEPRINT DRIFT PROMPT\nPerbaiki seluruh penyimpangan berikut pada proyek `{$blueprint->nama_bisnis}`:\n- " . implode("\n- ", $violations);
+            : "# AUTO-FIX BLUEPRINT DRIFT PROMPT\nPerbaiki seluruh penyimpangan berikut pada proyek `{$blueprint->nama_bisnis}`:\n- ".implode("\n- ", $violations);
 
         if ($recordAudit) {
             AuditLog::record(
@@ -243,6 +243,7 @@ class BlueprintSlopScannerService
             ['pattern' => '/\bwire:poll(?:\.(?:[1-9]|[12][0-9])s|\.\d+ms)?(?![0-9a-zA-Z\.])/', 'rule' => 'HIGH_FREQ_WIRE_POLL_SLOP', 'fix' => 'DILARANG menggunakan `wire:poll` frekuensi tinggi (`< 30s`) yang membebani CPU PostgreSQL; ganti ke Event-Driven WebSocket (`Laravel Reverb` / `Soketi`) pada Private Tenant Channel `organization.{ulid}.{module}`!'],
             ['pattern' => '/(?:@keyframes\s+[a-zA-Z0-9_\-]+\s*\{[\s\S]{0,600}?\b(?:top|left|right|bottom|margin-top|margin-left|width|height)\s*:|\btransition\s*:\s*[^;{}]*\b(?:top|left|right|bottom|margin|width|height)\b)/i', 'rule' => 'LAYOUT_REFLOW_ANIMATION_SLOP', 'fix' => 'Patuhi 5 Hukum Besi Animasi Anti-Slop: DILARANG menganimasikan `top/left/width/height/margin` di `@keyframes` maupun `transition:`; gunakan khusus GPU Compositor (`transform: translate3d(...)`, `scale(...)`, `opacity`) + `@media (prefers-reduced-motion: reduce)`!'],
             ['pattern' => '/\bFilament\\\\Forms\\\\(?:Form|Get|Set)\b|\bLocaleSwitcher::make\s*\(/', 'rule' => 'SYNTAX_OR_LOCALE_SWITCHER_DRIFT_2026', 'fix' => 'Patuhi `.agents/SYNTAX_LOCK_2026.md`: gunakan `Filament\\Schemas\\Schema`, `Filament\\Schemas\\Components\\Utilities\\Get`/`Set`, dan ganti `LocaleSwitcher::make()` dengan `TranslatableTabs::make()` in-place!'],
+            ['pattern' => '/\bdpr\s*=\s*\{\s*window\.devicePixelRatio\s*\}|\bsetPixelRatio\s*\(\s*window\.devicePixelRatio\s*\)/', 'rule' => 'WEBGL_UNBOUNDED_DPR_GPU_THROTTLE', 'fix' => 'Patuhi Kontrak Hybrid Island WebGL2 Project OS: batasi rasio piksel GPU maksimal `dpr={[1, 1.5]}` atau `Math.min(window.devicePixelRatio, 1.5)` agar layar Retina/Mobile 3x tidak mengalami thermal throttling <20 FPS!'],
         ];
 
         foreach ($rules as $r) {
@@ -260,14 +261,14 @@ class BlueprintSlopScannerService
         $autoFixPrompt = empty($violations)
             ? '✅ Kode bersih 100% sesuai standar Anti-Slop & Strict ULID Project OS.'
             : "# PROJECT OS SLOP SCANNER — AUTO-FIX PROMPT\nTemuan pelanggaran standar pada kode Anda yang WAJIB segera diperbaiki:\n"
-                . implode("\n", array_map(fn ($v) => "- **[{$v['rule']}]**: {$v['fix']}", $violations))
-                . "\n\nTerapkan perubahan secara surgical diff dan pastikan seluruh pengujian tetap hijau.";
+                .implode("\n", array_map(fn ($v) => "- **[{$v['rule']}]**: {$v['fix']}", $violations))
+                ."\n\nTerapkan perubahan secara surgical diff dan pastikan seluruh pengujian tetap hijau.";
 
         if ($recordAudit) {
             AuditLog::record(
                 action: 'code_snippet_slop_scanned',
                 newValues: ['score' => $score, 'violations_count' => count($violations)],
-                description: "Slop Scanner memeriksa potongan kode: Skor {$score}/100 (" . count($violations) . " temuan).",
+                description: "Slop Scanner memeriksa potongan kode: Skor {$score}/100 (".count($violations).' temuan).',
                 eventCategory: 'slop_audit'
             );
         }

@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use App\Services\Security\DocumentThreatSanitizerService;
-
 /**
  * PosAgentShieldAndCoDesignCatalog — Project OS v9.0 Ultimate
  *
@@ -267,7 +265,7 @@ class PosAgentShieldAndCoDesignCatalog
         $tableChunks = array_chunk($tables, max(1, (int) ceil(count($tables) / max(1, count($divisions)))));
 
         foreach ($divisions as $idx => $div) {
-            $moduleCode = (string) ($div['division_code'] ?? ('MOD_DIV_0' . ($idx + 1)));
+            $moduleCode = (string) ($div['division_code'] ?? ('MOD_DIV_0'.($idx + 1)));
             $saved = $existingByKey[$moduleCode] ?? [];
             $menus = array_values(array_filter(
                 (array) ($div['menus'] ?? []),
@@ -283,7 +281,7 @@ class PosAgentShieldAndCoDesignCatalog
                 $tableChunks[$idx] ?? array_slice($tables, 0, 3)
             ));
             $mappedStates = array_values(array_map(
-                static fn ($sm): string => (string) (($sm['entity'] ?? 'Entity') . ': ' . implode(' -> ', array_slice((array) ($sm['states'] ?? []), 0, 4))),
+                static fn ($sm): string => (string) (($sm['entity'] ?? 'Entity').': '.implode(' -> ', array_slice((array) ($sm['states'] ?? []), 0, 4))),
                 array_slice($stateMachines, $idx % max(1, count($stateMachines)), 2)
             ));
 
@@ -310,8 +308,8 @@ class PosAgentShieldAndCoDesignCatalog
                 'module_code' => $moduleCode,
                 'is_custom_client_addition' => false,
                 'title' => $div['division_name'] ?? [
-                    'id' => 'Divisi Operasional ' . ($idx + 1),
-                    'en' => 'Operational Division ' . ($idx + 1),
+                    'id' => 'Divisi Operasional '.($idx + 1),
+                    'en' => 'Operational Division '.($idx + 1),
                 ],
                 'localized_title' => (string) ($div['division_name'][$loc] ?? $div['division_name']['id'] ?? $moduleCode),
                 'status' => $status,
@@ -322,7 +320,7 @@ class PosAgentShieldAndCoDesignCatalog
                     'wireframe_widgets' => ! empty($panePreview['widgets']) ? $panePreview['widgets'] : array_slice($menuLabels, 0, 4),
                     'included_menus' => $menuLabels,
                     'estimated_cost_idr' => $moduleCostIdr,
-                    'formatted_cost_idr' => 'Rp ' . number_format($moduleCostIdr, 0, ',', '.'),
+                    'formatted_cost_idr' => 'Rp '.number_format($moduleCostIdr, 0, ',', '.'),
                     'estimated_days' => $moduleDays,
                 ],
                 'architect_technical_lens' => [
@@ -332,7 +330,7 @@ class PosAgentShieldAndCoDesignCatalog
                         static fn ($l): string => is_array($l) ? (string) ($l['target'] ?? $l['mechanism'] ?? 'SELECT ... FOR UPDATE') : (string) $l,
                         $locks
                     )), 0, 2),
-                    'websocket_channel' => 'organization.{ulid}.' . strtolower($moduleCode),
+                    'websocket_channel' => 'organization.{ulid}.'.strtolower($moduleCode),
                 ],
                 'annotations' => array_values((array) ($saved['annotations'] ?? [])),
                 'extra_man_hours' => $extraHours,
@@ -366,14 +364,14 @@ class PosAgentShieldAndCoDesignCatalog
                     'wireframe_widgets' => (array) ($cm['client_business_lens']['wireframe_widgets'] ?? [$titleArr[$loc] ?? 'Custom Feature']),
                     'included_menus' => [$titleArr[$loc] ?? 'Custom Feature'],
                     'estimated_cost_idr' => $costIdr,
-                    'formatted_cost_idr' => 'Rp ' . number_format($costIdr, 0, ',', '.'),
+                    'formatted_cost_idr' => 'Rp '.number_format($costIdr, 0, ',', '.'),
                     'estimated_days' => $days,
                 ],
                 'architect_technical_lens' => [
                     'ulid_tables' => (array) ($cm['architect_technical_lens']['ulid_tables'] ?? ['custom_module_records (ULID)']),
                     'state_machines' => ['CustomFlow: DRAFT -> SUBMITTED -> APPROVED -> COMPLETED'],
                     'concurrency_locks' => ['Atomic DB::transaction + Row-Level Pessimistic Lock'],
-                    'websocket_channel' => 'organization.{ulid}.custom_' . ($cIdx + 1),
+                    'websocket_channel' => 'organization.{ulid}.custom_'.($cIdx + 1),
                 ],
                 'annotations' => array_values((array) ($cm['annotations'] ?? [])),
                 'extra_man_hours' => $extraHours,
@@ -547,11 +545,11 @@ class PosAgentShieldAndCoDesignCatalog
                     ],
                     [
                         'task_code' => 'TSK-304',
-                        'role' => 'Public Front-Stage & Motion Engineer',
+                        'role' => 'Public Front-Stage, WebGL & Motion Engineer',
                         'title' => $loc === 'en'
-                            ? "Build Zone B Public Front-Stage [{$publicUxCode}: {$publicUxName}] + PRIMITIVE_VERIFIED_SOCIAL_PROOF Aniwall obeying 5 Iron GPU Animation Laws (0% CDN, CLS=0.00)"
-                            : "Bangun Zona B Public Front-Stage [{$publicUxCode}: {$publicUxName}] + PRIMITIVE_VERIFIED_SOCIAL_PROOF Aniwall patuh 5 Hukum Animasi GPU (0% CDN, CLS=0.00)",
-                        'deliverable' => "Zone B {$publicUxCode} + VerifiedTestimonialAniwall",
+                            ? "Build 3-Layer Hybrid Island Zone B [{$publicUxCode}: {$publicUxName}] (Forever-Cached data-props, 60–120fps GPU/WebGL Rig, Flux UI HUD pos:camera-waypoint, 3-Tier GPU Fallback) + PRIMITIVE_VERIFIED_SOCIAL_PROOF Aniwall"
+                            : "Bangun Zona B Hybrid Island 3-Lapis [{$publicUxCode}: {$publicUxName}] (Forever-Cached data-props, Rig GPU/WebGL 60–120fps, HUD Flux UI pos:camera-waypoint, Fallback GPU 3-Tingkat) + PRIMITIVE_VERIFIED_SOCIAL_PROOF Aniwall",
+                        'deliverable' => "Zone B {$publicUxCode} Hybrid Island + VerifiedTestimonialAniwall",
                     ],
                     [
                         'task_code' => 'TSK-305',
@@ -634,4 +632,3 @@ class PosAgentShieldAndCoDesignCatalog
         ];
     }
 }
-

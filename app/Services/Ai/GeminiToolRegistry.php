@@ -747,7 +747,7 @@ class GeminiToolRegistry
             ],
             [
                 'name' => 'configure_dual_zone_public_ux_preset',
-                'description' => 'Inspeksi atau simpan konfigurasi Dual-Zone UI Architecture Project OS v10.0: Zone A Operational Back-Stage (Linear/Stripe Crisp 36 UIs, 0% parallax) + Zone B Public Front-Stage (6 Preset Advanced UX: UX_F1_SCROLLYTELLING, UX_F2_KINETIC_ANIWALL, UX_F3_SPATIAL_SHOWCASE, UX_F4_LOOKBOOK_COMMERCE, UX_F5_TRUST_SIMULATOR, UX_F6_GAMIFIED_PATHWAY), 5 Hukum Besi Animasi Anti-Slop (GPU translate3d/opacity, CLS 0.00, 0% CDN), serta Universal Input Hygiene (email karakter ketat, pemisah ribuan regional, country_zones.php hapus 0 depan).',
+                'description' => 'Inspeksi atau simpan konfigurasi Dual-Zone UI & 3-Layer Hybrid Island Scrollytelling Blueprint Project OS: Zone A Operational Back-Stage (Linear/Stripe Crisp 36 UIs, 0% WebGL/parallax) + Zone B Public Front-Stage (6 Preset Advanced UX: UX_F1_SCROLLYTELLING Spline Camera, UX_F2_KINETIC_ANIWALL, UX_F3_SPATIAL_SHOWCASE Hybrid WebGL2 R3F + BVH + Draco/KTX2, UX_F4_LOOKBOOK_COMMERCE, UX_F5_TRUST_SIMULATOR, UX_F6_GAMIFIED_PATHWAY), Arsitektur Hybrid Island 3-Lapis (Filament v5 3D Asset CMS + Single-Canvas R3F/GSAP scrub:1.2 + Flux UI HUD pos:camera-waypoint + 3-Tier Adaptive GPU Fallback), 5 Hukum Besi Animasi Anti-Slop, serta Universal Input Hygiene.',
                 'parameters' => [
                     'type' => 'OBJECT',
                     'properties' => [

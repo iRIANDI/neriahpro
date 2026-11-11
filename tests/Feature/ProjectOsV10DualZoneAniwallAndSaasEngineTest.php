@@ -214,13 +214,56 @@ class ProjectOsV10DualZoneAniwallAndSaasEngineTest extends TestCase
             $previewF3->json('live_commercial_sync.scope_hash_short')
         );
 
-        // Verify Anti-Slop Scanner catches layout-reflow animation violations (Iron Law #2)
+        // Verify Anti-Slop Scanner catches layout-reflow animation violations (Iron Law #2) & unbounded WebGL DPR
         $slopReport = app(BlueprintSlopScannerService::class)->scanCodeSnippet(
-            '.hero-card { transition: top 0.4s ease, left 0.4s ease, width 0.3s; } @keyframes badMove { 0% { top: 0px; } 100% { top: 50px; } }',
+            '.hero-card { transition: top 0.4s ease, left 0.4s ease, width 0.3s; } @keyframes badMove { 0% { top: 0px; } 100% { top: 50px; } } <Canvas dpr={window.devicePixelRatio}>',
             false
         );
         $violationCodes = array_column($slopReport['findings'] ?? $slopReport['violations'] ?? [], 'code');
         $this->assertContains('LAYOUT_REFLOW_ANIMATION_SLOP', $violationCodes);
+        $this->assertContains('WEBGL_UNBOUNDED_DPR_GPU_THROTTLE', $violationCodes);
+
+        // Verify v12.1 3-Layer Hybrid Island Scrollytelling & Deterministic Frontend Execution Blueprint Contract
+        $webglMatch = PosDualZoneFrontendAndSaasCatalog::autoMatchPublicUxPresetForSectorAndIdea(
+            'SECTOR_02_HOSPITALITY_SPACE',
+            'Interactive WebGL React Three Fiber glb ktx2 mesh transmission showcase'
+        );
+        $this->assertSame(PosDualZoneFrontendAndSaasCatalog::UX_F3, $webglMatch['code']);
+
+        $splineMatch = PosDualZoneFrontendAndSaasCatalog::autoMatchPublicUxPresetForSectorAndIdea(
+            'SECTOR_04_FINTECH_LEDGER',
+            'Halaman depan narasi scroll dengan camera spline catmullrom bertahap'
+        );
+        $this->assertSame(PosDualZoneFrontendAndSaasCatalog::UX_F1, $splineMatch['code']);
+
+        $hybridSchema = ProjectOsBlueprintCompilerService::compileSchemaFromPayload([
+            'name' => 'Hybrid Island Spatial Flagship',
+            'sector_code' => 'SECTOR_02_HOSPITALITY_SPACE',
+            'public_ux_preset' => PosDualZoneFrontendAndSaasCatalog::UX_F3,
+            'primitive_codes' => ['PRIM_BOOKING_CALENDAR', 'PRIM_PAYMENT_GATEWAY'],
+        ]);
+        $this->assertSame(
+            '3_LAYER_HYBRID_ISLAND_OVERLAY',
+            $hybridSchema['hybrid_island_scrollytelling_architecture']['paradigm_name'] ?? null
+        );
+        $this->assertSame(
+            'pos_showcase_3d_assets',
+            $hybridSchema['hybrid_island_scrollytelling_architecture']['layer_1_backend_3d_asset_cms']['ulid_table'] ?? null
+        );
+        $this->assertCount(
+            3,
+            $hybridSchema['hybrid_island_scrollytelling_architecture']['adaptive_gpu_degradation_governor']['tiers'] ?? []
+        );
+        $this->assertSame(
+            '12.1.0-FRONTEND-BLUEPRINT-LOCK',
+            $hybridSchema['frontend_execution_blueprint_contract']['contract_version'] ?? null
+        );
+
+        $renderedMd = PosDualZoneFrontendAndSaasCatalog::renderDualZoneAndInputHygieneMarkdown($hybridSchema, 'en');
+        $this->assertStringContainsString('3_LAYER_HYBRID_ISLAND_OVERLAY', $renderedMd);
+        $this->assertStringContainsString('pos_showcase_3d_assets', $renderedMd);
+        $this->assertStringContainsString('AUTO_3_TIER_GPU_FALLBACK', $renderedMd);
+        $this->assertStringContainsString('Deterministic Frontend Execution & Core Web Vitals Budget', $renderedMd);
     }
 
     public function test_cryptographically_verified_testimonials_auto_issued_on_bast_and_phase6_mcp_completion(): void

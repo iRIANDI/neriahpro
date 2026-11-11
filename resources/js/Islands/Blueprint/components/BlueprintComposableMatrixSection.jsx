@@ -17,7 +17,12 @@ import {
   FileCode,
   Lightbulb,
 } from 'lucide-react';
-import { PUBLIC_UX_PRESETS_V10, resolveDefaultPublicUxForSector } from '../constants/blueprintConstants';
+import {
+  PUBLIC_UX_PRESETS_V10,
+  HYBRID_ISLAND_3_LAYERS,
+  ADAPTIVE_GPU_GOVERNOR_TIERS,
+  resolveDefaultPublicUxForSector,
+} from '../constants/blueprintConstants';
 
 export default function BlueprintComposableMatrixSection({
   matrixCatalog,
@@ -66,6 +71,9 @@ export default function BlueprintComposableMatrixSection({
   initialData,
   currentTrack = 'retail',
 }) {
+  const [scrollyWaypointIdx, setScrollyWaypointIdx] = React.useState(0);
+  const [activeGpuGovernorTier, setActiveGpuGovernorTier] = React.useState('TIER_1_HIGH');
+
   return (
     <>
         {matrixCatalog.sectors.length > 0 && (() => {
@@ -648,22 +656,28 @@ export default function BlueprintComposableMatrixSection({
                             )}
                           </div>
 
-                          {/* v10.0 ZONE B — PUBLIC FRONT-STAGE UX VISUAL SELECTOR (UX_F1..UX_F6) + 5 IRON ANTI-SLOP ANIMATION LAWS */}
+                          {/* v12.1 ZONE B — PUBLIC FRONT-STAGE UX & 3-LAYER HYBRID ISLAND SCROLLYTELLING BLUEPRINT */}
                           {(() => {
                             const activePubUxCode = formData.publicUxPreset || resolveDefaultPublicUxForSector(resolvedSectorKey);
+                            const activePubUxObj = PUBLIC_UX_PRESETS_V10.find((u) => u.code === activePubUxCode) || PUBLIC_UX_PRESETS_V10[0];
+                            const activeWaypoints = activePubUxObj.waypoints || [];
+                            const safeWpIdx = Math.min(scrollyWaypointIdx, Math.max(0, activeWaypoints.length - 1));
+                            const currentWaypoint = activeWaypoints[safeWpIdx] || null;
+                            const activeTierObj = ADAPTIVE_GPU_GOVERNOR_TIERS.find((g) => g.id === activeGpuGovernorTier) || ADAPTIVE_GPU_GOVERNOR_TIERS[0];
+
                             return (
-                              <div className="p-3.5 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none space-y-2.5">
+                              <div className="p-3.5 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none space-y-3">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                   <div>
                                     <div className="font-mono text-[10px] font-black uppercase text-emerald-950 dark:text-emerald-300">
                                       ✨ {lang === 'en'
-                                        ? 'ZONE B — PUBLIC FRONT-STAGE UX PRESET (6 ADVANCED ARCHETYPES • ZERO-JANK 60FPS)'
-                                        : 'ZONE B — PILIHAN UX HALAMAN PUBLIK / DEPAN (6 PRESET INTERAKTIF • ZERO-JANK 60FPS)'}
+                                        ? 'ZONE B — PUBLIC FRONT-STAGE UX & 3-LAYER HYBRID ISLAND SCROLLYTELLING BLUEPRINT'
+                                        : 'ZONE B — CETAK BIRU UX PUBLIK & ARSITEKTUR HYBRID ISLAND SCROLLYTELLING 3-LAPIS'}
                                     </div>
                                     <p className="text-[11px] text-zinc-700 dark:text-zinc-300 mt-0.5">
                                       {lang === 'en'
-                                        ? 'Dual-Zone Architecture strictly separates Zone A Back-Stage (zero heavy animation) from Zone B Public Front-Stage (GPU translate3d, CLS = 0.00, 100% local @vite).'
-                                        : 'Arsitektur Dual-Zone memisahkan tegas Zone A Operasional Staf (tanpa animasi berat) dari Zone B Halaman Publik Klien (GPU translate3d, CLS = 0.00, 100% lokal @vite).'}
+                                        ? 'Separates Zone A Operational Back-Stage (0% WebGL/parallax) from Zone B Public Showcase: Forever-Cached 3D/Asset CMS + Single-Canvas 60–120fps GPU/WebGL Rig + SEO-Safe Flux UI HUD.'
+                                        : 'Memisahkan tegas Zona A Operasional Staf (0% WebGL/parallax) dari Zona B Halaman Publik: CMS Aset 3D Forever-Cache + Single-Canvas Rig GPU/WebGL 60–120fps + HUD Flux UI Ramah SEO.'}
                                     </p>
                                   </div>
                                   <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[9px] font-black uppercase rounded-none">
@@ -681,6 +695,7 @@ export default function BlueprintComposableMatrixSection({
                                         key={ux.code}
                                         type="button"
                                         onClick={() => {
+                                          setScrollyWaypointIdx(0);
                                           setFormData((prev) => {
                                             const next = { ...prev, publicUxPreset: ux.code };
                                             triggerAutoSave(next);
@@ -689,7 +704,7 @@ export default function BlueprintComposableMatrixSection({
                                         }}
                                         className={`p-2.5 text-left border rounded-none transition cursor-pointer flex flex-col justify-between ${isPubPicked
                                           ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950/90 dark:text-white dark:border-emerald-400'
-                                          : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-800'
+                                          : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 hover:border-zinc-500 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-800 dark:hover:border-zinc-600'
                                           }`}
                                       >
                                         <div>
@@ -697,7 +712,9 @@ export default function BlueprintComposableMatrixSection({
                                             <span className={isPubPicked ? 'text-emerald-400' : 'text-emerald-900 dark:text-emerald-300'}>
                                               {ux.badge}
                                             </span>
-                                            <span>{isPubPicked ? '✓ ACTIVE' : `+${ux.hours}h`}</span>
+                                            <span className={isPubPicked ? 'px-1.5 py-0.5 bg-emerald-400 text-zinc-950 font-black' : ''}>
+                                              {isPubPicked ? '✓ ACTIVE' : `+${ux.hours}h`}
+                                            </span>
                                           </div>
                                           <div className="text-xs font-black mt-1 leading-snug">{uxTitle}</div>
                                           <p className={`text-[10px] mt-1 leading-relaxed ${isPubPicked ? 'text-zinc-300' : 'text-zinc-600 dark:text-zinc-400'}`}>
@@ -712,12 +729,138 @@ export default function BlueprintComposableMatrixSection({
                                   })}
                                 </div>
 
+                                {/* 3-LAYER HYBRID ISLAND OVERLAY & INTERACTIVE WAYPOINT / GPU GOVERNOR INSPECTOR */}
+                                <div className="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2.5">
+                                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                                    <div className="font-mono text-[10px] font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                      🧊 {lang === 'en'
+                                        ? `3-LAYER HYBRID ISLAND ARCHITECTURE — DETERMINISTIC FRONTEND CONTRACT (${activePubUxObj.code})`
+                                        : `ARSITEKTUR HYBRID ISLAND 3-LAPIS — KONTRAK EKSEKUSI FRONTEND DETERMINISTIK (${activePubUxObj.code})`}
+                                    </div>
+                                    <span className="px-2 py-0.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[9px] font-black uppercase rounded-none">
+                                      {lang === 'en' ? 'ZERO PURE-WEBGL SEO LOSS' : '0% KEHILANGAN SEO & WCAG'}
+                                    </span>
+                                  </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                    {HYBRID_ISLAND_3_LAYERS.map((layer) => (
+                                      <div key={layer.code} className="p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none flex flex-col justify-between">
+                                        <div>
+                                          <div className="flex items-center justify-between gap-1 mb-1">
+                                            <span className="font-mono text-[9px] font-black text-emerald-950 dark:text-emerald-300">
+                                              {layer.code}
+                                            </span>
+                                            <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[8px] font-black">
+                                              {layer.badge}
+                                            </span>
+                                          </div>
+                                          <div className="text-[11px] font-black text-zinc-950 dark:text-zinc-100">
+                                            {lang === 'en' ? layer.title.en : layer.title.id}
+                                          </div>
+                                          <p className="text-[10px] text-zinc-700 dark:text-zinc-300 mt-1 leading-relaxed">
+                                            {lang === 'en' ? layer.detail.en : layer.detail.id}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Interactive Camera / Stage Waypoint Simulator + 3-Tier Adaptive GPU Governor */}
+                                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 pt-1">
+                                    <div className="lg:col-span-7 p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none space-y-2">
+                                      <div className="flex flex-wrap items-center justify-between gap-1">
+                                        <span className="font-mono text-[9px] font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                          🎯 {lang === 'en' ? 'SCROLLRIG WAYPOINT & HUD BRIDGE SIMULATOR' : 'SIMULATOR JALUR KAMERA SCROLL & EVENT HUD'}
+                                        </span>
+                                        {currentWaypoint && (
+                                          <span className="font-mono text-[9px] font-bold text-emerald-900 dark:text-emerald-300">
+                                            Spline XYZ: {currentWaypoint.xyz} • {currentWaypoint.metric}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="grid grid-cols-3 gap-1.5">
+                                        {activeWaypoints.map((wp, idx) => {
+                                          const isWpActive = safeWpIdx === idx;
+                                          return (
+                                            <button
+                                              key={wp.step}
+                                              type="button"
+                                              onClick={() => setScrollyWaypointIdx(idx)}
+                                              className={`p-2 border text-left rounded-none transition cursor-pointer ${isWpActive
+                                                ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950 dark:text-white dark:border-emerald-400'
+                                                : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-800'
+                                                }`}
+                                            >
+                                              <div className="flex items-center justify-between font-mono text-[9px] font-black">
+                                                <span className={isWpActive ? 'text-emerald-400' : 'text-emerald-900 dark:text-emerald-300'}>
+                                                  STEP {wp.step}
+                                                </span>
+                                                <span>{wp.xyz}</span>
+                                              </div>
+                                              <div className="text-[10px] font-black mt-0.5 truncate">
+                                                {lang === 'en' ? wp.label.en : wp.label.id}
+                                              </div>
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                      {activePubUxObj.choreography && (
+                                        <div className="pt-1 border-t border-zinc-200 dark:border-zinc-800 font-mono text-[9px] text-zinc-700 dark:text-zinc-300 space-y-0.5">
+                                          <div><span className="font-black text-zinc-950 dark:text-zinc-100">RIG:</span> {activePubUxObj.choreography.scrollRig}</div>
+                                          <div><span className="font-black text-zinc-950 dark:text-zinc-100">HUD BUS:</span> {activePubUxObj.choreography.hudBridge}</div>
+                                          <div><span className="font-black text-zinc-950 dark:text-zinc-100">PIPELINE:</span> {activePubUxObj.choreography.assetPipeline}</div>
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    <div className="lg:col-span-5 p-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none flex flex-col justify-between space-y-2">
+                                      <div>
+                                        <div className="flex items-center justify-between gap-1 mb-1.5">
+                                          <span className="font-mono text-[9px] font-black uppercase text-zinc-950 dark:text-zinc-100">
+                                            🛡️ {lang === 'en' ? '3-TIER ADAPTIVE GPU GOVERNOR' : 'GOVERNOR ADAPTIF GPU 3-TINGKAT'}
+                                          </span>
+                                          <span className="px-1.5 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[8px] font-black">
+                                            {activeTierObj.fps}
+                                          </span>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-1">
+                                          {ADAPTIVE_GPU_GOVERNOR_TIERS.map((gt) => {
+                                            const isGtActive = activeTierObj.id === gt.id;
+                                            return (
+                                              <button
+                                                key={gt.id}
+                                                type="button"
+                                                onClick={() => setActiveGpuGovernorTier(gt.id)}
+                                                className={`px-1.5 py-1.5 border font-mono text-[8px] font-black uppercase rounded-none transition cursor-pointer text-center ${isGtActive
+                                                  ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-emerald-950 dark:text-white dark:border-emerald-400'
+                                                  : 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-800'
+                                                  }`}
+                                              >
+                                                {gt.badge}
+                                              </button>
+                                            );
+                                          })}
+                                        </div>
+                                        <div className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 mt-2">
+                                          {lang === 'en' ? activeTierObj.label.en : activeTierObj.label.id}
+                                        </div>
+                                        <p className="text-[10px] text-zinc-700 dark:text-zinc-300 mt-0.5 leading-relaxed">
+                                          {lang === 'en' ? activeTierObj.desc.en : activeTierObj.desc.id}
+                                        </p>
+                                      </div>
+                                      <div className="pt-1 border-t border-zinc-200 dark:border-zinc-800 font-mono text-[8px] font-bold text-emerald-950 dark:text-emerald-300">
+                                        ✓ FCP &lt;0.8s • LCP &lt;1.5s • CLS 0.00 • Initial JS &lt;180KB (React.lazy)
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
                                 <div className="flex flex-wrap gap-1.5 pt-1 font-mono text-[9px]">
                                   {[
                                     'LAW_01: 100% Local @vite (0% CDN)',
-                                    'LAW_02: GPU translate3d/opacity Only',
+                                    'LAW_02: GPU translate3d / BVH O(log N)',
                                     'LAW_03: CLS = 0.00 Aspect Lock',
-                                    'LAW_04: prefers-reduced-motion Guard',
+                                    'LAW_04: prefers-reduced-motion + ContextLoss Guard',
                                     'LAW_05: IntersectionObserver FCP <0.8s',
                                   ].map((law) => (
                                     <span key={law} className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-800 font-bold rounded-none">

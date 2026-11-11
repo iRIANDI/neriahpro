@@ -2,87 +2,219 @@
 export const PUBLIC_UX_PRESETS_V10 = [
   {
     code: 'UX_F1_SCROLLYTELLING',
-    badge: 'UX_F1 • NARRATIVE SCROLL',
-    hours: 8,
-    name: { id: 'Narrative Scrollytelling & Sticky Reveal', en: 'Narrative Scrollytelling & Sticky Reveal' },
+    badge: 'UX_F1 • SPLINE & STICKY SCROLL',
+    hours: 14,
+    name: { id: 'Spline Camera & Sticky Narrative Scrollytelling', en: 'Spline Camera & Sticky Narrative Scrollytelling' },
     summary: {
-      id: 'Layar kanan sticky berubah mulus 60fps mengikuti narasi scroll kiri (gaya Stripe/Apple). 100% GPU translate3d & CLS = 0.00.',
-      en: 'Sticky right viewport morphs smoothly at 60fps with left narrative steps (Stripe/Apple style). 100% GPU translate3d & CLS = 0.00.',
+      id: 'Kanvas/visual utama terkunci mulus sementara scroll HTML menggerakkan jalur kamera/tahap secara inersia (scrub: 1.2) tersinkronisasi dua arah dengan HUD semantik ramah SEO.',
+      en: 'Pinned visual stage & spline camera rig scrubbed smoothly via HTML scroll proxy (scrub: 1.2 inertia) bidirectionally synced with an SEO-safe semantic HUD.',
     },
-    engine: 'Local CSS Sticky + IntersectionObserver + GPU translate3d',
+    engine: 'GSAP ScrollTrigger (scrub: 1.2) + Lenis + Hybrid HUD CustomEvent (@vite)',
+    choreography: {
+      scrollRig: 'THREE.CatmullRomCurve3 / GPU translate3d Pinning (scrub: 1.2, lerp: 0.10)',
+      hudBridge: 'CustomEvent("pos:camera-waypoint", { detail: { index, slug } })',
+      assetPipeline: 'Forever-Cached JSON data-props + Local WebP / Draco .glb + KTX2',
+    },
+    waypoints: [
+      { step: '01', label: { id: 'Hulu / Pondasi', en: 'Origin / Foundation' }, metric: '100% SHA-256', xyz: '[0, 1, 12]' },
+      { step: '02', label: { id: 'Proses & Audit', en: 'Execution & Audit' }, metric: 'CLS 0.00 • Scrub 1.2', xyz: '[-2, -6, 2]' },
+      { step: '03', label: { id: 'Dampak Nyata / BAST', en: 'Verified Handover' }, metric: 'FCP < 0.8s', xyz: '[2, -12, -8]' },
+    ],
   },
   {
     code: 'UX_F2_KINETIC_ANIWALL',
     badge: 'UX_F2 • KINETIC ANIWALL',
-    hours: 6,
-    name: { id: 'Infinite Kinetic Aniwall & Bento Grid', en: 'Infinite Kinetic Aniwall & Bento Grid' },
+    hours: 12,
+    name: { id: 'Interactive Bento Grid & Kinetic Aniwall', en: 'Interactive Bento Grid & Kinetic Aniwall' },
     summary: {
-      id: 'Dinding bukti sosial & portofolio bergerak halus dua arah (pause on hover + prefers-reduced-motion) dengan filter instan.',
-      en: 'Bidirectional smooth kinetic proof wall & bento grid (pause on hover + prefers-reduced-motion) with instant filter.',
+      id: 'Grid Bento asimetris presisi dengan sorotan border mengikuti kursor dan dinding bukti sosial terverifikasi bergerak dua arah (pause on hover + prefers-reduced-motion).',
+      en: 'Asymmetric Bento grid with cursor spotlight border and bidirectional hardware-accelerated proof wall (pause on hover + prefers-reduced-motion).',
     },
-    engine: 'Pure CSS @keyframes translate3d(x,0,0) + Bento Grid',
+    engine: 'Tailwind Bento Grid + GPU @keyframes translate3d(x,0,0) + Alpine.js',
+    choreography: {
+      scrollRig: 'Bidirectional CSS translate3d(x,0,0) + IntersectionObserver viewport gate',
+      hudBridge: 'CustomEvent("pos:aniwall-filter", { detail: { sectorCode } })',
+      assetPipeline: 'Cache::rememberForever SHA-256 BAST Receipts + Local Inline SVG',
+    },
+    waypoints: [
+      { step: 'B1', label: { id: 'Bento Telemetry Hero', en: 'Bento Telemetry Hero' }, metric: '60-120 FPS', xyz: '[0, 0, 10]' },
+      { step: 'B2', label: { id: 'Aniwall Marquee 2-Arah', en: 'Bidirectional Aniwall' }, metric: 'Pause Hover', xyz: '[0, -4, 10]' },
+      { step: 'B3', label: { id: 'Receipt Blueprint Modal', en: 'Blueprint Receipt Modal' }, metric: 'ULID Linked', xyz: '[0, -8, 10]' },
+    ],
   },
   {
     code: 'UX_F3_SPATIAL_SHOWCASE',
-    badge: 'UX_F3 • SPATIAL FLOORPLAN',
-    hours: 12,
-    name: { id: 'Interactive Spatial Map, Unit & Seat Picker', en: 'Interactive Spatial Map, Unit & Seat Picker' },
+    badge: 'UX_F3 • HYBRID WEBGL2 & BVH',
+    hours: 18,
+    name: { id: 'Hybrid Island WebGL2, BVH Raycasting & Spatial Explorer', en: 'Hybrid Island WebGL2, BVH Raycasting & Spatial Explorer' },
     summary: {
-      id: 'Eksplorasi denah lantai/kavling/meja/kamar interaktif berbasis SVG lokal dengan status ketersediaan real-time.',
-      en: 'Interactive local SVG floorplan/unit/table/room explorer with real-time availability status.',
+      id: 'Arsitektur Hybrid Island 3-Lapis kelas Awwwards: kanvas tunggal WebGL2 (refraksi MeshTransmission, BVH raycasting O(log N) di GPU, teks 3D SDF, Draco/KTX2 VRAM) + denah SVG & HUD Flux UI ramah SEO.',
+      en: 'Awwwards-grade 3-Layer Hybrid Island: single-canvas WebGL2 (MeshTransmission refraction, O(log N) GPU BVH raycast, Troika SDF 3D text, Draco/KTX2 VRAM) + SVG floorplan & SEO-safe Flux UI HUD.',
     },
-    engine: 'Local Interactive SVG Pan/Zoom + WebSocket Stock Badge',
+    engine: 'R3F + Drei (MeshTransmission, Bvh, SDF Text) + Draco .glb / KTX2 VRAM',
+    choreography: {
+      scrollRig: 'Single-Canvas R3F dpr=[1,1.5] + CatmullRomCurve3 + <Bvh firstHitOnly> O(log N)',
+      hudBridge: 'CustomEvent("pos:focus-artifact", { detail: { ulid, slotCode } })',
+      assetPipeline: 'Filament v5 3D Asset CMS -> @gltf-transform (Draco + KTX2 VRAM) -> Brotli',
+    },
+    waypoints: [
+      { step: 'S1', label: { id: 'Kanvas WebGL2 / Denah BVH', en: 'WebGL2 Canvas / BVH Map' }, metric: 'O(log N) BVH', xyz: '[0, 1, 12]' },
+      { step: 'S2', label: { id: 'Refraksi Shader & KTX2 VRAM', en: 'Transmission & KTX2 VRAM' }, metric: 'DPR [1, 1.5]', xyz: '[-2, -6, 4]' },
+      { step: 'S3', label: { id: 'Kunci Slot Anti-Bentrok HUD', en: 'HUD Atomic Slot Hold' }, metric: 'Redis TTL', xyz: '[2, -12, -4]' },
+    ],
   },
   {
     code: 'UX_F4_LOOKBOOK_COMMERCE',
     badge: 'UX_F4 • EDITORIAL COMMERCE',
-    hours: 8,
-    name: { id: 'Editorial Lookbook & Slide-Over Quick-Cart', en: 'Editorial Lookbook & Slide-Over Quick-Cart' },
+    hours: 12,
+    name: { id: 'Editorial Lookbook & Instant Drawer Commerce', en: 'Editorial Lookbook & Instant Drawer Commerce' },
     summary: {
-      id: 'Katalog produk ritel/F&B rasio gambar terkunci (CLS 0.00) dengan laci keranjang instan tanpa reload halaman.',
-      en: 'Aspect-locked retail/F&B product catalog (CLS 0.00) with instant slide-over cart drawer and zero page reload.',
+      id: 'Katalog produk ritel/B2B rasio gambar terkunci (CLS 0.00) dengan transisi halaman tanpa reload, matriks spesifikasi, dan laci keranjang instan.',
+      en: 'Aspect-locked retail/B2B catalog (CLS 0.00) with zero-reload View Transitions, SKU spec compare matrix, and instant slide-over cart drawer.',
     },
-    engine: 'Aspect-Locked Grid + Slide-Over Cart Drawer',
+    engine: 'View Transitions API + Aspect-Locked 4:5 Grid + Slide-Over Cart',
+    choreography: {
+      scrollRig: 'Native View Transitions API + Optimistic UI Drawer State',
+      hudBridge: 'CustomEvent("pos:quick-cart-open", { detail: { skuUlid } })',
+      assetPipeline: 'Local AVIF/WebP Aspect-Locked Srcset + 0ms Cart Mutation',
+    },
+    waypoints: [
+      { step: 'L1', label: { id: 'Editorial Lookbook Grid', en: 'Editorial Lookbook Grid' }, metric: 'Aspect 4:5', xyz: '[0, 0, 10]' },
+      { step: 'L2', label: { id: 'Quick-View Spec Compare', en: 'Quick-View Spec Compare' }, metric: '0ms Optimistic', xyz: '[0, -5, 10]' },
+      { step: 'L3', label: { id: 'Slide-Over Checkout', en: 'Slide-Over Checkout' }, metric: 'QRIS/VA', xyz: '[0, -10, 10]' },
+    ],
   },
   {
     code: 'UX_F5_TRUST_SIMULATOR',
     badge: 'UX_F5 • LIVE ROI / TRANSPARENCY',
-    hours: 9,
-    name: { id: 'Interactive Calculator & Live Transparency Ledger', en: 'Interactive Calculator & Live Transparency Ledger' },
+    hours: 10,
+    name: { id: 'Interactive Calculator & Live Transparency Portal', en: 'Interactive Calculator & Live Transparency Portal' },
     summary: {
-      id: 'Kalkulator cicilan/premi/pajak/donasi interaktif tabular-nums real-time + buku besar transparansi dana terverifikasi.',
-      en: 'Real-time tabular-nums installment/tax/donation simulator + cryptographically verified public transparency ledger.',
+      id: 'Slider simulasi tarif kargo/paket medis/pajak PPh21 real-time dengan pemisah ribuan regional tabular-nums + buku besar transparansi terverifikasi.',
+      en: 'Real-time cargo/medical/PPh21 mathematical sliders with regional tabular-nums thousand separators + cryptographically verified transparency ledger.',
     },
-    engine: 'Deterministic Client Math + Tabular-Nums Counter',
+    engine: 'Reactive Alpine.js Math Sliders + Local Canvas Telemetry Chart',
+    choreography: {
+      scrollRig: 'Deterministic Client Formula Sliders + 60fps Canvas Telemetry Bar',
+      hudBridge: 'CustomEvent("pos:simulator-lock-quote", { detail: { payload } })',
+      assetPipeline: 'Forever-Cached Tariff/Rate Matrix JSON + Tabular-Nums Formatter',
+    },
+    waypoints: [
+      { step: 'T1', label: { id: 'Slider Parameter Real-Time', en: 'Live Parameter Sliders' }, metric: 'Tabular-Nums', xyz: '[0, 0, 10]' },
+      { step: 'T2', label: { id: 'Rincian Biaya Transparan', en: 'Transparent Breakdown' }, metric: '1.000 / 1,000', xyz: '[0, -5, 10]' },
+      { step: 'T3', label: { id: 'Konversi Booking / Resi', en: 'Instant Booking CTA' }, metric: 'E.164 Ready', xyz: '[0, -10, 10]' },
+    ],
   },
   {
     code: 'UX_F6_GAMIFIED_PATHWAY',
-    badge: 'UX_F6 • MILESTONE PATHWAY',
-    hours: 8,
-    name: { id: 'Guided Step-by-Step Pathway & Milestone Tracker', en: 'Guided Step-by-Step Pathway & Milestone Tracker' },
+    badge: 'UX_F6 • SKILL-TREE PATHWAY',
+    hours: 14,
+    name: { id: 'Skill-Tree & Milestone Progress Showcase', en: 'Skill-Tree & Milestone Progress Showcase' },
     summary: {
-      id: 'Peta kurikulum/pelatihan/pendaftaran bertahap dengan indikator progres tajam dan verifikasi sertifikat QR.',
-      en: 'Step-by-step curriculum/admissions/onboarding milestone pathway with crisp progress tracker and QR verification.',
+      id: 'Peta perjalanan kurikulum/pelatihan sebagai pohon keahlian SVG interaktif, lencana sertifikasi bersegel SHA-256, dan progres kohort.',
+      en: 'Interactive SVG skill-tree curriculum map, SHA-256 verifiable badges, and crisp cohort milestone tracker.',
     },
-    engine: 'Progressive Stepper + Instant Milestone State',
+    engine: 'Scroll-Driven SVG Path Stroke + Interactive Curriculum Tree (@vite)',
+    choreography: {
+      scrollRig: 'Scroll-Driven SVG stroke-dashoffset Dagre/Tree Path + Milestone Reveal',
+      hudBridge: 'CustomEvent("pos:pathway-node-inspect", { detail: { nodeUlid } })',
+      assetPipeline: 'Inline Vector Skill-Tree DAG + Local SVG QR Certificate Verifier',
+    },
+    waypoints: [
+      { step: 'G1', label: { id: 'Pohon Kurikulum SVG', en: 'Interactive SVG Skill-Tree' }, metric: 'Node Unlock', xyz: '[0, 0, 10]' },
+      { step: 'G2', label: { id: 'Lencana & Sertifikat Hash', en: 'Hash-Verified Badges' }, metric: 'SHA-256', xyz: '[0, -5, 10]' },
+      { step: 'G3', label: { id: 'Pendaftaran Kohort Instan', en: 'Cohort Enrollment' }, metric: 'O(1) Cursor', xyz: '[0, -10, 10]' },
+    ],
+  },
+];
+
+export const HYBRID_ISLAND_3_LAYERS = [
+  {
+    code: 'LAYER 01 • BACKEND 3D/ASSET CMS',
+    badge: '0 SQL ON SCROLL',
+    title: {
+      id: 'Laravel 13 + Filament v5 Asset Pipeline',
+      en: 'Laravel 13 + Filament v5 Asset Pipeline',
+    },
+    detail: {
+      id: 'Tabel ULID pos_showcase_3d_assets + TranslatableTabs + job @gltf-transform/cli (Draco .glb + KTX2 VRAM) + Cache::rememberForever data-props JSON.',
+      en: 'ULID table pos_showcase_3d_assets + TranslatableTabs + queued @gltf-transform/cli (Draco .glb + KTX2 VRAM) + Cache::rememberForever data-props JSON.',
+    },
+  },
+  {
+    code: 'LAYER 02 • SINGLE-CANVAS GPU RIG',
+    badge: '60–120 FPS • DPR [1,1.5]',
+    title: {
+      id: 'R3F WebGL2 / GSAP ScrollTrigger Spline',
+      en: 'R3F WebGL2 / GSAP ScrollTrigger Spline',
+    },
+    detail: {
+      id: 'Kanvas tunggal fixed inset-0 z-0: MeshTransmissionMaterial, raycast <Bvh firstHitOnly> O(log N), teks 3D SDF Troika, & kurva kamera CatmullRomCurve3 (scrub: 1.2).',
+      en: 'Single fixed inset-0 z-0 canvas: MeshTransmissionMaterial, O(log N) <Bvh firstHitOnly> raycast, Troika SDF 3D text, & CatmullRomCurve3 camera rig (scrub: 1.2).',
+    },
+  },
+  {
+    code: 'LAYER 03 • SEMANTIC HUD & SEO SHIELD',
+    badge: '100% SEO + WCAG AAA',
+    title: {
+      id: 'Livewire 4 + Flux UI HUD Event Bridge',
+      en: 'Livewire 4 + Flux UI HUD Event Bridge',
+    },
+    detail: {
+      id: 'HUD z-10 pointer-events-none (kontrol pointer-events-auto, rounded-none tajam Terang/Gelap) + CustomEvent("pos:camera-waypoint") + Schema.org JSON-LD & /llms.txt utuh.',
+      en: 'z-10 pointer-events-none HUD (pointer-events-auto controls, sharp rounded-none Light/Dark) + CustomEvent("pos:camera-waypoint") + intact Schema.org JSON-LD & /llms.txt.',
+    },
+  },
+];
+
+export const ADAPTIVE_GPU_GOVERNOR_TIERS = [
+  {
+    id: 'TIER_1_HIGH',
+    badge: 'TIER 1 • HIGH GPU',
+    fps: '60–120 FPS',
+    label: { id: 'WebGL2 Transmission + BVH', en: 'WebGL2 Transmission + BVH' },
+    desc: {
+      id: 'Desktop / Apple Silicon (>=6 core): R3F penuh + MeshTransmission (samples:6) + merged EffectComposer pada dpr [1, 1.5].',
+      en: 'Desktop / Apple Silicon (>=6 cores): Full R3F + MeshTransmission (samples:6) + merged EffectComposer at dpr [1, 1.5].',
+    },
+  },
+  {
+    id: 'TIER_2_MEDIUM',
+    badge: 'TIER 2 • MID MOBILE',
+    fps: 'LOCKED 60 FPS',
+    label: { id: 'KTX2 Matcap + DPR 1.0', en: 'KTX2 Matcap + DPR 1.0' },
+    desc: {
+      id: 'GPU terintegrasi / HP menengah: matikan post-processing berat, ganti ke tekstur KTX2 Matcap di VRAM pada dpr=1.0.',
+      en: 'Integrated / mid-tier mobile GPU: bypass multi-sample post-processing, switch to VRAM KTX2 Matcap at dpr=1.0.',
+    },
+  },
+  {
+    id: 'TIER_3_LOW',
+    badge: 'TIER 3 • SAFE STATIC',
+    fps: 'ZERO JANK (0 MB VRAM)',
+    label: { id: 'Poster WebP + Reduced-Motion', en: 'Poster WebP + Reduced-Motion' },
+    desc: {
+      id: 'Aktif otomatis saat prefers-reduced-motion, Save-Data, <4 thread, atau webglcontextlost: lepas WebGL & tampilkan Poster WebP lokal tajam.',
+      en: 'Auto-engaged on prefers-reduced-motion, Save-Data, <4 threads, or webglcontextlost: unmount WebGL & render crisp aspect-locked Poster WebP.',
+    },
   },
 ];
 
 export function resolveDefaultPublicUxForSector(sectorCode) {
   const s = String(sectorCode || '').toUpperCase();
   if (s.includes('SECTOR_01')) return 'UX_F4_LOOKBOOK_COMMERCE';
-  if (s.includes('SECTOR_02')) return 'UX_F6_GAMIFIED_PATHWAY';
+  if (s.includes('SECTOR_02')) return 'UX_F3_SPATIAL_SHOWCASE';
   if (s.includes('SECTOR_03')) return 'UX_F5_TRUST_SIMULATOR';
-  if (s.includes('SECTOR_04')) return 'UX_F1_SCROLLYTELLING';
-  if (s.includes('SECTOR_05')) return 'UX_F3_SPATIAL_SHOWCASE';
-  if (s.includes('SECTOR_06')) return 'UX_F6_GAMIFIED_PATHWAY';
-  if (s.includes('SECTOR_07')) return 'UX_F1_SCROLLYTELLING';
-  if (s.includes('SECTOR_08')) return 'UX_F5_TRUST_SIMULATOR';
-  if (s.includes('SECTOR_09')) return 'UX_F1_SCROLLYTELLING';
-  if (s.includes('SECTOR_10')) return 'UX_F2_KINETIC_ANIWALL';
+  if (s.includes('SECTOR_04')) return 'UX_F2_KINETIC_ANIWALL';
+  if (s.includes('SECTOR_05')) return 'UX_F1_SCROLLYTELLING';
+  if (s.includes('SECTOR_06')) return 'UX_F5_TRUST_SIMULATOR';
+  if (s.includes('SECTOR_07')) return 'UX_F6_GAMIFIED_PATHWAY';
+  if (s.includes('SECTOR_08')) return 'UX_F2_KINETIC_ANIWALL';
+  if (s.includes('SECTOR_09')) return 'UX_F3_SPATIAL_SHOWCASE';
+  if (s.includes('SECTOR_10')) return 'UX_F3_SPATIAL_SHOWCASE';
   if (s.includes('SECTOR_11')) return 'UX_F5_TRUST_SIMULATOR';
-  if (s.includes('SECTOR_12')) return 'UX_F3_SPATIAL_SHOWCASE';
-  return 'UX_F1_SCROLLYTELLING';
+  if (s.includes('SECTOR_12')) return 'UX_F1_SCROLLYTELLING';
+  return 'UX_F2_KINETIC_ANIWALL';
 }
 
 export const QUICK_IDEA_CATALOG = {

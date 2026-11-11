@@ -25,6 +25,7 @@ use App\Services\BlueprintSlopScannerService;
 use App\Services\BrownfieldMigrationAuditorService;
 use App\Services\Entitlement\BlueprintEntitlementGateService;
 use App\Services\PosCommercialBridgeService;
+use App\Services\PrdGeneratorService;
 use App\Services\ProjectOsBlueprintCompilerService;
 use App\Services\Saas\PosSaasCommercialEngineService;
 use App\Services\Security\DocumentThreatSanitizerService;
@@ -838,8 +839,9 @@ class AgenticActionExecutionEngine
             $prd['erd_schema']['tables'] = $updatedTables;
             $prd['database_erd'] = $updatedTables;
             try {
-                $prd['virtual_charts']['erd_mermaid'] = \App\Services\PrdGeneratorService::generateErdMermaid($updatedTables);
-            } catch (\Throwable) {}
+                $prd['virtual_charts']['erd_mermaid'] = PrdGeneratorService::generateErdMermaid($updatedTables);
+            } catch (\Throwable) {
+            }
             $blueprint->prd_content = $prd;
             $blueprint->save();
         }
@@ -2072,6 +2074,8 @@ class AgenticActionExecutionEngine
             'sector_code' => $sectorCode,
             'selected_public_ux_preset' => $uxCode,
             'dual_zone_ui_contract' => $dualContract,
+            'hybrid_island_scrollytelling_architecture' => $dualContract['hybrid_island_scrollytelling_architecture'] ?? [],
+            'frontend_execution_blueprint_contract' => $dualContract['frontend_execution_blueprint_contract'] ?? [],
             'five_iron_animation_laws' => PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws(),
             'input_hygiene_contract' => PosDualZoneFrontendAndSaasCatalog::inputHygieneContract(),
             'persisted_project' => $persistedProject,
@@ -2716,7 +2720,7 @@ class AgenticActionExecutionEngine
             ];
         }
 
-        $auditHash = hash('sha256', "PURGE_BIOMETRICS:{$userId}:" . now()->toIso8601String() . ":{$user?->id}");
+        $auditHash = hash('sha256', "PURGE_BIOMETRICS:{$userId}:".now()->toIso8601String().":{$user?->id}");
 
         AuditLog::record(
             action: 'biometric_data_purged_right_to_erasure',

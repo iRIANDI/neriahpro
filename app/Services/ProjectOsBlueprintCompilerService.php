@@ -24,6 +24,7 @@ use App\Support\PosStackPresetCatalog;
 use App\Support\ProjectOsMatrixCatalog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -37,7 +38,7 @@ class ProjectOsBlueprintCompilerService
     protected static function hasMatrixTables(): bool
     {
         try {
-            return Schema::hasTable('pos_sectors') 
+            return Schema::hasTable('pos_sectors')
                 && Schema::hasTable('pos_primitives')
                 && Schema::hasTable('pos_rule_packs');
         } catch (\Throwable) {
@@ -381,6 +382,7 @@ class ProjectOsBlueprintCompilerService
                 'agentshield_layers' => DocumentThreatSanitizerService::fiveLayersBlueprintContract('NeriahPro Project OS', 'STACK_M1_LARAVEL_MONOLITH', 'SECTOR_01_COMMERCE_OMNICHANNEL')['layers'],
                 'sector_audit_presets' => PosAgentShieldAndCoDesignCatalog::twelveSectorAuditPresets(),
                 'public_ux_presets' => array_values(PosDualZoneFrontendAndSaasCatalog::sixPublicUxPresets()),
+                'hybrid_island_scrollytelling_architecture' => PosDualZoneFrontendAndSaasCatalog::hybridIslandScrollytellingArchitecture(),
                 'five_iron_animation_laws' => PosDualZoneFrontendAndSaasCatalog::fiveIronAnimationLaws(),
                 'input_hygiene_contract' => PosDualZoneFrontendAndSaasCatalog::inputHygieneContract(),
                 'six_critical_saas_modules' => PosDualZoneFrontendAndSaasCatalog::sixCriticalSaasModules(),
@@ -1164,6 +1166,8 @@ class ProjectOsBlueprintCompilerService
         }
         $schema['dual_zone_release'] = PosDualZoneFrontendAndSaasCatalog::VERSION;
         $schema['dual_zone_ui_contract'] = $dualZoneUiContract;
+        $schema['hybrid_island_scrollytelling_architecture'] = $dualZoneUiContract['hybrid_island_scrollytelling_architecture'] ?? [];
+        $schema['frontend_execution_blueprint_contract'] = $dualZoneUiContract['frontend_execution_blueprint_contract'] ?? [];
         $schema['five_iron_animation_laws'] = $dualZoneUiContract['five_iron_animation_laws'];
         $schema['input_hygiene_contract'] = $dualZoneUiContract['input_hygiene_contract'];
 
@@ -1337,7 +1341,7 @@ class ProjectOsBlueprintCompilerService
                     PosProject::query()->create($projectPayload);
                 }
             } catch (\Throwable $persistEx) {
-                \Illuminate\Support\Facades\Log::warning('PosProject persistence skipped in compileUniversalSchema: ' . $persistEx->getMessage());
+                Log::warning('PosProject persistence skipped in compileUniversalSchema: '.$persistEx->getMessage());
             }
         }
 
@@ -1793,10 +1797,10 @@ MD;
 
         $seedList = implode("\n", array_map(fn ($s) => "  - {$s}", $onboard['atomic_foundation_records'] ?? []));
         $snapTables = implode('`, `', $snapshot['enforced_on_tables'] ?? ['order_items']);
-        $snapCols = implode("\n", array_map(fn ($c) => "  - `".($c['column'] ?? 'id')."` (`".($c['type'] ?? 'VARCHAR(26)')."`): ".($c['purpose'] ?? 'Audit snapshot'), $snapshot['mandatory_snapshot_columns'] ?? []));
-        $lanes = implode("\n", array_map(fn ($q) => "  - **`".($q['lane'] ?? 'default')."`** (SLA ".($q['sla_target'] ?? '10s')."): ".($q['workloads'] ?? 'General background tasks'), $ops['queue_lanes'] ?? []));
-        $crons = implode("\n", array_map(fn ($c) => "  - `".($c['cron'] ?? '* * * * *')."` -> `php artisan ".($c['command'] ?? 'inspire')."`: ".($c['purpose'] ?? 'Periodic task'), $ops['scheduler_registry'] ?? []));
-        $limiters = implode("\n", array_map(fn ($l) => "  - **`".($l['limiter'] ?? 'api')."`** (`".($l['limit'] ?? '60/min')."`): ".($l['scope'] ?? 'IP-based rate limiter'), $sec['tiered_rate_limiters'] ?? []));
+        $snapCols = implode("\n", array_map(fn ($c) => '  - `'.($c['column'] ?? 'id').'` (`'.($c['type'] ?? 'VARCHAR(26)').'`): '.($c['purpose'] ?? 'Audit snapshot'), $snapshot['mandatory_snapshot_columns'] ?? []));
+        $lanes = implode("\n", array_map(fn ($q) => '  - **`'.($q['lane'] ?? 'default').'`** (SLA '.($q['sla_target'] ?? '10s').'): '.($q['workloads'] ?? 'General background tasks'), $ops['queue_lanes'] ?? []));
+        $crons = implode("\n", array_map(fn ($c) => '  - `'.($c['cron'] ?? '* * * * *').'` -> `php artisan '.($c['command'] ?? 'inspire').'`: '.($c['purpose'] ?? 'Periodic task'), $ops['scheduler_registry'] ?? []));
+        $limiters = implode("\n", array_map(fn ($l) => '  - **`'.($l['limiter'] ?? 'api').'`** (`'.($l['limit'] ?? '60/min').'`): '.($l['scope'] ?? 'IP-based rate limiter'), $sec['tiered_rate_limiters'] ?? []));
         $doctorBanner = $doctor['summary_banner']['id'] ?? 'Ready';
         $onboardAction = $onboard['action_class'] ?? 'InitializeNewTenantAction';
         $onboardGuarantee = $onboard['execution_guarantee'] ?? 'DB::transaction()';
@@ -2470,6 +2474,10 @@ Read `.agents/ENTERPRISE_MENU_MATRIX.md`, `.agents/SYMBOL_MANIFEST.json`, and `.
 **Mandatory Industrial Archetype (Zone A Operational Back-Stage):** `{$primaryArch}` & `{$secondaryArch}`
 **Operational Visual Frontend Design (Zone A):** `{$vUiCode}` ({$vUiLabel}) | **Navigation Shell:** `{$vShellCode}` *(FORBIDDEN Scrollytelling/Parallax in Zone A)*
 **Public Front-Stage UX Preset (Zone B):** `{$pubUxCode}` — {$pubUxName} (`{$pubUxStack}` + `PRIMITIVE_VERIFIED_SOCIAL_PROOF` Aniwall)
+**3-Layer Hybrid Island Scrollytelling Blueprint (Zone B):**
+  - **Layer 1 (Asset CMS & 0ms Payload):** ULID table `pos_showcase_3d_assets` + Filament v5 `Showcase3dAssetResource` (`TranslatableTabs`) + queued `@gltf-transform/cli` (`Draco + Meshopt + KTX2` VRAM) + `Cache::rememberForever` `data-props` JSON (0 SQL queries on scroll).
+  - **Layer 2 (Single-Canvas GPU/WebGL2 Rig):** Fixed `z-0` canvas (`dpr={[1, 1.5]}`, `powerPreference: 'high-performance'`) with memoized `THREE.CatmullRomCurve3` / `#scroll-proxy-container` `GSAP ScrollTrigger` (`scrub: 1.2`) + `<Bvh firstHitOnly>` `O(log N)` raycasting + Troika SDF `<Text>` + single-pass `EffectComposer`.
+  - **Layer 3 (Accessible HUD & 3-Tier GPU Fallback):** Semantic Blade/Livewire 4 + Flux UI HUD at `relative z-10 pointer-events-none` (`pointer-events-auto` controls, sharp `rounded-none` WCAG AAA Light/Dark, Schema.org JSON-LD intact) synced via `CustomEvent('pos:camera-waypoint')` + automatic 3-Tier GPU Governor (`HIGH WebGL2` -> `MEDIUM Matcap 60fps` -> `LOW Static WebP` on `prefers-reduced-motion` / `webglcontextlost`).
 **5 Iron Laws of Enterprise Animation (Zone B):** 100% Local `@vite` (0% CDN), GPU `translate3d()/scale()/opacity` Only, `CLS = 0.00` aspect-ratio lock, `@media (prefers-reduced-motion: reduce)`, & `IntersectionObserver` FCP `< 0.8s`.
 **Mandatory Input Hygiene Standards:** Email pure `[a-zA-Z0-9._%+\-@]`, numbers/currencies `>= 1,000` must use regional thousand separators (`.` ID / `,` EN) + `tabular-nums`, and phone inputs must use `config/country_zones.php` + auto-strip leading `0`.
 **Output Language & Jurisdiction:** `{$jOutputLocale}` (`{$vHtmlDir}` — `{$jCode}`)
@@ -2497,6 +2505,10 @@ Baca `.agents/ENTERPRISE_MENU_MATRIX.md`, `.agents/SYMBOL_MANIFEST.json`, dan `.
 **Archetype Wajib Industri (Zona A Operational Back-Stage):** `{$primaryArch}` & `{$secondaryArch}`
 **Desain Visual Frontend Operasional (Zona A):** `{$vUiCode}` ({$vUiLabel}) | **Navigation Shell:** `{$vShellCode}` *(HARAM Scrollytelling/Parallax di Zona A)*
 **Public Front-Stage UX Preset (Zona B):** `{$pubUxCode}` — {$pubUxName} (`{$pubUxStack}` + `PRIMITIVE_VERIFIED_SOCIAL_PROOF` Aniwall)
+**Cetak Biru Hybrid Island Scrollytelling 3-Lapis (Zona B):**
+  - **Lapisan 1 (Asset CMS & Payload 0ms):** Tabel ULID `pos_showcase_3d_assets` + Filament v5 `Showcase3dAssetResource` (`TranslatableTabs`) + job antrean `@gltf-transform/cli` (`Draco + Meshopt + KTX2` VRAM) + `Cache::rememberForever` `data-props` JSON (0 query SQL saat scroll).
+  - **Lapisan 2 (Single-Canvas GPU/WebGL2 Rig):** Kanvas tunggal `z-0` (`dpr={[1, 1.5]}`, `powerPreference: 'high-performance'`) dengan `THREE.CatmullRomCurve3` ter-memoisasi / `#scroll-proxy-container` `GSAP ScrollTrigger` (`scrub: 1.2`) + raycasting `<Bvh firstHitOnly>` `O(log N)` + teks 3D SDF Troika + single-pass `EffectComposer`.
+  - **Lapisan 3 (HUD Aksesibel & Fallback GPU 3-Tingkat):** HUD semantik Blade/Livewire 4 + Flux UI di `relative z-10 pointer-events-none` (kontrol `pointer-events-auto`, sudut tajam `rounded-none` WCAG AAA Terang/Gelap, Schema.org JSON-LD utuh) tersinkronisasi via `CustomEvent('pos:camera-waypoint')` + Governor GPU 3-Tingkat otomatis (`HIGH WebGL2` -> `MEDIUM Matcap 60fps` -> `LOW Static WebP` saat `prefers-reduced-motion` / `webglcontextlost`).
 **5 Hukum Besi Animasi Enterprise (Zona B):** 100% Local `@vite` (0% CDN), GPU `translate3d()/scale()/opacity` Only, `CLS = 0.00` aspect-ratio lock, `@media (prefers-reduced-motion: reduce)`, & `IntersectionObserver` FCP `< 0.8s`.
 **Standar Higienitas Input Wajib:** Email murni karakter `[a-zA-Z0-9._%+\-@]`, angka/mata uang `>= 1.000` wajib pemisah ribuan regional (`.` ID / `,` EN) + `tabular-nums`, dan input telepon wajib menggunakan `config/country_zones.php` + hapus otomatis angka `0` di awal ketikan.
 **Bahasa Output & Yurisdiksi:** `{$jOutputLocale}` (`{$vHtmlDir}` — `{$jCode}`)

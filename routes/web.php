@@ -148,7 +148,7 @@ Route::post('/blueprint/{slug}/issues/{issueId}/comments', [ProjectThreadControl
 // Payment Gateway Webhooks (Midtrans DLQ Handler & Notification Aliases)
 Route::match(['get', 'post'], '/api/webhook/midtrans', function (Request $request) {
     if ($request->isMethod('get')) {
-        return app(MidtransWebhookController::class)->status();
+        return app(MidtransWebhookController::class)->status($request);
     }
 
     return app(MidtransWebhookController::class)->handle($request);
@@ -156,7 +156,7 @@ Route::match(['get', 'post'], '/api/webhook/midtrans', function (Request $reques
 
 Route::match(['get', 'post'], '/webhook/midtrans', function (Request $request) {
     if ($request->isMethod('get')) {
-        return app(MidtransWebhookController::class)->status();
+        return app(MidtransWebhookController::class)->status($request);
     }
 
     return app(MidtransWebhookController::class)->handle($request);
@@ -164,7 +164,7 @@ Route::match(['get', 'post'], '/webhook/midtrans', function (Request $request) {
 
 Route::match(['get', 'post'], '/api/midtrans/notification', function (Request $request) {
     if ($request->isMethod('get')) {
-        return app(MidtransWebhookController::class)->status();
+        return app(MidtransWebhookController::class)->status($request);
     }
 
     return app(MidtransWebhookController::class)->handle($request);
@@ -172,7 +172,7 @@ Route::match(['get', 'post'], '/api/midtrans/notification', function (Request $r
 
 Route::match(['get', 'post'], '/api/midtrans/webhook', function (Request $request) {
     if ($request->isMethod('get')) {
-        return app(MidtransWebhookController::class)->status();
+        return app(MidtransWebhookController::class)->status($request);
     }
 
     return app(MidtransWebhookController::class)->handle($request);

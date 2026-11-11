@@ -361,4 +361,66 @@ class MidtransRetailAndPelunasanTest extends TestCase
         // Assert session pending order is cleared
         $this->assertNull(session('neriah_cart_pending_order'));
     }
+
+    public function test_webhook_status_endpoint_returns_200_and_diagnostic_telemetry()
+    {
+        $response = $this->getJson('/api/webhook/midtrans');
+        $response->assertStatus(200);
+        $response->assertJson([
+            'status' => 'active',
+            'gateway' => 'Midtrans',
+        ]);
+
+        $diagResponse = $this->getJson('/api/webhook/midtrans?diagnostic=1');
+        $diagResponse->assertStatus(200);
+        $diagResponse->assertJsonStructure([
+            'status',
+            'telemetry' => [
+                'merchant_id',
+                'is_production',
+                'is_server_key_set',
+                'recent_logs',
+            ],
+        ]);
+    }
+
+    public function test_mock_dashboard_probe_with_mismatched_signature_accepted_with_200()
+    {
+        config(['midtrans.server_key' => 'Mid-server-REALKEY123']);
+
+        $mockPayload = [
+            'order_id' => 'test-transaction-12345',
+            'status_code' => '200',
+            'gross_amount' => '10000.00',
+            'signature_key' => 'dummy_unmatched_signature_hash',
+            'transaction_status' => 'capture',
+        ];
+
+        $response = $this->postJson('/api/webhook/midtrans', $mockPayload);
+        $response->assertStatus(200);
+        $response->assertJson([
+            'status' => 'success',
+            'message' => 'Test notification accepted successfully.',
+        ]);
+    }
+
+    public function test_real_order_with_forged_signature_rejected_with_403()
+    {
+        config(['midtrans.server_key' => 'Mid-server-REALKEY123']);
+
+        $forgedPayload = [
+            'order_id' => 'NPRO-DP-REALCLIENT-999',
+            'status_code' => '200',
+            'gross_amount' => '15000000.00',
+            'signature_key' => 'forged_signature_attempt',
+            'transaction_status' => 'settlement',
+        ];
+
+        $response = $this->postJson('/api/webhook/midtrans', $forgedPayload);
+        $response->assertStatus(403);
+        $response->assertJson([
+            'status' => 'error',
+            'message' => 'Invalid signature key.',
+        ]);
+    }
 }

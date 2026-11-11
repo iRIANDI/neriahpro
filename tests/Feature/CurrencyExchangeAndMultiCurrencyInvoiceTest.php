@@ -26,13 +26,20 @@ class CurrencyExchangeAndMultiCurrencyInvoiceTest extends TestCase
     public function test_currency_conversion_calculates_correct_foreign_amount(): void
     {
         $idrAmount = 1_490_000.0;
-        $converted = CurrencyExchangeService::convert($idrAmount, 'USD');
+        $convertedUsd = CurrencyExchangeService::convert($idrAmount, 'USD');
 
-        $this->assertEquals('USD', $converted['currency']);
-        $this->assertEquals('$', $converted['symbol']);
-        $this->assertEquals(1_490_000.0, $converted['idr_amount']);
-        $this->assertGreaterThan(0, $converted['foreign_amount']);
-        $this->assertGreaterThan(0, $converted['rate_to_idr']);
+        $this->assertEquals('USD', $convertedUsd['currency']);
+        $this->assertEquals('$', $convertedUsd['symbol']);
+        $this->assertEquals(1_490_000.0, $convertedUsd['idr_amount']);
+        $this->assertGreaterThan(0, $convertedUsd['foreign_amount']);
+        $this->assertGreaterThan(0, $convertedUsd['rate_to_idr']);
+
+        // Test EUR conversion specifically for German/European localization
+        $convertedEur = CurrencyExchangeService::convert($idrAmount, 'EUR');
+        $this->assertEquals('EUR', $convertedEur['currency']);
+        $this->assertEquals('€', $convertedEur['symbol']);
+        $this->assertGreaterThan(0, $convertedEur['foreign_amount']);
+        $this->assertGreaterThan(0, $convertedEur['rate_to_idr']);
     }
 
     public function test_currency_rates_api_endpoint_returns_json(): void
@@ -51,3 +58,4 @@ class CurrencyExchangeAndMultiCurrencyInvoiceTest extends TestCase
         $this->assertTrue($response->json('success'));
     }
 }
+

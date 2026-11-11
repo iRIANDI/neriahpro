@@ -324,7 +324,7 @@ export default function HeroIsland({
                   <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-0.5">
                     {isEn ? 'INVESTMENT' : 'BIAYA INVESTASI'}
                   </div>
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-baseline gap-2 notranslate" translate="no">
                     <span className="text-2xl sm:text-3xl font-black font-mono text-zinc-900 dark:text-white">
                       Rp {retailLitePrice}
                     </span>
@@ -427,7 +427,7 @@ export default function HeroIsland({
                   <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider mb-0.5">
                     {isEn ? 'INVESTMENT' : 'BIAYA INVESTASI'}
                   </div>
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-baseline gap-2 notranslate" translate="no">
                     <span className="text-2xl sm:text-3xl font-black font-mono text-zinc-900 dark:text-white">
                       Rp {umkmPrice}
                     </span>

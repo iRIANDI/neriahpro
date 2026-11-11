@@ -65,6 +65,58 @@ export const CURRENCY_SYMBOLS = {
   JPY: '¥',
 };
 
+export const detectActiveLanguage = (fallbackLocale = 'id') => {
+  if (typeof window === 'undefined') return fallbackLocale || 'id';
+
+  // 1. Check Google Translate cookie (Tier 2)
+  try {
+    const match = document.cookie.match(new RegExp('(^| )googtrans=([^;]+)'));
+    if (match) {
+      const parts = decodeURIComponent(match[2]).split('/');
+      const target = parts[parts.length - 1]?.trim()?.toLowerCase();
+      if (target && target !== 'id' && target !== '' && target.length <= 8) {
+        return target;
+      }
+    }
+  } catch (e) {}
+
+  // 2. Check HTML document element lang
+  try {
+    const docLang = document.documentElement.lang?.trim()?.toLowerCase();
+    if (docLang && docLang !== 'id') {
+      if (docLang.startsWith('de')) return 'de';
+      if (docLang.startsWith('ja')) return 'ja';
+      if (docLang.startsWith('fr')) return 'fr';
+      if (docLang.startsWith('es')) return 'es';
+      if (docLang.startsWith('en')) return 'en';
+    }
+  } catch (e) {}
+
+  // 3. Check Tier 1 cookie
+  try {
+    const match = document.cookie.match(new RegExp('(^| )neriah_locale=([^;]+)'));
+    if (match && (match[2] === 'id' || match[2] === 'en')) {
+      return match[2];
+    }
+  } catch (e) {}
+
+  return fallbackLocale || 'id';
+};
+
+export const LANGUAGE_TO_DEFAULT_CURRENCY = {
+  de: 'EUR',
+  fr: 'EUR',
+  es: 'EUR',
+  it: 'EUR',
+  nl: 'EUR',
+  ja: 'JPY',
+  en: 'USD',
+  zh: 'USD',
+  'zh-cn': 'USD',
+  ar: 'USD',
+  id: 'IDR',
+};
+
 export const parseCleanIdr = (val, defaultVal = 0) => {
   if (val === null || val === undefined || val === '') return defaultVal;
   if (typeof val === 'number') return Math.round(val);
@@ -390,12 +442,22 @@ export default function ArchitecturePricingIsland({
   countries = [],
   currencyData = {}
 }) {
-  const isEn = currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
+  const [activeLang, setActiveLang] = useState(() => detectActiveLanguage(currentLocale));
+  const isEn = activeLang === 'en' || currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
   const countryList = normalizeCountryZones(countries || COUNTRY_ZONES_TEMPLATE);
 
   // Multi-Currency Selection: IDR, USD, EUR, SGD, GBP, AUD, JPY
   const [selectedCurrency, setSelectedCurrency] = useState(() => {
     if (typeof window !== 'undefined') {
+      const detected = detectActiveLanguage(currentLocale);
+      const savedManual = localStorage.getItem('neriah_pricing_currency_manual');
+      if (savedManual && ['IDR', 'USD', 'EUR', 'SGD', 'GBP', 'AUD', 'JPY'].includes(savedManual)) {
+        return savedManual;
+      }
+      const autoCurr = LANGUAGE_TO_DEFAULT_CURRENCY[detected];
+      if (autoCurr) {
+        return autoCurr;
+      }
       const saved = localStorage.getItem('neriah_pricing_currency');
       if (saved && ['IDR', 'USD', 'EUR', 'SGD', 'GBP', 'AUD', 'JPY'].includes(saved)) {
         return saved;
@@ -408,8 +470,48 @@ export default function ArchitecturePricingIsland({
     setSelectedCurrency(newCurr);
     if (typeof window !== 'undefined') {
       localStorage.setItem('neriah_pricing_currency', newCurr);
+      localStorage.setItem('neriah_pricing_currency_manual', newCurr);
     }
   };
+
+  // Synchronize currency automatically when language switches (Tier 1 & Tier 2 Google Translate)
+  useEffect(() => {
+    const onLangChange = (e) => {
+      const newLang = e?.detail?.lang?.toLowerCase() || detectActiveLanguage(currentLocale);
+      setActiveLang(newLang);
+      const autoCurr = LANGUAGE_TO_DEFAULT_CURRENCY[newLang];
+      if (autoCurr) {
+        setSelectedCurrency(autoCurr);
+        try {
+          localStorage.setItem('neriah_pricing_currency', autoCurr);
+          localStorage.removeItem('neriah_pricing_currency_manual');
+        } catch(e) {}
+      }
+    };
+
+    window.addEventListener('neriah-language-changed', onLangChange);
+
+    // Heartbeat check for Google Translate background cookie updates without page reload
+    const interval = setInterval(() => {
+      const current = detectActiveLanguage(currentLocale);
+      if (current !== activeLang) {
+        setActiveLang(current);
+        const autoCurr = LANGUAGE_TO_DEFAULT_CURRENCY[current];
+        if (autoCurr && autoCurr !== selectedCurrency) {
+          setSelectedCurrency(autoCurr);
+          try {
+            localStorage.setItem('neriah_pricing_currency', autoCurr);
+            localStorage.removeItem('neriah_pricing_currency_manual');
+          } catch(e) {}
+        }
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('neriah-language-changed', onLangChange);
+      clearInterval(interval);
+    };
+  }, [activeLang, selectedCurrency, currentLocale]);
 
   const activeRatesToIdr = useMemo(() => {
     return {
@@ -428,33 +530,42 @@ export default function ArchitecturePricingIsland({
     const targetCurr = forceCurrency || selectedCurrency;
     const idr = parseCleanIdr(rawVal, 0);
 
+    const isEur = targetCurr === 'EUR';
+    const isJpy = targetCurr === 'JPY';
+    const isIdr = targetCurr === 'IDR';
+    const symbol = CURRENCY_SYMBOLS[targetCurr] || targetCurr;
+
     if (idr === 0) {
-      return targetCurr === 'IDR' ? 'Rp 0' : `${CURRENCY_SYMBOLS[targetCurr] || ''}0`;
+      if (isIdr) return 'Rp 0';
+      return `${symbol} 0`;
     }
 
     const rate = activeRatesToIdr[targetCurr] || 1;
 
     if (targetCurr === 'IDR') {
-      const formatted = forceEn
+      const formatted = (forceEn || (activeLang !== 'id' && !['de', 'fr', 'es', 'it', 'nl'].includes(activeLang)))
         ? idr.toLocaleString('en-US')
         : idr.toLocaleString('id-ID');
       return `Rp ${formatted}`;
     }
 
     const foreignVal = idr / rate;
-    const symbol = CURRENCY_SYMBOLS[targetCurr] || targetCurr + ' ';
-    const decimals = targetCurr === 'JPY' ? 0 : 2;
-    const formattedForeign = foreignVal.toLocaleString('en-US', {
+    const decimals = isJpy ? 0 : 2;
+
+    const isEuropean = isEur || ['de', 'fr', 'es', 'it', 'nl'].includes(activeLang);
+    const localeForNumber = isEuropean
+      ? 'de-DE'
+      : (activeLang === 'id' ? 'id-ID' : 'en-US');
+
+    const formattedForeign = foreignVal.toLocaleString(localeForNumber, {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     });
 
-    const mainPrice = `${symbol}${formattedForeign}`;
+    const mainPrice = `${symbol} ${formattedForeign}`;
 
     if (showEquivalent) {
-      const idrFormatted = forceEn
-        ? idr.toLocaleString('en-US')
-        : idr.toLocaleString('id-ID');
+      const idrFormatted = idr.toLocaleString('id-ID');
       return `${mainPrice} (≈ Rp ${idrFormatted})`;
     }
 
@@ -2565,7 +2676,7 @@ export default function ArchitecturePricingIsland({
                       {/* Compact Price Box */}
                       <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
                         <div className="flex items-baseline justify-between">
-                          <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                          <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white notranslate" translate="no">
                             {formatPrice(pricingSettings.retail_spark_price || '0')}
                           </span>
                           <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
@@ -2641,7 +2752,7 @@ export default function ArchitecturePricingIsland({
                       {/* Compact Price Box */}
                       <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
                         <div className="flex items-baseline justify-between">
-                          <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                          <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white notranslate" translate="no">
                             {formatPrice(pricingSettings.retail_lite_price || '99.000')}
                           </span>
                           <span className="text-[10px] font-mono text-zinc-500">
@@ -2649,7 +2760,7 @@ export default function ArchitecturePricingIsland({
                           </span>
                         </div>
                         {selectedCurrency !== 'IDR' && (
-                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold notranslate" translate="no">
                             ≈ {formatPrice(pricingSettings.retail_lite_price || '99.000', { forceCurrency: 'IDR' })}
                           </div>
                         )}
@@ -2733,7 +2844,7 @@ export default function ArchitecturePricingIsland({
                       {/* Compact Price Box */}
                       <div className="mb-4 p-3 bg-emerald-500/5 border border-emerald-500/30 space-y-1.5">
                         <div className="flex items-baseline justify-between">
-                          <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                          <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white notranslate" translate="no">
                             {formatPrice(pricingSettings.retail_pro_price || '399.000')}
                           </span>
                           <span className="text-[10px] font-mono text-zinc-500">
@@ -2741,7 +2852,7 @@ export default function ArchitecturePricingIsland({
                           </span>
                         </div>
                         {selectedCurrency !== 'IDR' && (
-                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold notranslate" translate="no">
                             ≈ {formatPrice(pricingSettings.retail_pro_price || '399.000', { forceCurrency: 'IDR' })}
                           </div>
                         )}
@@ -2827,7 +2938,7 @@ export default function ArchitecturePricingIsland({
                       {/* Compact Price Box */}
                       <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
                         <div className="flex items-baseline justify-between">
-                          <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
+                          <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white notranslate" translate="no">
                             {formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')}
                           </span>
                           <span className="text-[10px] font-mono text-zinc-500">
@@ -2835,7 +2946,7 @@ export default function ArchitecturePricingIsland({
                           </span>
                         </div>
                         {selectedCurrency !== 'IDR' && (
-                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold notranslate" translate="no">
                             ≈ {formatPrice(pricingSettings.retail_ultimate_price || '1.490.000', { forceCurrency: 'IDR' })}
                           </div>
                         )}
@@ -2928,13 +3039,13 @@ export default function ArchitecturePricingIsland({
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-baseline gap-2">
-                            <span className="text-xs line-through text-zinc-500 font-mono font-bold">
+                            <span className="text-xs line-through text-zinc-500 font-mono font-bold notranslate" translate="no">
                               {formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')}
                             </span>
-                            <span className="text-xl font-black font-mono text-emerald-900 dark:text-emerald-300 tabular-nums">
+                            <span className="text-xl font-black font-mono text-emerald-900 dark:text-emerald-300 tabular-nums notranslate" translate="no">
                               {formatPrice(pricingSettings.impact_grant_price || '0')}
                             </span>
-                            <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-400">
+                            <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-400 notranslate" translate="no">
                               {isEn ? `(Subsidized to ${formatPrice(0)})` : `(Disubsidi ${formatPrice(0)} Penuh)`}
                             </span>
                           </div>
@@ -2971,11 +3082,11 @@ export default function ArchitecturePricingIsland({
                         <div className="font-black text-sm text-zinc-950 dark:text-white">
                           Single-App UMKM Pass
                         </div>
-                        <div className="text-xl font-black font-mono text-zinc-950 dark:text-white tabular-nums">
+                        <div className="text-xl font-black font-mono text-zinc-950 dark:text-white tabular-nums notranslate" translate="no">
                           {formatPrice(pricingSettings.single_app_pass_price || '299.000')} <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400">/ {isEn ? '1 App Forever' : '1 Aplikasi Penuh'}</span>
                         </div>
                         {selectedCurrency !== 'IDR' && (
-                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold notranslate" translate="no">
                             ≈ {formatPrice(pricingSettings.single_app_pass_price || '299.000', { forceCurrency: 'IDR' })}
                           </div>
                         )}
@@ -3006,11 +3117,11 @@ export default function ArchitecturePricingIsland({
                         <div className="font-black text-sm text-zinc-950 dark:text-white">
                           Agency Partner & White-Label Studio
                         </div>
-                        <div className="text-xl font-black font-mono text-zinc-950 dark:text-white tabular-nums">
+                        <div className="text-xl font-black font-mono text-zinc-950 dark:text-white tabular-nums notranslate" translate="no">
                           {formatPrice(pricingSettings.agency_whitelabel_price || '990.000')} <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400">/ {isEn ? 'Multi-Client Pack' : 'Paket Agensi'}</span>
                         </div>
                         {selectedCurrency !== 'IDR' && (
-                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold notranslate" translate="no">
                             ≈ {formatPrice(pricingSettings.agency_whitelabel_price || '990.000', { forceCurrency: 'IDR' })}
                           </div>
                         )}
@@ -3134,13 +3245,13 @@ export default function ArchitecturePricingIsland({
                       {/* Price & DP Credit Guarantee Box */}
                       <div className="mb-5 p-3.5 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
                         <div className="flex items-baseline justify-between">
-                          <span className="text-2xl sm:text-3xl font-black font-mono text-zinc-900 dark:text-white">
+                          <span className="text-2xl sm:text-3xl font-black font-mono text-zinc-900 dark:text-white notranslate" translate="no">
                             {formatPrice(pricingSettings.advisory_price || '2.500.000')}
                           </span>
                           <span className="text-xs font-mono text-zinc-500">{isEn ? '/ project' : '/ proyek'}</span>
                         </div>
                         {selectedCurrency !== 'IDR' && (
-                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold notranslate" translate="no">
                             ≈ {formatPrice(pricingSettings.advisory_price || '2.500.000', { forceCurrency: 'IDR' })}
                           </div>
                         )}
@@ -3239,7 +3350,7 @@ export default function ArchitecturePricingIsland({
                           <span className="text-xl sm:text-2xl font-black font-mono text-zinc-900 dark:text-white">
                             {isEn ? 'Algorithmic Fair RAB' : 'RAB Algoritmik Transparan'}
                           </span>
-                          <span className="text-[10px] font-mono font-black text-emerald-800 dark:text-emerald-400">
+                          <span className="text-[10px] font-mono font-black text-emerald-800 dark:text-emerald-400 notranslate" translate="no">
                             {formatPrice(hourlyRate)}/{isEn ? 'hr' : 'jam'}
                           </span>
                         </div>
@@ -3356,10 +3467,10 @@ export default function ArchitecturePricingIsland({
                       <div className="mb-5 p-3.5 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
                         <div className="flex items-baseline justify-between">
                           <div>
-                            <span className="text-xs text-zinc-400 line-through mr-2">
+                            <span className="text-xs text-zinc-400 line-through mr-2 notranslate" translate="no">
                               {formatPrice(pricingSettings.umkm_price || '7.500.000')}
                             </span>
-                            <span className="text-2xl font-black font-mono text-amber-800 dark:text-amber-400">
+                            <span className="text-2xl font-black font-mono text-amber-800 dark:text-amber-400 notranslate" translate="no">
                               {formatPrice(parseCleanIdr(pricingSettings.umkm_price, 7500000) / 2)}
                             </span>
                           </div>
@@ -3368,7 +3479,7 @@ export default function ArchitecturePricingIsland({
                           </span>
                         </div>
                         {selectedCurrency !== 'IDR' && (
-                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold notranslate" translate="no">
                             ≈ {formatPrice(parseCleanIdr(pricingSettings.umkm_price, 7500000) / 2, { forceCurrency: 'IDR' })}
                           </div>
                         )}
@@ -4732,25 +4843,25 @@ return match (true) {
                             <th className="py-3.5 px-3 font-black text-amber-950 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-950/40 min-w-[185px]">
                               <div>Spark &amp; Hibah CSR</div>
                               <div className="text-[9px] font-bold text-amber-900 dark:text-amber-200 mt-0.5">
-                                {formatPrice(0)} ({isEn ? 'Guest 2x / Verified NGO' : 'Tamu 2x / Yayasan Akta'})
+                                <span className="notranslate" translate="no">{formatPrice(0)}</span> ({isEn ? 'Guest 2x / Verified NGO' : 'Tamu 2x / Yayasan Akta'})
                               </div>
                             </th>
                             <th className="py-3.5 px-3 font-black text-cyan-950 dark:text-cyan-300 bg-cyan-100/60 dark:bg-cyan-950/40 min-w-[195px]">
                               <div>Starter &amp; UMKM Pass</div>
                               <div className="text-[9px] font-bold text-cyan-900 dark:text-cyan-200 mt-0.5">
-                                {formatPrice(pricingSettings.retail_lite_price || '99.000')} / {formatPrice(pricingSettings.single_app_pass_price || '299.000')}
+                                <span className="notranslate" translate="no">{formatPrice(pricingSettings.retail_lite_price || '99.000')}</span> / <span className="notranslate" translate="no">{formatPrice(pricingSettings.single_app_pass_price || '299.000')}</span>
                               </div>
                             </th>
                             <th className="py-3.5 px-3 font-black text-emerald-950 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/50 min-w-[210px]">
                               <div>Pro / Agency / Ultimate</div>
                               <div className="text-[9px] font-bold text-emerald-900 dark:text-emerald-200 mt-0.5">
-                                {formatPrice(pricingSettings.retail_pro_price || '399.000')} – {formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')}
+                                <span className="notranslate" translate="no">{formatPrice(pricingSettings.retail_pro_price || '399.000')}</span> – <span className="notranslate" translate="no">{formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')}</span>
                               </div>
                             </th>
                             <th className="py-3.5 px-3 font-black text-zinc-950 dark:text-zinc-100 bg-zinc-200/70 dark:bg-zinc-900 min-w-[195px]">
                               <div>Advisory &amp; UMKM Studio</div>
                               <div className="text-[9px] font-bold text-zinc-700 dark:text-zinc-300 mt-0.5">
-                                {formatPrice(pricingSettings.advisory_price || '2.500.000')} / {formatPrice(parseCleanIdr(pricingSettings.umkm_price, 7500000) / 2)}
+                                <span className="notranslate" translate="no">{formatPrice(pricingSettings.advisory_price || '2.500.000')}</span> / <span className="notranslate" translate="no">{formatPrice(parseCleanIdr(pricingSettings.umkm_price, 7500000) / 2)}</span>
                               </div>
                             </th>
                             <th className="py-3.5 px-3 font-black text-emerald-950 dark:text-emerald-200 bg-emerald-200/70 dark:bg-emerald-950/80 min-w-[220px]">

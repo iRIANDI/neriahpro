@@ -174,6 +174,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
     document.cookie = `neriah_locale=${newLang};path=/;max-age=31536000`;
     document.cookie = 'neriah_locale_manual=1;path=/;max-age=31536000';
     try { localStorage.setItem('neriah_blueprint_lang', newLang); } catch(e) {}
+    try { window.dispatchEvent(new CustomEvent('neriah-language-changed', { detail: { lang: newLang } })); } catch(e) {}
     setLang(newLang);
     setActiveTier2(null);
     setGlobalLangOpen(false);
@@ -195,6 +196,7 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
     setActiveTier2(code);
     setGlobalLangOpen(false);
     document.cookie = 'neriah_locale_manual=1;path=/;max-age=31536000';
+    try { window.dispatchEvent(new CustomEvent('neriah-language-changed', { detail: { lang: code } })); } catch(e) {}
     if (window.translateLanguage) {
       window.translateLanguage(code);
     } else {

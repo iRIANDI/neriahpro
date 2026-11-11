@@ -417,6 +417,10 @@
             document.cookie = 'googtrans=/id/' + langCode + '; path=/; domain=' + window.location.hostname;
             document.cookie = 'googtrans=/id/' + langCode + '; path=/;';
 
+            try {
+                window.dispatchEvent(new CustomEvent('neriah-language-changed', { detail: { lang: langCode } }));
+            } catch(e) {}
+
             const select = document.querySelector('.goog-te-combo');
             if (select) {
                 select.value = langCode;

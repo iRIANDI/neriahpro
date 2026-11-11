@@ -71,59 +71,7 @@ class CvProFinanceReportPage extends Page
 
     public function mount(): void
     {
-        // Seed default initial records if table exists and empty
-        if (Schema::hasTable('cv_finance_records') && CvFinanceRecord::query()->count() === 0) {
-            $defaultRecords = [
-                [
-                    'trx_code' => 'TRX-101',
-                    'transaction_date' => '2026-10-01',
-                    'client_name' => 'Budi Santoso (PT Solusi Cemerlang)',
-                    'client_email' => 'budi.santoso@solusicemerlang.com',
-                    'package_name' => 'Standard (ATS Optimized)',
-                    'amount_idr' => 75000,
-                    'payment_method' => 'Midtrans QRIS',
-                    'status' => 'paid',
-                    'notes' => 'Poles kata kerja aktif dan audit skor ATS 85+.',
-                ],
-                [
-                    'trx_code' => 'TRX-102',
-                    'transaction_date' => '2026-10-02',
-                    'client_name' => 'Siti Rahma, S.Kom',
-                    'client_email' => 'siti.rahma@gmail.com',
-                    'package_name' => 'Full Stack',
-                    'amount_idr' => 150000,
-                    'payment_method' => 'BCA Transfer',
-                    'status' => 'paid',
-                    'notes' => 'Paket Full Stack lengkap dengan cover letter dan profil LinkedIn.',
-                ],
-                [
-                    'trx_code' => 'TRX-103',
-                    'transaction_date' => '2026-10-03',
-                    'client_name' => 'Ahmad Fauzi, M.T.',
-                    'client_email' => 'ahmad.fauzi@outlook.com',
-                    'package_name' => 'Executive VIP',
-                    'amount_idr' => 300000,
-                    'payment_method' => 'Mandiri Transfer',
-                    'status' => 'paid',
-                    'notes' => 'Executive coaching + simulasi mock interview STAR.',
-                ],
-                [
-                    'trx_code' => 'TRX-104',
-                    'transaction_date' => '2026-10-04',
-                    'client_name' => 'Dian Permata',
-                    'client_email' => 'dian.permata@yahoo.com',
-                    'package_name' => 'Standard (ATS Optimized)',
-                    'amount_idr' => 75000,
-                    'payment_method' => 'Midtrans QRIS',
-                    'status' => 'pending',
-                    'notes' => 'Menunggu verifikasi pembayaran QRIS.',
-                ],
-            ];
-
-            foreach ($defaultRecords as $row) {
-                CvFinanceRecord::create($row);
-            }
-        }
+        // No auto-seeding - keep records clean and managed strictly by admin or webhook transactions
     }
 
     public function clearSearch(): void

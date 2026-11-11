@@ -45,9 +45,57 @@ class CvProFinanceAndBlackBoxTelemetryTest extends TestCase
             ->assertSee('Total Omset Layanan');
     }
 
-    public function test_cv_pro_finance_kpi_calculations_and_seeding(): void
+    public function test_cv_pro_finance_kpi_calculations(): void
     {
         $this->actingAs($this->admin);
+
+        // Verify initial empty state
+        $component = Livewire::test(CvProFinanceReportPage::class);
+        $emptyKpis = $component->get('kpis');
+        $this->assertEquals(0, $emptyKpis['total_omset']);
+        $this->assertEquals(0, $emptyKpis['total_count']);
+
+        // Create explicit test records (3 paid = Rp 525.000, 1 pending)
+        CvFinanceRecord::create([
+            'trx_code' => 'TEST-001',
+            'transaction_date' => '2026-10-01',
+            'client_name' => 'Klien Test A',
+            'client_email' => 'a@test.com',
+            'package_name' => 'Standard',
+            'amount_idr' => 75000,
+            'payment_method' => 'QRIS',
+            'status' => 'paid',
+        ]);
+        CvFinanceRecord::create([
+            'trx_code' => 'TEST-002',
+            'transaction_date' => '2026-10-02',
+            'client_name' => 'Klien Test B',
+            'client_email' => 'b@test.com',
+            'package_name' => 'Full Stack',
+            'amount_idr' => 150000,
+            'payment_method' => 'BCA',
+            'status' => 'paid',
+        ]);
+        CvFinanceRecord::create([
+            'trx_code' => 'TEST-003',
+            'transaction_date' => '2026-10-03',
+            'client_name' => 'Klien Test C',
+            'client_email' => 'c@test.com',
+            'package_name' => 'VIP',
+            'amount_idr' => 300000,
+            'payment_method' => 'Mandiri',
+            'status' => 'paid',
+        ]);
+        CvFinanceRecord::create([
+            'trx_code' => 'TEST-004',
+            'transaction_date' => '2026-10-04',
+            'client_name' => 'Klien Test D',
+            'client_email' => 'd@test.com',
+            'package_name' => 'Standard',
+            'amount_idr' => 75000,
+            'payment_method' => 'QRIS',
+            'status' => 'pending',
+        ]);
 
         $component = Livewire::test(CvProFinanceReportPage::class);
 
@@ -58,7 +106,6 @@ class CvProFinanceAndBlackBoxTelemetryTest extends TestCase
         $this->assertArrayHasKey('total_count', $kpis);
         $this->assertArrayHasKey('success_rate', $kpis);
 
-        // Seeded 4 records (3 paid = Rp 525.000, 1 pending)
         $this->assertEquals(525000, $kpis['total_omset']);
         $this->assertEquals(175000, $kpis['aov']);
         $this->assertEquals(4, $kpis['total_count']);

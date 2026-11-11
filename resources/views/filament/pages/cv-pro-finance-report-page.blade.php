@@ -128,7 +128,7 @@
                         <input
                             type="text"
                             wire:model.live.debounce.300ms="search"
-                            placeholder="misal: Budi Santoso atau TRX-101..."
+                            placeholder="misal: cari nama klien atau kode transaksi..."
                             class="bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs px-3 py-1.5 pr-7 text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 rounded-none w-56 sm:w-64 focus:ring-1 focus:ring-zinc-500"
                         />
                         @if (!empty($search))

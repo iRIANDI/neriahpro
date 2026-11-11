@@ -41,12 +41,25 @@ export default function HeroIsland({
 
   const isEn = currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
 
-  // Pricing constants from settings
-  const retailLitePrice = pricingSettings?.retail_lite_price || '99.000';
-  const retailProPrice = pricingSettings?.retail_pro_price || '399.000';
-  const retailUltimatePrice = pricingSettings?.retail_ultimate_price || '1.490.000';
-  const umkmPrice = pricingSettings?.umkm_price || '7.500.000';
-  const mvpPrice = pricingSettings?.mvp_price || 'Custom Quotation';
+  const parseCleanIdr = (val, defaultVal = 0) => {
+    if (val === null || val === undefined || val === '') return defaultVal;
+    if (typeof val === 'number') return Math.round(val);
+    const cleanStr = String(val).replace(/[^0-9]/g, '');
+    const parsed = parseInt(cleanStr, 10);
+    return isNaN(parsed) ? defaultVal : parsed;
+  };
+
+  const formatPriceNumber = (val, fallback = 0) => {
+    const num = parseCleanIdr(val, fallback);
+    return isEn ? num.toLocaleString('en-US') : num.toLocaleString('id-ID');
+  };
+
+  // Pricing constants from settings with strict thousand separators
+  const retailLitePrice = formatPriceNumber(pricingSettings?.retail_lite_price, 99000);
+  const retailProPrice = formatPriceNumber(pricingSettings?.retail_pro_price, 399000);
+  const retailUltimatePrice = formatPriceNumber(pricingSettings?.retail_ultimate_price, 1490000);
+  const umkmPrice = formatPriceNumber(pricingSettings?.umkm_price, 7500000);
+  const mvpPrice = pricingSettings?.mvp_price || (isEn ? 'Custom Quotation' : 'Penawaran Kustom');
 
   // State for the Unified Idea & MarkItDown Workspace
   const [ideaText, setIdeaText] = useState('');
@@ -898,7 +911,7 @@ export default function HeroIsland({
                         {isEn ? 'INVESTMENT' : 'BIAYA INVESTASI'}
                       </div>
                       <div className="text-lg font-black font-mono text-zinc-900 dark:text-white">
-                        Rp 0 <span className="text-xs font-normal text-zinc-500">(Gratis) s/d Rp {retailUltimatePrice}</span>
+                        Rp 0 <span className="text-xs font-normal text-zinc-500">{isEn ? `(Free) up to Rp ${retailUltimatePrice}` : `(Gratis) s/d Rp ${retailUltimatePrice}`}</span>
                       </div>
                       <div className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
                         {isEn ? 'One-time payment • Lifetime access' : 'Sekali bayar • Akses permanen & unduh instan'}
@@ -992,7 +1005,7 @@ export default function HeroIsland({
                         {isEn ? 'INVESTMENT' : 'BIAYA INVESTASI'}
                       </div>
                       <div className="text-lg font-black font-mono text-zinc-900 dark:text-white">
-                        Rp {pricingSettings?.studio_umkm_price || '3.750.000'} <span className="text-xs font-normal text-zinc-500">(UMKM) / Custom Quotation</span>
+                        Rp {formatPriceNumber(pricingSettings?.studio_umkm_price, 3750000)} <span className="text-xs font-normal text-zinc-500">(UMKM) / Custom Quotation</span>
                       </div>
                       <div className="text-[10px] font-mono text-blue-600 dark:text-blue-400 mt-0.5">
                         {isEn ? 'Staged 50% DP Milestone • Developer Service Agreement' : 'Termin Bertahap DP 50% • Kesepakatan Layanan Pengembang'}

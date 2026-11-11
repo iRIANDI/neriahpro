@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Check,
@@ -44,6 +44,34 @@ import {
   parseRegionalNumberInput,
   COUNTRY_ZONES_TEMPLATE,
 } from '../utils/inputHygiene';
+
+export const DEFAULT_RATES_TO_IDR = {
+  IDR: 1,
+  USD: 16000,
+  EUR: 17200,
+  SGD: 11900,
+  GBP: 20200,
+  AUD: 10500,
+  JPY: 104,
+};
+
+export const CURRENCY_SYMBOLS = {
+  IDR: 'Rp',
+  USD: '$',
+  EUR: '€',
+  SGD: 'S$',
+  GBP: '£',
+  AUD: 'A$',
+  JPY: '¥',
+};
+
+export const parseCleanIdr = (val, defaultVal = 0) => {
+  if (val === null || val === undefined || val === '') return defaultVal;
+  if (typeof val === 'number') return Math.round(val);
+  const cleanStr = String(val).replace(/[^0-9]/g, '');
+  const parsed = parseInt(cleanStr, 10);
+  return isNaN(parsed) ? defaultVal : parsed;
+};
 
 /**
  * Concrete Package Registry for fundamental architectural consistency.
@@ -359,10 +387,94 @@ export default function ArchitecturePricingIsland({
   currentLocale = 'id',
   pricingSettings = {},
   authUser = null,
-  countries = []
+  countries = [],
+  currencyData = {}
 }) {
   const isEn = currentLocale === 'en' || (typeof window !== 'undefined' && (document.documentElement.lang?.startsWith('en') || document.cookie.includes('neriah_locale=en')));
   const countryList = normalizeCountryZones(countries || COUNTRY_ZONES_TEMPLATE);
+
+  // Multi-Currency Selection: IDR, USD, EUR, SGD, GBP, AUD, JPY
+  const [selectedCurrency, setSelectedCurrency] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('neriah_pricing_currency');
+      if (saved && ['IDR', 'USD', 'EUR', 'SGD', 'GBP', 'AUD', 'JPY'].includes(saved)) {
+        return saved;
+      }
+    }
+    return isEn ? 'USD' : 'IDR';
+  });
+
+  const handleCurrencyChange = (newCurr) => {
+    setSelectedCurrency(newCurr);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('neriah_pricing_currency', newCurr);
+    }
+  };
+
+  const activeRatesToIdr = useMemo(() => {
+    return {
+      ...DEFAULT_RATES_TO_IDR,
+      ...(currencyData?.rates_to_idr || {})
+    };
+  }, [currencyData]);
+
+  const formatPrice = (rawVal, options = {}) => {
+    const {
+      showEquivalent = false,
+      forceCurrency = null,
+      forceEn = isEn
+    } = options;
+
+    const targetCurr = forceCurrency || selectedCurrency;
+    const idr = parseCleanIdr(rawVal, 0);
+
+    if (idr === 0) {
+      return targetCurr === 'IDR' ? 'Rp 0' : `${CURRENCY_SYMBOLS[targetCurr] || ''}0`;
+    }
+
+    const rate = activeRatesToIdr[targetCurr] || 1;
+
+    if (targetCurr === 'IDR') {
+      const formatted = forceEn
+        ? idr.toLocaleString('en-US')
+        : idr.toLocaleString('id-ID');
+      return `Rp ${formatted}`;
+    }
+
+    const foreignVal = idr / rate;
+    const symbol = CURRENCY_SYMBOLS[targetCurr] || targetCurr + ' ';
+    const decimals = targetCurr === 'JPY' ? 0 : 2;
+    const formattedForeign = foreignVal.toLocaleString('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+
+    const mainPrice = `${symbol}${formattedForeign}`;
+
+    if (showEquivalent) {
+      const idrFormatted = forceEn
+        ? idr.toLocaleString('en-US')
+        : idr.toLocaleString('id-ID');
+      return `${mainPrice} (≈ Rp ${idrFormatted})`;
+    }
+
+    return mainPrice;
+  };
+
+  const getPackageBaseIdr = (pkgKey) => {
+    switch (pkgKey) {
+      case 'retail_spark': return 0;
+      case 'retail_lite': return parseCleanIdr(pricingSettings.retail_lite_price, 99000);
+      case 'retail_pro': return parseCleanIdr(pricingSettings.retail_pro_price, 399000);
+      case 'single_app_umkm_pass': return parseCleanIdr(pricingSettings.single_app_pass_price, 299000);
+      case 'agency_whitelabel_partner': return parseCleanIdr(pricingSettings.agency_whitelabel_price, 990000);
+      case 'retail_ultimate': return parseCleanIdr(pricingSettings.retail_ultimate_price, 1490000);
+      case 'impact_nonprofit_grant': return parseCleanIdr(pricingSettings.impact_grant_price, 0);
+      case 'blueprint_advisory': return parseCleanIdr(pricingSettings.advisory_price, 2500000);
+      case 'umkm_starter': return parseCleanIdr(pricingSettings.umkm_price, 3750000);
+      default: return 0;
+    }
+  };
 
   // Dynamic feature flag & admin toggle for CV Pro module switcher
   const isCvProEnabled = !featureFlags?.midtrans_mode && Boolean(featureFlags?.enable_cv_pro) && Boolean(featureFlags?.pricing_show_cv_tab);
@@ -812,6 +924,18 @@ export default function ArchitecturePricingIsland({
       if (selectedPackage === 'umkm_starter' && umkmCategory) payload.append('umkm_category', umkmCategory);
       if (formData.notes) payload.append('notes', formData.notes);
       if (formData.estimated_budget_display) payload.append('budget_range', formData.estimated_budget_display);
+
+      // Multi-currency audit trail payload
+      const currentRateToIdr = activeRatesToIdr[selectedCurrency] || 1;
+      const packageIdrPrice = getPackageBaseIdr(selectedPackage);
+      const foreignAmount = selectedCurrency === 'IDR'
+        ? packageIdrPrice
+        : Number((packageIdrPrice / currentRateToIdr).toFixed(selectedCurrency === 'JPY' ? 0 : 2));
+
+      payload.append('selected_currency', selectedCurrency);
+      payload.append('exchange_rate', currentRateToIdr);
+      payload.append('foreign_amount', foreignAmount);
+
       if (selectedPackage === 'impact_nonprofit_grant') {
         payload.append('legal_decree_number', formData.legal_decree_number || '');
         payload.append('organization_type', formData.organization_type || 'NONPROFIT_YAYASAN');
@@ -1489,18 +1613,18 @@ export default function ArchitecturePricingIsland({
               const formatIdrPlain = (num) => formatRegionalNumberInput(Math.round(num), isEn ? 'en' : 'id');
 
               const sectorComplexityMap = [
-                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 8, states: 6, locks: 3, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 12, states: 9, locks: 4, integrations: 3, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
-                { tables: 11, states: 8, locks: 5, integrations: 3, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
-                { tables: 11, states: 8, locks: 3, integrations: 2, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
-                { tables: 10, states: 9, locks: 3, integrations: 3, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 8, states: 6, locks: 2, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 8, states: 6, locks: 2, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 9, states: 7, locks: 2, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: 'Pro Agentic (Rp ' + (pricingSettings.retail_pro_price || '399.000') + ')' },
-                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
-                { tables: 10, states: 8, locks: 3, integrations: 3, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: 'Ultimate OS (Rp ' + (pricingSettings.retail_ultimate_price || '1.490.000') + ')' },
-                { tables: 10, states: 8, locks: 3, integrations: 2, recommendedTierKey: 'impact_nonprofit_grant', recommendedRetail: 'grant', retailLabel: isEn ? 'CSR Non-Profit Grant (Rp 0 Subsidized)' : 'Hibah CSR Yayasan / NGO (Rp 0 Terverifikasi)' },
+                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: `Pro Agentic (${formatPrice(pricingSettings.retail_pro_price || '399.000')})` },
+                { tables: 8, states: 6, locks: 3, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: `Pro Agentic (${formatPrice(pricingSettings.retail_pro_price || '399.000')})` },
+                { tables: 12, states: 9, locks: 4, integrations: 3, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: `Ultimate OS (${formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')})` },
+                { tables: 11, states: 8, locks: 5, integrations: 3, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: `Ultimate OS (${formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')})` },
+                { tables: 11, states: 8, locks: 3, integrations: 2, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: `Ultimate OS (${formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')})` },
+                { tables: 10, states: 9, locks: 3, integrations: 3, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: `Pro Agentic (${formatPrice(pricingSettings.retail_pro_price || '399.000')})` },
+                { tables: 8, states: 6, locks: 2, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: `Pro Agentic (${formatPrice(pricingSettings.retail_pro_price || '399.000')})` },
+                { tables: 8, states: 6, locks: 2, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: `Pro Agentic (${formatPrice(pricingSettings.retail_pro_price || '399.000')})` },
+                { tables: 9, states: 7, locks: 2, integrations: 2, recommendedTierKey: 'retail_pro', recommendedRetail: 'pro', retailLabel: `Pro Agentic (${formatPrice(pricingSettings.retail_pro_price || '399.000')})` },
+                { tables: 9, states: 7, locks: 3, integrations: 2, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: `Ultimate OS (${formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')})` },
+                { tables: 10, states: 8, locks: 3, integrations: 3, recommendedTierKey: 'retail_ultimate', recommendedRetail: 'ultimate', retailLabel: `Ultimate OS (${formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')})` },
+                { tables: 10, states: 8, locks: 3, integrations: 2, recommendedTierKey: 'impact_nonprofit_grant', recommendedRetail: 'grant', retailLabel: isEn ? `CSR Non-Profit Grant (${formatPrice(0)} Subsidized)` : `Hibah CSR Yayasan / NGO (${formatPrice(0)} Terverifikasi)` },
               ];
 
               const wizardSector = SECTORAL_ARCHETYPES_SHOWCASE[selectedSectorIdx] || SECTORAL_ARCHETYPES_SHOWCASE[0];
@@ -1537,7 +1661,7 @@ export default function ArchitecturePricingIsland({
                 retail_pro: {
                   key: 'retail_pro',
                   shortName: 'Pro Agentic Blueprint',
-                  priceStr: `Rp ${pricingSettings.retail_pro_price || '399.000'}`,
+                  priceStr: formatPrice(pricingSettings.retail_pro_price || '399.000', { showEquivalent: selectedCurrency !== 'IDR' }),
                   priceSub: isEn ? 'One-time official SaaS license' : 'Sekali bayar lisensi SaaS resmi',
                   badge: isEn ? 'POPULAR CHOICE' : 'PILIHAN UTAMA',
                   desc: isEn
@@ -1547,7 +1671,7 @@ export default function ArchitecturePricingIsland({
                 retail_ultimate: {
                   key: 'retail_ultimate',
                   shortName: 'Ultimate Architecture OS',
-                  priceStr: `Rp ${pricingSettings.retail_ultimate_price || '1.490.000'}`,
+                  priceStr: formatPrice(pricingSettings.retail_ultimate_price || '1.490.000', { showEquivalent: selectedCurrency !== 'IDR' }),
                   priceSub: isEn ? 'Includes 1-on-1 Architect Call' : 'Termasuk Telepon Arsitek 1-on-1',
                   badge: isEn ? 'ENTERPRISE ARCHITECT' : 'ARSITEKTUR LENGKAP',
                   desc: isEn
@@ -1557,7 +1681,7 @@ export default function ArchitecturePricingIsland({
                 single_app_umkm_pass: {
                   key: 'single_app_umkm_pass',
                   shortName: 'Single-App UMKM Pass',
-                  priceStr: `Rp ${pricingSettings.single_app_pass_price || '299.000'}`,
+                  priceStr: formatPrice(pricingSettings.single_app_pass_price || '299.000', { showEquivalent: selectedCurrency !== 'IDR' }),
                   priceSub: isEn ? 'Pay-per-project (1 app lifetime)' : 'Sekali bayar 1 aplikasi selamanya',
                   badge: isEn ? 'PAY-PER-APP' : '1 APLIKASI PENUH',
                   desc: isEn
@@ -1567,7 +1691,7 @@ export default function ArchitecturePricingIsland({
                 retail_lite: {
                   key: 'retail_lite',
                   shortName: 'Starter AI Architect',
-                  priceStr: `Rp ${pricingSettings.retail_lite_price || '99.000'}`,
+                  priceStr: formatPrice(pricingSettings.retail_lite_price || '99.000', { showEquivalent: selectedCurrency !== 'IDR' }),
                   priceSub: isEn ? 'Fast concept sanity check' : 'Uji konsep arsitektur cepat',
                   badge: isEn ? 'BUDGET STARTER' : 'STARTER EKONOMIS',
                   desc: isEn
@@ -1577,7 +1701,7 @@ export default function ArchitecturePricingIsland({
                 agency_whitelabel_partner: {
                   key: 'agency_whitelabel_partner',
                   shortName: 'Agency Partner White-Label',
-                  priceStr: `Rp ${pricingSettings.agency_whitelabel_price || '990.000'}`,
+                  priceStr: formatPrice(pricingSettings.agency_whitelabel_price || '990.000', { showEquivalent: selectedCurrency !== 'IDR' }),
                   priceSub: isEn ? '5 seats studio pack' : 'Paket studio agensi 5 kursi',
                   badge: isEn ? 'AGENCY B2B2C' : 'MULTI-KLIEN AGENSI',
                   desc: isEn
@@ -1587,17 +1711,17 @@ export default function ArchitecturePricingIsland({
                 impact_nonprofit_grant: {
                   key: 'impact_nonprofit_grant',
                   shortName: isEn ? 'Impact & Non-Profit Grant' : 'Hibah Yayasan, NGO & Rumah Ibadah',
-                  priceStr: 'Rp 0',
-                  priceSub: isEn ? '100% CSR Subsidized (Real Value Rp 1.490.000)' : 'Subsidi Penuh CSR 100% (Nilai Riil Rp 1.490.000)',
+                  priceStr: formatPrice(0),
+                  priceSub: isEn ? `100% CSR Subsidized (Real Value ${formatPrice(1490000)})` : `Subsidi Penuh CSR 100% (Nilai Riil ${formatPrice(1490000)})`,
                   badge: isEn ? 'CSR GRANT' : 'HIBAH SOSIAL CSR',
                   desc: isEn
-                    ? 'Real value Rp 1.490.000 fully subsidized to Rp 0 for registered NGOs, religious houses, social schools & academic research (Requires legal doc verification).'
-                    : 'Nilai riil Rp 1.490.000 disubsidi 100% menjadi Rp 0 khusus Yayasan, Rumah Ibadah, Sekolah Sosial & Riset Kampus (Wajib verifikasi akta/SK Kemenkumham).',
+                    ? `Real value ${formatPrice(1490000)} fully subsidized to ${formatPrice(0)} for registered NGOs, religious houses, social schools & academic research (Requires legal doc verification).`
+                    : `Nilai riil ${formatPrice(1490000)} disubsidi 100% menjadi ${formatPrice(0)} khusus Yayasan, Rumah Ibadah, Sekolah Sosial & Riset Kampus (Wajib verifikasi akta/SK Kemenkumham).`,
                 },
                 retail_spark: {
                   key: 'retail_spark',
                   shortName: 'Spark Guest Idea Audit',
-                  priceStr: 'Rp 0',
+                  priceStr: formatPrice(0),
                   priceSub: isEn ? 'Free Guest Mode (2x/month)' : 'Mode Tamu Gratis (Kuota 2x/bulan)',
                   badge: isEn ? 'GUEST EXPLORER' : 'KUOTA TAMU',
                   desc: isEn
@@ -1609,26 +1733,26 @@ export default function ArchitecturePricingIsland({
               const activeRetailPkg = retailPackageCatalog[wizardRetailTier] || retailPackageCatalog['retail_pro'];
 
               const retailWizardPackages = [
-                { key: 'retail_pro', label: `Pro Agentic Blueprint — Rp ${pricingSettings.retail_pro_price || '399.000'} (${isEn ? 'Recommended' : 'Rekomendasi Utama'})` },
-                { key: 'retail_ultimate', label: `Ultimate Architecture OS + 1-on-1 Call — Rp ${pricingSettings.retail_ultimate_price || '1.490.000'}` },
-                { key: 'single_app_umkm_pass', label: `Single-App UMKM Pass — Rp ${pricingSettings.single_app_pass_price || '299.000'} (${isEn ? '1 App One-Time' : 'Sekali Bayar 1 Aplikasi'})` },
-                { key: 'retail_lite', label: `Starter AI Architect — Rp ${pricingSettings.retail_lite_price || '99.000'}` },
-                { key: 'agency_whitelabel_partner', label: `Agency Partner White-Label (5-Seat) — Rp ${pricingSettings.agency_whitelabel_price || '990.000'}` },
-                { key: 'impact_nonprofit_grant', label: `${isEn ? 'CSR Non-Profit / NGO Grant' : 'Hibah CSR Yayasan / NGO'} — Rp ${pricingSettings.impact_grant_price || '0'} (${isEn ? 'Doc Verification' : 'Verifikasi Akta'})` },
-                { key: 'retail_spark', label: `Spark Guest Idea Audit — Rp 0 (${isEn ? '2x/mo Quota • Phase 1–2 Only' : 'Kuota 2x/bln • Terbatas Fase 1–2'})` },
+                { key: 'retail_pro', label: `Pro Agentic Blueprint — ${formatPrice(pricingSettings.retail_pro_price || '399.000')} (${isEn ? 'Recommended' : 'Rekomendasi Utama'})` },
+                { key: 'retail_ultimate', label: `Ultimate Architecture OS + 1-on-1 Call — ${formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')}` },
+                { key: 'single_app_umkm_pass', label: `Single-App UMKM Pass — ${formatPrice(pricingSettings.single_app_pass_price || '299.000')} (${isEn ? '1 App One-Time' : 'Sekali Bayar 1 Aplikasi'})` },
+                { key: 'retail_lite', label: `Starter AI Architect — ${formatPrice(pricingSettings.retail_lite_price || '99.000')}` },
+                { key: 'agency_whitelabel_partner', label: `Agency Partner White-Label (5-Seat) — ${formatPrice(pricingSettings.agency_whitelabel_price || '990.000')}` },
+                { key: 'impact_nonprofit_grant', label: `${isEn ? 'CSR Non-Profit / NGO Grant' : 'Hibah CSR Yayasan / NGO'} — ${formatPrice(pricingSettings.impact_grant_price || '0')} (${isEn ? 'Doc Verification' : 'Verifikasi Akta'})` },
+                { key: 'retail_spark', label: `Spark Guest Idea Audit — ${formatPrice(0)} (${isEn ? '2x/mo Quota • Phase 1–2 Only' : 'Kuota 2x/bln • Terbatas Fase 1–2'})` },
               ];
 
               const mitraWizardPackages = [
-                { key: 'full_mvp', label: `${isEn ? 'Custom Full Turnkey MVP (Milestone RAB)' : 'Custom Full Turnkey MVP (RAB Algoritmik Bertahap)'} — Rp ${formatIdrPlain(estimatedRabIdr)}` },
-                { key: 'umkm_starter', label: `${isEn ? 'UMKM Digital Starter (50% Subsidy)' : 'UMKM Digital Starter (Subsidi 50%)'} — Rp ${pricingSettings.umkm_price || '3.750.000'}` },
-                { key: 'blueprint_advisory', label: `${isEn ? '1-on-1 Principal Architect Advisory (100% DP Credit)' : '1-on-1 Advisory Blueprint (Potong DP 100%)'} — Rp ${pricingSettings.advisory_price || '2.500.000'}` },
+                { key: 'full_mvp', label: `${isEn ? 'Custom Full Turnkey MVP (Milestone RAB)' : 'Custom Full Turnkey MVP (RAB Algoritmik Bertahap)'} — ${formatPrice(estimatedRabIdr)}` },
+                { key: 'umkm_starter', label: `${isEn ? 'UMKM Digital Starter (50% Subsidy)' : 'UMKM Digital Starter (Subsidi 50%)'} — ${formatPrice(pricingSettings.umkm_price || '3.750.000')}` },
+                { key: 'blueprint_advisory', label: `${isEn ? '1-on-1 Principal Architect Advisory (100% DP Credit)' : '1-on-1 Advisory Blueprint (Potong DP 100%)'} — ${formatPrice(pricingSettings.advisory_price || '2.500.000')}` },
               ];
 
               const mitraPackageCatalog = {
                 full_mvp: {
                   key: 'full_mvp',
                   shortName: isEn ? 'Custom Full Turnkey MVP' : 'Custom Full Turnkey MVP',
-                  priceStr: `Rp ${formatIdrPlain(estimatedRabIdr)}`,
+                  priceStr: formatPrice(estimatedRabIdr, { showEquivalent: selectedCurrency !== 'IDR' }),
                   priceSub: `${totalHours} ${isEn ? 'Man-Hours' : 'Jam Kerja'} (${workingDays} ${isEn ? 'Work Days' : 'Hari Kerja'})`,
                   badge: isEn ? 'TURNKEY MILESTONE SLA' : 'PEMBAYARAN BERTAHAP SLA',
                   desc: isEn
@@ -1638,7 +1762,7 @@ export default function ArchitecturePricingIsland({
                 umkm_starter: {
                   key: 'umkm_starter',
                   shortName: isEn ? 'UMKM Digital Starter (50% Subsidy)' : 'UMKM Digital Starter (Subsidi 50%)',
-                  priceStr: `Rp ${pricingSettings.umkm_price || '3.750.000'}`,
+                  priceStr: formatPrice(pricingSettings.umkm_price || '3.750.000', { showEquivalent: selectedCurrency !== 'IDR' }),
                   priceSub: isEn ? '2–3 Weeks (50% DP + 50% UAT)' : '2–3 Minggu (DP 50% + Pelunasan UAT 50%)',
                   badge: isEn ? '50% UMKM SUBSIDY' : 'SUBSIDI UMKM 50%',
                   desc: isEn
@@ -1648,7 +1772,7 @@ export default function ArchitecturePricingIsland({
                 blueprint_advisory: {
                   key: 'blueprint_advisory',
                   shortName: isEn ? '1-on-1 Principal Architect Advisory' : '1-on-1 Advisory Blueprint Studio',
-                  priceStr: `Rp ${pricingSettings.advisory_price || '2.500.000'}`,
+                  priceStr: formatPrice(pricingSettings.advisory_price || '2.500.000', { showEquivalent: selectedCurrency !== 'IDR' }),
                   priceSub: isEn ? '24–48 Hours • 100% Deducts MVP DP' : '24–48 Jam Kerja • Potong DP MVP 100%',
                   badge: isEn ? '100% DP CREDIT' : 'POTONG DP 100%',
                   desc: isEn
@@ -2243,6 +2367,66 @@ export default function ArchitecturePricingIsland({
               );
             })()}
 
+            {/* ========================================================================= */}
+            {/* 1.8 GLOBAL MULTI-CURRENCY CONVERTER & REGIONAL FX AUDIT BAR               */}
+            {/* ========================================================================= */}
+            <div className="flex flex-col items-center justify-center mb-6 sm:mb-8 w-full px-2 sm:px-4">
+              <div className="w-full max-w-7xl p-3 sm:p-4 bg-white dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs flex flex-col lg:flex-row items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-2 py-0.5 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950 font-mono text-[10px] font-black tracking-widest uppercase rounded-none">
+                    {isEn ? 'CURRENCY / REGIONAL FX' : 'MATA UANG / KONVERSI REALTIME'}
+                  </span>
+                  <span className="text-xs font-mono font-bold text-zinc-700 dark:text-zinc-300">
+                    {isEn ? 'World-Class Multi-Currency Display:' : 'Pilihan Mata Uang Acuan Regional:'}
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-1.5 font-mono text-xs">
+                  {[
+                    { code: 'IDR', label: 'IDR (Rp)', flag: '🇮🇩' },
+                    { code: 'USD', label: 'USD ($)', flag: '🇺🇸' },
+                    { code: 'EUR', label: 'EUR (€)', flag: '🇪🇺' },
+                    { code: 'SGD', label: 'SGD (S$)', flag: '🇸🇬' },
+                    { code: 'GBP', label: 'GBP (£)', flag: '🇬🇧' },
+                    { code: 'AUD', label: 'AUD (A$)', flag: '🇦🇺' },
+                    { code: 'JPY', label: 'JPY (¥)', flag: '🇯🇵' },
+                  ].map((curr) => {
+                    const isActive = selectedCurrency === curr.code;
+                    return (
+                      <button
+                        key={curr.code}
+                        type="button"
+                        onClick={() => handleCurrencyChange(curr.code)}
+                        className={`px-2.5 py-1 text-xs font-mono font-black transition border rounded-none cursor-pointer ${
+                          isActive
+                            ? 'bg-zinc-950 text-white border-zinc-950 dark:bg-zinc-100 dark:text-zinc-950 dark:border-zinc-100 shadow-xs'
+                            : 'bg-zinc-50 hover:bg-zinc-200 text-zinc-800 border-zinc-300 dark:bg-zinc-950 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700'
+                        }`}
+                      >
+                        <span className="mr-1">{curr.flag}</span>
+                        <span>{curr.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 text-center lg:text-right">
+                  {selectedCurrency === 'IDR' ? (
+                    <span>
+                      {isEn ? 'Official Settlement: Indonesian Rupiah (IDR)' : 'Mata Uang Acuan: Rupiah Indonesia (IDR)'}
+                    </span>
+                  ) : (
+                    <span>
+                      1 {selectedCurrency} ≈ Rp {parseCleanIdr(activeRatesToIdr[selectedCurrency] || 16000).toLocaleString(isEn ? 'en-US' : 'id-ID')} &bull;{' '}
+                      <span className="text-emerald-700 dark:text-emerald-400 font-bold">
+                        {isEn ? 'Settle in IDR per BI rules' : 'Penyelesaian via IDR regulasi BI'}
+                      </span>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* 2. DYNAMIC 5-TAB NAVIGATION SWITCHER (RETAIL | STUDIO | 12-SECTOR UI & KILLER OS | MATRIX | FAQ) */}
             <div className="flex justify-center mb-8 sm:mb-10 w-full px-2 sm:px-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 p-1.5 bg-zinc-100 dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs font-mono text-xs w-full max-w-7xl gap-1.5 sm:gap-2">
@@ -2382,7 +2566,7 @@ export default function ArchitecturePricingIsland({
                       <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
                         <div className="flex items-baseline justify-between">
                           <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
-                            Rp {pricingSettings.retail_spark_price || '0'}
+                            {formatPrice(pricingSettings.retail_spark_price || '0')}
                           </span>
                           <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400">
                             {isEn ? '100% FREE' : 'GRATIS'}
@@ -2458,12 +2642,17 @@ export default function ArchitecturePricingIsland({
                       <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
                         <div className="flex items-baseline justify-between">
                           <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
-                            Rp {pricingSettings.retail_lite_price || '99.000'}
+                            {formatPrice(pricingSettings.retail_lite_price || '99.000')}
                           </span>
                           <span className="text-[10px] font-mono text-zinc-500">
                             {isEn ? '/ project' : '/ proyek'}
                           </span>
                         </div>
+                        {selectedCurrency !== 'IDR' && (
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                            ≈ {formatPrice(pricingSettings.retail_lite_price || '99.000', { forceCurrency: 'IDR' })}
+                          </div>
+                        )}
                         <div className="text-[10px] font-mono text-zinc-500 space-y-0.5 pt-1 border-t border-zinc-200 dark:border-zinc-800">
                           <div>&bull; {isEn ? 'One-time license • Lifetime download' : 'Lisensi sekali bayar • Unduh selamanya'}</div>
                           <div>&bull; {isEn ? '30-day form parameter revision' : (pricingSettings.retail_lite_limit || 'Akses revisi form 30 hari')}</div>
@@ -2545,12 +2734,17 @@ export default function ArchitecturePricingIsland({
                       <div className="mb-4 p-3 bg-emerald-500/5 border border-emerald-500/30 space-y-1.5">
                         <div className="flex items-baseline justify-between">
                           <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
-                            Rp {pricingSettings.retail_pro_price || '399.000'}
+                            {formatPrice(pricingSettings.retail_pro_price || '399.000')}
                           </span>
                           <span className="text-[10px] font-mono text-zinc-500">
                             {isEn ? '/ project' : '/ proyek'}
                           </span>
                         </div>
+                        {selectedCurrency !== 'IDR' && (
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                            ≈ {formatPrice(pricingSettings.retail_pro_price || '399.000', { forceCurrency: 'IDR' })}
+                          </div>
+                        )}
                         <div className="text-[10px] font-mono text-zinc-500 space-y-0.5 pt-1 border-t border-emerald-500/20">
                           <div>&bull; {isEn ? 'One-time license • Lifetime download' : 'Lisensi sekali bayar • Unduh selamanya'}</div>
                           <div>&bull; {isEn ? '6 Months AI regeneration access' : (pricingSettings.retail_pro_limit || 'Akses regenerasi AI 6 bulan')}</div>
@@ -2634,12 +2828,17 @@ export default function ArchitecturePricingIsland({
                       <div className="mb-4 p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
                         <div className="flex items-baseline justify-between">
                           <span className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
-                            Rp {pricingSettings.retail_ultimate_price || '1.490.000'}
+                            {formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')}
                           </span>
                           <span className="text-[10px] font-mono text-zinc-500">
                             {isEn ? '/ project' : '/ proyek'}
                           </span>
                         </div>
+                        {selectedCurrency !== 'IDR' && (
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                            ≈ {formatPrice(pricingSettings.retail_ultimate_price || '1.490.000', { forceCurrency: 'IDR' })}
+                          </div>
+                        )}
                         <div className="text-[10px] font-mono text-zinc-500 space-y-0.5 pt-1 border-t border-zinc-200 dark:border-zinc-800">
                           <div>&bull; {isEn ? 'One-time license • Lifetime download' : 'Lisensi sekali bayar • Unduh selamanya'}</div>
                           <div>&bull; {isEn ? '1 Year priority architecture updates' : (pricingSettings.retail_ultimate_limit || 'Pembaruan prioritas 1 tahun')}</div>
@@ -2730,13 +2929,13 @@ export default function ArchitecturePricingIsland({
                         <div className="space-y-1">
                           <div className="flex items-baseline gap-2">
                             <span className="text-xs line-through text-zinc-500 font-mono font-bold">
-                              Rp 1.490.000
+                              {formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')}
                             </span>
                             <span className="text-xl font-black font-mono text-emerald-900 dark:text-emerald-300 tabular-nums">
-                              Rp {pricingSettings.impact_grant_price || '0'}
+                              {formatPrice(pricingSettings.impact_grant_price || '0')}
                             </span>
                             <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-400">
-                              {isEn ? '(Subsidized to Rp 0)' : '(Disubsidi Rp 0 Penuh)'}
+                              {isEn ? `(Subsidized to ${formatPrice(0)})` : `(Disubsidi ${formatPrice(0)} Penuh)`}
                             </span>
                           </div>
                           <div className="p-1.5 bg-emerald-100/60 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-[10px] font-mono text-emerald-950 dark:text-emerald-200 font-bold">
@@ -2756,7 +2955,7 @@ export default function ArchitecturePricingIsland({
                         onClick={() => openBookingModal('impact_nonprofit_grant', 'CSR-IMPACT-100')}
                         className="mt-4 w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-black uppercase tracking-wider rounded-none transition cursor-pointer"
                       >
-                        {isEn ? 'Apply CSR Grant Access (Rp 0) →' : 'Ajukan Hibah CSR Non-Profit (Rp 0) →'}
+                        {isEn ? `Apply CSR Grant Access (${formatPrice(0)}) →` : `Ajukan Hibah CSR Non-Profit (${formatPrice(0)}) →`}
                       </button>
                     </div>
 
@@ -2773,8 +2972,13 @@ export default function ArchitecturePricingIsland({
                           Single-App UMKM Pass
                         </div>
                         <div className="text-xl font-black font-mono text-zinc-950 dark:text-white tabular-nums">
-                          Rp {pricingSettings.single_app_pass_price || '299.000'} <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400">/ {isEn ? '1 App Forever' : '1 Aplikasi Penuh'}</span>
+                          {formatPrice(pricingSettings.single_app_pass_price || '299.000')} <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400">/ {isEn ? '1 App Forever' : '1 Aplikasi Penuh'}</span>
                         </div>
+                        {selectedCurrency !== 'IDR' && (
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                            ≈ {formatPrice(pricingSettings.single_app_pass_price || '299.000', { forceCurrency: 'IDR' })}
+                          </div>
+                        )}
                         <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
                           {isEn
                             ? 'Pay only when launching a business app: 1 complete production blueprint, 36 Visual Sector UI selection, PostgreSQL 16 ULID SQL, 7-Phase AI Prompts, & Zero-Slop Certified Badge.'
@@ -2803,8 +3007,13 @@ export default function ArchitecturePricingIsland({
                           Agency Partner & White-Label Studio
                         </div>
                         <div className="text-xl font-black font-mono text-zinc-950 dark:text-white tabular-nums">
-                          Rp {pricingSettings.agency_whitelabel_price || '990.000'} <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400">/ {isEn ? 'Multi-Client Pack' : 'Paket Agensi'}</span>
+                          {formatPrice(pricingSettings.agency_whitelabel_price || '990.000')} <span className="text-xs font-bold text-zinc-600 dark:text-zinc-400">/ {isEn ? 'Multi-Client Pack' : 'Paket Agensi'}</span>
                         </div>
+                        {selectedCurrency !== 'IDR' && (
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                            ≈ {formatPrice(pricingSettings.agency_whitelabel_price || '990.000', { forceCurrency: 'IDR' })}
+                          </div>
+                        )}
                         <p className="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
                           {isEn
                             ? 'Export official A4 BoQ/RAB, SPK Contract, UAT & Digital BAST branded with YOUR own Software House Logo & Legal Entity + 70:30 Marketplace Revenue Share & 1-Click MCP Revoke.'
@@ -2926,10 +3135,15 @@ export default function ArchitecturePricingIsland({
                       <div className="mb-5 p-3.5 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
                         <div className="flex items-baseline justify-between">
                           <span className="text-2xl sm:text-3xl font-black font-mono text-zinc-900 dark:text-white">
-                            Rp {pricingSettings.advisory_price || '2.500.000'}
+                            {formatPrice(pricingSettings.advisory_price || '2.500.000')}
                           </span>
                           <span className="text-xs font-mono text-zinc-500">{isEn ? '/ project' : '/ proyek'}</span>
                         </div>
+                        {selectedCurrency !== 'IDR' && (
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                            ≈ {formatPrice(pricingSettings.advisory_price || '2.500.000', { forceCurrency: 'IDR' })}
+                          </div>
+                        )}
                         <div className="p-2 bg-emerald-100 dark:bg-emerald-950/80 border-l-2 border-emerald-600 dark:border-emerald-400 text-emerald-950 dark:text-emerald-200 font-mono text-[10px] font-black">
                           ⭐ {isEn ? 'Advisory fee 100% deducted from DP if continuing to Full MVP!' : 'Biaya Rp 2.5 jt otomatis memotong DP jika lanjut ke Full MVP!'}
                         </div>
@@ -2975,7 +3189,7 @@ export default function ArchitecturePricingIsland({
                           onClick={() => openBookingModal('blueprint_advisory')}
                           className="w-full bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-black py-3 px-4 font-mono text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition rounded-none shadow-xs text-center cursor-pointer"
                         >
-                          <span>{isEn ? 'ORDER ADVISORY (RP 2.5M)' : 'PESAN JASA ADVISORY (RP 2.5 JT)'}</span>
+                          <span>{isEn ? `ORDER ADVISORY (${formatPrice(pricingSettings.advisory_price || '2.500.000')})` : `PESAN JASA ADVISORY (${formatPrice(pricingSettings.advisory_price || '2.500.000')})`}</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </button>
 
@@ -3026,7 +3240,7 @@ export default function ArchitecturePricingIsland({
                             {isEn ? 'Algorithmic Fair RAB' : 'RAB Algoritmik Transparan'}
                           </span>
                           <span className="text-[10px] font-mono font-black text-emerald-800 dark:text-emerald-400">
-                            Rp {pricingSettings.mitra_man_hour_rate_idr ? new Intl.NumberFormat('id-ID').format(parseInt(String(pricingSettings.mitra_man_hour_rate_idr).replace(/\D+/g, ''), 10) || 350000) : '350.000'}/jam
+                            {formatPrice(hourlyRate)}/{isEn ? 'hr' : 'jam'}
                           </span>
                         </div>
                         <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between text-xs font-mono">
@@ -3142,15 +3356,22 @@ export default function ArchitecturePricingIsland({
                       <div className="mb-5 p-3.5 bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
                         <div className="flex items-baseline justify-between">
                           <div>
-                            <span className="text-xs text-zinc-400 line-through mr-2">Rp {pricingSettings.umkm_price || '7.500.000'}</span>
+                            <span className="text-xs text-zinc-400 line-through mr-2">
+                              {formatPrice(pricingSettings.umkm_price || '7.500.000')}
+                            </span>
                             <span className="text-2xl font-black font-mono text-amber-800 dark:text-amber-400">
-                              Rp 3.750.000
+                              {formatPrice(parseCleanIdr(pricingSettings.umkm_price, 7500000) / 2)}
                             </span>
                           </div>
                           <span className="text-[10px] font-mono px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-black">
                             {isEn ? '50% SUBSIDY' : 'SUBSIDI 50%'}
                           </span>
                         </div>
+                        {selectedCurrency !== 'IDR' && (
+                          <div className="text-[10px] font-mono text-zinc-500 font-bold">
+                            ≈ {formatPrice(parseCleanIdr(pricingSettings.umkm_price, 7500000) / 2, { forceCurrency: 'IDR' })}
+                          </div>
+                        )}
                         <div className="text-[10px] font-mono text-zinc-500 pt-1 border-t border-zinc-200 dark:border-zinc-800">
                           &bull; {isEn ? 'Voucher "UMKM-SUBSIDI-50" (Quota 2 slots / month)' : 'Gunakan voucher "UMKM-SUBSIDI-50" (Kuota 2 usaha / bln)'}
                         </div>
@@ -4511,25 +4732,25 @@ return match (true) {
                             <th className="py-3.5 px-3 font-black text-amber-950 dark:text-amber-300 bg-amber-100/60 dark:bg-amber-950/40 min-w-[185px]">
                               <div>Spark &amp; Hibah CSR</div>
                               <div className="text-[9px] font-bold text-amber-900 dark:text-amber-200 mt-0.5">
-                                Rp 0 ({isEn ? 'Guest 2x / Verified NGO' : 'Tamu 2x / Yayasan Akta'})
+                                {formatPrice(0)} ({isEn ? 'Guest 2x / Verified NGO' : 'Tamu 2x / Yayasan Akta'})
                               </div>
                             </th>
                             <th className="py-3.5 px-3 font-black text-cyan-950 dark:text-cyan-300 bg-cyan-100/60 dark:bg-cyan-950/40 min-w-[195px]">
                               <div>Starter &amp; UMKM Pass</div>
                               <div className="text-[9px] font-bold text-cyan-900 dark:text-cyan-200 mt-0.5">
-                                Rp {pricingSettings.retail_lite_price || '99.000'} / Rp {pricingSettings.single_app_pass_price || '299.000'}
+                                {formatPrice(pricingSettings.retail_lite_price || '99.000')} / {formatPrice(pricingSettings.single_app_pass_price || '299.000')}
                               </div>
                             </th>
                             <th className="py-3.5 px-3 font-black text-emerald-950 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/50 min-w-[210px]">
                               <div>Pro / Agency / Ultimate</div>
                               <div className="text-[9px] font-bold text-emerald-900 dark:text-emerald-200 mt-0.5">
-                                Rp {pricingSettings.retail_pro_price || '399.000'} – Rp {pricingSettings.retail_ultimate_price || '1.490.000'}
+                                {formatPrice(pricingSettings.retail_pro_price || '399.000')} – {formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')}
                               </div>
                             </th>
                             <th className="py-3.5 px-3 font-black text-zinc-950 dark:text-zinc-100 bg-zinc-200/70 dark:bg-zinc-900 min-w-[195px]">
                               <div>Advisory &amp; UMKM Studio</div>
                               <div className="text-[9px] font-bold text-zinc-700 dark:text-zinc-300 mt-0.5">
-                                Rp {pricingSettings.advisory_price || '2.500.000'} / Rp {pricingSettings.umkm_price || '3.750.000'}
+                                {formatPrice(pricingSettings.advisory_price || '2.500.000')} / {formatPrice(parseCleanIdr(pricingSettings.umkm_price, 7500000) / 2)}
                               </div>
                             </th>
                             <th className="py-3.5 px-3 font-black text-emerald-950 dark:text-emerald-200 bg-emerald-200/70 dark:bg-emerald-950/80 min-w-[220px]">
@@ -4889,12 +5110,12 @@ return match (true) {
                       <span>{isEn ? 'INDEPENDENT DEVELOPER // ARCHITECTURE ADVISORY' : 'PENGEMBANG INDEPENDEN // JASA ADVISORY BLUEPRINT'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'ORDER ADVISORY BLUEPRINT (RP 2.500.000)' : 'PESAN JASA ADVISORY BLUEPRINT (RP 2.5 JT)'}
+                      {isEn ? `ORDER ADVISORY BLUEPRINT (${formatPrice(pricingSettings.advisory_price || '2.500.000', { showEquivalent: selectedCurrency !== 'IDR' })})` : `PESAN JASA ADVISORY BLUEPRINT (${formatPrice(pricingSettings.advisory_price || '2.500.000', { showEquivalent: selectedCurrency !== 'IDR' })})`}
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn
-                        ? 'Receive full 26-parameter PRD, PostgreSQL Strict ULID ERD, and 5-sprint WBS with personal discovery call. Rp 2.5M fee is 100% credited toward DP if upgrading to Full MVP.'
-                        : 'Dapatkan cetak biru teknis lengkap (PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan WBS 5 Sprint) dengan pendampingan scoping Lead Architect Yoseph Iriandi (Memotong DP 100%).'}
+                        ? `Receive full 26-parameter PRD, PostgreSQL Strict ULID ERD, and 5-sprint WBS with personal discovery call. ${formatPrice(pricingSettings.advisory_price || '2.500.000')} fee is 100% credited toward DP if upgrading to Full MVP.`
+                        : `Dapatkan cetak biru teknis lengkap (PRD 26 parameter, skema DDL PostgreSQL Strict ULID, dan WBS 5 Sprint) dengan pendampingan scoping Lead Architect Yoseph Iriandi (Memotong DP 100%).`}
                     </p>
                   </>
                 ) : selectedPackage === 'retail_ultimate' ? (
@@ -4904,7 +5125,7 @@ return match (true) {
                       <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'Checkout Ultimate Architecture Blueprint' : 'Checkout Lisensi Ultimate Architecture Blueprint'} (Rp {pricingSettings.retail_ultimate_price || '1.490.000'})
+                      {isEn ? 'Checkout Ultimate Architecture Blueprint' : 'Checkout Lisensi Ultimate Architecture Blueprint'} ({formatPrice(pricingSettings.retail_ultimate_price || '1.490.000', { showEquivalent: selectedCurrency !== 'IDR' })})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn
@@ -4919,7 +5140,7 @@ return match (true) {
                       <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'Checkout Pro Agentic Blueprint' : 'Checkout Lisensi Pro Agentic Blueprint'} (Rp {pricingSettings.retail_pro_price || '399.000'})
+                      {isEn ? 'Checkout Pro Agentic Blueprint' : 'Checkout Lisensi Pro Agentic Blueprint'} ({formatPrice(pricingSettings.retail_pro_price || '399.000', { showEquivalent: selectedCurrency !== 'IDR' })})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn
@@ -4934,7 +5155,7 @@ return match (true) {
                       <span>{isEn ? 'DIRECT CHECKOUT // INSTANT MIDTRANS SNAP' : 'CHECKOUT LANGSUNG // INSTANT MIDTRANS SNAP'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'Checkout Starter AI Architect' : 'Checkout Lisensi Starter AI Architect'} (Rp {pricingSettings.retail_lite_price || '99.000'})
+                      {isEn ? 'Checkout Starter AI Architect' : 'Checkout Lisensi Starter AI Architect'} ({formatPrice(pricingSettings.retail_lite_price || '99.000', { showEquivalent: selectedCurrency !== 'IDR' })})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn
@@ -4949,7 +5170,7 @@ return match (true) {
                       <span>{isEn ? 'ONE-TIME PASS // LOCK 1 APPLICATION PERMANENTLY' : 'SEKALI BAYAR // KUNCI 1 APLIKASI PERMANEN'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'Checkout Single-App UMKM Pass' : 'Checkout Single-App UMKM Pass'} (Rp {pricingSettings.single_app_pass_price || '299.000'})
+                      {isEn ? 'Checkout Single-App UMKM Pass' : 'Checkout Single-App UMKM Pass'} ({formatPrice(pricingSettings.single_app_pass_price || '299.000', { showEquivalent: selectedCurrency !== 'IDR' })})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn
@@ -4964,7 +5185,7 @@ return match (true) {
                       <span>{isEn ? 'AGENCY 5-SEAT // WHITE-LABEL PROPOSAL & ZIP EXPORT' : 'AGENSI 5-KURSI // EKSPOR PROPOSAL & ZIP WHITE-LABEL'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'Checkout Agency White-Label Partner' : 'Checkout Agency White-Label Partner'} (Rp {pricingSettings.agency_whitelabel_price || '990.000'})
+                      {isEn ? 'Checkout Agency White-Label Partner' : 'Checkout Agency White-Label Partner'} ({formatPrice(pricingSettings.agency_whitelabel_price || '990.000', { showEquivalent: selectedCurrency !== 'IDR' })})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn
@@ -4979,12 +5200,12 @@ return match (true) {
                       <span>{isEn ? '100% CSR CROSS-SUBSIDY // VERIFIED NON-PROFIT GRANT' : 'SUBSIDI SILANG CSR 100% // HIBAH YAYASAN & RUMAH IBADAH'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      {isEn ? 'Impact & Non-Profit CSR Grant (Rp 0 — Subsidized)' : 'Hibah CSR Yayasan, NGO, Rumah Ibadah & Riset (Rp 0)'}
+                      {isEn ? `Impact & Non-Profit CSR Grant (${formatPrice(0)} — Subsidized)` : `Hibah CSR Yayasan, NGO, Rumah Ibadah & Riset (${formatPrice(0)})`}
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn
-                        ? 'Commercial value Rp 1,490,000 subsidized 100% to Rp 0 for verified non-profits, houses of worship, NGOs, and academic research (ISAK 35 / PSAK 109 compliant).'
-                        : 'Nilai komersial Rp 1.490.000 disubsidi 100% menjadi Rp 0 khusus Yayasan Sosial, Lembaga Zakat/Wakaf, Rumah Ibadah, dan Riset Akademik terverifikasi.'}
+                        ? `Commercial value ${formatPrice(1490000)} subsidized 100% to ${formatPrice(0)} for verified non-profits, houses of worship, NGOs, and academic research (ISAK 35 / PSAK 109 compliant).`
+                        : `Nilai komersial ${formatPrice(1490000)} disubsidi 100% menjadi ${formatPrice(0)} khusus Yayasan Sosial, Lembaga Zakat/Wakaf, Rumah Ibadah, dan Riset Akademik terverifikasi.`}
                     </p>
                   </>
                 ) : (
@@ -4994,7 +5215,7 @@ return match (true) {
                       <span>{isEn ? '100% SELF-SERVICE // GUEST ACCESS (NO CREDIT CARD)' : '100% SELF-SERVICE // AKSES TAMU (TANPA KARTU KREDIT)'}</span>
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-900 dark:text-white font-sans">
-                      Spark Free Idea Audit (Rp 0)
+                      Spark Free Idea Audit ({formatPrice(0)})
                     </h3>
                     <p className="text-xs text-zinc-500 font-sans mt-0.5 leading-relaxed">
                       {isEn
@@ -5126,20 +5347,20 @@ return match (true) {
                       required
                     >
                       <optgroup label={isEn ? "INSTANT ARCHITECTURAL BLUEPRINT (100% SELF-SERVICE // ZERO CONSULTANT MARKUP)" : "INSTANT ARCHITECTURAL BLUEPRINT (100% SELF-SERVICE // TANPA BIAYA KONSULTAN)"}>
-                        <option value="retail_spark">{isEn ? 'Spark Free Audit (Free / Guest Mode - Monthly Reset)' : 'Spark Free Audit (Rp 0 - Guest Mode / Reset Tiap Bulan)'}</option>
-                        <option value="retail_lite">{isEn ? `Starter AI Architect (Rp ${pricingSettings.retail_lite_price || '99.000'} - Login Required)` : `Starter AI Architect (Rp ${pricingSettings.retail_lite_price || '99.000'} - Wajib Login)`}</option>
-                        <option value="retail_pro">{isEn ? `Pro Agentic Blueprint (Rp ${pricingSettings.retail_pro_price || '399.000'} - Login Required)` : `Pro Agentic Blueprint (Rp ${pricingSettings.retail_pro_price || '399.000'} - Wajib Login)`}</option>
-                        <option value="retail_ultimate">{isEn ? `Ultimate Architecture Blueprint + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Verified Account)` : `Ultimate Architecture Blueprint + 1-on-1 Call (Rp ${pricingSettings.retail_ultimate_price || '1.490.000'} - Akun Terverifikasi)`}</option>
+                        <option value="retail_spark">{isEn ? `Spark Free Audit (${formatPrice(0)} / Guest Mode - Monthly Reset)` : `Spark Free Audit (${formatPrice(0)} - Guest Mode / Reset Tiap Bulan)`}</option>
+                        <option value="retail_lite">{isEn ? `Starter AI Architect (${formatPrice(pricingSettings.retail_lite_price || '99.000')} - Login Required)` : `Starter AI Architect (${formatPrice(pricingSettings.retail_lite_price || '99.000')} - Wajib Login)`}</option>
+                        <option value="retail_pro">{isEn ? `Pro Agentic Blueprint (${formatPrice(pricingSettings.retail_pro_price || '399.000')} - Login Required)` : `Pro Agentic Blueprint (${formatPrice(pricingSettings.retail_pro_price || '399.000')} - Wajib Login)`}</option>
+                        <option value="retail_ultimate">{isEn ? `Ultimate Architecture Blueprint + 1-on-1 Call (${formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')} - Verified Account)` : `Ultimate Architecture Blueprint + 1-on-1 Call (${formatPrice(pricingSettings.retail_ultimate_price || '1.490.000')} - Akun Terverifikasi)`}</option>
                       </optgroup>
                       <optgroup label={isEn ? "INCLUSIVE HYBRID VALUE-METRIC & CSR TIERS (PROJECT OS V8.0)" : "PAKET INKLUSIF HIBAH CSR, PAS UMKM & AGENSI WHITE-LABEL (V8.0)"}>
-                        <option value="impact_nonprofit_grant">{isEn ? `Impact & Non-Profit CSR Grant (70%–100% Subsidy / Rp ${pricingSettings.impact_grant_price || '0'})` : `Hibah CSR Yayasan / NGO / Rumah Ibadah (Subsidi 70%–100% / Rp ${pricingSettings.impact_grant_price || '0'})`}</option>
-                        <option value="single_app_umkm_pass">{isEn ? `Single-App UMKM Pass (Rp ${pricingSettings.single_app_pass_price || '299.000'} - One-Time Per App)` : `Single-App UMKM Pass (Rp ${pricingSettings.single_app_pass_price || '299.000'} - Sekali Bayar 1 Aplikasi)`}</option>
-                        <option value="agency_whitelabel_partner">{isEn ? `Agency Partner & White-Label Studio 5-Seat (Rp ${pricingSettings.agency_whitelabel_price || '990.000'})` : `Agency Partner & White-Label Studio 5-Seat (Rp ${pricingSettings.agency_whitelabel_price || '990.000'})`}</option>
+                        <option value="impact_nonprofit_grant">{isEn ? `Impact & Non-Profit CSR Grant (70%–100% Subsidy / ${formatPrice(pricingSettings.impact_grant_price || '0')})` : `Hibah CSR Yayasan / NGO / Rumah Ibadah (Subsidi 70%–100% / ${formatPrice(pricingSettings.impact_grant_price || '0')})`}</option>
+                        <option value="single_app_umkm_pass">{isEn ? `Single-App UMKM Pass (${formatPrice(pricingSettings.single_app_pass_price || '299.000')} - One-Time Per App)` : `Single-App UMKM Pass (${formatPrice(pricingSettings.single_app_pass_price || '299.000')} - Sekali Bayar 1 Aplikasi)`}</option>
+                        <option value="agency_whitelabel_partner">{isEn ? `Agency Partner & White-Label Studio 5-Seat (${formatPrice(pricingSettings.agency_whitelabel_price || '990.000')})` : `Agency Partner & White-Label Studio 5-Seat (${formatPrice(pricingSettings.agency_whitelabel_price || '990.000')})`}</option>
                       </optgroup>
                       <optgroup label={isEn ? "INDEPENDENT DEVELOPER ENGINEERING (EXECUTED DIRECTLY BY YOSEPH IRIANDI)" : "LAYANAN REKAYASA PENGEMBANG INDEPENDEN (DIKERJAKAN LANGSUNG OLEH YOSEPH IRIANDI)"}>
                         <option value="full_mvp">{isEn ? 'Custom Full Monolith MVP (5 Sprints - Scoping & Custom Quotation)' : 'Custom Full Monolith MVP (5 Sprint - Sesi Scoping & Penawaran Kustom)'}</option>
-                        <option value="umkm_starter">{isEn ? 'UMKM Digital Starter (50% Subsidy Program - Rp 3,750,000)' : 'UMKM Digital Starter (Program Subsidi 50% - Rp 3.750.000)'}</option>
-                        <option value="blueprint_advisory">{isEn ? 'Blueprint & PRD Architecture Advisory (Rp 2,500,000)' : 'Blueprint & PRD Architecture Advisory (Rp 2.500.000)'}</option>
+                        <option value="umkm_starter">{isEn ? `UMKM Digital Starter (50% Subsidy Program - ${formatPrice(parseCleanIdr(pricingSettings.umkm_price, 7500000) / 2)})` : `UMKM Digital Starter (Program Subsidi 50% - ${formatPrice(parseCleanIdr(pricingSettings.umkm_price, 7500000) / 2)})`}</option>
+                        <option value="blueprint_advisory">{isEn ? `Blueprint & PRD Architecture Advisory (${formatPrice(pricingSettings.advisory_price || '2.500.000')})` : `Blueprint & PRD Architecture Advisory (${formatPrice(pricingSettings.advisory_price || '2.500.000')})`}</option>
                       </optgroup>
                     </select>
                   </div>
@@ -5164,6 +5385,21 @@ return match (true) {
                               ? '⚡ Instant Digital Access — Auto-Generated & Ready for Download Post-Payment'
                               : '⚡ Akses Digital Instan — Dihasilkan Otomatis & Siap Unduh Pasca Pembayaran')}
                       </div>
+                    </div>
+                  )}
+
+                  {/* MULTI-CURRENCY CONVERSION & BI SETTLEMENT NOTICE */}
+                  {selectedCurrency !== 'IDR' && (
+                    <div className="p-3 bg-zinc-100 dark:bg-zinc-800/80 border-l-2 border-emerald-600 dark:border-emerald-400 text-zinc-800 dark:text-zinc-200 font-mono text-[10px] space-y-1">
+                      <div className="font-black text-emerald-800 dark:text-emerald-400 flex items-center justify-between">
+                        <span>🌐 {isEn ? `INTERNATIONAL CLIENT BILLING (${selectedCurrency})` : `PENAGIHAN KLIEN REGIONAL (${selectedCurrency})`}</span>
+                        <span className="font-bold">1 {selectedCurrency} ≈ Rp {parseCleanIdr(activeRatesToIdr[selectedCurrency] || 16000).toLocaleString(isEn ? 'en-US' : 'id-ID')}</span>
+                      </div>
+                      <p className="leading-relaxed text-zinc-600 dark:text-zinc-400">
+                        {isEn
+                          ? `Reference Amount: ${formatPrice(getPackageBaseIdr(selectedPackage))} (Approx. Rp ${getPackageBaseIdr(selectedPackage).toLocaleString('en-US')}). Credit card transaction will settle in Indonesian Rupiah per Bank Indonesia / Midtrans regulation. The official commercial invoice will stamp the exact foreign currency equivalent and real-time exchange rate.`
+                          : `Estimasi Nilai Acuan: ${formatPrice(getPackageBaseIdr(selectedPackage))} (Setara Rp ${getPackageBaseIdr(selectedPackage).toLocaleString('id-ID')}). Transaksi kartu kredit akan diproses dalam mata uang Rupiah sesuai regulasi Bank Indonesia. Kwitansi dan bukti pembayaran resmi mencatat nilai konversi mata uang asal beserta kurs real-time.`}
+                      </p>
                     </div>
                   )}
 
@@ -5761,32 +5997,32 @@ return match (true) {
                     ) : selectedPackage === 'retail_lite' ? (
                       <>
                         <CreditCard className="w-4 h-4" />
-                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.retail_lite_price || '99.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.retail_lite_price || '99.000'}) →`}</span>
+                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (${formatPrice(pricingSettings.retail_lite_price || '99.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →` : `BAYAR VIA MIDTRANS SNAP (${formatPrice(pricingSettings.retail_lite_price || '99.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →`}</span>
                       </>
                     ) : selectedPackage === 'single_app_umkm_pass' ? (
                       <>
                         <CreditCard className="w-4 h-4" />
-                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.single_app_pass_price || '299.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.single_app_pass_price || '299.000'}) →`}</span>
+                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (${formatPrice(pricingSettings.single_app_pass_price || '299.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →` : `BAYAR VIA MIDTRANS SNAP (${formatPrice(pricingSettings.single_app_pass_price || '299.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →`}</span>
                       </>
                     ) : selectedPackage === 'retail_pro' ? (
                       <>
                         <Sparkles className="w-4 h-4" />
-                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.retail_pro_price || '399.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.retail_pro_price || '399.000'}) →`}</span>
+                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (${formatPrice(pricingSettings.retail_pro_price || '399.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →` : `BAYAR VIA MIDTRANS SNAP (${formatPrice(pricingSettings.retail_pro_price || '399.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →`}</span>
                       </>
                     ) : selectedPackage === 'agency_whitelabel_partner' ? (
                       <>
                         <Crown className="w-4 h-4" />
-                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.agency_whitelabel_price || '990.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.agency_whitelabel_price || '990.000'}) →`}</span>
+                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (${formatPrice(pricingSettings.agency_whitelabel_price || '990.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →` : `BAYAR VIA MIDTRANS SNAP (${formatPrice(pricingSettings.agency_whitelabel_price || '990.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →`}</span>
                       </>
                     ) : selectedPackage === 'retail_ultimate' ? (
                       <>
                         <Crown className="w-4 h-4" />
-                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (RP ${pricingSettings.retail_ultimate_price || '1.490.000'}) →` : `BAYAR VIA MIDTRANS SNAP (RP ${pricingSettings.retail_ultimate_price || '1.490.000'}) →`}</span>
+                        <span>{isEn ? `PAY NOW VIA MIDTRANS SNAP (${formatPrice(pricingSettings.retail_ultimate_price || '1.490.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →` : `BAYAR VIA MIDTRANS SNAP (${formatPrice(pricingSettings.retail_ultimate_price || '1.490.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →`}</span>
                       </>
                     ) : selectedPackage === 'impact_nonprofit_grant' ? (
                       <>
                         <ShieldCheck className="w-4 h-4" />
-                        <span>{isEn ? 'APPLY FOR 100% CSR SUBSIDY GRANT (RP 0) →' : 'AJUKAN HIBAH SUBSIDI CSR 100% (RP 0) →'}</span>
+                        <span>{isEn ? `APPLY FOR 100% CSR SUBSIDY GRANT (${formatPrice(0)}) →` : `AJUKAN HIBAH SUBSIDI CSR 100% (${formatPrice(0)}) →`}</span>
                       </>
                     ) : selectedPackage === 'retail_spark' ? (
                       <>
@@ -5796,7 +6032,7 @@ return match (true) {
                     ) : selectedPackage === 'blueprint_advisory' ? (
                       <>
                         <FileText className="w-4 h-4" />
-                        <span>{isEn ? 'ORDER ADVISORY BLUEPRINT (RP 2.500.000) →' : 'PESAN JASA ADVISORY BLUEPRINT (RP 2.500.000) →'}</span>
+                        <span>{isEn ? `ORDER ADVISORY BLUEPRINT (${formatPrice(pricingSettings.advisory_price || '2.500.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →` : `PESAN JASA ADVISORY BLUEPRINT (${formatPrice(pricingSettings.advisory_price || '2.500.000', { showEquivalent: selectedCurrency !== 'IDR' })}) →`}</span>
                       </>
                     ) : selectedPackage === 'full_mvp' ? (
                       <>

@@ -140,6 +140,7 @@ Route::post('/blueprint/{slug}/architecture-advisory/scan', [BlueprintCollaborat
 Route::post('/blueprint/{slug}/architecture-advisory/integrate', [BlueprintCollaborationController::class, 'integrateArchitectureAdvisory'])->name('blueprint.architecture-advisory.integrate')->middleware('throttle:30,1');
 Route::post('/api/blueprint/{slug}/checkpoint', [BlueprintCollaborationController::class, 'updateCheckpoint'])->name('api.blueprint.checkpoint');
 Route::post('/api/pricing/inquiry', [BlueprintCommercialController::class, 'pricingInquiry'])->name('api.pricing.inquiry')->middleware('throttle:30,1');
+Route::get('/api/currency/rates', [BlueprintCommercialController::class, 'currencyRates'])->name('api.currency.rates');
 
 // Project Thread / UAT Ticketing Routes
 Route::post('/blueprint/{slug}/issues', [ProjectThreadController::class, 'storeIssue'])->name('blueprint.issues.store');

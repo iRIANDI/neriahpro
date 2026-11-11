@@ -23,6 +23,7 @@ use App\Services\BlueprintKpiCascadeService;
 use App\Services\BlueprintRefinementService;
 use App\Services\BlueprintSlopScannerService;
 use App\Services\BrownfieldMigrationAuditorService;
+use App\Services\Currency\CurrencyExchangeService;
 use App\Services\Legal\LegalDocumentVaultService;
 use App\Services\MidtransSnapService;
 use App\Services\Notification\FonnteWhatsAppService;
@@ -948,13 +949,28 @@ class BlueprintCommercialController extends Controller
             ], now()->addDays(3));
 
             // Instantly record pending transaction in database for admin visibility
+            $selectedCurrency = strtoupper(trim((string) $request->input('selected_currency', 'IDR')));
+            if (! in_array($selectedCurrency, ['IDR', 'USD', 'EUR', 'SGD', 'GBP', 'AUD', 'JPY'], true)) {
+                $selectedCurrency = 'IDR';
+            }
+            $exchangeRate = (float) $request->input('exchange_rate', 0);
+            if ($exchangeRate <= 0) {
+                $exchangeRate = CurrencyExchangeService::getRate($selectedCurrency);
+            }
+            $foreignAmount = (float) $request->input('foreign_amount', 0);
+            if ($foreignAmount <= 0) {
+                $converted = CurrencyExchangeService::convert((float) $finalAmount, $selectedCurrency);
+                $foreignAmount = (float) $converted['converted_amount'];
+            }
+
             Transaction::create([
                 'user_id' => null,
                 'midtrans_order_id' => $orderId,
                 'status' => 'pending',
                 'total_idr' => $finalAmount,
-                'original_currency' => 'IDR',
-                'original_amount' => $finalAmount,
+                'original_currency' => $selectedCurrency,
+                'original_amount' => $foreignAmount,
+                'exchange_rate' => $exchangeRate,
                 'customer_details' => [
                     'name' => $validated['name'],
                     'email' => $validated['email'],
@@ -966,6 +982,11 @@ class BlueprintCommercialController extends Controller
                     'lead_id' => $lead->id,
                     'blueprint_slug' => $blueprintSlug,
                     'snap_token' => $snapResponse['token'],
+                    'currency' => $selectedCurrency,
+                    'exchange_rate' => $exchangeRate,
+                    'foreign_amount' => $foreignAmount,
+                    'rate_timestamp' => now()->toIso8601String(),
+                    'rate_source' => 'Bank Indonesia / Open FX Real-Time Feed',
                 ],
             ]);
 
@@ -1303,4 +1324,11 @@ class BlueprintCommercialController extends Controller
         return view('prints.mitra-commercial-pack', $viewData);
     }
 
+    /**
+     * Return live multi-currency exchange rates and supported currencies.
+     */
+    public function currencyRates(): JsonResponse
+    {
+        return response()->json(array_merge(['success' => true], CurrencyExchangeService::getAllRates()));
+    }
 }

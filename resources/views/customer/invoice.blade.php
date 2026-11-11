@@ -39,6 +39,12 @@
 
     $isSettled = in_array($transaction->status, ['settlement', 'capture', 'success']);
     $totalAmount = (float) $transaction->total_idr;
+
+    // Multi-Currency & Real-Time Exchange Rate Audit Info
+    $txCurrency = strtoupper(trim((string) ($transaction->original_currency ?: ($txDetails['currency'] ?? 'IDR'))));
+    $txExchangeRate = (float) ($transaction->exchange_rate ?: ($txDetails['exchange_rate'] ?? 1.0));
+    $txForeignAmount = (float) ($transaction->original_amount ?: ($txDetails['foreign_amount'] ?? 0.0));
+    $hasForeignCurrency = in_array($txCurrency, ['USD', 'EUR', 'SGD', 'GBP', 'AUD', 'JPY'], true) && $txExchangeRate > 1;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -169,6 +175,12 @@
                     <div>ID Transaksi: <strong>{{ $transaction->midtrans_transaction_id ?: 'Verifikasi Gateway Otomatis' }}</strong></div>
                     <div>Status: <span class="font-bold {{ $isSettled ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600' }}">{{ strtoupper($transaction->status) }}</span></div>
                     <div>Jenis Dokumen: <strong>Official Commercial Invoice & Kwitansi Pembayaran</strong></div>
+                    @if($hasForeignCurrency)
+                        <div class="pt-1 mt-1 border-t border-zinc-200 dark:border-zinc-800 text-[11px] text-blue-900 dark:text-blue-300">
+                            <div>Mata Uang Acuan: <strong>{{ $txCurrency }} ({{ number_format($txForeignAmount, 2) }})</strong></div>
+                            <div>Kurs Acuan BI / Real-Time: <strong>1 {{ $txCurrency }} = Rp {{ number_format($txExchangeRate, 0, ',', '.') }}</strong></div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -215,8 +227,15 @@
 
         <!-- TOTALS & TAX BREAKDOWN -->
         <div class="py-6 border-b-2 border-zinc-900 dark:border-zinc-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs font-mono">
-            <div class="text-zinc-500 max-w-md text-[11px] leading-relaxed">
-                * Harga di atas telah mencakup seluruh hak akses lisensi digital seumur hidup (*lifetime license*), penyediaan arsip spesifikasi, dan dokumen pendukung sesuai pesanan.
+            <div class="text-zinc-500 max-w-md text-[11px] leading-relaxed space-y-1">
+                @if($hasForeignCurrency)
+                    <div class="text-blue-900 dark:text-blue-300 font-bold">
+                        * Penagihan kartu kredit internasional / settlement gateway diproses dalam Rupiah (IDR) sesuai regulasi Bank Indonesia. Kurs tercatat: 1 {{ $txCurrency }} = Rp {{ number_format($txExchangeRate, 0, ',', '.') }}.
+                    </div>
+                @endif
+                <div>
+                    * Harga di atas telah mencakup seluruh hak akses lisensi digital seumur hidup (*lifetime license*), penyediaan arsip spesifikasi, dan dokumen pendukung sesuai pesanan.
+                </div>
             </div>
 
             <div class="w-full sm:w-72 space-y-1.5">
@@ -228,8 +247,14 @@
                     <span>PPN (Sudah Termasuk):</span>
                     <span class="font-bold">Rp 0 (Termasuk)</span>
                 </div>
+                @if($hasForeignCurrency)
+                    <div class="flex justify-between text-blue-900 dark:text-blue-300 font-bold pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                        <span>Ekuivalen Valas ({{ $txCurrency }}):</span>
+                        <span>{{ $txCurrency }} {{ number_format($txForeignAmount, 2) }}</span>
+                    </div>
+                @endif
                 <div class="flex justify-between text-base font-black text-zinc-900 dark:text-white pt-2 border-t border-zinc-300 dark:border-zinc-700">
-                    <span>TOTAL BAYAR:</span>
+                    <span>TOTAL BAYAR (IDR):</span>
                     <span class="text-emerald-600 dark:text-emerald-400">Rp {{ number_format($totalAmount, 0, ',', '.') }}</span>
                 </div>
             </div>

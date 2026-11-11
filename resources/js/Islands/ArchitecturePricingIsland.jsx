@@ -3256,7 +3256,7 @@ export default function ArchitecturePricingIsland({
                     <span>{isEn ? 'NERIAH PRO STUDIO // TURNKEY CONTRACTS' : 'NERIAH PRO STUDIO // KONTRAK TURNKEY'}</span>
                   </div>
                   <h2 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5 font-sans w-full">
-                    {isEn ? 'Turnkey Software Engineering by Independent Lead Architect Yoseph Iriandi' : 'Kontrak Rekayasa Software & Kode oleh Lead Architect Yoseph Iriandi'}
+                    {isEn ? 'Turnkey Software Engineering by Independent Lead Architect' : 'Kontrak Rekayasa Software & Kode oleh Lead Architect'}
                   </h2>
                   <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed w-full mb-3">
                     {isEn

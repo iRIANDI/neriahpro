@@ -176,8 +176,13 @@
                     <div>Status: <span class="font-bold {{ $isSettled ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600' }}">{{ strtoupper($transaction->status) }}</span></div>
                     <div>Jenis Dokumen: <strong>Official Commercial Invoice & Kwitansi Pembayaran</strong></div>
                     @if($hasForeignCurrency)
+                        @php
+                            $txSymbol = \App\Services\Currency\CurrencyExchangeService::CURRENCY_SYMBOLS[$txCurrency] ?? $txCurrency;
+                            $txRoundedForeign = $txForeignAmount > 0 ? max(1, (int) round($txForeignAmount)) : 0;
+                            $txExactDecimals = $txCurrency === 'JPY' ? 0 : 2;
+                        @endphp
                         <div class="pt-1 mt-1 border-t border-zinc-200 dark:border-zinc-800 text-[11px] text-blue-900 dark:text-blue-300">
-                            <div>Mata Uang Acuan: <strong>{{ $txCurrency }} ({{ number_format($txForeignAmount, 2) }})</strong></div>
+                            <div>Acuan Katalog Valas: <strong>≈ {{ $txSymbol }} {{ number_format($txRoundedForeign, 0, '.', ',') }}</strong> <span class="text-zinc-500">(Presisi Audit: {{ $txCurrency }} {{ number_format($txForeignAmount, $txExactDecimals, '.', ',') }})</span></div>
                             <div>Kurs Acuan BI / Real-Time: <strong>1 {{ $txCurrency }} = Rp {{ number_format($txExchangeRate, 0, ',', '.') }}</strong></div>
                         </div>
                     @endif
@@ -230,7 +235,7 @@
             <div class="text-zinc-500 max-w-md text-[11px] leading-relaxed space-y-1">
                 @if($hasForeignCurrency)
                     <div class="text-blue-900 dark:text-blue-300 font-bold">
-                        * Penagihan kartu kredit internasional / settlement gateway diproses dalam Rupiah (IDR) sesuai regulasi Bank Indonesia. Kurs tercatat: 1 {{ $txCurrency }} = Rp {{ number_format($txExchangeRate, 0, ',', '.') }}.
+                        * Kepatuhan Pajak (UU HPP / DJP) &amp; PBI No. 17/3/PBI/2015: Tampilan harga valas pada katalog dibulatkan untuk kemudahan referensi regional (≈ {{ $txSymbol ?? $txCurrency }} {{ number_format($txRoundedForeign ?? round($txForeignAmount), 0, '.', ',') }}), sedangkan Dasar Pengenaan Pajak (DPP), pembukuan fiskal, dan settlement Midtrans mengacu 100% pada nominal Rupiah eksak (Rp {{ number_format($totalAmount, 0, ',', '.') }} • Kurs tercatat: 1 {{ $txCurrency }} = Rp {{ number_format($txExchangeRate, 0, ',', '.') }}).
                     </div>
                 @endif
                 <div>
@@ -240,17 +245,17 @@
 
             <div class="w-full sm:w-72 space-y-1.5">
                 <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
-                    <span>Subtotal:</span>
+                    <span>Dasar Pengenaan Pajak (DPP):</span>
                     <span class="font-bold">Rp {{ number_format($totalAmount, 0, ',', '.') }}</span>
                 </div>
                 <div class="flex justify-between text-zinc-600 dark:text-zinc-400">
-                    <span>PPN (Sudah Termasuk):</span>
-                    <span class="font-bold">Rp 0 (Termasuk)</span>
+                    <span>PPN / Pajak (Termasuk):</span>
+                    <span class="font-bold">Rp 0 (Non-PKP / Termasuk)</span>
                 </div>
                 @if($hasForeignCurrency)
                     <div class="flex justify-between text-blue-900 dark:text-blue-300 font-bold pt-1 border-t border-zinc-200 dark:border-zinc-800">
-                        <span>Ekuivalen Valas ({{ $txCurrency }}):</span>
-                        <span>{{ $txCurrency }} {{ number_format($txForeignAmount, 2) }}</span>
+                        <span>Audit Valas ({{ $txCurrency }}):</span>
+                        <span>{{ $txCurrency }} {{ number_format($txForeignAmount, $txExactDecimals ?? 2, '.', ',') }} (≈ {{ $txSymbol ?? $txCurrency }} {{ number_format($txRoundedForeign ?? round($txForeignAmount), 0, '.', ',') }})</span>
                     </div>
                 @endif
                 <div class="flex justify-between text-base font-black text-zinc-900 dark:text-white pt-2 border-t border-zinc-300 dark:border-zinc-700">

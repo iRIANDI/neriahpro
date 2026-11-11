@@ -32,6 +32,10 @@ class CurrencyExchangeAndMultiCurrencyInvoiceTest extends TestCase
         $this->assertEquals('$', $convertedUsd['symbol']);
         $this->assertEquals(1_490_000.0, $convertedUsd['idr_amount']);
         $this->assertGreaterThan(0, $convertedUsd['foreign_amount']);
+        $this->assertIsInt($convertedUsd['rounded_amount']);
+        $this->assertEquals((int) round($convertedUsd['foreign_amount']), $convertedUsd['rounded_amount']);
+        $this->assertStringNotContainsString('.', $convertedUsd['formatted']);
+        $this->assertArrayHasKey('formatted_exact', $convertedUsd);
         $this->assertGreaterThan(0, $convertedUsd['rate_to_idr']);
 
         // Test EUR conversion specifically for German/European localization
@@ -39,6 +43,7 @@ class CurrencyExchangeAndMultiCurrencyInvoiceTest extends TestCase
         $this->assertEquals('EUR', $convertedEur['currency']);
         $this->assertEquals('€', $convertedEur['symbol']);
         $this->assertGreaterThan(0, $convertedEur['foreign_amount']);
+        $this->assertIsInt($convertedEur['rounded_amount']);
         $this->assertGreaterThan(0, $convertedEur['rate_to_idr']);
     }
 

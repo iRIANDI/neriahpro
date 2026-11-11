@@ -45,6 +45,12 @@ import {
   COUNTRY_ZONES_TEMPLATE,
 } from '../utils/inputHygiene';
 
+const WhatsAppIcon = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.23 8.23 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24m4.52 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.25-.75-.67-1.26-1.5-1.4-1.75-.15-.25-.02-.39.11-.51.11-.11.25-.29.37-.44.13-.15.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.35-.77-1.85-.2-.49-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.43.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.17-.48-.29" />
+  </svg>
+);
+
 export const DEFAULT_RATES_TO_IDR = {
   IDR: 1,
   USD: 16000,
@@ -524,7 +530,8 @@ export default function ArchitecturePricingIsland({
     const {
       showEquivalent = false,
       forceCurrency = null,
-      forceEn = isEn
+      forceEn = isEn,
+      exactDecimals = false,
     } = options;
 
     const targetCurr = forceCurrency || selectedCurrency;
@@ -549,15 +556,17 @@ export default function ArchitecturePricingIsland({
       return `Rp ${formatted}`;
     }
 
-    const foreignVal = idr / rate;
-    const decimals = isJpy ? 0 : 2;
+    const rawForeignVal = idr / rate;
+    const useExact = Boolean(exactDecimals) && !isJpy;
+    const displayForeignVal = useExact ? rawForeignVal : Math.max(1, Math.round(rawForeignVal));
+    const decimals = useExact ? 2 : 0;
 
     const isEuropean = isEur || ['de', 'fr', 'es', 'it', 'nl'].includes(activeLang);
     const localeForNumber = isEuropean
       ? 'de-DE'
       : (activeLang === 'id' ? 'id-ID' : 'en-US');
 
-    const formattedForeign = foreignVal.toLocaleString(localeForNumber, {
+    const formattedForeign = displayForeignVal.toLocaleString(localeForNumber, {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     });
@@ -565,7 +574,7 @@ export default function ArchitecturePricingIsland({
     const mainPrice = `${symbol} ${formattedForeign}`;
 
     if (showEquivalent) {
-      const idrFormatted = idr.toLocaleString('id-ID');
+      const idrFormatted = idr.toLocaleString(isEn ? 'en-US' : 'id-ID');
       return `${mainPrice} (≈ Rp ${idrFormatted})`;
     }
 
@@ -2340,8 +2349,8 @@ export default function ArchitecturePricingIsland({
                                 <span className="px-2 py-0.5 bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-700 font-mono text-[10px] font-black uppercase">
                                   {isEn ? 'MITRA TURNKEY // MILESTONE WBS V12.0' : 'MITRA TURNKEY // MILESTONE RAB V12.0'}
                                 </span>
-                                <span className="font-mono text-[10px] font-bold text-zinc-700 dark:text-zinc-300 tabular-nums">
-                                  Rp {formatIdrPlain(hourlyRate)}/{isEn ? 'hr' : 'jam'} &bull; {activeStack.mult}x
+                                <span className="font-mono text-[10px] font-bold text-zinc-700 dark:text-zinc-300 tabular-nums notranslate" translate="no">
+                                  {formatPrice(hourlyRate)}/{isEn ? 'hr' : 'jam'} &bull; {activeStack.mult}x
                                 </span>
                               </div>
 
@@ -2376,26 +2385,26 @@ export default function ArchitecturePricingIsland({
                                 <div className="grid grid-cols-3 gap-1.5 font-mono text-[10px] tabular-nums">
                                   <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
                                     <div className="text-zinc-600 dark:text-zinc-400 font-bold">{terminScheme === '50_50' ? 'DP 50%' : 'DP 30% [F1-2]'}</div>
-                                    <div className="font-black text-zinc-950 dark:text-zinc-100">Rp {formatIdrPlain(dp30)}</div>
+                                    <div className="font-black text-zinc-950 dark:text-zinc-100 notranslate" translate="no">{formatPrice(dp30)}</div>
                                   </div>
                                   <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
                                     <div className="text-zinc-600 dark:text-zinc-400 font-bold">{terminScheme === '50_50' ? 'Staging [F3-5]' : 'Termin 50% [F3-5]'}</div>
-                                    <div className="font-black text-zinc-950 dark:text-zinc-100">{terminScheme === '50_50' ? 'Included' : `Rp ${formatIdrPlain(milestone50)}`}</div>
+                                    <div className="font-black text-zinc-950 dark:text-zinc-100 notranslate" translate="no">{terminScheme === '50_50' ? 'Included' : formatPrice(milestone50)}</div>
                                   </div>
                                   <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
                                     <div className="text-zinc-600 dark:text-zinc-400 font-bold">{terminScheme === '50_50' ? 'BAST 50%' : 'BAST 20% [F6-7]'}</div>
-                                    <div className="font-black text-emerald-800 dark:text-emerald-400">Rp {formatIdrPlain(finalBast)}</div>
+                                    <div className="font-black text-emerald-800 dark:text-emerald-400 notranslate" translate="no">{formatPrice(finalBast)}</div>
                                   </div>
                                 </div>
                               ) : wizardMitraTier === 'umkm_starter' ? (
                                 <div className="grid grid-cols-2 gap-1.5 font-mono text-[10px] tabular-nums">
                                   <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
                                     <div className="text-zinc-600 dark:text-zinc-400 font-bold">{isEn ? 'Kickoff DP 50%' : 'DP 50% (Kickoff)'}</div>
-                                    <div className="font-black text-zinc-950 dark:text-zinc-100">Rp {formatIdrPlain(1875000)}</div>
+                                    <div className="font-black text-zinc-950 dark:text-zinc-100 notranslate" translate="no">{formatPrice(1875000)}</div>
                                   </div>
                                   <div className="p-1.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800">
                                     <div className="text-zinc-600 dark:text-zinc-400 font-bold">{isEn ? 'UAT Settlement 50%' : 'Pelunasan UAT 50%'}</div>
-                                    <div className="font-black text-emerald-800 dark:text-emerald-400">Rp {formatIdrPlain(1875000)}</div>
+                                    <div className="font-black text-emerald-800 dark:text-emerald-400 notranslate" translate="no">{formatPrice(1875000)}</div>
                                   </div>
                                 </div>
                               ) : (
@@ -2532,7 +2541,7 @@ export default function ArchitecturePricingIsland({
                     <span>
                       1 {selectedCurrency} ≈ Rp {parseCleanIdr(activeRatesToIdr[selectedCurrency] || 16000).toLocaleString(isEn ? 'en-US' : 'id-ID')} &bull;{' '}
                       <span className="text-emerald-700 dark:text-emerald-400 font-bold">
-                        {isEn ? 'Settle in IDR per BI rules' : 'Penyelesaian via IDR regulasi BI'}
+                        {isEn ? 'Rounded display • Exact IDR tax & BI settlement' : 'Tampilan dibulatkan • Pajak & bayar eksak IDR (BI)'}
                       </span>
                     </span>
                   )}
@@ -2541,7 +2550,7 @@ export default function ArchitecturePricingIsland({
             </div>
 
             {/* 2. DYNAMIC 5-TAB NAVIGATION SWITCHER (RETAIL | STUDIO | 12-SECTOR UI & KILLER OS | MATRIX | FAQ) */}
-            <div className="flex justify-center mb-8 sm:mb-10 w-full px-2 sm:px-4">
+            <div className="flex justify-center mb-6 sm:mb-7 w-full px-2 sm:px-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 p-1.5 bg-zinc-100 dark:bg-zinc-900 border-2 border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs font-mono text-xs w-full max-w-7xl gap-1.5 sm:gap-2">
 
                 {[
@@ -3195,15 +3204,15 @@ export default function ArchitecturePricingIsland({
                 transition={{ duration: 0.2 }}
                 className="mb-20"
               >
-                <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold mb-2.5 rounded-none">
+                <div className="text-center w-full max-w-7xl mx-auto mb-5 sm:mb-6">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold mb-2 rounded-none">
                     <Crown className="w-3.5 h-3.5" />
                     <span>{isEn ? 'NERIAH PRO STUDIO // TURNKEY CONTRACTS' : 'NERIAH PRO STUDIO // KONTRAK TURNKEY'}</span>
                   </div>
-                  <h2 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-2 font-sans">
+                  <h2 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-zinc-900 dark:text-white mb-1.5 font-sans w-full">
                     {isEn ? 'Turnkey Software Engineering by Independent Lead Architect Yoseph Iriandi' : 'Kontrak Rekayasa Software & Kode oleh Lead Architect Yoseph Iriandi'}
                   </h2>
-                  <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed max-w-2xl mx-auto mb-4">
+                  <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed w-full mb-3">
                     {isEn
                       ? 'Full turnkey production development across all 20 Pillars of Software Factory OS v12.0 built directly by Yoseph Iriandi (Independent Lead Architect). Includes Midtrans Snap Milestone Payments (50% DP Kickoff & 50% UAT Completion), SHA-256 Scope Lock, dedicated VPS hardening, isolated sprint batches (Anti-Collision), and a full 90-day SLA bug warranty.'
                       : 'Pengerjaan kode produksi turnkey (20 Pilar Software Factory OS v12.0) langsung oleh Yoseph Iriandi (Lead Software Architect). Dilengkapi Pembayaran Bertahap Midtrans Snap (DP 50% Kickoff & Pelunasan 50% pasca UAT), Kunci Lingkup SHA-256, kapasitas sprint terisolasi (Anti-Collision), dedicated cloud VPS, dan garansi bug SLA 90 hari penuh.'}
@@ -3539,7 +3548,7 @@ export default function ArchitecturePricingIsland({
                           rel="noopener noreferrer"
                           className="w-full bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2 px-4 font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition rounded-none text-center"
                         >
-                          <MessageSquare className="w-3.5 h-3.5 text-amber-500" />
+                          <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span>{isEn ? 'CONSULT ON WHATSAPP' : 'KONSULTASI WHATSAPP'}</span>
                         </a>
                       </div>
@@ -5147,7 +5156,7 @@ return match (true) {
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 py-3 px-6 font-mono text-xs font-bold uppercase tracking-wider transition rounded-none flex items-center justify-center gap-2"
                 >
-                  <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                  <WhatsAppIcon className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>{isEn ? 'CHAT ON WHATSAPP' : 'CHAT WHATSAPP RESMI'}</span>
                 </a>
               </div>
@@ -5413,9 +5422,9 @@ return match (true) {
                         href={submittedWaUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full sm:w-auto px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2 border border-emerald-400 rounded-none transition shadow-lg"
+                        className="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2 border border-emerald-500 rounded-none transition shadow-lg"
                       >
-                        <MessageCircle className="w-4 h-4" />
+                        <WhatsAppIcon className="w-4 h-4 shrink-0" />
                         <span>{isEn ? 'CONNECT DIRECTLY ON WHATSAPP →' : 'HUBUNGI LEAD ARCHITECT DI WHATSAPP →'}</span>
                       </a>
                     )}
@@ -5510,8 +5519,8 @@ return match (true) {
                       </div>
                       <p className="leading-relaxed text-zinc-600 dark:text-zinc-400">
                         {isEn
-                          ? `Reference Amount: ${formatPrice(getPackageBaseIdr(selectedPackage))} (Approx. Rp ${getPackageBaseIdr(selectedPackage).toLocaleString('en-US')}). Credit card transaction will settle in Indonesian Rupiah per Bank Indonesia / Midtrans regulation. The official commercial invoice will stamp the exact foreign currency equivalent and real-time exchange rate.`
-                          : `Estimasi Nilai Acuan: ${formatPrice(getPackageBaseIdr(selectedPackage))} (Setara Rp ${getPackageBaseIdr(selectedPackage).toLocaleString('id-ID')}). Transaksi kartu kredit akan diproses dalam mata uang Rupiah sesuai regulasi Bank Indonesia. Kwitansi dan bukti pembayaran resmi mencatat nilai konversi mata uang asal beserta kurs real-time.`}
+                          ? `Catalog Reference (Rounded): ${formatPrice(getPackageBaseIdr(selectedPackage))} • Exact FX Audit: ${formatPrice(getPackageBaseIdr(selectedPackage), { exactDecimals: true })} (Official Settlement: Rp ${getPackageBaseIdr(selectedPackage).toLocaleString('en-US')}). Payment settles in exact IDR per Bank Indonesia PBI 17/3/PBI/2015 & Indonesian Tax Law (UU HPP), with both the real-time exchange rate and exact FX figure stamped on your Commercial Invoice.`
+                          : `Acuan Katalog (Dibulatkan): ${formatPrice(getPackageBaseIdr(selectedPackage))} • Audit Valas Eksak: ${formatPrice(getPackageBaseIdr(selectedPackage), { exactDecimals: true })} (Tagihan Resmi: Rp ${getPackageBaseIdr(selectedPackage).toLocaleString('id-ID')}). Pembayaran diproses dalam Rupiah eksak sesuai PBI 17/3/PBI/2015 & UU HPP Perpajakan Indonesia, disertai pencatatan kurs real-time dan nominal valas presisi di Kwitansi Resmi.`}
                       </p>
                     </div>
                   )}

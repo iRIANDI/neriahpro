@@ -133,19 +133,26 @@ class CurrencyExchangeService
         $symbol = self::CURRENCY_SYMBOLS[$targetCurrency] ?? $targetCurrency;
 
         if ($targetCurrency === 'IDR' || $rate <= 0) {
+            $roundedIdr = (int) round($idrAmount);
+
             return [
                 'currency' => 'IDR',
                 'symbol' => 'Rp',
                 'rate' => 1.0,
+                'rate_to_idr' => 1.0,
                 'idr_amount' => $idrAmount,
                 'converted_amount' => $idrAmount,
+                'foreign_amount' => $idrAmount,
+                'rounded_amount' => $roundedIdr,
                 'formatted' => 'Rp ' . number_format($idrAmount, 0, ',', '.'),
+                'formatted_exact' => 'Rp ' . number_format($idrAmount, 0, ',', '.'),
                 'formatted_short' => 'Rp ' . number_format($idrAmount, 0, ',', '.'),
             ];
         }
 
         $converted = $idrAmount / $rate;
-        $decimals = in_array($targetCurrency, ['JPY'], true) ? 0 : 2;
+        $exactDecimals = in_array($targetCurrency, ['JPY'], true) ? 0 : 2;
+        $roundedForeign = $idrAmount > 0 ? max(1, (int) round($converted)) : 0;
 
         return [
             'currency' => $targetCurrency,
@@ -153,10 +160,12 @@ class CurrencyExchangeService
             'rate' => $rate,
             'rate_to_idr' => $rate,
             'idr_amount' => $idrAmount,
-            'converted_amount' => round($converted, 2),
-            'foreign_amount' => round($converted, 2),
-            'formatted' => $symbol . number_format($converted, $decimals, '.', ','),
-            'formatted_with_idr' => $symbol . number_format($converted, $decimals, '.', ',') . ' (Rp ' . number_format($idrAmount, 0, ',', '.') . ')',
+            'converted_amount' => round($converted, $exactDecimals),
+            'foreign_amount' => round($converted, $exactDecimals),
+            'rounded_amount' => $roundedForeign,
+            'formatted' => $symbol . ' ' . number_format($roundedForeign, 0, '.', ','),
+            'formatted_exact' => $symbol . ' ' . number_format($converted, $exactDecimals, '.', ','),
+            'formatted_with_idr' => $symbol . ' ' . number_format($roundedForeign, 0, '.', ',') . ' (Rp ' . number_format($idrAmount, 0, ',', '.') . ')',
         ];
     }
 

@@ -587,6 +587,8 @@ export default function ArchitecturePricingIsland({
     }
   };
 
+  const mitraHourlyRate = parseCleanIdr(pricingSettings?.mitra_man_hour_rate_idr, 350000);
+
   // Dynamic feature flag & admin toggle for CV Pro module switcher
   const isCvProEnabled = !featureFlags?.midtrans_mode && Boolean(featureFlags?.enable_cv_pro) && Boolean(featureFlags?.pricing_show_cv_tab);
   const [activeTab, setActiveTab] = useState('software'); // 'software' | 'cv'
@@ -3351,7 +3353,7 @@ export default function ArchitecturePricingIsland({
                             {isEn ? 'Algorithmic Fair RAB' : 'RAB Algoritmik Transparan'}
                           </span>
                           <span className="text-[10px] font-mono font-black text-emerald-800 dark:text-emerald-400 notranslate" translate="no">
-                            {formatPrice(hourlyRate)}/{isEn ? 'hr' : 'jam'}
+                            {formatPrice(mitraHourlyRate)}/{isEn ? 'hr' : 'jam'}
                           </span>
                         </div>
                         <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between text-xs font-mono">

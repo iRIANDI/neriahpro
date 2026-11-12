@@ -1,6 +1,48 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+class IslandErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, errorMessage: '' };
+    }
+
+    static getDerivedStateFromError(error) {
+        return {
+            hasError: true,
+            errorMessage: error?.message || 'Interactive module failed to initialize.',
+        };
+    }
+
+    componentDidCatch(error, info) {
+        console.error(`[IslandErrorBoundary:${this.props.name}]`, error, info);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="max-w-3xl mx-auto my-8 p-6 bg-white dark:bg-zinc-950 border-2 border-rose-500 text-zinc-950 dark:text-zinc-100 font-mono text-xs rounded-none shadow-sm">
+                    <div className="font-black uppercase text-rose-700 dark:text-rose-400 mb-2">
+                        MODULE RECOVERY GUARD // {this.props.name}
+                    </div>
+                    <p className="mb-4 text-zinc-700 dark:text-zinc-300">
+                        {this.state.errorMessage}
+                    </p>
+                    <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black uppercase rounded-none cursor-pointer"
+                    >
+                        Muat Ulang Modul
+                    </button>
+                </div>
+            );
+        }
+
+        return this.props.children;
+    }
+}
+
 import ClientOnboardingIsland from './Islands/ClientOnboardingIsland.jsx';
 import HeroIsland from './Islands/HeroIsland.jsx';
 import ProductGridIsland from './Islands/ProductGridIsland.jsx';
@@ -40,7 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const props = rawProps ? JSON.parse(rawProps) : {};
                 
                 const root = createRoot(node);
-                root.render(<Component {...props} />);
+                root.render(
+                    <IslandErrorBoundary name={componentName}>
+                        <Component {...props} />
+                    </IslandErrorBoundary>
+                );
             } else {
                 console.warn(`Island component ${componentName} not found.`);
             }

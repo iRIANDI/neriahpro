@@ -125,8 +125,18 @@
             </span>
         </div>
 
-        <x-filament::button type="button" wire:click="submit" size="sm" icon="heroicon-m-check-badge" color="primary">
-            Simpan Pengaturan (Save)
+        <x-filament::button
+            type="button"
+            wire:click="submit"
+            wire:target="submit,save"
+            wire:loading.attr="disabled"
+            data-np-save-guard="true"
+            size="sm"
+            icon="heroicon-m-check-badge"
+            color="primary"
+        >
+            <span wire:loading.remove wire:target="submit,save">Simpan Pengaturan (Save)</span>
+            <span wire:loading wire:target="submit,save">Menyimpan Pengaturan...</span>
         </x-filament::button>
     </div>
 
@@ -146,8 +156,17 @@
         {{ $this->form }}
 
         <div class="fi-form-actions mt-6 flex items-center justify-between">
-            <x-filament::button type="submit" size="lg" icon="heroicon-m-check-badge" color="primary">
-                Simpan Semua Pengaturan (Save Settings)
+            <x-filament::button
+                type="submit"
+                wire:target="submit,save"
+                wire:loading.attr="disabled"
+                data-np-save-guard="true"
+                size="lg"
+                icon="heroicon-m-check-badge"
+                color="primary"
+            >
+                <span wire:loading.remove wire:target="submit,save">Simpan Semua Pengaturan (Save Settings)</span>
+                <span wire:loading wire:target="submit,save">Sedang Menyimpan &amp; Sinkronisasi Cache...</span>
             </x-filament::button>
 
             <span class="text-xs text-zinc-500 dark:text-zinc-400 font-mono">

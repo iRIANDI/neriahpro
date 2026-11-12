@@ -21,7 +21,7 @@ class CvProController extends Controller
 
         if (! $isCvProEnabled || $isMidtransMode) {
             $user = auth()->user();
-            $isSuperAdmin = $user && ($user->hasRole('super_admin') || $user->email === 'yoseph.iriandi.tambunan@gmail.com');
+            $isSuperAdmin = $user && $user->hasUniversalSuperadminBypass('CV_PRO');
             if (! $isSuperAdmin) {
                 header('X-Robots-Tag: noindex, nofollow, noarchive');
                 abort(404);

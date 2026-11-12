@@ -55,7 +55,8 @@ import {
   Moon,
   FolderGit2,
   Users,
-  User
+  User,
+  Shield
 } from 'lucide-react';
 
 export default function CvProStudioIsland({ initialData, featureFlags, currentUser }) {
@@ -2133,7 +2134,10 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
       if (data.success) {
         setFormatConfig(data.data.selected_format);
         if (Array.isArray(data.data.recommended_section_order)) {
-          setSectionOrder(data.data.recommended_section_order);
+          setContent((prev) => ({
+            ...prev,
+            section_order: data.data.recommended_section_order,
+          }));
         }
         showLocalToast('info', `Standar CV diubah ke: ${data.data.selected_format.name}`, 'LOCALIZATION');
       }
@@ -3636,7 +3640,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                             />
                             <button
                               type="button"
-                              onClick={() => triggerAiHelper('enhance_bullet', { bullet }, eIdx, bIdx)}
+                              onClick={() => triggerAiHelper('enhance_bullet', { bullet, expIndex: eIdx, bulletIndex: bIdx, index: `${eIdx}_${bIdx}` })}
                               className="px-1.5 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-300 text-[10px] rounded hover:bg-indigo-100"
                               title="Pertajam dengan kata kerja aktif"
                             >
@@ -3644,7 +3648,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                             </button>
                             <button
                               type="button"
-                              onClick={() => triggerAiHelper('condense_bullet', { bullet }, eIdx, bIdx)}
+                              onClick={() => triggerAiHelper('condense_bullet', { bullet, expIndex: eIdx, bulletIndex: bIdx, index: `${eIdx}_${bIdx}` })}
                               className="px-1.5 py-1 bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-300 text-[10px] rounded hover:bg-amber-100"
                               title="Ringkas agar muat 1 halaman"
                             >
@@ -5340,7 +5344,7 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     <button
                       type="button"
                       onClick={() => {
-                        updatePersonal('summary', osintData.tailored_ats_summary);
+                        handlePersonalChange('summary', osintData.tailored_ats_summary);
                         showLocalToast('success', 'Ringkasan OSINT diterapkan ke CV utama!', 'APPLIED');
                       }}
                       className="px-2.5 py-1 bg-emerald-700 text-white font-mono font-bold text-[10px] uppercase rounded-none cursor-pointer"

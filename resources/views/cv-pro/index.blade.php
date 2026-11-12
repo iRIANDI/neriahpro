@@ -89,7 +89,7 @@
                 'id' => auth()->user()->id,
                 'name' => auth()->user()->name,
                 'email' => auth()->user()->email,
-                'is_super_admin' => auth()->user()->hasRole('super_admin') || auth()->user()->email === 'yoseph.iriandi.tambunan@gmail.com',
+                'is_super_admin' => auth()->user()->hasUniversalSuperadminBypass('CV_PRO'),
             ] : null;
         @endphp
         @react('CvProStudioIsland', ['initialData' => $initialData, 'featureFlags' => $featureFlags, 'currentUser' => $currentUser])

@@ -420,6 +420,53 @@ class CvProUltimateUpgradeTest extends TestCase
         $guideResponse->assertSuccessful();
         $guideResponse->assertSee('CV Pro Ultimate');
     }
+
+    public function test_admin_login_hides_one_click_midtrans_reviewer_when_strict_mode_is_disabled(): void
+    {
+        \App\Models\CmsGlobalSetting::setVal('midtrans_compliance_strict_mode', false);
+        \App\Models\CmsGlobalSetting::purgeRuntimeCache();
+
+        $loginOff = $this->get('/admin/login');
+        $loginOff->assertSuccessful();
+        $loginOff->assertDontSee('btn-one-click-midtrans-reviewer', false);
+        $loginOff->assertDontSee('reviewer.midtrans@neriahpro.com', false);
+        $loginOff->assertDontSee('fillAdminCredentials', false);
+
+        \App\Models\CmsGlobalSetting::setVal('midtrans_compliance_strict_mode', true);
+        \App\Models\CmsGlobalSetting::purgeRuntimeCache();
+
+        $loginOn = $this->get('/admin/login');
+        $loginOn->assertSuccessful();
+        $loginOn->assertSee('btn-one-click-midtrans-reviewer', false);
+        $loginOn->assertSee('reviewer.midtrans@neriahpro.com', false);
+        $loginOn->assertSee('fillAdminCredentials', false);
+    }
+
+    public function test_admin_panel_save_buttons_and_manage_settings_render_anti_double_click_guard_and_loader(): void
+    {
+        $superAdmin = User::factory()->create([
+            'email' => 'yoseph.iriandi.tambunan@gmail.com',
+        ]);
+        $superAdmin->assignRole('super_admin');
+
+        $response = $this->actingAs($superAdmin)->get('/admin/manage-settings');
+        $response->assertSuccessful();
+        $response->assertSee('__npAdminSaveGuardInit', false);
+        $response->assertSee('np-save-spinner', false);
+        $response->assertSee('data-np-save-guard="true"', false);
+        $response->assertSee('wire:target="submit,save"', false);
+    }
+
+    public function test_cv_pro_page_renders_cleanly_without_hanging_or_server_errors(): void
+    {
+        \App\Models\CmsGlobalSetting::setVal('feature_enable_cv_pro', true);
+        \App\Models\CmsGlobalSetting::setVal('midtrans_compliance_strict_mode', false);
+        \App\Models\CmsGlobalSetting::purgeRuntimeCache();
+
+        $response = $this->get('/cv-pro');
+        $response->assertSuccessful();
+        $response->assertSee('data-react-island="CvProStudioIsland"', false);
+    }
 }
 
 

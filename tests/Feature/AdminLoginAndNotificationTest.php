@@ -15,6 +15,9 @@ class AdminLoginAndNotificationTest extends TestCase
      */
     public function test_filament_admin_login_page_renders_with_neriah_pro_mission(): void
     {
+        \App\Models\CmsGlobalSetting::setVal('midtrans_compliance_strict_mode', false);
+        \App\Models\CmsGlobalSetting::purgeRuntimeCache();
+
         $response = $this->get('/admin/login');
 
         $response->assertStatus(200);
@@ -25,7 +28,14 @@ class AdminLoginAndNotificationTest extends TestCase
         $response->assertSee('CV Pro Studio');
         $response->assertDontSee('yoseph.iriandi.tambunan@gmail.com');
         $response->assertDontSee('PostgreSQL 16');
-        $response->assertSee('reviewer.midtrans@neriahpro.com');
+        $response->assertDontSee('reviewer.midtrans@neriahpro.com');
+
+        \App\Models\CmsGlobalSetting::setVal('midtrans_compliance_strict_mode', true);
+        \App\Models\CmsGlobalSetting::purgeRuntimeCache();
+
+        $strictResponse = $this->get('/admin/login');
+        $strictResponse->assertStatus(200);
+        $strictResponse->assertSee('reviewer.midtrans@neriahpro.com');
     }
 
     /**

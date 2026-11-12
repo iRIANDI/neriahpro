@@ -383,9 +383,17 @@
                         </button>
                         <button
                             type="submit"
-                            class="px-4 py-1.5 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold rounded-none transition cursor-pointer shadow-xs"
+                            wire:target="saveTransaction"
+                            wire:loading.attr="disabled"
+                            data-np-save-guard="true"
+                            class="inline-flex items-center gap-2 px-4 py-1.5 bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold rounded-none transition cursor-pointer shadow-xs disabled:opacity-70"
                         >
-                            Simpan Transaksi
+                            <svg wire:loading wire:target="saveTransaction" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-opacity="0.25"></circle>
+                                <path fill="currentColor" d="M4 12a8 8 0 018-8v3a5 5 0 00-5 5H4z"></path>
+                            </svg>
+                            <span wire:loading.remove wire:target="saveTransaction">Simpan Transaksi</span>
+                            <span wire:loading wire:target="saveTransaction">Menyimpan...</span>
                         </button>
                     </div>
                 </form>

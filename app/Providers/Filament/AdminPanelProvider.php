@@ -71,7 +71,10 @@ class AdminPanelProvider extends PanelProvider
             )
             ->renderHook(
                 PanelsRenderHook::BODY_END,
-                fn () => view('filament.components.floating-copilot-hook')
+                fn () => new HtmlString(
+                    view('filament.components.floating-copilot-hook')->render() .
+                    view('filament.components.anti-double-click-guard')->render()
+                )
             )
             ->userMenuItems([
                 MenuItem::make()

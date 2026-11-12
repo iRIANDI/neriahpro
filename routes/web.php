@@ -284,6 +284,15 @@ Route::prefix('api/cv-pro')->group(function () {
     Route::post('/topup', [CvProApiController::class, 'topup'])->middleware('throttle:30,1');
     Route::post('/purge-data', [CvProApiController::class, 'purgeData'])->middleware('throttle:30,1');
     Route::get('/compliance-status', [CvProApiController::class, 'complianceStatus'])->middleware('throttle:60,1');
+    Route::post('/ats/deterministic-score', [CvProApiController::class, 'deterministicScore'])->middleware('throttle:60,1');
+    Route::post('/ats/emulator', [CvProApiController::class, 'simulateAts'])->middleware('throttle:60,1');
+    Route::post('/ai/google-xyz', [CvProApiController::class, 'googleXyz'])->middleware('throttle:60,1');
+    Route::post('/osint/tailor', [CvProApiController::class, 'companyOsint'])->middleware('throttle:30,1');
+    Route::post('/export/typst', [CvProApiController::class, 'exportTypst'])->middleware('throttle:30,1');
+    Route::post('/recruiter-chat', [CvProApiController::class, 'recruiterChat'])->middleware('throttle:30,1');
+    Route::post('/ai/case-study-convert', [CvProApiController::class, 'caseStudyConvert'])->middleware('throttle:30,1');
+    Route::get('/portfolio/catalog', [CvProApiController::class, 'portfolioCatalog'])->middleware('throttle:60,1');
+    Route::post('/localize-format', [CvProApiController::class, 'localizeFormat'])->middleware('throttle:60,1');
 });
 
 // Dynamic Search Engine & GEO AI Citation Architecture: Sitemap.xml, Robots.txt, llms.txt & IndexNow

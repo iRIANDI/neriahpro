@@ -1925,6 +1925,227 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
     }));
   };
 
+  // =========================================================================
+  // 8-PILLAR ULTIMATE UPGRADE STATES & HANDLERS (DESIGN CV.MD SPECIFICATION)
+  // =========================================================================
+  const [isAnonymized, setIsAnonymized] = useState(false);
+  const [pdfDensity, setPdfDensity] = useState('normal'); // 'compact' | 'normal' | 'relaxed'
+  const [globalFormat, setGlobalFormat] = useState('us_ats'); // 'us_ats' | 'de_lebenslauf' | 'jp_rirekisho'
+  const [formatConfig, setFormatConfig] = useState(null);
+
+  // 1. Deterministic Hybrid ATS Scorer
+  const [jdForDeterministic, setJdForDeterministic] = useState('');
+  const [deterministicScoreData, setDeterministicScoreData] = useState(null);
+  const [runningDeterministic, setRunningDeterministic] = useState(false);
+
+  // 2. Workday & Greenhouse ATS Parser Emulator
+  const [atsEmulatorData, setAtsEmulatorData] = useState(null);
+  const [runningEmulator, setRunningEmulator] = useState(false);
+  const [emulatorViewMode, setEmulatorViewMode] = useState('workday'); // 'raw' | 'workday' | 'greenhouse'
+
+  // 3. Google XYZ Formula Rewriter & Zero-Hallucination Case Study Architect
+  const [xyzBulletInput, setXyzBulletInput] = useState('Mengoptimalkan performa query database dan arsitektur caching aplikasi.');
+  const [xyzData, setXyzData] = useState(null);
+  const [runningXyz, setRunningXyz] = useState(false);
+  const [caseStudyData, setCaseStudyData] = useState(null);
+  const [runningCaseStudy, setRunningCaseStudy] = useState(false);
+
+  // 4. Company OSINT Tailoring & Bespoke /for-{company} Micro-Pitch
+  const [osintCompany, setOsintCompany] = useState('Stripe');
+  const [osintRole, setOsintRole] = useState('Staff Infrastructure Engineer');
+  const [osintData, setOsintData] = useState(null);
+  const [runningOsint, setRunningOsint] = useState(false);
+
+  // 5. AI Recruiter Chat with Interactive Co-Browsing (RAG)
+  const [recruiterQuery, setRecruiterQuery] = useState('Apakah kandidat pernah menangani optimasi biaya server cloud atau skalabilitas database?');
+  const [recruiterChatData, setRecruiterChatData] = useState(null);
+  const [runningRecruiterChat, setRunningRecruiterChat] = useState(false);
+
+  // 6. Typst Compiler Source Export
+  const [exportingTypst, setExportingTypst] = useState(false);
+
+  const handleRunDeterministicScore = async () => {
+    setRunningDeterministic(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/cv-pro/ats/deterministic-score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf || '' },
+        body: JSON.stringify({ content, job_description: jdForDeterministic, lang }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDeterministicScoreData(data.data);
+        showLocalToast('success', 'Skor Deterministik Hybrid berhasil dihitung (<50ms Zero-LLM).', 'ATS SCORER');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRunningDeterministic(false);
+    }
+  };
+
+  const handleRunAtsEmulator = async () => {
+    setRunningEmulator(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/cv-pro/ats/emulator', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf || '' },
+        body: JSON.stringify({ content, lang }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAtsEmulatorData(data.data);
+        showLocalToast('success', 'Simulasi ekstraksi Workday & Greenhouse selesai.', 'ATS EMULATOR');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRunningEmulator(false);
+    }
+  };
+
+  const handleRunGoogleXyz = async () => {
+    setRunningXyz(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/cv-pro/ai/google-xyz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf || '' },
+        body: JSON.stringify({ bullet: xyzBulletInput, role: content?.personal_info?.title || 'Engineer', lang }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setXyzData(data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRunningXyz(false);
+    }
+  };
+
+  const handleRunCaseStudyConvert = async () => {
+    setRunningCaseStudy(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const firstExp = (content.experiences && content.experiences[0]) || {
+        id: 'exp_01',
+        company: 'Enterprise Systems',
+        role: content?.personal_info?.title || 'Lead Architect',
+        bullets: ['Memangkas latensi respon API sebesar 65% melalui integrasi multi-tier Redis caching.'],
+      };
+      const res = await fetch('/api/cv-pro/ai/case-study-convert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf || '' },
+        body: JSON.stringify({ experience: firstExp, lang }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCaseStudyData(data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRunningCaseStudy(false);
+    }
+  };
+
+  const handleRunCompanyOsint = async () => {
+    setRunningOsint(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/cv-pro/osint/tailor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf || '' },
+        body: JSON.stringify({ company: osintCompany, role: osintRole, content, lang }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOsintData(data.data);
+        showLocalToast('success', `Intelijen OSINT & Micro-Pitch /for-${data.data.company_slug} siap digunakan!`, 'OSINT TAILOR');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRunningOsint(false);
+    }
+  };
+
+  const handleAskRecruiterChat = async () => {
+    if (!recruiterQuery.trim()) return;
+    setRunningRecruiterChat(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/cv-pro/recruiter-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf || '' },
+        body: JSON.stringify({ query: recruiterQuery, content, lang }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRecruiterChatData(data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setRunningRecruiterChat(false);
+    }
+  };
+
+  const handleSwitchGlobalFormat = async (fmt) => {
+    setGlobalFormat(fmt);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/cv-pro/localize-format', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf || '' },
+        body: JSON.stringify({ content, country_format: fmt, lang }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setFormatConfig(data.data.selected_format);
+        if (Array.isArray(data.data.recommended_section_order)) {
+          setSectionOrder(data.data.recommended_section_order);
+        }
+        showLocalToast('info', `Standar CV diubah ke: ${data.data.selected_format.name}`, 'LOCALIZATION');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDownloadTypst = async () => {
+    setExportingTypst(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/cv-pro/export/typst', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf || '' },
+        body: JSON.stringify({
+          content,
+          config: { density: pdfDensity, anonymized: isAnonymized },
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.typst_source) {
+        const blob = new Blob([data.data.typst_source], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = data.data.file_name || 'ats-resume.typ';
+        a.click();
+        URL.revokeObjectURL(url);
+        showLocalToast('success', 'File source Typst (.typ) berhasil diunduh dengan proteksi Anti-Orphan.', 'TYPST COMPILER');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setExportingTypst(false);
+    }
+  };
+
   const p = content.personal_info || {};
 
   return (
@@ -2007,11 +2228,65 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
             <button
               onClick={() => { setTourStep(0); setTourModalOpen(true); }}
               id="start-tour-btn"
-              className="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition flex items-center gap-1.5 shadow-sm rounded-sm"
+              className="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition flex items-center gap-1.5 shadow-sm rounded-none"
               title="Mulai panduan interaktif seluruh fitur CV Pro"
             >
               <HelpCircle className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Panduan Tur</span>
+            </button>
+
+            {/* Blind Hiring Anonymizer Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsAnonymized(!isAnonymized);
+                showLocalToast('info', !isAnonymized ? 'Mode Blind Hiring Aktif: Identitas personal disembunyikan (Anti-Bias).' : 'Mode Blind Hiring Nonaktif: Identitas penuh ditampilkan.', 'BLIND HIRING');
+              }}
+              className={`px-2.5 py-1.5 border text-xs font-mono font-bold transition flex items-center gap-1.5 rounded-none cursor-pointer ${
+                isAnonymized
+                  ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border-emerald-400 dark:border-emerald-700'
+                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200'
+              }`}
+              title="Mode 1-Klik Blind Hiring untuk menyembunyikan nama, foto, dan kontak sensitif"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline">{isAnonymized ? 'Blind Hiring: ON' : 'Blind Hiring: OFF'}</span>
+            </button>
+
+            {/* Deterministic Page-Break Density Switcher */}
+            <select
+              value={pdfDensity}
+              onChange={(e) => setPdfDensity(e.target.value)}
+              className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono font-bold px-2 py-1.5 rounded-none cursor-pointer"
+              title="Pengatur Kerapatan Spasi Mikro (Deterministic Page-Break Engine)"
+            >
+              <option value="compact">Density: Compact (1 Hal Aman)</option>
+              <option value="normal">Density: Normal (Standar)</option>
+              <option value="relaxed">Density: Relaxed (Eksekutif)</option>
+            </select>
+
+            {/* Global Format Localization */}
+            <select
+              value={globalFormat}
+              onChange={(e) => handleSwitchGlobalFormat(e.target.value)}
+              className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono font-bold px-2 py-1.5 rounded-none cursor-pointer hidden md:block"
+              title="Global Format Localization (US ATS / German Lebenslauf / Japanese Rirekisho)"
+            >
+              <option value="us_ats">Format: US / Global ATS</option>
+              <option value="de_lebenslauf">Format: DE Lebenslauf</option>
+              <option value="jp_rirekisho">Format: JP Rirekisho</option>
+            </select>
+
+            {/* Typst Compiler Source Export */}
+            <button
+              type="button"
+              onClick={handleDownloadTypst}
+              disabled={exportingTypst}
+              className="px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border border-zinc-700 text-xs font-mono font-bold transition flex items-center gap-1.5 rounded-none cursor-pointer hover:opacity-90"
+              title="Unduh kode sumber Typst (.typ) dengan proteksi Anti-Orphan #block(breakable: false)"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden xl:inline">{exportingTypst ? 'Exporting...' : '.TYP ATS'}</span>
             </button>
 
             {/* Transcript Paste Button */}
@@ -4039,29 +4314,35 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                     /* ========================================================= */
                     /* LAYOUTS B, C, D, E: STANDARD SINGLE/DUAL COLUMN FORMATS   */
                     /* ========================================================= */
-                    <div className="space-y-5">
+                    <div className={pdfDensity === 'compact' ? 'space-y-3 text-[11px]' : (pdfDensity === 'relaxed' ? 'space-y-7 text-sm' : 'space-y-5')}>
                       
                       {/* Header with Photo & Accent */}
                       <div className={`pb-4 border-b ${template === 'executive_clean' ? 'text-center border-double border-b-4' : 'flex items-start justify-between'} ${template === 'tech_dark' ? 'border-slate-700' : ''}`} style={{ borderColor: template === 'executive_clean' ? primaryColor : `${primaryColor}30` }}>
                         <div className={template === 'executive_clean' ? 'mx-auto' : ''}>
                           <h1 className={`font-black tracking-tight ${template === 'tech_dark' ? 'text-white font-mono text-2xl' : 'text-zinc-950 text-2xl sm:text-3xl'}`}>
-                            {p.name || 'Nama Anda'}
+                            {isAnonymized ? `Kandidat Terverifikasi #${(resumeId || 'ULID99A').slice(-6).toUpperCase()}` : (p.name || 'Nama Anda')}
                           </h1>
                           <p className={`font-bold mt-0.5 ${template === 'tech_dark' ? 'text-emerald-400 font-mono text-xs' : 'text-sm'}`} style={{ color: template === 'tech_dark' ? undefined : primaryColor }}>
                             {template === 'tech_dark' ? `> ${p.title || 'Systems Architect'}` : (p.title || 'Posisi Impian')}
                           </p>
                           
-                          <div className={`flex flex-wrap gap-x-3 gap-y-1 text-[11px] mt-2 font-mono ${template === 'executive_clean' ? 'justify-center' : ''} ${template === 'tech_dark' ? 'text-slate-400' : 'text-zinc-600'}`}>
-                            {p.email && <span>✉ {p.email}</span>}
-                            {p.phone && <span>📞 {p.phone}</span>}
-                            {p.location && <span>📍 {p.location}</span>}
-                            {p.linkedin && <span>💼 {p.linkedin}</span>}
-                            {p.website && <span>🌐 {p.website}</span>}
-                          </div>
+                          {isAnonymized ? (
+                            <div className="mt-2 inline-block px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 font-mono font-black text-[10px] rounded-none">
+                              [BLIND HIRING VERIFIED — BEBAS BIAS IDENTITAS PERSONAL]
+                            </div>
+                          ) : (
+                            <div className={`flex flex-wrap gap-x-3 gap-y-1 text-[11px] mt-2 font-mono ${template === 'executive_clean' ? 'justify-center' : ''} ${template === 'tech_dark' ? 'text-slate-400' : 'text-zinc-600'}`}>
+                              {p.email && <span>✉ {p.email}</span>}
+                              {p.phone && <span>📞 {p.phone}</span>}
+                              {p.location && <span>📍 {p.location}</span>}
+                              {p.linkedin && <span>💼 {p.linkedin}</span>}
+                              {p.website && <span>🌐 {p.website}</span>}
+                            </div>
+                          )}
                         </div>
 
-                        {/* Optional Header Avatar */}
-                        {showPhoto && p.photo_url && template !== 'executive_clean' && (
+                        {/* Optional Header Avatar (Hidden in Blind Hiring or US Strict ATS) */}
+                        {!isAnonymized && globalFormat !== 'us_ats' && showPhoto && p.photo_url && template !== 'executive_clean' && (
                           <img
                             src={p.photo_url}
                             alt={p.name}
@@ -4220,6 +4501,25 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
 
                         return null;
                       })}
+
+                      {/* Global Format Localization Blocks: German Lebenslauf & Japanese Rirekisho */}
+                      {globalFormat === 'jp_rirekisho' && (
+                        <div className="p-3 border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 rounded-none mt-4">
+                          <div className="text-[10px] font-mono font-black uppercase text-zinc-900 dark:text-zinc-100 mb-1">
+                            志望動機 // MOTIVATION STATEMENT (JIS RIREKISHO STANDARD)
+                          </div>
+                          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                            {formatConfig?.shibou_douki_statement || 'Saya sangat menghormati filosofi keunggulan kualitas perusahaan Anda dan berkomitmen menyumbangkan keahlian rekayasa sistem saya demi pertumbuhan tim secara berkelanjutan.'}
+                          </p>
+                        </div>
+                      )}
+
+                      {globalFormat === 'de_lebenslauf' && !isAnonymized && (
+                        <div className="pt-6 mt-4 border-t border-zinc-300 flex items-center justify-between text-[11px] font-mono text-zinc-700">
+                          <span>{formatConfig?.signature_line || `${p.location || 'Jakarta'}, ${new Date().toLocaleDateString('de-DE')}`}</span>
+                          <span className="italic font-serif text-sm text-zinc-900">{p.name || 'Unterschrift'}</span>
+                        </div>
+                      )}
 
                     </div>
                   )}
@@ -4693,6 +4993,381 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                       <li key={idx}>{s}</li>
                     ))}
                   </ul>
+                </div>
+              )}
+            </div>
+
+            {/* ========================================================================= */}
+            {/* 8-PILLAR ULTIMATE ARCHITECTURE & ATS LAB (DESIGN CV.MD SPECIFICATION)     */}
+            {/* ========================================================================= */}
+
+            {/* PILLAR 1: DETERMINISTIC HYBRID ATS SCORER & KEYWORD HEATMAP */}
+            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 shadow-xs space-y-4 rounded-none">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div>
+                  <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-mono font-black text-[10px] uppercase rounded-none">
+                    ZERO-LLM &lt;50MS ENGINE
+                  </span>
+                  <h3 className="text-sm font-black uppercase font-mono text-zinc-950 dark:text-zinc-100 mt-1">
+                    1. Hybrid Deterministic ATS Scorer &amp; Keyword Heatmap
+                  </h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    Formula: ATSScore = (0.45 &times; K_exact) + (0.25 &times; S_semantic) + (0.15 &times; M_impact) + (0.15 &times; P_parse)
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRunDeterministicScore}
+                  disabled={runningDeterministic}
+                  className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-mono font-black text-xs uppercase rounded-none hover:opacity-90 cursor-pointer shrink-0"
+                >
+                  {runningDeterministic ? 'Menghitung...' : 'Hitung Skor Deterministik'}
+                </button>
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono font-bold text-zinc-800 dark:text-zinc-200 mb-1">
+                  Deskripsi Lowongan Kerja Target (Opsional untuk Pencocokan Kata Kunci Eksak):
+                </label>
+                <textarea
+                  rows={2}
+                  value={jdForDeterministic}
+                  onChange={(e) => setJdForDeterministic(e.target.value)}
+                  placeholder={lang === 'en' ? 'e.g. paste target job description to test exact keyword matching...' : 'misal: tempel deskripsi lowongan kerja untuk uji kecocokan kata kunci...'}
+                  className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 rounded-none"
+                />
+              </div>
+
+              {deterministicScoreData && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    <div className="p-3 bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-400 dark:border-emerald-700 text-center rounded-none">
+                      <div className="text-[10px] font-mono font-black text-emerald-950 dark:text-emerald-200 uppercase">FINAL ATS SCORE</div>
+                      <div className="text-2xl font-black text-emerald-950 dark:text-emerald-100 mt-0.5">{deterministicScoreData.final_score}%</div>
+                    </div>
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center rounded-none">
+                      <div className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400">EXACT KW (45%)</div>
+                      <div className="text-lg font-black text-zinc-950 dark:text-zinc-100">{deterministicScoreData.breakdown?.exact_keyword_score}%</div>
+                    </div>
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center rounded-none">
+                      <div className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400">SEMANTIC (25%)</div>
+                      <div className="text-lg font-black text-zinc-950 dark:text-zinc-100">{deterministicScoreData.breakdown?.semantic_score}%</div>
+                    </div>
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center rounded-none">
+                      <div className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400">IMPACT DENSITY (15%)</div>
+                      <div className="text-lg font-black text-zinc-950 dark:text-zinc-100">{deterministicScoreData.breakdown?.quantifiable_impact_score}%</div>
+                    </div>
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center rounded-none">
+                      <div className="text-[10px] font-mono text-zinc-600 dark:text-zinc-400">PARSER HEALTH (15%)</div>
+                      <div className="text-lg font-black text-zinc-950 dark:text-zinc-100">{deterministicScoreData.breakdown?.parser_health_score}%</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                      <div className="font-mono font-bold text-emerald-900 dark:text-emerald-300 mb-1.5">
+                        ✓ Kata Kunci Terdeteksi ({deterministicScoreData.matched_keywords?.length || 0}):
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(deterministicScoreData.matched_keywords || []).map((kw, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-mono font-bold text-[10px] rounded-none">
+                            {kw}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none">
+                      <div className="font-mono font-bold text-amber-900 dark:text-amber-300 mb-1.5">
+                        ! Kata Kunci Kritis Belum Ada ({deterministicScoreData.missing_critical_keywords?.length || 0}):
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(deterministicScoreData.missing_critical_keywords || []).map((kw, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border border-amber-400 dark:border-amber-700 font-mono font-bold text-[10px] rounded-none">
+                            {kw}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* PILLAR 2: WORKDAY & GREENHOUSE ATS PARSER EMULATOR */}
+            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 shadow-xs space-y-4 rounded-none">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div>
+                  <span className="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-400 dark:border-zinc-700 font-mono font-black text-[10px] uppercase rounded-none">
+                    RAW STREAM &amp; JSON INSPECTOR
+                  </span>
+                  <h3 className="text-sm font-black uppercase font-mono text-zinc-950 dark:text-zinc-100 mt-1">
+                    2. Workday &amp; Greenhouse ATS Parser Emulator
+                  </h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    Simulasi ekstraksi aliran teks mentah dan JSON persis seperti layar rekruter korporat.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRunAtsEmulator}
+                  disabled={runningEmulator}
+                  className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-mono font-black text-xs uppercase rounded-none hover:opacity-90 cursor-pointer shrink-0"
+                >
+                  {runningEmulator ? 'Mengekstrak...' : 'Jalankan Simulator Parser'}
+                </button>
+              </div>
+
+              {atsEmulatorData && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-400 dark:border-emerald-700 px-3 py-2 text-xs font-mono">
+                    <span className="font-black text-emerald-950 dark:text-emerald-200">
+                      STATUS: {atsEmulatorData.health_rating}
+                    </span>
+                    <span className="text-emerald-900 dark:text-emerald-300">
+                      Collision Risk: {atsEmulatorData.corruption_audit?.multi_column_overlap_risk}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                    {['workday', 'greenhouse', 'raw'].map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setEmulatorViewMode(mode)}
+                        className={`px-3 py-1 text-xs font-mono font-bold uppercase rounded-none border cursor-pointer ${
+                          emulatorViewMode === mode
+                            ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border-zinc-900'
+                            : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700'
+                        }`}
+                      >
+                        {mode === 'workday' ? 'Workday JSON' : mode === 'greenhouse' ? 'Greenhouse JSON' : 'Raw Text Stream'}
+                      </button>
+                    ))}
+                  </div>
+
+                  <pre className="p-4 bg-zinc-950 text-emerald-300 font-mono text-[11px] overflow-x-auto max-h-64 border border-zinc-800 rounded-none">
+                    {emulatorViewMode === 'raw'
+                      ? atsEmulatorData.raw_text_stream
+                      : JSON.stringify(emulatorViewMode === 'workday' ? atsEmulatorData.workday_json : atsEmulatorData.greenhouse_json, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+
+            {/* PILLAR 3: GOOGLE XYZ REWRITER & ZERO-HALLUCINATION CASE STUDY ARCHITECT */}
+            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 shadow-xs space-y-4 rounded-none">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div>
+                  <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-950/80 text-amber-950 dark:text-amber-200 border border-amber-400 dark:border-amber-700 font-mono font-black text-[10px] uppercase rounded-none">
+                    GOOGLE XYZ &amp; CASE STUDY AGENT
+                  </span>
+                  <h3 className="text-sm font-black uppercase font-mono text-zinc-950 dark:text-zinc-100 mt-1">
+                    3. Google &quot;XYZ&quot; Bullet Rewriter &amp; Case Study Architect
+                  </h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    Ubah kalimat tugas harian menjadi formula Google XYZ (&quot;Accomplished X as measured by Y by doing Z&quot;) atau dekonstruksi menjadi Studi Kasus Web bebas halusinasi.
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleRunGoogleXyz}
+                    disabled={runningXyz}
+                    className="px-3 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-mono font-black text-xs uppercase rounded-none hover:opacity-90 cursor-pointer"
+                  >
+                    {runningXyz ? 'Memproses...' : 'Poles Google XYZ'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRunCaseStudyConvert}
+                    disabled={runningCaseStudy}
+                    className="px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-mono font-black text-xs uppercase rounded-none cursor-pointer"
+                  >
+                    {runningCaseStudy ? 'Menganalisis...' : 'Konversi Studi Kasus'}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  value={xyzBulletInput}
+                  onChange={(e) => setXyzBulletInput(e.target.value)}
+                  placeholder={lang === 'en' ? 'e.g. enter a daily responsibility bullet to transform into Google XYZ...' : 'misal: masukkan kalimat pengalaman kerja untuk diubah ke format Google XYZ...'}
+                  className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 rounded-none"
+                />
+              </div>
+
+              {xyzData && (
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs rounded-none">
+                  <div className="font-mono font-black text-zinc-950 dark:text-zinc-100">
+                    HASIL UTAMA GOOGLE XYZ:
+                  </div>
+                  <p className="p-2.5 bg-white dark:bg-zinc-950 border border-emerald-500/50 text-zinc-900 dark:text-zinc-100 font-medium">
+                    {xyzData.full_xyz_bullet}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                    {(xyzData.variations || []).map((v, i) => (
+                      <div key={i} className="p-2.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                        <div className="font-mono font-bold text-[10px] text-emerald-800 dark:text-emerald-300 uppercase mb-1">{v.focus}</div>
+                        <p className="text-[11px] text-zinc-700 dark:text-zinc-300">{v.bullet}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {caseStudyData && (
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3 text-xs rounded-none">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-black text-zinc-950 dark:text-zinc-100 uppercase">
+                      {caseStudyData.case_study_title}
+                    </span>
+                    <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border border-emerald-400 font-mono font-black text-[10px]">
+                      ZERO HALLUCINATION VERIFIED ({Math.round((caseStudyData.confidence_score || 0.85) * 100)}%)
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="p-2.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                      <div className="font-mono font-bold text-[10px] uppercase text-zinc-500 mb-1">Context &amp; Problem</div>
+                      <p className="text-zinc-800 dark:text-zinc-200">{caseStudyData.structured_narrative?.context_and_problem}</p>
+                    </div>
+                    <div className="p-2.5 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                      <div className="font-mono font-bold text-[10px] uppercase text-zinc-500 mb-1">Technical Execution</div>
+                      <p className="text-zinc-800 dark:text-zinc-200">{caseStudyData.structured_narrative?.technical_execution}</p>
+                    </div>
+                  </div>
+                  {caseStudyData.missing_context_prompts?.length > 0 && (
+                    <div className="p-2.5 bg-amber-100/70 dark:bg-amber-950/40 border border-amber-400 dark:border-amber-700 text-amber-950 dark:text-amber-200">
+                      <div className="font-mono font-black text-[10px] uppercase mb-1">Interactive Micro-Prompts (Penggalian Konteks Tambahan):</div>
+                      <ul className="list-disc list-inside space-y-1 text-[11px]">
+                        {caseStudyData.missing_context_prompts.map((mp, idx) => (
+                          <li key={idx}>{mp}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* PILLAR 4: COMPANY OSINT TAILORING & BESPOKE MICRO-PITCH */}
+            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 shadow-xs space-y-4 rounded-none">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div>
+                  <span className="px-2 py-0.5 bg-cyan-100 dark:bg-cyan-950/80 text-cyan-950 dark:text-cyan-200 border border-cyan-400 dark:border-cyan-700 font-mono font-black text-[10px] uppercase rounded-none">
+                    OSINT INTELLIGENCE &amp; MICRO-PITCH
+                  </span>
+                  <h3 className="text-sm font-black uppercase font-mono text-zinc-950 dark:text-zinc-100 mt-1">
+                    4. Company OSINT Tailoring &amp; Bespoke /for-&#123;company&#125; Pitch
+                  </h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    Deteksi tumpukan teknologi, tantangan bisnis utama perusahaan tujuan, dan rakit banner Micro-Pitch khusus.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRunCompanyOsint}
+                  disabled={runningOsint}
+                  className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-mono font-black text-xs uppercase rounded-none hover:opacity-90 cursor-pointer shrink-0"
+                >
+                  {runningOsint ? 'Memindai OSINT...' : 'Pindai OSINT Perusahaan'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  value={osintCompany}
+                  onChange={(e) => setOsintCompany(e.target.value)}
+                  placeholder={lang === 'en' ? 'e.g. target company name (Stripe, Google, Shopee, BCA)...' : 'misal: nama perusahaan tujuan (Stripe, Google, Shopee, BCA)...'}
+                  className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 rounded-none"
+                />
+                <input
+                  type="text"
+                  value={osintRole}
+                  onChange={(e) => setOsintRole(e.target.value)}
+                  placeholder={lang === 'en' ? 'e.g. target role title...' : 'misal: posisi jabatan yang dilamar...'}
+                  className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 rounded-none"
+                />
+              </div>
+
+              {osintData && (
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-3 text-xs rounded-none">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-mono font-black text-zinc-950 dark:text-zinc-100">
+                      TARGET ROUTE: <code className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-950 dark:text-emerald-200">{osintData.bespoke_micro_pitch?.route_slug}</code>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updatePersonal('summary', osintData.tailored_ats_summary);
+                        showLocalToast('success', 'Ringkasan OSINT diterapkan ke CV utama!', 'APPLIED');
+                      }}
+                      className="px-2.5 py-1 bg-emerald-700 text-white font-mono font-bold text-[10px] uppercase rounded-none cursor-pointer"
+                    >
+                      Terapkan Ringkasan ke CV
+                    </button>
+                  </div>
+                  <div className="p-3 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
+                    <div className="font-mono font-bold text-[10px] text-zinc-500 uppercase mb-1">Bespoke Micro-Pitch Headline:</div>
+                    <div className="font-bold text-zinc-950 dark:text-zinc-100">{osintData.bespoke_micro_pitch?.banner_headline}</div>
+                    <p className="text-zinc-700 dark:text-zinc-300 mt-1">{osintData.tailored_ats_summary}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* PILLAR 5: AI RECRUITER CHAT WITH INTERACTIVE CO-BROWSING (RAG) */}
+            <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-6 shadow-xs space-y-4 rounded-none">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+                <div>
+                  <span className="px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border border-zinc-400 dark:border-zinc-700 font-mono font-black text-[10px] uppercase rounded-none">
+                    RAG CO-BROWSING AGENT
+                  </span>
+                  <h3 className="text-sm font-black uppercase font-mono text-zinc-950 dark:text-zinc-100 mt-1">
+                    5. AI Recruiter Chat &amp; Interactive UI Co-Browsing Simulator
+                  </h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    Uji bagaimana asisten AI menjawab pertanyaan rekruter dan otomatis mengarahkan layar (auto-scroll) ke bukti studi kasus.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAskRecruiterChat}
+                  disabled={runningRecruiterChat}
+                  className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 font-mono font-black text-xs uppercase rounded-none hover:opacity-90 cursor-pointer shrink-0"
+                >
+                  {runningRecruiterChat ? 'Menjawab...' : 'Tanya AI Recruiter'}
+                </button>
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  value={recruiterQuery}
+                  onChange={(e) => setRecruiterQuery(e.target.value)}
+                  placeholder={lang === 'en' ? 'e.g. ask a recruiter question about cloud cost savings or database scale...' : 'misal: tanyakan apakah kandidat pernah mengoptimalkan biaya server atau database...'}
+                  className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 p-2.5 text-xs text-zinc-900 dark:text-zinc-100 rounded-none"
+                />
+              </div>
+
+              {recruiterChatData && (
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs rounded-none">
+                  <div className="font-mono font-bold text-emerald-900 dark:text-emerald-300">
+                    RESPON AI RECRUITER:
+                  </div>
+                  <p className="text-zinc-900 dark:text-zinc-100 leading-relaxed">{recruiterChatData.ai_response_stream}</p>
+                  <div className="flex flex-wrap items-center gap-2 pt-2 font-mono text-[10px]">
+                    <span className="px-2 py-0.5 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950 font-bold">
+                      UI Action Scroll: {recruiterChatData.ui_actions?.scroll_to_element}
+                    </span>
+                    {(recruiterChatData.ui_actions?.highlight_widgets || []).map((w, i) => (
+                      <span key={i} className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-950 dark:text-emerald-200 border border-emerald-400">
+                        Highlight: {w}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

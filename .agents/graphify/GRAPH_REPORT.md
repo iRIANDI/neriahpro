@@ -161,6 +161,15 @@ Seluruh model domain bisnis menggunakan ULID (`HasUlids`) string 26-karakter unt
 - `/api/cv-pro/interview/evaluate`: STAR method answer evaluation & scoring (POST).
 - `/api/cv-pro/outreach/generate`: Job application letter generator (Thank You, Follow-up, Cold Pitch) (POST).
 - `/api/cv-pro/upload-cv`: Microsoft MarkItDown multi-format CV scanner & parser (POST).
+- `/api/cv-pro/ats/deterministic-score`: Zero-LLM Hybrid Deterministic ATS Scorer $(0.45 K_{exact} + 0.25 S_{semantic} + 0.15 M_{impact} + 0.15 P_{parse})$ & Keyword Heatmap (POST).
+- `/api/cv-pro/ats/emulator`: Workday & Greenhouse ATS Linear Stream & JSON Parser Emulator with Corruption Audit (POST).
+- `/api/cv-pro/ai/google-xyz`: Google "XYZ" Formula Rewriter (*"Accomplished X as measured by Y by doing Z"*) (POST).
+- `/api/cv-pro/ai/case-study-convert`: Zero-Hallucination CV-to-Case-Study Architect Agent with Widget Mapper & Interactive Gap Micro-Prompts (POST).
+- `/api/cv-pro/osint/tailor`: Company OSINT Tailoring & Bespoke `/for-{company}` Micro-Pitch Banner Generator (POST).
+- `/api/cv-pro/export/typst`: Typst `.typ` Linear ATS Compiler Source Generator with Anti-Orphan `#block(breakable: false)` & Blind Hiring Anonymizer (POST).
+- `/api/cv-pro/recruiter-chat`: RAG AI Recruiter Chatbot with Interactive UI Co-Browsing (`scroll_to_element`, `highlight_widgets`) (POST).
+- `/api/cv-pro/portfolio/catalog`: Catalog of 7 Functional Web Portfolio Types, 10 Visual Styles & 4 Curated Launch MVPs (GET).
+- `/api/cv-pro/localize-format`: Global Format Localization between US/Global ATS, German *Lebenslauf*, and Japanese *Rirekisho* (POST).
 - `/api/ai/models`: Endpoint GET telemetri kesehatan kuota dan katalog model AI multi-provider (`MultiAiModelManager::getCatalog`).
 - `/blueprint`: Halaman public kuesioner Project OS (`BlueprintController::create`) dengan pemilih interaktif 12 Sektor Fungsional, 12 Core Primitives, **25 L1–L4 Enterprise Sub-Menus & 5 Enterprise Glue**, Hermetic Workspace Isolation (`draft_token` + `+ Proyek Baru Bersih`), & tombol peluncur ke 3-Pane Studio (`ProjectBlueprintIsland.jsx`).
 - `/blueprint/studio/{slug?}`: **The Dual-Mode 100vh 3-Pane Architect Studio IDE v9.0** (`App\Livewire\BlueprintArchitectStudio` + alias `App\Livewire\Studio\BlueprintWorkbench` + `components/layouts/studio.blade.php`) memulai workspace 100% bersih saat `{slug}` dikosongkan (`+ Proyek Baru Bersih`), mendukung mode `RETAIL_SELF_DEV` & `MITRA_TURNKEY_PROJECT` melintasi 11 Tab Canvas termasuk **🤝 Co-Design & Sign-Off Room (`codesign_room` — Dual-Mirror Client Business Lens <-> Architect ULID Lens, Per-Module Sign-Off, Live RAB Impact, & Dual-Key Scope Lock Ceremony)** serta **🧱 AgentShield & 5-Sprint Backlog (`agentshield_tasks`)**.

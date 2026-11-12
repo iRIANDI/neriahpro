@@ -634,4 +634,157 @@ class CvProApiController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Deterministic Hybrid ATS Scorer (Zero-LLM Algorithm).
+     */
+    public function deterministicScore(Request $request): JsonResponse
+    {
+        $content = $request->input('content', []);
+        $jobDesc = $request->input('job_description', '');
+        $lang = $request->input('lang', 'id');
+
+        $result = CvAiService::calculateDeterministicAtsScore($content, $jobDesc, $lang);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * ATS Parser Emulator (Workday & Greenhouse linear extraction simulator).
+     */
+    public function simulateAts(Request $request): JsonResponse
+    {
+        $content = $request->input('content', []);
+        $lang = $request->input('lang', 'id');
+
+        $result = CvAiService::simulateAtsParser($content, $lang);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * Google "XYZ" Formula Rewriter.
+     */
+    public function googleXyz(Request $request): JsonResponse
+    {
+        $bullet = $request->input('bullet', '');
+        $role = $request->input('role', '');
+        $lang = $request->input('lang', 'id');
+
+        $result = CvAiService::rewriteGoogleXyz($bullet, $role, $lang);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * Company OSINT Tailoring & Bespoke Micro-Pitch.
+     */
+    public function companyOsint(Request $request): JsonResponse
+    {
+        $company = $request->input('company', '');
+        $role = $request->input('role', '');
+        $jobDesc = $request->input('job_description', '');
+        $content = $request->input('content', []);
+        $lang = $request->input('lang', 'id');
+
+        $result = CvAiService::runCompanyOsint($company, $role, $jobDesc, $content, $lang);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * Typst Source Code Generator (Anti-Orphan & Deterministic Page-Break).
+     */
+    public function exportTypst(Request $request): JsonResponse
+    {
+        $content = $request->input('content', []);
+        $config = $request->input('config', []);
+
+        $result = CvAiService::generateTypstSource($content, $config);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * AI Recruiter Chatbot with Interactive Co-Browsing (RAG).
+     */
+    public function recruiterChat(Request $request): JsonResponse
+    {
+        $query = $request->input('query', '');
+        $content = $request->input('content', []);
+        $lang = $request->input('lang', 'id');
+
+        if (empty(trim($query))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Query cannot be empty.',
+            ], 422);
+        }
+
+        $result = CvAiService::askRecruiterChat($query, $content, $lang);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * CV-to-Case-Study Architect Agent (Zero-Hallucination Guardrail & Widget Mapper).
+     */
+    public function caseStudyConvert(Request $request): JsonResponse
+    {
+        $experience = $request->input('experience', []);
+        $lang = $request->input('lang', 'id');
+
+        $result = CvAiService::convertExperienceToCaseStudy($experience, $lang);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
+
+    /**
+     * Get the complete catalog of 7 Functional Types, 10 Visual Styles, and 4 Launch MVPs.
+     */
+    public function portfolioCatalog(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => CvAiService::getPortfolioStyleCatalog(),
+        ]);
+    }
+
+    /**
+     * Global Format Localization (US/Global ATS, German Lebenslauf, Japanese Rirekisho).
+     */
+    public function localizeFormat(Request $request): JsonResponse
+    {
+        $content = $request->input('content', []);
+        $countryFormat = $request->input('country_format', 'us_ats');
+        $lang = $request->input('lang', 'id');
+
+        $result = CvAiService::localizeGlobalFormat($content, $countryFormat, $lang);
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ]);
+    }
 }

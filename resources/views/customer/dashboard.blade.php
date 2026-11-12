@@ -2329,6 +2329,44 @@
                     </div>
                 </div>
 
+                <!-- CV Pro Ultimate 8-Pillar Studio Card -->
+                <div class="p-6 bg-white dark:bg-zinc-900 border-2 border-emerald-500/80 dark:border-emerald-600 rounded-none space-y-4 shadow-xs md:col-span-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                        <div>
+                            <span class="text-[10px] font-mono font-black text-emerald-700 dark:text-emerald-300 uppercase">PRODUK UNGGULAN 02 // AI CAREER &amp; WEB PORTFOLIO ENGINE</span>
+                            <h3 class="text-base font-black uppercase text-zinc-900 dark:text-white font-sans">CV Pro Ultimate 8-Pillar Studio &amp; Dual-View Portfolio</h3>
+                        </div>
+                        <a href="/cv-pro" class="font-mono text-xs px-3 py-1.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-black uppercase rounded-none">
+                            {{ $isEn ? 'Launch CV Pro Studio ↗' : 'Buka Studio CV Pro ↗' }}
+                        </a>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 space-y-1">
+                            <span class="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                                <span>✓</span> KEUNGGULAN EKSEKUTIF 8 PILAR CV PRO ULTIMATE:
+                            </span>
+                            <ul class="list-disc list-inside text-zinc-700 dark:text-zinc-300 space-y-1 text-[11px] leading-relaxed">
+                                <li><strong>Deterministic Hybrid ATS &amp; Emulator</strong>: Kalkulasi skor ATS matematis objektif &amp; simulasi pembacaan bot Workday/Greenhouse.</li>
+                                <li><strong>Zero-Hallucination Case Study &amp; OSINT</strong>: Konversi bullet CV menjadi studi kasus 4 babak bebas angka palsu, rumus Google XYZ, &amp; riset Company OSINT.</li>
+                                <li><strong>Typst Vector PDF &amp; Dual-View Portfolio</strong>: Ekspor kode sumber Typst (<code>.typ</code>) anti-orphan, 10 gaya visual portofolio, mode Recruiter Speed-View (&lt;15 detik), &amp; AI Recruiter Chatbot RAG.</li>
+                                <li><strong>Global Format &amp; DEI Blind Hiring</strong>: Lokalisasi instan US ATS, Jerman <em>Lebenslauf</em>, dan Jepang <em>Rirekisho</em> serta anonimisasi PII 1-klik.</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                            <span class="font-bold text-zinc-900 dark:text-zinc-200 flex items-center gap-1.5">
+                                <span>🛡️</span> PERLINDUNGAN PRIVASI UU PDP &amp; TATA KELOLA:
+                            </span>
+                            <ul class="list-disc list-inside text-zinc-700 dark:text-zinc-300 space-y-1 text-[11px] leading-relaxed">
+                                <li><strong>Hak Penghapusan Data Permanen (UU PDP No. 27/2022)</strong>: Kendali penuh untuk memusnahkan seluruh riwayat CV kapan saja dalam 1 klik.</li>
+                                <li><strong>Lisensi Font Bebas Royalti (SIL OFL)</strong>: Seluruh dokumen PDF &amp; portofolio web aman digunakan secara komersial di seluruh dunia.</li>
+                                <li><strong>Universal Superadmin Bypass (Rp 0)</strong>: Mendukung pembukaan akses penuh tanpa bayar bagi akun Superadmin terverifikasi dengan segel audit SHA-256.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Studio MVP Track Card -->
                 <div class="p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none space-y-4 shadow-xs">
                     <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">

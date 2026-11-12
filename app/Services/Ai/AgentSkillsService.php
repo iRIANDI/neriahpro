@@ -423,9 +423,9 @@ MD;
 
         return [
             'overview' => [
-                'title' => 'Neriah Pro AI Agentic & Software Factory OS',
-                'release' => 'v12.0 Enterprise Ultimate',
-                'description' => 'Sistem orkestrasi AI mandiri dengan arsitektur Tri-Hybrid (RAG, CAG, KAG), 49 Native Tools, Vercel Skills Hub, dan ECC Universal v2.2.3 Agent Harness.',
+                'title' => 'Neriah Pro AI Agentic & Dual-Flagship Ecosystem (Project OS + CV Pro Ultimate)',
+                'release' => 'v15.0 Multi-Product Enterprise Ultimate',
+                'description' => 'Sistem orkestrasi AI mandiri dengan arsitektur Tri-Hybrid (RAG, CAG, KAG), 52 Native Tools, Project OS Software Factory, CV Pro 8-Pillar Career & Portfolio Studio, Universal Superadmin Bypass (Rp 0), Vercel Skills Hub, dan ECC Universal v2.2.3 Agent Harness.',
             ],
             'features' => [
                 [
@@ -435,9 +435,21 @@ MD;
                     'badge' => 'pgvector + Cache O(1) + Rule Graph',
                     'summary' => 'Menghilangkan halusinasi LLM secara mekanis dengan 3 lapisan memori berkecepatan tinggi.',
                     'details' => [
-                        'RAG (Dense 768-dim + Sparse Lexical RRF)' => 'Mencari dokumen PRD dan pasal hukum dengan presisi 100%.',
-                        'CAG (Context Augmented O(1))' => 'Injeksi live telemetri status sprint, webhook, dan revenue tanpa query berulang.',
-                        'KAG (Knowledge Augmented Graph)' => 'Penegakan inva-aturan deterministik (Strict ULID, no alert, zero hardcode).',
+                        'RAG (Dense 768-dim + Sparse Lexical RRF)' => 'Mencari dokumen PRD, 8 Pilar CV Pro Ultimate, dan pasal hukum dengan presisi 100%.',
+                        'CAG (Context Augmented O(1))' => 'Injeksi live telemetri status sprint Project OS, resume CV Pro, webhook, dan revenue tanpa query berulang.',
+                        'KAG (Knowledge Augmented Graph)' => 'Penegakan inva-aturan deterministik (Strict ULID, Zero-Hallucination Case Study, Universal Superadmin Bypass).',
+                    ],
+                ],
+                [
+                    'id' => 'cv_pro_ultimate_8_pillars',
+                    'title' => 'CV Pro Ultimate 8-Pillar AI Career & Web Portfolio Engine',
+                    'tag' => 'Flagship Product 02',
+                    'badge' => 'Deterministic ATS + Typst + Case Study Architect',
+                    'summary' => 'Platform karir & portofolio web paling mutakhir di dunia dengan margin >92%, terintegrasi penuh dengan AI Copilot & RBAC.',
+                    'details' => [
+                        'Deterministic ATS & Parser Emulator' => 'Formula matematis 0.30*Keyword + 0.25*Impact + 0.25*Structure + 0.20*Readability & simulator Workday/Greenhouse.',
+                        'Zero-Hallucination Case Study & OSINT' => 'Konversi bullet CV menjadi studi kasus 4 babak dengan placeholder anti-halusinasi & riset Company OSINT.',
+                        'Typst Vector Engine & Global Localization' => 'Kompilasi Typst (.typ) anti-orphan, DEI Blind Hiring, serta lokalisasi US ATS, Jerman Lebenslauf, & Jepang Rirekisho.',
                     ],
                 ],
                 [
@@ -466,14 +478,14 @@ MD;
                 ],
                 [
                     'id' => 'native_function_calling',
-                    'title' => '49 Enterprise Native Tools (Spatie RBAC & SHA-256 Audit)',
+                    'title' => '52 Enterprise Native Tools (Spatie RBAC, Universal Bypass & SHA-256 Audit)',
                     'tag' => 'Operasional Sistem',
                     'badge' => '100% Function Calling Protobuf Compatible',
-                    'summary' => '49 operasi sistem tervalidasi yang dapat dipanggil langsung oleh Google Gemini, DeepSeek, dan Claude.',
+                    'summary' => '52 operasi sistem tervalidasi lintas Project OS & CV Pro yang dapat dipanggil langsung oleh Google Gemini, DeepSeek, dan Claude.',
                     'details' => [
-                        'Modul Blueprint & Kontrak' => 'create_blueprint, update_blueprint_status, convert_to_contract, search_blueprints.',
-                        'Modul Keuangan & Aset' => 'search_transactions, manage_domain_hosting.',
-                        'Modul Enterprise & HKI' => 'AgentShield, Co-Design Dual-Key, IP Canary Watermark, SLA Bug-Warranty 90 Hari.',
+                        'Modul Project OS & Kontrak' => 'create_blueprint, update_blueprint_status, convert_to_contract, search_blueprints.',
+                        'Modul CV Pro Ultimate 8 Pilar' => 'evaluate_cv_deterministic_ats_and_emulator, execute_cv_case_study_and_osint_tailor, audit_cv_pro_compliance_and_governance.',
+                        'Universal Superadmin Bypass' => 'verify_universal_superadmin_bypass (Rp 0 Unlimited lintas Project OS, CV Pro, & fitur masa depan).',
                     ],
                 ],
                 [
@@ -484,7 +496,7 @@ MD;
                     'summary' => 'Merekam setiap pemanggilan AI, tool name, waktu eksekusi milidetik, dan parameter input/output secara transparan.',
                     'details' => [
                         'CCTV Log' => 'Tersedia di tab Jejak CCTV pada halaman AI Copilot.',
-                        'Tamper-Evident' => 'Terkoneksi ke rantai hash append-only audit_logs.',
+                        'Tamper-Evident' => 'Terkoneksi ke rantai hash append-only audit_logs (termasuk kategori cv_pro_studio & superadmin_bypass).',
                     ],
                 ],
                 [
@@ -513,29 +525,34 @@ MD;
     {
         return [
             [
-                'category' => 'Arsitektur',
+                'category' => 'Arsitektur Project OS',
                 'title' => 'Rancang Blueprint Baru',
                 'prompt' => 'Tolong rancang blueprint arsitektur sistem ERP Multi-Gudang dengan Keyset Cursor O(1) dan skema PostgreSQL Strict ULID.',
             ],
             [
-                'category' => 'Keahlian Agen',
-                'title' => 'Cari Skill di Ekosistem',
-                'prompt' => 'Gunakan modul find-skills untuk mencari rekomendasi agent skill terbaik untuk optimasi performa React dan pengujian Pest PHP.',
+                'category' => 'CV Pro Ultimate',
+                'title' => 'Evaluasi ATS Deterministik & Emulator',
+                'prompt' => 'Jalankan evaluate_cv_deterministic_ats_and_emulator untuk menguji skor ATS deterministik dan simulasi ekstraksi Workday/Greenhouse pada CV terbaru.',
+            ],
+            [
+                'category' => 'CV Pro Case Study',
+                'title' => 'Konversi Bullet CV ke Studi Kasus',
+                'prompt' => 'Gunakan execute_cv_case_study_and_osint_tailor untuk mengubah pengalaman kerja Senior Backend Engineer menjadi Studi Kasus 4 Babak dengan Zero-Hallucination Guardrail.',
+            ],
+            [
+                'category' => 'Superadmin Bypass',
+                'title' => 'Verifikasi Universal Bypass Rp 0',
+                'prompt' => 'Jalankan verify_universal_superadmin_bypass untuk memeriksa dan mengaktifkan akses gratis Rp 0 Unlimited pada Project OS dan CV Pro Ultimate Studio.',
             ],
             [
                 'category' => 'Status Sistem',
-                'title' => 'Cek Kapasitas & Telemetri',
-                'prompt' => 'Berapa kapasitas sprint paralel yang aktif saat ini, berapa total blueprint yang sudah Scope Locked, dan bagaimana status kesehatan sistem?',
+                'title' => 'Cek Kapasitas & Telemetri Dual-Produk',
+                'prompt' => 'Berapa kapasitas sprint paralel Project OS, berapa total resume di CV Pro Studio, dan bagaimana status kesehatan ekosistem saat ini?',
             ],
             [
                 'category' => 'Harness & ECC',
                 'title' => 'Audit Status ECC Harness',
                 'prompt' => 'Periksa status kesehatan ECC Universal v2.2.3 pada folder .agents dan sebutkan subagent apa saja yang tersedia untuk code review.',
-            ],
-            [
-                'category' => 'Garansi & SLA',
-                'title' => 'Triase Garansi Bug SLA 90 Hari',
-                'prompt' => 'Jelaskan bagaimana sistem membedakan antara klaim Bug Warranty Pasca-BAST Rp 0 dengan Change Request Delta v1.1 berbayar.',
             ],
         ];
     }

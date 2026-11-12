@@ -72,6 +72,7 @@ export default function HeroIsland({
   // State for Dual-Track Recommendation Bridge Modal
   const [synthesizedResult, setSynthesizedResult] = useState(null);
   const [isRecommendationModalOpen, setIsRecommendationModalOpen] = useState(false);
+  const [activeEcosystemProduct, setActiveEcosystemProduct] = useState('all'); // 'all' | 'project_os' | 'cv_pro' | 'roadmap'
 
   const fileInputRef = useRef(null);
 
@@ -212,70 +213,291 @@ export default function HeroIsland({
         {/* ========================================================================= */}
         <div className="max-w-4xl">
           {/* Status Pill */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-mono uppercase tracking-widest mb-5 rounded-none">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-200 text-xs font-mono font-bold uppercase tracking-widest mb-5 rounded-none">
             <span className="w-2 h-2 bg-emerald-500 rounded-none animate-pulse"></span>
-            <span>NERIAH PRO // PROFESSIONAL DEVELOPER SERVICES &amp; ARCHITECTURE</span>
+            <span>
+              {isEn
+                ? 'NERIAH PRO ECOSYSTEM // 01. PROJECT OS & 02. CV PRO ULTIMATE STUDIO'
+                : 'EKOSISTEM DIGITAL NERIAH PRO // 01. PROJECT OS & 02. CV PRO ULTIMATE STUDIO'}
+            </span>
           </div>
 
           {/* Master Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold uppercase tracking-tight leading-[1.08] mb-5 text-zinc-900 dark:text-zinc-50 font-sans">
             {headline || (isEn 
-              ? 'PROFESSIONAL SOFTWARE ARCHITECTURE & DEVELOPER SERVICES.'
-              : 'LAYANAN ARSITEKTUR & REKAYASA SISTEM DIGITAL PROFESIONAL.')}
+              ? 'ENTERPRISE SOFTWARE ARCHITECTURE & AI CAREER PORTFOLIO ECOSYSTEM.'
+              : 'EKOSISTEM ARSITEKTUR SOFTWARE & STUDIO KARIR AI BERSTANDAR GLOBAL.')}
           </h1>
 
-          {/* Subheadline: Dual-Track Clarification */}
-          <p className="text-sm sm:text-base md:text-lg text-zinc-600 dark:text-zinc-400 font-sans leading-relaxed mb-8 max-w-3xl">
+          {/* Subheadline: Multi-Product Clarification */}
+          <p className="text-sm sm:text-base md:text-lg text-zinc-700 dark:text-zinc-300 font-sans leading-relaxed mb-8 max-w-3xl">
             {subheadline || (isEn
-              ? <>Two practical software engineering paths: Acquire instant self-service blueprint licenses (<strong>Retail</strong>) to build independently, or collaborate directly with an experienced independent full-stack developer (<strong>Project Studio</strong>).</>
-              : <>Dua jalur solusi rekayasa software modern: Beli lisensi cetak biru arsitektur siap pakai (<strong>Retail</strong>) untuk di-deploy mandiri, atau bangun sistem khusus bersama pengembang berpengalaman (<strong>Project Studio</strong>).</>)}
+              ? <>One unified digital engineering hub featuring two flagship platforms: <strong>01. Project OS</strong> (Enterprise Software Blueprint Compiler &amp; Turnkey MVP Studio) and <strong>02. CV Pro Ultimate</strong> (8-Pillar Deterministic ATS Scorer, Zero-Hallucination Case Study Architect &amp; Dual-View Web Portfolio)—built on a modular architecture ready for future products.</>
+              : <>Satu ekosistem teknologi terpadu dengan dua produk unggulan utama: <strong>01. Project OS</strong> (Compiler Cetak Biru Arsitektur Software &amp; Studio Rekayasa Turnkey) serta <strong>02. CV Pro Ultimate</strong> (Mesin Karir AI 8 Pilar, Skor ATS Deterministik &amp; Portofolio Web Dual-View)—dirancang dengan arsitektur modular jangka panjang yang siap menampung produk-produk masa depan.</>)}
           </p>
 
-          {/* Dual Action Primary CTA Buttons */}
-          <div className="flex flex-wrap items-center gap-4 mb-8 font-mono text-xs uppercase tracking-wider font-bold">
-            <a
-              href="/pricing"
-              className="bg-emerald-600 hover:bg-emerald-500 text-black font-black py-3.5 px-6 rounded-none transition flex items-center gap-2 cursor-pointer shadow-xs"
-            >
-              <ShoppingBag className="w-4 h-4 text-black" />
-              <span>{isEn ? `Explore Pricing & Packages →` : `Jelajahi Paket & Harga Investasi →`}</span>
-            </a>
-
+          {/* Dual-Flagship Primary CTA Buttons */}
+          <div className="flex flex-wrap items-center gap-3.5 mb-8 font-mono text-xs uppercase tracking-wider font-bold">
             <button
               type="button"
               onClick={() => scrollTo('interactive-discovery')}
-              className="border-2 border-zinc-900 dark:border-zinc-200 hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-black text-zinc-900 dark:text-zinc-100 py-3.5 px-6 rounded-none transition flex items-center gap-2 cursor-pointer"
+              className="bg-emerald-600 hover:bg-emerald-500 text-black font-black py-3.5 px-5 rounded-none transition flex items-center gap-2 cursor-pointer shadow-xs"
             >
-              <Rocket className="w-4 h-4 text-emerald-500" />
-              <span>{isEn ? 'Dedicated Studio Consultation ↓' : 'Konsultasi Proyek Studio Dedicated ↓'}</span>
+              <Cpu className="w-4 h-4 text-black" />
+              <span>{isEn ? '01. Launch Project OS Discovery ↓' : '01. Rancang Arsitektur Project OS ↓'}</span>
             </button>
 
+            {isCvProEnabled && (
+              <a
+                href="/cv-pro"
+                className="bg-zinc-950 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 border-2 border-zinc-950 dark:border-zinc-100 font-black py-3.5 px-5 rounded-none transition flex items-center gap-2 cursor-pointer shadow-xs"
+              >
+                <FileText className="w-4 h-4 text-emerald-400 dark:text-emerald-600" />
+                <span>{isEn ? '02. Open CV Pro Ultimate Studio →' : '02. Buka Studio CV Pro Ultimate →'}</span>
+              </a>
+            )}
+
             <a
-              href="/pricing#retail"
-              className="text-zinc-600 dark:text-zinc-400 hover:text-emerald-500 py-3.5 px-3 transition flex items-center gap-1.5 underline decoration-zinc-400 dark:decoration-zinc-600 underline-offset-4"
+              href="/pricing"
+              className="border-2 border-zinc-900 dark:border-zinc-300 hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-black text-zinc-900 dark:text-zinc-100 py-3.5 px-5 rounded-none transition flex items-center gap-2 cursor-pointer"
             >
-              <span>{isEn ? 'Blueprint Packages ↗' : 'Paket Blueprint ↗'}</span>
+              <ShoppingBag className="w-4 h-4 text-emerald-500" />
+              <span>{isEn ? 'Packages & Investment →' : 'Daftar Paket & Investasi →'}</span>
+            </a>
+
+            <a
+              href="/smart-guide"
+              className="text-zinc-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 py-3.5 px-2 transition flex items-center gap-1.5 underline decoration-zinc-400 dark:decoration-zinc-600 underline-offset-4"
+            >
+              <span>{isEn ? 'Smart Client Guide ↗' : 'Panduan Pintar Klien ↗'}</span>
             </a>
           </div>
 
           {/* Quick Trust Pillars Strip */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] font-mono text-zinc-500 dark:text-zinc-400 pb-10">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] font-mono text-zinc-600 dark:text-zinc-400 pb-10">
             <span className="inline-flex items-center gap-1">
-              <Check className="w-3.5 h-3.5 text-emerald-500" /> Strict ULID PostgreSQL
+              <Check className="w-3.5 h-3.5 text-emerald-500" /> 01 // Project OS (12 Sectors &amp; Strict ULID)
             </span>
             <span className="text-zinc-300 dark:text-zinc-700 hidden sm:inline">&bull;</span>
             <span className="inline-flex items-center gap-1">
-              <Check className="w-3.5 h-3.5 text-emerald-500" /> Clean Solid Monolith
+              <Check className="w-3.5 h-3.5 text-emerald-500" /> 02 // CV Pro Ultimate (8-Pillar ATS &amp; Typst PDF)
             </span>
             <span className="text-zinc-300 dark:text-zinc-700 hidden sm:inline">&bull;</span>
             <span className="inline-flex items-center gap-1">
-              <Check className="w-3.5 h-3.5 text-emerald-500" /> Microsoft MarkItDown Engine
+              <Check className="w-3.5 h-3.5 text-emerald-500" /> Tri-Hybrid AI (RAG • CAG • KAG + 52 Tools)
             </span>
             <span className="text-zinc-300 dark:text-zinc-700 hidden sm:inline">&bull;</span>
             <span className="inline-flex items-center gap-1">
-              <Check className="w-3.5 h-3.5 text-emerald-500" /> Garansi SLA &amp; Termin Bertahap
+              <Check className="w-3.5 h-3.5 text-emerald-500" /> SHA-256 Audit &amp; SLA Warranty
             </span>
           </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 1.5 SECTION: MULTI-PRODUCT ECOSYSTEM HUB (SCALABLE LONG-TERM ARCHITECTURE) */}
+        {/* ========================================================================= */}
+        <div id="neriah-product-ecosystem" className="pt-10 pb-12 border-t border-zinc-200 dark:border-zinc-800 scroll-mt-20">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 mb-6">
+            <div>
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 font-mono text-[10px] font-black uppercase tracking-wider mb-2">
+                <span>{isEn ? 'MODULAR PRODUCT SUITE // SCALABLE ECOSYSTEM ARCHITECTURE' : 'ARSITEKTUR MULTI-PRODUK // EKOSISTEM JANGKA PANJANG'}</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-zinc-950 dark:text-zinc-50">
+                {isEn ? 'Explore Neriah Pro Flagship Products.' : 'Pilih Produk Unggulan Neriah Pro Sesuai Target Anda.'}
+              </h2>
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 max-w-3xl mt-1 leading-relaxed">
+                {isEn
+                  ? 'Whether you are a founder/enterprise building mission-critical software with Project OS, or an ambitious professional accelerating your global career with CV Pro Ultimate, start immediately below.'
+                  : 'Baik Anda Founder/Perusahaan yang sedang merancang sistem software berskala besar melalui Project OS, maupun Profesional yang ingin menembus seleksi perusahaan global melalui CV Pro Ultimate, pilih modul Anda di bawah ini.'}
+              </p>
+            </div>
+
+            {/* Interactive Product Filter Switcher (Ready for 01, 02, 03+ Future Products) */}
+            <div className="inline-flex flex-wrap border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-none font-mono text-xs shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveEcosystemProduct('all')}
+                className={`px-3.5 py-2 font-black uppercase cursor-pointer transition ${activeEcosystemProduct === 'all' ? 'bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950' : 'text-zinc-800 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+              >
+                {isEn ? 'ALL PRODUCTS (2 ACTIVE)' : 'SEMUA PRODUK (2 AKTIF)'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveEcosystemProduct('project_os')}
+                className={`px-3.5 py-2 font-black uppercase cursor-pointer border-l border-zinc-300 dark:border-zinc-700 transition ${activeEcosystemProduct === 'project_os' ? 'bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950' : 'text-zinc-800 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+              >
+                01 // PROJECT OS
+              </button>
+              {isCvProEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setActiveEcosystemProduct('cv_pro')}
+                  className={`px-3.5 py-2 font-black uppercase cursor-pointer border-l border-zinc-300 dark:border-zinc-700 transition ${activeEcosystemProduct === 'cv_pro' ? 'bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950' : 'text-zinc-800 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+                >
+                  02 // CV PRO ULTIMATE
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setActiveEcosystemProduct('roadmap')}
+                className={`px-3.5 py-2 font-black uppercase cursor-pointer border-l border-zinc-300 dark:border-zinc-700 transition ${activeEcosystemProduct === 'roadmap' ? 'bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950' : 'text-zinc-800 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+              >
+                {isEn ? '03+ // EXPANSION SLOTS' : '03+ // EKSPANSI FITUR'}
+              </button>
+            </div>
+          </div>
+
+          {/* Scalable Product Cards Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* PRODUCT 01: PROJECT OS */}
+            {(activeEcosystemProduct === 'all' || activeEcosystemProduct === 'project_os') && (
+              <div className={`${activeEcosystemProduct === 'project_os' ? 'lg:col-span-12' : 'lg:col-span-6'} bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 hover:border-emerald-500 dark:hover:border-emerald-500 p-6 sm:p-7 rounded-none transition flex flex-col justify-between`}>
+                <div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-zinc-200 dark:border-zinc-800">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-zinc-950 text-white dark:bg-emerald-500 dark:text-zinc-950 font-mono text-[10px] font-black uppercase">
+                        PRODUCT 01 // FLAGSHIP B2B &amp; SAAS
+                      </span>
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
+                        ACTIVE &bull; V15.0
+                      </span>
+                    </div>
+                    <span className="font-mono text-[11px] font-bold text-zinc-600 dark:text-zinc-400">
+                      12 Sectors &bull; 20 Pillars Locked
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-950 dark:text-white mb-2">
+                    Project OS — Software Factory &amp; Turnkey Studio
+                  </h3>
+                  <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed mb-4">
+                    {isEn
+                      ? 'Transform raw business ideas or existing documents into Fortune 500-grade Product Requirements Documents (PRD), Strict ULID PostgreSQL schemas, Phased AI Coding Prompts, or hire our dedicated studio to build your turnkey MVP.'
+                      : 'Ubah ide bisnis atau dokumen spesifikasi menjadi Cetak Biru Arsitektur (PRD) sekelas korporasi global, skema database PostgreSQL Strict ULID, prompt eksekusi bertahap Fase 1–7, atau serahkan pengerjaan penuh MVP sampai rilis kepada tim Studio kami.'}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6 font-mono text-xs">
+                    <div className="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200">
+                      <strong className="block text-emerald-800 dark:text-emerald-300">✓ 300 L1–L4 Sectoral Menus</strong>
+                      <span className="text-[11px] text-zinc-600 dark:text-zinc-400">12 industri, 36 varian UI operasional, &amp; kalkulator RAB presisi.</span>
+                    </div>
+                    <div className="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200">
+                      <strong className="block text-emerald-800 dark:text-emerald-300">✓ Dual Track (Retail &amp; Mitra)</strong>
+                      <span className="text-[11px] text-zinc-600 dark:text-zinc-400">Beli lisensi blueprint mandiri atau kontrak pengerjaan penuh 5 Sprint.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5 pt-3 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs font-bold uppercase">
+                  <button
+                    type="button"
+                    onClick={() => scrollTo('interactive-discovery')}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-black font-black py-3 px-4 rounded-none transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Sparkles className="w-4 h-4 text-black" />
+                    <span>{isEn ? 'Simulate Project Blueprint ↓' : 'Simulasi Blueprint Gratis ↓'}</span>
+                  </button>
+                  <a
+                    href="/blueprint"
+                    className="px-4 py-3 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 font-black rounded-none transition flex items-center justify-center gap-1.5"
+                  >
+                    <span>{isEn ? 'Open Project OS →' : 'Buka Project OS →'}</span>
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* PRODUCT 02: CV PRO ULTIMATE STUDIO */}
+            {isCvProEnabled && (activeEcosystemProduct === 'all' || activeEcosystemProduct === 'cv_pro') && (
+              <div className={`${activeEcosystemProduct === 'cv_pro' ? 'lg:col-span-12' : 'lg:col-span-6'} bg-white dark:bg-zinc-900 border-2 border-emerald-500 dark:border-emerald-600 hover:border-zinc-950 dark:hover:border-zinc-300 p-6 sm:p-7 rounded-none transition flex flex-col justify-between`}>
+                <div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-4 border-b border-zinc-200 dark:border-zinc-800">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 bg-emerald-600 text-black font-mono text-[10px] font-black uppercase">
+                        PRODUCT 02 // AI CAREER &amp; PORTFOLIO ENGINE
+                      </span>
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
+                        8 PILLARS ULTIMATE
+                      </span>
+                    </div>
+                    <span className="font-mono text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                      100% Free Manual &amp; PDF + AI Pro
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-zinc-950 dark:text-white mb-2">
+                    CV Pro Ultimate — 8-Pillar ATS &amp; Dual-View Web Portfolio
+                  </h3>
+                  <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed mb-4">
+                    {isEn
+                      ? 'Engineered to beat global Applicant Tracking Systems (Workday, Greenhouse, Taleo) and captivate hiring executives in under 15 seconds. Build deterministic ATS resumes, convert bullets into 4-Act Case Studies, and deploy an interactive Web Portfolio with a 24/7 RAG Recruiter Chatbot.'
+                      : 'Dirancang untuk menaklukkan seleksi mesin ATS global (Workday, Greenhouse, Taleo) dan memikat Manajer HR dalam 15 detik pertama. Susun CV dengan rumus ATS deterministik, ubah poin kerja menjadi Studi Kasus 4 Babak bebas halusinasi, dan terbitkan Web Portfolio interaktif ber-Chatbot AI.'}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6 font-mono text-xs">
+                    <div className="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200">
+                      <strong className="block text-emerald-800 dark:text-emerald-300">✓ Deterministic ATS &amp; Typst PDF</strong>
+                      <span className="text-[11px] text-zinc-600 dark:text-zinc-400">Emulator Workday/Greenhouse, rumus Google XYZ, OSINT &amp; vektor Typst anti-orphan.</span>
+                    </div>
+                    <div className="p-2.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-200">
+                      <strong className="block text-emerald-800 dark:text-emerald-300">✓ Dual-View Portfolio &amp; RAG Chat</strong>
+                      <span className="text-[11px] text-zinc-600 dark:text-zinc-400">10 gaya visual, Speed-View &lt;15 detik, Blind Hiring DEI, &amp; lokalisasi US/DE/JP.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5 pt-3 border-t border-zinc-200 dark:border-zinc-800 font-mono text-xs font-bold uppercase">
+                  <a
+                    href="/cv-pro"
+                    className="flex-1 bg-zinc-950 hover:bg-zinc-800 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-zinc-950 font-black py-3 px-4 rounded-none transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4 text-emerald-400 dark:text-zinc-950" />
+                    <span>{isEn ? 'Launch CV Pro Studio (Free) →' : 'Buka Studio CV Pro (Gratis) →'}</span>
+                  </a>
+                  <a
+                    href="/smart-guide#cv_pro"
+                    className="px-4 py-3 border border-zinc-400 dark:border-zinc-700 hover:border-zinc-900 dark:hover:border-zinc-300 text-zinc-900 dark:text-zinc-100 font-bold rounded-none transition flex items-center justify-center gap-1.5"
+                  >
+                    <span>{isEn ? '8-Pillar Guide ↗' : 'Pelajari 8 Pilar ↗'}</span>
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* FUTURE-PROOF MODULAR ECOSYSTEM EXPANSION BAR (LONG-TERM SCALABLE UX) */}
+          {(activeEcosystemProduct === 'all' || activeEcosystemProduct === 'roadmap') && (
+            <div className="mt-6 p-4 sm:p-5 bg-zinc-100/90 dark:bg-zinc-900/90 border border-zinc-300 dark:border-zinc-800 rounded-none flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2 font-mono text-[11px]">
+                  <span className="px-2 py-0.5 bg-zinc-900 text-white dark:bg-zinc-800 dark:text-emerald-300 font-black uppercase">
+                    MODULAR ECOSYSTEM ROADMAP // SLOTS 03, 04+
+                  </span>
+                  <span className="font-bold text-zinc-800 dark:text-zinc-200">
+                    {isEn
+                      ? 'Unified Single Sign-On (SSO), Shared RBAC, Universal Superadmin Bypass & SHA-256 Audit Ledger'
+                      : 'Satu Akun Terpadu (SSO), RBAC Terpusat, Universal Superadmin Bypass & Buku Besar Audit SHA-256'}
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 font-sans">
+                  {isEn
+                    ? 'Neriah Pro is engineered as an expandable multi-product suite. Every existing and future module shares the same O(1) database core, Tri-Hybrid AI Copilot, and client portal.'
+                    : 'Neriah Pro dirancang sebagai ekosistem multi-produk jangka panjang. Setiap fitur baru di masa depan otomatis terhubung dengan akun klien, AI Copilot Tri-Hybrid, dan standar keamanan yang sama.'}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] shrink-0">
+                <span className="px-2.5 py-1.5 bg-white dark:bg-zinc-950 border border-emerald-500 text-emerald-950 dark:text-emerald-300 font-black">
+                  01. PROJECT OS [LIVE]
+                </span>
+                <span className="px-2.5 py-1.5 bg-white dark:bg-zinc-950 border border-emerald-500 text-emerald-950 dark:text-emerald-300 font-black">
+                  02. CV PRO [LIVE]
+                </span>
+                <span className="px-2.5 py-1.5 bg-zinc-200/70 dark:bg-zinc-950 border border-dashed border-zinc-400 dark:border-zinc-700 text-zinc-700 dark:text-zinc-400 font-bold">
+                  03. NEXT MODULE [READY]
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ========================================================================= */}

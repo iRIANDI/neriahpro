@@ -328,6 +328,98 @@ class CvProUltimateUpgradeTest extends TestCase
             ->assertJsonPath('data.selected_format.code', 'de_lebenslauf')
             ->assertJsonPath('data.selected_format.include_signature_block', true);
     }
+
+    public function test_universal_superadmin_bypass_grants_zero_cost_unlimited_quota_and_records_sha256_audit_log(): void
+    {
+        $superAdmin = User::factory()->create([
+            'email' => 'yoseph.iriandi.tambunan@gmail.com',
+            'name' => 'Yoseph Iriandi Tambunan',
+        ]);
+        $superAdmin->assignRole('super_admin');
+
+        $this->assertTrue($superAdmin->hasUniversalSuperadminBypass('CV_PRO'));
+        $this->assertTrue($superAdmin->hasUniversalSuperadminBypass('PROJECT_OS'));
+        $this->assertTrue($superAdmin->hasUniversalSuperadminBypass('FUTURE_MODULE_X'));
+
+        $response = $this->actingAs($superAdmin)->postJson('/api/cv-pro/vip-bypass');
+
+        $response->assertSuccessful()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('is_superadmin_bypass', true)
+            ->assertJsonPath('billing_amount_idr', 0)
+            ->assertJsonPath('quota.tier_code', 'vip_superadmin_bypass')
+            ->assertJsonPath('quota.tailor_cv_remaining', 999999);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'CV_PRO_VIP_SUPERADMIN_BYPASS_ACTIVATED',
+            'event_category' => 'superadmin_bypass',
+        ]);
+    }
+
+    public function test_non_superadmin_is_rejected_from_vip_superadmin_bypass_endpoint(): void
+    {
+        $regularClient = User::factory()->create([
+            'email' => 'client.regular@example.com',
+        ]);
+
+        $this->assertFalse($regularClient->hasUniversalSuperadminBypass('CV_PRO'));
+
+        $response = $this->actingAs($regularClient)->postJson('/api/cv-pro/vip-bypass');
+        $response->assertStatus(403)
+            ->assertJsonPath('success', false);
+    }
+
+    public function test_ai_native_tools_for_cv_pro_ultimate_and_universal_bypass_execute_cleanly(): void
+    {
+        $superAdmin = User::factory()->create([
+            'email' => 'yoseph.iriandi.tambunan@gmail.com',
+        ]);
+        $superAdmin->assignRole('super_admin');
+        $this->actingAs($superAdmin);
+
+        $engine = app(\App\Services\Ai\AgenticActionExecutionEngine::class);
+
+        $atsResult = $engine->execute('evaluate_cv_deterministic_ats_and_emulator', [
+            'job_description' => 'Senior Systems Architect with Laravel, PostgreSQL, Redis, Docker',
+            'lang' => 'id',
+        ]);
+        $this->assertEquals('success', $atsResult['status'] ?? null);
+        $this->assertArrayHasKey('deterministic_ats_score', $atsResult);
+        $this->assertArrayHasKey('ats_parser_emulator', $atsResult);
+
+        $caseStudyResult = $engine->execute('execute_cv_case_study_and_osint_tailor', [
+            'operation' => 'case_study_convert',
+            'company' => 'Stripe',
+            'role' => 'Staff Backend Architect',
+            'bullet_or_description' => 'Meningkatkan reliabilitas webhook pembayaran sebesar 99.99% dengan arsitektur antrean idempoten.',
+            'lang' => 'id',
+        ]);
+        $this->assertEquals('success', $caseStudyResult['status'] ?? null);
+        $this->assertArrayHasKey('result', $caseStudyResult);
+
+        $bypassResult = $engine->execute('verify_universal_superadmin_bypass', [
+            'module_code' => 'CV_PRO',
+            'activate_cv_pro_vip' => true,
+        ]);
+        $this->assertEquals('success', $bypassResult['status'] ?? null);
+        $this->assertTrue($bypassResult['is_superadmin_bypass_eligible']);
+        $this->assertEquals('vip_superadmin_bypass', $bypassResult['cv_pro_vip_quota']['tier_code'] ?? null);
+    }
+
+    public function test_cag_and_kag_and_smart_guides_include_cv_pro_ultimate_and_dual_flagship_ecosystem(): void
+    {
+        $gateway = app(\App\Services\Ai\LlmGatewayService::class);
+        $cag = $gateway->buildLiveCagContext($this->user);
+        $kag = $gateway->buildDeterministicKagRules();
+
+        $this->assertStringContainsString('CV_PRO_ULTIMATE', $cag);
+        $this->assertStringContainsString('evaluate_cv_deterministic_ats_and_emulator', $kag);
+        $this->assertStringContainsString('verify_universal_superadmin_bypass', $kag);
+
+        $guideResponse = $this->get('/smart-guide');
+        $guideResponse->assertSuccessful();
+        $guideResponse->assertSee('CV Pro Ultimate');
+    }
 }
 
 

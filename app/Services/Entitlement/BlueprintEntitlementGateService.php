@@ -99,7 +99,9 @@ final class BlueprintEntitlementGateService
 
         // 3. Check authenticated user concrete role / settled transactions
         if ($user !== null && isset($user->id)) {
-            if (method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['super_admin', 'admin', 'principal_architect'])) {
+            if ((method_exists($user, 'hasUniversalSuperadminBypass') && $user->hasUniversalSuperadminBypass('PROJECT_OS'))
+                || (method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['super_admin', 'admin', 'principal_architect']))
+            ) {
                 return 'AGENCY_PARTNER';
             }
 

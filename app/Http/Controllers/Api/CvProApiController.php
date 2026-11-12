@@ -72,6 +72,21 @@ class CvProApiController extends Controller
                 $resume = Resume::create($data);
             }
 
+            AuditLog::record(
+                action: 'CV_PRO_RESUME_SAVED',
+                model: $resume,
+                newValues: [
+                    'title' => $resume->title,
+                    'target_role' => $resume->target_role,
+                    'template' => $resume->template,
+                    'ats_score' => $resume->ats_score,
+                ],
+                description: "Resume '{$resume->title}' ({$resume->target_role}) disimpan dengan skor ATS {$resume->ats_score}/100.",
+                eventCategory: 'cv_pro_studio',
+                sectorCode: 'SECTOR_07_HRTECH_EDUTECH',
+                primitiveCode: 'PRIMITIVE_CV_CLOUD_SAVE'
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Resume berhasil disimpan ke cloud!',
@@ -399,6 +414,8 @@ class CvProApiController extends Controller
                 'exchange_rate' => $economicsData['exchange_rate_usd_idr'],
                 'unit_costs' => $economicsData['unit_costs'],
                 'current_user_quota' => $userQuota,
+                'is_superadmin_bypass' => (bool) ($user && $user->hasUniversalSuperadminBypass('CV_PRO')),
+                'universal_bypass' => $user ? $user->getUniversalBypassEntitlementPayload('CV_PRO') : null,
             ],
         ]);
     }
@@ -413,6 +430,7 @@ class CvProApiController extends Controller
             return response()->json([
                 'success' => true,
                 'is_guest' => true,
+                'is_superadmin_bypass' => false,
                 'quota' => [
                     'tier_code' => 'free',
                     'tailor_cv_remaining' => 1,
@@ -426,26 +444,29 @@ class CvProApiController extends Controller
         }
 
         $quota = CvQuotaService::getUserQuota($user);
+        $isBypass = $user->hasUniversalSuperadminBypass('CV_PRO');
 
         return response()->json([
             'success' => true,
             'is_guest' => false,
+            'is_superadmin_bypass' => $isBypass,
+            'universal_bypass' => $user->getUniversalBypassEntitlementPayload('CV_PRO'),
             'quota' => [
                 'tier_code' => $quota->tier_code,
                 'plan_id' => $quota->plan_id,
-                'tailor_cv_remaining' => $quota->remaining('tailor_cv'),
-                'mock_interviews_remaining' => $quota->remaining('mock_interviews'),
-                'ats_audits_remaining' => $quota->remaining('ats_audits'),
-                'linkedin_packs_remaining' => $quota->remaining('linkedin_packs'),
-                'outreach_letters_remaining' => $quota->remaining('outreach_letters'),
-                'ai_credits_balance' => $quota->ai_credits_balance,
+                'tailor_cv_remaining' => $isBypass ? 999999 : $quota->remaining('tailor_cv'),
+                'mock_interviews_remaining' => $isBypass ? 999999 : $quota->remaining('mock_interviews'),
+                'ats_audits_remaining' => $isBypass ? 999999 : $quota->remaining('ats_audits'),
+                'linkedin_packs_remaining' => $isBypass ? 999999 : $quota->remaining('linkedin_packs'),
+                'outreach_letters_remaining' => $isBypass ? 999999 : $quota->remaining('outreach_letters'),
+                'ai_credits_balance' => $isBypass ? max(999999, (int) $quota->ai_credits_balance) : $quota->ai_credits_balance,
                 'plan_expires_at' => $quota->plan_expires_at?->toIso8601String(),
             ],
         ]);
     }
 
     /**
-     * Top-up or activate a plan (Simulated or via Midtrans settlement).
+     * Top-up or activate a plan (Simulated, via Midtrans settlement, or Free Superadmin Bypass).
      */
     public function topup(Request $request): JsonResponse
     {
@@ -470,16 +491,76 @@ class CvProApiController extends Controller
 
         $plan = CvProPlan::where('code', $request->input('plan_code'))->firstOrFail();
 
+        if ($user->hasUniversalSuperadminBypass('CV_PRO')) {
+            $updatedQuota = CvQuotaService::activateSuperadminVipBypass($user, $request->ip());
+
+            return response()->json([
+                'success' => true,
+                'is_superadmin_bypass' => true,
+                'billing_amount_idr' => 0,
+                'message' => "VIP Superadmin Bypass Aktif (Rp 0): Paket '{$plan->code}' & Unlimited 8-Pillar Studio dibuka tanpa biaya.",
+                'quota' => $updatedQuota,
+            ]);
+        }
+
         if ($plan->type === 'subscription') {
             $updatedQuota = CvQuotaService::applyPlan($user, $plan);
         } else {
             $updatedQuota = CvQuotaService::applyTopUp($user, $plan);
         }
 
+        AuditLog::record(
+            action: 'CV_PRO_PLAN_ACTIVATED',
+            model: $updatedQuota,
+            newValues: [
+                'plan_code' => $plan->code,
+                'plan_type' => $plan->type,
+                'tier_code' => $updatedQuota->tier_code,
+            ],
+            description: "Pengguna ({$user->email}) mengaktifkan paket CV Pro '{$plan->code}'.",
+            eventCategory: 'cv_pro_studio',
+            sectorCode: 'SECTOR_07_HRTECH_EDUTECH',
+            primitiveCode: 'PRIMITIVE_CV_QUOTA_BILLING'
+        );
+
         return response()->json([
             'success' => true,
+            'is_superadmin_bypass' => false,
             'message' => "Paket '{$plan->code}' berhasil diterapkan ke akun Anda.",
             'quota' => $updatedQuota,
+        ]);
+    }
+
+    /**
+     * 1-Click VIP Superadmin Free Bypass for CV Pro Ultimate Studio (Rp 0 Unlimited).
+     */
+    public function vipSuperadminBypass(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user || ! $user->hasUniversalSuperadminBypass('CV_PRO')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Otorisasi ditolak: Hanya Superadmin atau pemegang izin bypass_all_payment_gates yang dapat mengeksekusi VIP Zero-Cost Bypass.',
+            ], 403);
+        }
+
+        $quota = CvQuotaService::activateSuperadminVipBypass($user, $request->ip());
+
+        return response()->json([
+            'success' => true,
+            'is_superadmin_bypass' => true,
+            'billing_amount_idr' => 0,
+            'message' => 'VIP Superadmin Bypass (Rp 0 Unlimited) berhasil diaktifkan untuk seluruh 8 Pilar CV Pro Ultimate Studio!',
+            'universal_bypass' => $user->getUniversalBypassEntitlementPayload('CV_PRO'),
+            'quota' => [
+                'tier_code' => $quota->tier_code,
+                'tailor_cv_remaining' => 999999,
+                'mock_interviews_remaining' => 999999,
+                'ats_audits_remaining' => 999999,
+                'linkedin_packs_remaining' => 999999,
+                'outreach_letters_remaining' => 999999,
+                'ai_credits_balance' => $quota->ai_credits_balance,
+            ],
         ]);
     }
 
@@ -646,6 +727,18 @@ class CvProApiController extends Controller
 
         $result = CvAiService::calculateDeterministicAtsScore($content, $jobDesc, $lang);
 
+        AuditLog::record(
+            action: 'CV_PRO_DETERMINISTIC_ATS_SCORED',
+            newValues: [
+                'overall_score' => $result['overall_score'] ?? 0,
+                'Breakdown' => $result['breakdown'] ?? [],
+            ],
+            description: 'Eksekusi Deterministic Hybrid ATS Scorer (Formula 0.30*K + 0.25*I + 0.25*S + 0.20*R). Skor: '.($result['overall_score'] ?? 0).'/100.',
+            eventCategory: 'cv_pro_studio',
+            sectorCode: 'SECTOR_07_HRTECH_EDUTECH',
+            primitiveCode: 'PRIMITIVE_CV_DETERMINISTIC_ATS'
+        );
+
         return response()->json([
             'success' => true,
             'data' => $result,
@@ -661,6 +754,18 @@ class CvProApiController extends Controller
         $lang = $request->input('lang', 'id');
 
         $result = CvAiService::simulateAtsParser($content, $lang);
+
+        AuditLog::record(
+            action: 'CV_PRO_ATS_PARSER_EMULATED',
+            newValues: [
+                'parsing_confidence' => $result['parsing_confidence'] ?? 0,
+                'engine_compatibility' => $result['engine_compatibility'] ?? [],
+            ],
+            description: 'Simulasi ekstraksi linear ATS Parser Emulator (Workday, Greenhouse, Lever, Taleo).',
+            eventCategory: 'cv_pro_studio',
+            sectorCode: 'SECTOR_07_HRTECH_EDUTECH',
+            primitiveCode: 'PRIMITIVE_CV_ATS_EMULATOR'
+        );
 
         return response()->json([
             'success' => true,
@@ -698,6 +803,19 @@ class CvProApiController extends Controller
 
         $result = CvAiService::runCompanyOsint($company, $role, $jobDesc, $content, $lang);
 
+        AuditLog::record(
+            action: 'CV_PRO_COMPANY_OSINT_EXECUTED',
+            newValues: [
+                'company' => $company,
+                'role' => $role,
+                'detected_tech_stack' => $result['detected_tech_stack'] ?? [],
+            ],
+            description: "Eksekusi Company OSINT Tailoring & Micro-Pitch untuk target perusahaan '{$company}' ({$role}).",
+            eventCategory: 'cv_pro_studio',
+            sectorCode: 'SECTOR_07_HRTECH_EDUTECH',
+            primitiveCode: 'PRIMITIVE_CV_OSINT_TAILOR'
+        );
+
         return response()->json([
             'success' => true,
             'data' => $result,
@@ -713,6 +831,18 @@ class CvProApiController extends Controller
         $config = $request->input('config', []);
 
         $result = CvAiService::generateTypstSource($content, $config);
+
+        AuditLog::record(
+            action: 'CV_PRO_TYPST_SOURCE_EXPORTED',
+            newValues: [
+                'engine' => $result['engine'] ?? 'Typst v0.12 Deterministic Vector Compiler',
+                'blind_hiring_mode' => (bool) ($config['blind_hiring'] ?? false),
+            ],
+            description: 'Ekspor kode sumber vektor deterministik Typst (.typ) dengan aturan Anti-Orphan #block(breakable: false).',
+            eventCategory: 'cv_pro_studio',
+            sectorCode: 'SECTOR_07_HRTECH_EDUTECH',
+            primitiveCode: 'PRIMITIVE_CV_TYPST_COMPILER'
+        );
 
         return response()->json([
             'success' => true,
@@ -753,6 +883,20 @@ class CvProApiController extends Controller
         $lang = $request->input('lang', 'id');
 
         $result = CvAiService::convertExperienceToCaseStudy($experience, $lang);
+
+        AuditLog::record(
+            action: 'CV_PRO_CASE_STUDY_CONVERTED',
+            newValues: [
+                'role' => $experience['role'] ?? 'Professional',
+                'company' => $experience['company'] ?? '-',
+                'recommended_widget' => $result['recommended_widget']['type'] ?? 'metric_counter_grid',
+                'unverified_placeholders_count' => count($result['unverified_placeholders'] ?? []),
+            ],
+            description: 'Konversi Bullet CV menjadi Studi Kasus Portofolio dengan Zero-Hallucination Guardrail.',
+            eventCategory: 'cv_pro_studio',
+            sectorCode: 'SECTOR_07_HRTECH_EDUTECH',
+            primitiveCode: 'PRIMITIVE_CV_CASE_STUDY_ARCHITECT'
+        );
 
         return response()->json([
             'success' => true,

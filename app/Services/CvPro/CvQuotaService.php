@@ -2,6 +2,7 @@
 
 namespace App\Services\CvPro;
 
+use App\Models\AuditLog;
 use App\Models\CvProPlan;
 use App\Models\CvQuotaTransaction;
 use App\Models\User;
@@ -13,30 +14,96 @@ class CvQuotaService
 {
     /**
      * Get or initialize quota for a user.
+     * Superadmin automatically receives Universal VIP Unlimited Bypass (Rp 0).
      */
     public static function getUserQuota(User $user): UserCvQuota
     {
+        $isSuperadminBypass = $user->hasUniversalSuperadminBypass('CV_PRO');
         $freePlan = CvProPlan::where('code', 'starter_free')->first();
 
-        return UserCvQuota::firstOrCreate(
+        $quota = UserCvQuota::firstOrCreate(
             ['user_id' => $user->id],
             [
                 'plan_id' => $freePlan?->id,
-                'tier_code' => 'free',
-                'tailor_cv_quota' => $freePlan?->quotas['tailor_cv_limit'] ?? 1,
+                'tier_code' => $isSuperadminBypass ? 'vip_superadmin_bypass' : 'free',
+                'tailor_cv_quota' => $isSuperadminBypass ? -1 : ($freePlan?->quotas['tailor_cv_limit'] ?? 1),
                 'tailor_cv_used' => 0,
-                'mock_interviews_quota' => $freePlan?->quotas['mock_interviews_limit'] ?? 1,
+                'mock_interviews_quota' => $isSuperadminBypass ? -1 : ($freePlan?->quotas['mock_interviews_limit'] ?? 1),
                 'mock_interviews_used' => 0,
-                'ats_audits_quota' => $freePlan?->quotas['ats_audits_limit'] ?? 3,
+                'ats_audits_quota' => $isSuperadminBypass ? -1 : ($freePlan?->quotas['ats_audits_limit'] ?? 3),
                 'ats_audits_used' => 0,
-                'linkedin_packs_quota' => $freePlan?->quotas['linkedin_packs_limit'] ?? 0,
+                'linkedin_packs_quota' => $isSuperadminBypass ? -1 : ($freePlan?->quotas['linkedin_packs_limit'] ?? 0),
                 'linkedin_packs_used' => 0,
-                'outreach_letters_quota' => $freePlan?->quotas['outreach_letters_limit'] ?? 1,
+                'outreach_letters_quota' => $isSuperadminBypass ? -1 : ($freePlan?->quotas['outreach_letters_limit'] ?? 1),
                 'outreach_letters_used' => 0,
-                'ai_credits_balance' => $freePlan?->quotas['ai_credits'] ?? 10,
+                'ai_credits_balance' => $isSuperadminBypass ? 999999 : ($freePlan?->quotas['ai_credits'] ?? 10),
                 'plan_expires_at' => null,
             ]
         );
+
+        if ($isSuperadminBypass && ($quota->tier_code !== 'vip_superadmin_bypass' || $quota->tailor_cv_quota !== -1 || $quota->ai_credits_balance < 999999)) {
+            $quota->update([
+                'tier_code' => 'vip_superadmin_bypass',
+                'tailor_cv_quota' => -1,
+                'mock_interviews_quota' => -1,
+                'ats_audits_quota' => -1,
+                'linkedin_packs_quota' => -1,
+                'outreach_letters_quota' => -1,
+                'ai_credits_balance' => max(999999, (int) $quota->ai_credits_balance),
+                'plan_expires_at' => null,
+            ]);
+            $quota->refresh();
+        }
+
+        return $quota;
+    }
+
+    /**
+     * Explicitly activate 1-click VIP Superadmin Free Bypass on CV Pro (and record SHA-256 Audit Trail).
+     */
+    public static function activateSuperadminVipBypass(User $user, ?string $ipAddress = null): UserCvQuota
+    {
+        $quota = self::getUserQuota($user);
+
+        $quota->update([
+            'tier_code' => 'vip_superadmin_bypass',
+            'tailor_cv_quota' => -1,
+            'mock_interviews_quota' => -1,
+            'ats_audits_quota' => -1,
+            'linkedin_packs_quota' => -1,
+            'outreach_letters_quota' => -1,
+            'ai_credits_balance' => 999999,
+            'plan_expires_at' => null,
+        ]);
+        $quota->refresh();
+
+        CvQuotaTransaction::create([
+            'user_id' => $user->id,
+            'plan_id' => $quota->plan_id,
+            'type' => 'vip_superadmin_bypass',
+            'feature' => 'universal_superadmin_bypass',
+            'amount' => 0,
+            'balance_after' => 999999,
+            'description' => 'VIP Superadmin Zero-Cost Bypass (Rp 0 Unlimited) diaktifkan untuk CV Pro Ultimate Studio.',
+        ]);
+
+        AuditLog::record(
+            action: 'CV_PRO_VIP_SUPERADMIN_BYPASS_ACTIVATED',
+            model: $quota,
+            oldValues: ['tier_code' => 'standard'],
+            newValues: [
+                'tier_code' => 'vip_superadmin_bypass',
+                'billing_amount_idr' => 0,
+                'unlimited_all_8_pillars' => true,
+                'ip_address' => $ipAddress,
+            ],
+            description: "Superadmin ({$user->email}) mengaktifkan VIP Owner Bypass Tanpa Bayar (Rp 0 Unlimited) pada ekosistem CV Pro Ultimate Studio.",
+            eventCategory: 'superadmin_bypass',
+            sectorCode: 'SECTOR_07_HRTECH_EDUTECH',
+            primitiveCode: 'PRIMITIVE_UNIVERSAL_SUPERADMIN_BYPASS'
+        );
+
+        return $quota;
     }
 
     /**
@@ -44,8 +111,8 @@ class CvQuotaService
      */
     public static function canUse(User $user, string $feature): bool
     {
-        // Superadmin bypasses quota checks
-        if ($user->hasRole('super_admin') || $user->email === 'yoseph.iriandi.tambunan@gmail.com') {
+        // Universal Superadmin bypasses quota checks across all modules
+        if ($user->hasUniversalSuperadminBypass('CV_PRO')) {
             return true;
         }
 
@@ -69,7 +136,7 @@ class CvQuotaService
      */
     public static function consume(User $user, string $feature, int $amount = 1, ?string $description = null): bool
     {
-        if ($user->hasRole('super_admin') || $user->email === 'yoseph.iriandi.tambunan@gmail.com') {
+        if ($user->hasUniversalSuperadminBypass('CV_PRO')) {
             return true;
         }
 

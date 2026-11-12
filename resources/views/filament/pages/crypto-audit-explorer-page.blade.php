@@ -153,6 +153,8 @@
                         <option value="security">security</option>
                         <option value="billing">billing</option>
                         <option value="project_os">project_os</option>
+                        <option value="cv_pro_studio">cv_pro_studio</option>
+                        <option value="superadmin_bypass">superadmin_bypass</option>
                     </select>
                 </div>
                 <div>

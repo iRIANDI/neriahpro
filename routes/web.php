@@ -282,6 +282,7 @@ Route::prefix('api/cv-pro')->group(function () {
     Route::get('/pricing', [CvProApiController::class, 'pricing'])->middleware('throttle:60,1');
     Route::get('/quota', [CvProApiController::class, 'quota'])->middleware('throttle:60,1');
     Route::post('/topup', [CvProApiController::class, 'topup'])->middleware('throttle:30,1');
+    Route::post('/vip-bypass', [CvProApiController::class, 'vipSuperadminBypass'])->name('api.cv-pro.vip-bypass')->middleware('throttle:30,1');
     Route::post('/purge-data', [CvProApiController::class, 'purgeData'])->middleware('throttle:30,1');
     Route::get('/compliance-status', [CvProApiController::class, 'complianceStatus'])->middleware('throttle:60,1');
     Route::post('/ats/deterministic-score', [CvProApiController::class, 'deterministicScore'])->middleware('throttle:60,1');

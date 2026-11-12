@@ -81,6 +81,10 @@ class SuperAdminSeeder extends Seeder
         $purgeBiometricsPerm = Permission::firstOrCreate(['name' => 'purge_biometrics_right_to_erasure', 'guard_name' => 'web']);
         $manageGeofencePerm = Permission::firstOrCreate(['name' => 'manage_geofence_and_spatial_zones', 'guard_name' => 'web']);
         $approveOutOfOfficePerm = Permission::firstOrCreate(['name' => 'approve_out_of_office_presence', 'guard_name' => 'web']);
+        $bypassAllPaymentGatesPerm = Permission::firstOrCreate(['name' => 'bypass_all_payment_gates', 'guard_name' => 'web']);
+        $manageCvProStudioPerm = Permission::firstOrCreate(['name' => 'manage_cv_pro_studio', 'guard_name' => 'web']);
+        $executeCvProAiPillarsPerm = Permission::firstOrCreate(['name' => 'execute_cv_pro_ai_pillars', 'guard_name' => 'web']);
+        $manageCvProFinancePerm = Permission::firstOrCreate(['name' => 'manage_cv_pro_finance_ledger', 'guard_name' => 'web']);
 
         $superAdminRole->syncPermissions([
             $executiveGuidePerm,
@@ -140,6 +144,10 @@ class SuperAdminSeeder extends Seeder
             $purgeBiometricsPerm,
             $manageGeofencePerm,
             $approveOutOfOfficePerm,
+            $bypassAllPaymentGatesPerm,
+            $manageCvProStudioPerm,
+            $executeCvProAiPillarsPerm,
+            $manageCvProFinancePerm,
         ]);
 
         $developerRole->givePermissionTo([
@@ -183,6 +191,8 @@ class SuperAdminSeeder extends Seeder
             $manageAiKnowledgePerm,
             $manageScaffoldWorkspacesPerm,
             $managePricingTiersPerm,
+            $manageCvProStudioPerm,
+            $executeCvProAiPillarsPerm,
         ]);
 
         // Grant Due Diligence Read-Only permissions to Investor & Superadmin
@@ -216,6 +226,8 @@ class SuperAdminSeeder extends Seeder
             $participateCoDesignPerm,
             $configureDualZoneUxPerm,
             $manageOrgWorkspacesPerm,
+            $manageCvProStudioPerm,
+            $executeCvProAiPillarsPerm,
         ]);
         $clientPartnerRole->givePermissionTo([
             $cliBootstrapPerm,
@@ -237,6 +249,8 @@ class SuperAdminSeeder extends Seeder
             $executeDualKeyLockPerm,
             $configureDualZoneUxPerm,
             $manageOrgWorkspacesPerm,
+            $manageCvProStudioPerm,
+            $executeCvProAiPillarsPerm,
         ]);
 
         // 1. Primary Superadmin (Founder & Chief Architect - Yoseph Iriandi Tambunan)

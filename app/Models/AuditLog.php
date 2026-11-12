@@ -404,6 +404,12 @@ class AuditLog extends Model
     {
         $haystack = strtolower($action . ' ' . ($modelClass ?? '') . ' ' . ($description ?? ''));
 
+        if (str_contains($haystack, 'vip_superadmin_bypass') || str_contains($haystack, 'vip_owner_bypass') || str_contains($haystack, 'superadmin_bypass') || str_contains($haystack, 'universal_superadmin_bypass') || str_contains($haystack, 'bypass_all_payment_gates')) {
+            return 'superadmin_bypass';
+        }
+        if (str_contains($haystack, 'cv_pro') || str_contains($haystack, 'cv_ats') || str_contains($haystack, 'cv_osint') || str_contains($haystack, 'cv_case_study') || str_contains($haystack, 'cv_typst') || str_contains($haystack, 'cv_recruiter') || str_contains($haystack, 'cv_portfolio') || str_contains($haystack, 'usercvquota') || str_contains($haystack, 'cvquotatransaction') || str_contains($haystack, 'cvfinancerecord') || str_contains($haystack, 'app\\models\\resume')) {
+            return 'cv_pro_studio';
+        }
         if (str_contains($haystack, 'aniwall') || str_contains($haystack, 'verified_testimonial') || str_contains($haystack, 'posverifiedtestimonial')) {
             return 'verified_aniwall_v10';
         }

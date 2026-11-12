@@ -1963,6 +1963,32 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
 
   // 6. Typst Compiler Source Export
   const [exportingTypst, setExportingTypst] = useState(false);
+  const [activatingVipBypass, setActivatingVipBypass] = useState(false);
+
+  const handleActivateVipSuperadminBypass = async () => {
+    setActivatingVipBypass(true);
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/cv-pro/vip-bypass', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf || '' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.quota) {
+          setUserQuota(data.quota);
+        }
+        showLocalToast('success', data.message || 'VIP Superadmin Bypass (Rp 0 Unlimited) aktif!', 'VIP SUPERADMIN BYPASS');
+      } else {
+        showLocalToast('error', data.message || 'Gagal mengaktifkan VIP Bypass.', 'OTORISASI DITOLAK');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setActivatingVipBypass(false);
+    }
+  };
 
   const handleRunDeterministicScore = async () => {
     setRunningDeterministic(true);
@@ -2303,14 +2329,27 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
             {/* Plan Tier & AI Quota Badge */}
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-none text-xs">
               <span className="font-mono text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                {currentUser?.is_super_admin ? 'SUPERADMIN' : (userQuota?.tier_code ? userQuota.tier_code.toUpperCase() : 'STARTER FREE')}
+                {currentUser?.is_super_admin || userQuota?.tier_code === 'vip_superadmin_bypass' ? 'VIP SUPERADMIN BYPASS (RP 0)' : (userQuota?.tier_code ? userQuota.tier_code.toUpperCase() : 'STARTER FREE')}
               </span>
               <span className="text-zinc-400">•</span>
               <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-300 flex items-center gap-0.5" title="Kredit AI Tersisa">
                 <Zap className="w-3 h-3 text-amber-500" />
-                {currentUser?.is_super_admin ? '∞' : (userQuota?.ai_credits_balance ?? 0)}
+                {currentUser?.is_super_admin || userQuota?.tier_code === 'vip_superadmin_bypass' ? '∞' : (userQuota?.ai_credits_balance ?? 0)}
               </span>
             </div>
+
+            {currentUser?.is_super_admin && (
+              <button
+                type="button"
+                onClick={handleActivateVipSuperadminBypass}
+                disabled={activatingVipBypass}
+                className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-black font-mono text-[11px] font-black uppercase rounded-none transition flex items-center gap-1 cursor-pointer shadow-xs"
+                title="1-Klik Bypass Superadmin Tanpa Bayar (Rp 0 Unlimited Semua 8 Pilar CV Pro)"
+              >
+                <Crown className="w-3.5 h-3.5 text-black" />
+                <span className="hidden xl:inline">{activatingVipBypass ? 'BYPASSING...' : 'VIP BYPASS RP 0'}</span>
+              </button>
+            )}
 
             {/* Upgrade & Top-up Button */}
             <button

@@ -1188,13 +1188,47 @@ class VectorEmbeddingService
             $totalChunks++;
         }
 
+        // 19. Indeks CV Pro Ultimate 8-Pillar Architecture (design CV.MD), Dual-Flagship Ecosystem (Project OS + CV Pro), & Universal Superadmin Bypass
+        $cvProUltimateSourceId = 'cv-pro-ultimate-8-pillars-and-universal-superadmin-bypass-v15';
+        if ($forceRefresh || ! AiKnowledgeVector::where('source_id', $cvProUltimateSourceId)->exists()) {
+            $cvProContent = "Neriah Pro Dual-Flagship Ecosystem (Project OS + CV Pro Ultimate Studio) & Universal Superadmin Zero-Cost Bypass:\n"
+                ."1. Ekosistem Multi-Produk Neriah Pro: Saat ini memiliki 2 Produk Flagship Utama di Frontpage:\n"
+                ."   - Produk 01: Project OS (Software Architecture, Deterministic PRD Compiler, 12 Sektoral Industri & Turnkey Software Factory).\n"
+                ."   - Produk 02: CV Pro Ultimate Studio (`/cv-pro` — AI Career Copilot, Deterministic ATS Scorer & Dual-View Web Portfolio Engine) dengan margin unit economics >92%.\n"
+                ."2. 8 Pilar Strategis CV Pro Ultimate (`design CV.MD` — 100% Unbeatable Worldwide):\n"
+                ."   - Pilar 1 (Deterministic Hybrid ATS Scorer & Parser Emulator): Formula matematis deterministik `Total = 0.30*Keyword + 0.25*Impact + 0.25*Structure + 0.20*Readability` (Zero-LLM) + Simulator ekstraksi linear Workday, Greenhouse, Lever, & Taleo.\n"
+                ."   - Pilar 2 (Company OSINT Tailoring & Google XYZ Rewriter): Riset tech stack perusahaan, budaya korporat, bespoke micro-pitch, dan formula Google XYZ (`Accomplished [X] as measured by [Y], by doing [Z]`).\n"
+                ."   - Pilar 3 (Typst Deterministic Vector PDF Engine): Compiler kode sumber `.typ` dengan aturan Anti-Orphan `#block(breakable: false)` sehingga sub-judul pengalaman tidak pernah terpotong gantung di akhir halaman A4.\n"
+                ."   - Pilar 4 (Zero-Hallucination Case Study Architect & Interactive Widget Mapper): Mengubah 3 bullet CV menjadi narasi studi kasus 4 babak (`The Challenge`, `Strategic Approach`, `Execution & Architecture`, `Measurable Impact`). Dilarang mengarang angka palsu; metrik yang belum ada ditandai dengan placeholder `[Isi persentase/angka dampak di sini]` dan dipetakan ke widget visual (`before_after_slider`, `architecture_flow`, `metric_counter_grid`).\n"
+                ."   - Pilar 5 (AI Recruiter Chatbot dengan Co-Browsing RAG): Asisten AI interaktif pada Web Portfolio publik yang menjawab pertanyaan perekrut dan mengirimkan sinyal `scroll_to_section` ke bagian proyek terkait.\n"
+                ."   - Pilar 6 (Katalog 7 Tipe Fungsional, 10 Gaya Desain Visual & 4 MVP Prioritas): Mencakup `minimalist_swiss`, `bento_grid`, `interactive_terminal`, dan `editorial_case_study` dengan Dual-View Switcher (Interactive Web View vs Recruiter Speed-View `<15 detik`).\n"
+                ."   - Pilar 7 (DEI Blind Hiring Mode & Global Format Localization): Anonimisasi PII 1-klik (`CANDIDATE #NP-XXXX`) serta lokalisasi otomatis standar US/Global ATS, Jerman (`Lebenslauf`), dan Jepang (`Rirekisho` + furigana).\n"
+                ."   - Pilar 8 (4-Pillar Statutory Governance): Kepatuhan UU PDP No. 27/2022 Right to Erasure (`/api/cv-pro/purge-data`), Disclaimer of Warranty, SIL Open Font License, dan Non-Refundable Consumed Digital Goods.\n"
+                ."3. Universal Superadmin Payment & Quota Bypass (`User::hasUniversalSuperadminBypass()` & Permission `bypass_all_payment_gates`):\n"
+                ."   - Mendukung bypass 100% gratis (Rp 0 Unlimited) bagi akun Superadmin baik di Project OS (`/blueprint/{slug}/vip-owner-bypass`), CV Pro (`/api/cv-pro/vip-bypass`), maupun seluruh fitur/produk masa depan Neriah Pro, lengkap dengan jejak audit kriptografi SHA-256 (`superadmin_bypass`).";
+
+            $embedding = $this->generateEmbedding("CV Pro Ultimate 8 Pillars Deterministic ATS Score Workday Greenhouse Emulator Google XYZ Typst Case Study Zero Hallucination Company OSINT Blind Hiring Universal Superadmin Bypass\n{$cvProContent}");
+            AiKnowledgeVector::create([
+                'title' => 'CV Pro Ultimate 8-Pillar Architecture (design CV.MD), Dual-Flagship Ecosystem & Universal Superadmin Bypass',
+                'source_type' => 'cv_pro_ultimate_8_pillars_v15',
+                'source_id' => $cvProUltimateSourceId,
+                'content' => "### CV Pro Ultimate 8-Pillar Architecture & Universal Superadmin Bypass\n\n{$cvProContent}",
+                'embedding' => $embedding,
+                'metadata' => [
+                    'category' => 'CV Pro Ultimate 8 Pillars & Multi-Product Ecosystem',
+                ],
+            ]);
+            $syncedSections++;
+            $totalChunks++;
+        }
+
         Log::info("VectorEmbeddingService::syncSystemKnowledgeBase: Berhasil menyinkronkan {$syncedSections} bagian ke basis pengetahuan RAG.");
 
         return [
             'status' => 'success',
             'synced_sections' => $syncedSections,
             'total_chunks' => $totalChunks,
-            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (Project OS v14.0 14 Primitif Biometrik & Geofence, v13.0 Multi-Bahasa Tier 1 JSONB vs Skalar, v11.0 SEO/GEO Paripurna, v9.0 AgentShield 5-Layer, v8.0 36 Visual UI, 15 Pilar Master Freeze, 12 Sectoral UI/UX, 9 Stack Adapters, 6 Killer Engines) ke basis pengetahuan RAG pgvector.",
+            'message' => "Berhasil menyinkronkan {$syncedSections} bagian (CV Pro Ultimate 8 Pilar & Universal Superadmin Bypass, Project OS v14.0 14 Primitif Biometrik & Geofence, v13.0 Multi-Bahasa Tier 1 JSONB vs Skalar, v11.0 SEO/GEO Paripurna, v9.0 AgentShield 5-Layer, v8.0 36 Visual UI, 15 Pilar Master Freeze) ke basis pengetahuan RAG pgvector.",
         ];
     }
 }

@@ -100,6 +100,50 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasRole('super_admin') || ($this->email && $this->email === 'yoseph.iriandi.tambunan@gmail.com');
     }
 
+    /**
+     * Universal Superadmin Payment & Quota Bypass Gate across Project OS, CV Pro, and all future Neriah Pro modules.
+     */
+    public function hasUniversalSuperadminBypass(?string $moduleCode = null): bool
+    {
+        try {
+            if ($this->isSuperAdmin()) {
+                return true;
+            }
+
+            if (method_exists($this, 'hasPermissionTo') && $this->hasPermissionTo('bypass_all_payment_gates')) {
+                return true;
+            }
+        } catch (\Throwable) {
+            return (bool) ($this->email && $this->email === 'yoseph.iriandi.tambunan@gmail.com');
+        }
+
+        return false;
+    }
+
+    /**
+     * Standardized Zero-Cost Entitlement Payload for Universal Superadmin Bypass across current & future modules.
+     *
+     * @return array<string, mixed>
+     */
+    public function getUniversalBypassEntitlementPayload(string $moduleCode = 'ALL_MODULES'): array
+    {
+        $active = $this->hasUniversalSuperadminBypass($moduleCode);
+
+        return [
+            'is_bypass_active' => $active,
+            'module_code' => strtoupper($moduleCode),
+            'tier_code' => $active ? 'vip_superadmin_bypass' : 'standard',
+            'billing_amount_idr' => 0,
+            'unlimited_quota' => $active,
+            'supported_ecosystems' => [
+                'PROJECT_OS',
+                'CV_PRO',
+                'FUTURE_ECOSYSTEM_MODULES',
+            ],
+            'verified_actor' => $this->email ?? 'guest',
+        ];
+    }
+
     public function isDeveloper(): bool
     {
         return $this->hasRole('developer');

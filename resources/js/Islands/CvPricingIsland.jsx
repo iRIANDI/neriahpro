@@ -214,10 +214,10 @@ export default function CvPricingIsland({
         </p>
 
         {/* Free Tier Notice Banner */}
-        <div className="mt-6 p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-medium flex items-center justify-center gap-2 max-w-2xl mx-auto">
-          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+        <div className="mt-6 p-4 bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-400 dark:border-emerald-700 text-emerald-950 dark:text-emerald-200 text-xs sm:text-sm font-medium flex items-center justify-center gap-2 max-w-2xl mx-auto">
+          <Check className="w-4 h-4 text-emerald-800 dark:text-emerald-400 shrink-0" />
           <span>
-            <strong>Jaminan Akses Gratis:</strong> Siapa pun dapat mengisi seluruh form CV secara manual dan mengunduh format PDF secara 100% gratis tanpa batasan.
+            <strong>Jaminan Akses Gratis &amp; VIP Superadmin Bypass:</strong> Siapa pun dapat menyusun CV manual &amp; mengunduh PDF secara 100% gratis, serta mendukung <strong>Universal Superadmin Bypass (Rp 0 Unlimited)</strong> tanpa bayar untuk pemilik sistem.
           </span>
         </div>
       </div>

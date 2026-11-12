@@ -1098,6 +1098,73 @@ class GeminiToolRegistry
                     'required' => ['user_id', 'confirmation_token'],
                 ],
             ],
+            [
+                'name' => 'evaluate_cv_deterministic_ats_and_emulator',
+                'description' => 'Mengevaluasi CV/Resume menggunakan Pilar 1 CV Pro Ultimate: Deterministic Hybrid ATS Scorer (Zero-LLM Formula: 0.30*Keyword + 0.25*Impact + 0.25*Structure + 0.20*Readability) dan ATS Parser Emulator (simulasi ekstraksi teks linear Workday, Greenhouse, Lever, & Taleo).',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'resume_id' => [
+                            'type' => 'STRING',
+                            'description' => 'Opsional ULID atau slug Resume di database.',
+                        ],
+                        'job_description' => [
+                            'type' => 'STRING',
+                            'description' => 'Deskripsi lowongan kerja target untuk kalkulasi TF-IDF Keyword Match.',
+                        ],
+                        'lang' => [
+                            'type' => 'STRING',
+                            'description' => 'Bahasa evaluasi: id atau en.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'execute_cv_case_study_and_osint_tailor',
+                'description' => 'Menjalankan mesin AI CV Pro Ultimate (design CV.MD): Konversi pengalaman CV menjadi Studi Kasus Portofolio 4 Babak dengan Zero-Hallucination Guardrail & Interactive Widget Mapper, Company OSINT Tailoring, Google XYZ Formula Rewriter, Typst Vector Source (.typ), dan Katalog 10 Gaya Portofolio.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'operation' => [
+                            'type' => 'STRING',
+                            'description' => 'Jenis operasi: case_study_convert (Zero-Hallucination Case Study), company_osint (OSINT & Micro-Pitch), google_xyz (Formula Google XYZ), typst_export (Kode sumber Typst anti-orphan), atau portfolio_catalog (7 Tipe Fungsional & 10 Gaya Visual).',
+                        ],
+                        'company' => [
+                            'type' => 'STRING',
+                            'description' => 'Nama perusahaan target (untuk company_osint atau case_study_convert).',
+                        ],
+                        'role' => [
+                            'type' => 'STRING',
+                            'description' => 'Jabatan/role profesional kandidat.',
+                        ],
+                        'bullet_or_description' => [
+                            'type' => 'STRING',
+                            'description' => 'Teks poin pencapaian atau deskripsi pengalaman kerja.',
+                        ],
+                        'lang' => [
+                            'type' => 'STRING',
+                            'description' => 'Bahasa output: id atau en.',
+                        ],
+                    ],
+                ],
+            ],
+            [
+                'name' => 'verify_universal_superadmin_bypass',
+                'description' => 'Memeriksa dan mengaktifkan Universal Superadmin Free Bypass (Rp 0 Tanpa Bayar / Unlimited Quota) lintas ekosistem Neriah Pro: Project OS, CV Pro Ultimate Studio, dan modul masa depan.',
+                'parameters' => [
+                    'type' => 'OBJECT',
+                    'properties' => [
+                        'module_code' => [
+                            'type' => 'STRING',
+                            'description' => 'Kode modul target: ALL_MODULES, PROJECT_OS, atau CV_PRO.',
+                        ],
+                        'activate_cv_pro_vip' => [
+                            'type' => 'BOOLEAN',
+                            'description' => 'Set true untuk langsung mengaktifkan kuota unlimited Rp 0 pada akun Superadmin di CV Pro Studio.',
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         // Format sanitasi resmi Google Gemini Protobuf Map Schema

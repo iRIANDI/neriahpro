@@ -345,6 +345,9 @@
             <a href="#sec-v14-technologies-v12" @click.prevent="scrollTo('sec-v14-technologies-v12')" :class="activeSection === 'sec-v14-technologies-v12' ? 'sg-nav-btn active' : 'sg-nav-btn'">
                 21. <span x-text="t[lang].nav_v14_tech"></span>
             </a>
+            <a href="#sec-cv-pro-ultimate" @click.prevent="scrollTo('sec-cv-pro-ultimate')" :class="activeSection === 'sec-cv-pro-ultimate' ? 'sg-nav-btn active' : 'sg-nav-btn'">
+                22. <span x-text="t[lang].nav_cv_pro_ultimate || 'CV Pro Ultimate 8 Pilar & Universal Bypass'"></span>
+            </a>
         </div>
 
         <!-- Right Controls: Bulletproof Search & Language Switcher -->
@@ -2102,9 +2105,73 @@
                     <span style="font-family: ui-monospace, monospace; font-size: 9px; padding: 2px 6px; background: rgba(236, 72, 153, 0.1); color: #db2777; border: 1px solid rgba(236, 72, 153, 0.3);">CLOUD SYNC</span>
                 </div>
                 <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
-                    <div>• <strong>Per-Project Isolation</strong>: Nama folder kustom (misal: <code>htctranslator</code>) disimpan pada kolom <code>scaffold_workspace_folder</code> di database.</div>
+                    <div>• <strong>Per-Project Isolation</strong>: Nama folder kustom (misal: <code>my-app-workspace</code>) disimpan pada kolom <code>scaffold_workspace_folder</code> di database.</div>
                     <div>• <strong>Zero Cross-Project Collision</strong>: Beralih antar-proyek tidak akan menimpa nama folder proyek lain.</div>
                     <div>• <strong>24h Asynchronous Artifact Center</strong>: Antrean berkas latar belakang (ZIP Starter Kit 22+ file, PDF, MD) ber-ticker retensi.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SECTION 22: CV PRO ULTIMATE 8-PILLAR STUDIO & UNIVERSAL SUPERADMIN BYPASS -->
+    <!-- ========================================================================= -->
+    <div id="sec-cv-pro-ultimate" class="sg-card" x-show="matchesSearch('cv pro ultimate 8 pilar deterministic ats parser emulator workday greenhouse google xyz typst vector case study zero hallucination osint blind hiring rirekisho lebenslauf universal superadmin bypass rp 0')" style="border-top: 3px solid #10b981;">
+        <div class="sg-section-header">
+            <span class="sg-step-badge" style="background: rgba(16, 185, 129, 0.15); color: #059669; border-color: rgba(16, 185, 129, 0.4);">SECTION 22 // FLAGSHIP PRODUCT 02 &amp; UNIVERSAL BYPASS</span>
+            <h2 class="sg-section-title">CV Pro Ultimate 8-Pillar Architecture (design CV.MD), Unit Economics (&gt;92% Margin) &amp; Universal Superadmin Bypass</h2>
+        </div>
+
+        <p style="font-size: 13px; color: var(--sg-text-body); margin-bottom: 18px; line-height: 1.65;">
+            Selain <strong>Project OS (Produk Flagship 01)</strong>, Neriah Pro kini mengoperasikan <strong>CV Pro Ultimate Studio (Produk Flagship 02 — <code>/cv-pro</code>)</strong> sebagai mesin akuisisi B2C/B2B bervolume tinggi dengan <strong>Gross Margin &gt;92%</strong>. Seluruh 8 Pilar Strategis &amp; cetak biru <code>design CV.MD</code> telah dikunci secara deterministik serta terintegrasi ke RAG, CAG, KAG, Audit Log SHA-256, dan RBAC.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 18px;">
+            <div class="sg-subcard" style="border-left: 3px solid #10b981;">
+                <strong style="color: #059669; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 6px;">01. DETERMINISTIC HYBRID ATS &amp; PARSER EMULATOR</strong>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    • <strong>Zero-LLM Mathematical Formula</strong>: <code>Total = (0.30 × Keyword TF-IDF) + (0.25 × Action Verb &amp; Quantified Impact) + (0.25 × Structural Integrity) + (0.20 × Flesch Readability)</code>.<br>
+                    • <strong>Workday &amp; Greenhouse Emulator</strong>: Simulasi pembacaan teks linear bot ATS enterprise, mendeteksi risiko gagal baca akibat tabel/kolom ganda.
+                </div>
+            </div>
+
+            <div class="sg-subcard" style="border-left: 3px solid #06b6d4;">
+                <strong style="color: #0891b2; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 6px;">02. COMPANY OSINT &amp; GOOGLE XYZ FORMULA</strong>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    • <strong>Company OSINT Tailoring</strong>: Ekstraksi sinyal tech stack perusahaan target, ekspektasi budaya rekayasa, kata kunci prioritas, dan <em>Bespoke 3-Sentence Micro-Pitch</em>.<br>
+                    • <strong>Google XYZ Rewriter</strong>: Menulis ulang poin pengalaman menjadi standar eksekutif Google: <em>“Accomplished [X] as measured by [Y], by doing [Z]”</em>.
+                </div>
+            </div>
+
+            <div class="sg-subcard" style="border-left: 3px solid #8b5cf6;">
+                <strong style="color: #7c3aed; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 6px;">03. TYPST DETERMINISTIC VECTOR PDF ENGINE</strong>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    • <strong>Anti-Orphan Layout Compiler</strong>: Menghasilkan kode sumber <code>.typ</code> (Typst v0.12) dengan penguncian <code>#block(breakable: false)</code> sehingga judul jabatan tidak pernah terpisah gantung di halaman berikutnya.<br>
+                    • <strong>100% Machine-Readable PDF Layer</strong>: Bebas bug pemotongan DOM browser <code>html2pdf</code>.
+                </div>
+            </div>
+
+            <div class="sg-subcard" style="border-left: 3px solid #f59e0b;">
+                <strong style="color: #d97706; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 6px;">04. ZERO-HALLUCINATION CASE STUDY ARCHITECT</strong>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    • <strong>4-Act Executive Case Study</strong>: Mengubah bullet CV menjadi <em>The Challenge, Strategic Approach, Execution &amp; Architecture, Measurable Impact</em>.<br>
+                    • <strong>Zero-Hallucination Guardrail</strong>: AI dilarang mengarang persentase palsu; metrik yang belum terverifikasi otomatis diberi placeholder <code>[Isi persentase/angka dampak di sini]</code> + pemetaan widget (<code>before_after_slider</code>, <code>architecture_flow</code>, <code>metric_counter_grid</code>).
+                </div>
+            </div>
+
+            <div class="sg-subcard" style="border-left: 3px solid #3b82f6;">
+                <strong style="color: #2563eb; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 6px;">05. RAG RECRUITER CHATBOT &amp; DUAL-VIEW PORTFOLIO</strong>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    • <strong>Interactive Co-Browsing RAG</strong>: Perekrut dapat bertanya langsung kepada AI kandidat dan halaman otomatis melakukan <code>scroll_to_section</code> ke bukti proyek relevan.<br>
+                    • <strong>Dual-View Switcher (&lt;15s Speed-View)</strong>: Sakelar instan antara <em>Interactive Web View</em> (4 MVP: Minimalist Swiss, Bento Grid, Terminal CLI, Editorial) dan <em>Recruiter Speed-View</em>.
+                </div>
+            </div>
+
+            <div class="sg-subcard" style="border-left: 3px solid #ec4899;">
+                <strong style="color: #db2777; font-size: 12px; text-transform: uppercase; display: block; margin-bottom: 6px;">06. DEI BLIND HIRING, GLOBAL LOCALE &amp; VIP BYPASS</strong>
+                <div style="font-size: 11px; color: var(--sg-text-body); line-height: 1.5;">
+                    • <strong>1-Click Blind Hiring &amp; Global Format</strong>: Anonimisasi PII (<code>CANDIDATE #NP-XXXX</code>) dan lokalisasi US/Global ATS, Jerman <em>Lebenslauf</em>, &amp; Jepang <em>Rirekisho</em>.<br>
+                    • <strong>Universal Superadmin Bypass (Rp 0)</strong>: Method <code>User::hasUniversalSuperadminBypass()</code> &amp; permission <code>bypass_all_payment_gates</code> menjamin Superadmin mengakses Project OS, CV Pro (<code>POST /api/cv-pro/vip-bypass</code>), dan seluruh produk masa depan 100% gratis tanpa bayar.
                 </div>
             </div>
         </div>
@@ -2427,7 +2494,7 @@ function smartGuideApp() {
         },
 
         initScrollSpy() {
-            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze', 'sec-v8-inclusive-security', 'sec-v9-agentshield-codesign-audit', 'sec-v10-dual-zone-aniwall-saas', 'sec-v11-seo-geo-paripurna', 'sec-v12-progressive-disclosure'];
+            const sections = ['sec-overview', 'sec-cogs', 'sec-pay-per-project', 'sec-simulator', 'sec-matrix', 'sec-playbook', 'sec-factory-pillars', 'sec-sectoral-ui', 'sec-killer-moat', 'sec-day2-ultimate', 'sec-lifecycle-studio', 'sec-mitra-commercial-bridge', 'sec-v6-deterministic-guarantees', 'sec-v7-realworld-freeze', 'sec-v8-inclusive-security', 'sec-v9-agentshield-codesign-audit', 'sec-v10-dual-zone-aniwall-saas', 'sec-v11-seo-geo-paripurna', 'sec-v12-progressive-disclosure', 'sec-cv-pro-ultimate'];
             window.addEventListener('scroll', () => {
                 let current = this.activeSection;
                 for (const id of sections) {

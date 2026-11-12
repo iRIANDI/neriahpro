@@ -135,6 +135,9 @@ class AgenticActionExecutionEngine
                 'verify_biometric_face_vector' => $this->verifyBiometricFaceVector($args),
                 'evaluate_geofence_and_spatial_presence' => $this->evaluateGeofenceAndSpatialPresence($args, $user),
                 'purge_biometric_vector_right_to_erasure' => $this->guardMutation($user, $toolName) ?? $this->purgeBiometricVectorRightToErasure($args, $user),
+                'evaluate_cv_deterministic_ats_and_emulator' => $this->evaluateCvDeterministicAtsAndEmulator($args),
+                'execute_cv_case_study_and_osint_tailor' => $this->executeCvCaseStudyAndOsintTailor($args),
+                'verify_universal_superadmin_bypass' => $this->verifyUniversalSuperadminBypass($args, $user),
                 default => ['error' => "Tool {$toolName} tidak dikenal oleh sistem."],
             };
 
@@ -615,6 +618,12 @@ class AgenticActionExecutionEngine
             'privacy_erasure_requests_count' => Schema::hasTable('pos_privacy_erasure_requests')
                 ? PosPrivacyErasureRequest::query()->count()
                 : 0,
+            'total_resumes_count' => Schema::hasTable('resumes')
+                ? Resume::query()->count()
+                : 0,
+            'cv_pro_pillars_count' => 8,
+            'flagship_products_count' => 2,
+            'universal_superadmin_bypass_supported' => true,
             'native_tools_count' => count(GeminiToolRegistry::getDeclarations()),
         ];
     }
@@ -2744,6 +2753,168 @@ class AgenticActionExecutionEngine
             'status' => 'REVOKED_FORGOTTEN',
             'statutory_reference' => 'UU PDP No. 27/2022 Pasal 8 (Hak Penghentian Pemrosesan & Penghapusan)',
             'forensic_audit_hash' => $auditHash,
+        ];
+    }
+
+    /**
+     * Evaluasi CV Pro Ultimate: Deterministic Hybrid ATS Scorer & Workday/Greenhouse Parser Emulator.
+     */
+    protected function evaluateCvDeterministicAtsAndEmulator(array $args): array
+    {
+        $resumeLookup = trim((string) ($args['resume_id'] ?? ''));
+        $jobDesc = (string) ($args['job_description'] ?? '');
+        $lang = (string) ($args['lang'] ?? 'id');
+
+        $resume = null;
+        if ($resumeLookup !== '' && Schema::hasTable('resumes')) {
+            $resume = Resume::where('id', $resumeLookup)->orWhere('slug', $resumeLookup)->first();
+        } elseif (Schema::hasTable('resumes')) {
+            $resume = Resume::orderBy('updated_at', 'desc')->first();
+        }
+
+        $content = $resume?->content ?? [
+            'personal_info' => [
+                'full_name' => 'Kandidat Profesional Neriah Pro',
+                'title' => 'Principal Software Architect',
+                'email' => 'candidate@example.com',
+                'phone' => '+62 812-0000-0000',
+                'location' => 'Jakarta, Indonesia',
+                'summary' => 'Arsitek sistem enterprise dengan spesialisasi skalabilitas O(1), keamanan kriptografi SHA-256, dan efisiensi infrastruktur cloud.',
+            ],
+            'experiences' => [
+                [
+                    'role' => 'Lead Systems Architect',
+                    'company' => 'Enterprise Digital Hub',
+                    'period' => '2023 - Sekarang',
+                    'description' => "• Meningkatkan throughput transaksi sebesar 78% dengan memigrasikan kueri offset ke Keyset Cursor Pagination O(1).\n• Memangkas biaya operasional server sebesar 45% melalui optimasi indeks PostgreSQL dan caching Redis.",
+                ],
+            ],
+            'educations' => [
+                [
+                    'degree' => 'S1 Teknik Informatika',
+                    'school' => 'Institut Teknologi',
+                    'period' => '2016 - 2020',
+                ],
+            ],
+            'skills' => ['Laravel', 'PostgreSQL', 'React', 'System Architecture', 'Docker', 'Redis', 'CI/CD', 'Security Audit'],
+        ];
+
+        $deterministicScore = \App\Services\CvPro\CvAiService::calculateDeterministicAtsScore($content, $jobDesc, $lang);
+        $emulatorResult = \App\Services\CvPro\CvAiService::simulateAtsParser($content, $lang);
+
+        AuditLog::record(
+            action: 'AI_TOOL_CV_DETERMINISTIC_ATS_EVALUATED',
+            model: $resume,
+            newValues: [
+                'overall_score' => $deterministicScore['overall_score'] ?? 0,
+                'parsing_confidence' => $emulatorResult['parsing_confidence'] ?? 0,
+            ],
+            description: 'AI Copilot mengeksekusi Deterministic Hybrid ATS Scorer & Workday/Greenhouse Parser Emulator.',
+            eventCategory: 'cv_pro_studio',
+            sectorCode: 'SECTOR_07_HRTECH_EDUTECH',
+            primitiveCode: 'PRIMITIVE_CV_DETERMINISTIC_ATS',
+            executionChannel: 'AI_COPILOT_TOOL'
+        );
+
+        return [
+            'status' => 'success',
+            'resume_id' => $resume?->id,
+            'resume_title' => $resume?->title ?? 'Sample / Active Resume Payload',
+            'deterministic_ats_score' => $deterministicScore,
+            'ats_parser_emulator' => $emulatorResult,
+        ];
+    }
+
+    /**
+     * Eksekusi fitur AI CV Pro Ultimate (design CV.MD): Case Study Architect, Company OSINT, Google XYZ, Typst, & Portfolio Catalog.
+     */
+    protected function executeCvCaseStudyAndOsintTailor(array $args): array
+    {
+        $operation = strtolower(trim((string) ($args['operation'] ?? 'case_study_convert')));
+        $company = (string) ($args['company'] ?? 'Enterprise Tech Corp');
+        $role = (string) ($args['role'] ?? 'Senior Software Engineer');
+        $text = (string) ($args['bullet_or_description'] ?? 'Merancang ulang arsitektur microservice dan meningkatkan keandalan sistem pembayaran.');
+        $lang = (string) ($args['lang'] ?? 'id');
+
+        $output = match ($operation) {
+            'company_osint' => \App\Services\CvPro\CvAiService::runCompanyOsint($company, $role, $text, [], $lang),
+            'google_xyz' => \App\Services\CvPro\CvAiService::rewriteGoogleXyz($text, $role, $lang),
+            'typst_export' => \App\Services\CvPro\CvAiService::generateTypstSource([
+                'personal_info' => ['full_name' => 'Professional Candidate', 'title' => $role],
+                'experiences' => [['role' => $role, 'company' => $company, 'period' => '2024 - Present', 'description' => $text]],
+            ], ['blind_hiring' => false]),
+            'portfolio_catalog' => \App\Services\CvPro\CvAiService::getPortfolioStyleCatalog(),
+            default => \App\Services\CvPro\CvAiService::convertExperienceToCaseStudy([
+                'role' => $role,
+                'company' => $company,
+                'period' => '2024 - Present',
+                'description' => $text,
+            ], $lang),
+        };
+
+        AuditLog::record(
+            action: 'AI_TOOL_CV_ULTIMATE_PILLAR_EXECUTED',
+            newValues: [
+                'operation' => $operation,
+                'company' => $company,
+                'role' => $role,
+            ],
+            description: "AI Copilot menjalankan operasi CV Pro Ultimate '{$operation}' untuk posisi {$role} ({$company}).",
+            eventCategory: 'cv_pro_studio',
+            sectorCode: 'SECTOR_07_HRTECH_EDUTECH',
+            primitiveCode: 'PRIMITIVE_CV_CASE_STUDY_ARCHITECT',
+            executionChannel: 'AI_COPILOT_TOOL'
+        );
+
+        return [
+            'status' => 'success',
+            'operation' => $operation,
+            'result' => $output,
+        ];
+    }
+
+    /**
+     * Verifikasi & Aktivasi Universal Superadmin Bypass (Rp 0 Tanpa Bayar) lintas Project OS, CV Pro, dan modul masa depan.
+     */
+    protected function verifyUniversalSuperadminBypass(array $args, ?User $user): array
+    {
+        $moduleCode = strtoupper(trim((string) ($args['module_code'] ?? 'ALL_MODULES')));
+        $activateCvPro = (bool) ($args['activate_cv_pro_vip'] ?? false);
+
+        $isSuperadmin = $user && $user->hasUniversalSuperadminBypass($moduleCode);
+        $cvQuotaPayload = null;
+
+        if ($isSuperadmin && $user && ($activateCvPro || in_array($moduleCode, ['ALL_MODULES', 'CV_PRO'], true))) {
+            $quota = \App\Services\CvPro\CvQuotaService::activateSuperadminVipBypass($user, request()?->ip());
+            $cvQuotaPayload = [
+                'tier_code' => $quota->tier_code,
+                'tailor_cv_remaining' => 999999,
+                'mock_interviews_remaining' => 999999,
+                'ats_audits_remaining' => 999999,
+                'linkedin_packs_remaining' => 999999,
+                'outreach_letters_remaining' => 999999,
+                'ai_credits_balance' => $quota->ai_credits_balance,
+            ];
+        }
+
+        return [
+            'status' => 'success',
+            'is_superadmin_bypass_eligible' => (bool) $isSuperadmin,
+            'module_code' => $moduleCode,
+            'entitlement_payload' => $user
+                ? $user->getUniversalBypassEntitlementPayload($moduleCode)
+                : [
+                    'is_bypass_active' => false,
+                    'module_code' => $moduleCode,
+                    'tier_code' => 'guest',
+                    'billing_amount_idr' => null,
+                ],
+            'cv_pro_vip_quota' => $cvQuotaPayload,
+            'supported_endpoints' => [
+                'project_os_vip_bypass' => 'POST /blueprint/{slug}/vip-owner-bypass',
+                'cv_pro_vip_bypass' => 'POST /api/cv-pro/vip-bypass',
+                'future_modules_gate' => 'User::hasUniversalSuperadminBypass(?string $moduleCode)',
+            ],
         ];
     }
 

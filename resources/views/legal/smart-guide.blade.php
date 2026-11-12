@@ -49,7 +49,7 @@
                 activeTab: 'overview',
                 init() {
                     const hash = window.location.hash.replace('#', '');
-                    const validTabs = ['overview', 'retail', 'studio', 'sla', 'factory'];
+                    const validTabs = ['overview', 'retail', 'studio', 'sla', 'factory', 'cv_pro'];
                     if (validTabs.includes(hash)) {
                         this.activeTab = hash;
                     }
@@ -169,6 +169,14 @@
                 class="px-4 py-2 font-mono text-xs font-bold border transition rounded-none cursor-pointer"
             >
                 {{ $isEn ? '5. 20 Pillars Factory OS V12.0' : '5. Arsitektur 20 Pilar Factory OS V12.0' }}
+            </button>
+            <button 
+                type="button"
+                @click="setTab('cv_pro')" 
+                :class="activeTab === 'cv_pro' ? 'bg-emerald-600 text-black dark:bg-emerald-400 dark:text-black border-emerald-600 dark:border-emerald-400 shadow-xs font-black' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:border-emerald-500'"
+                class="px-4 py-2 font-mono text-xs font-bold border transition rounded-none cursor-pointer"
+            >
+                {{ $isEn ? '6. CV Pro Ultimate 8-Pillar Studio' : '6. CV Pro Ultimate (8 Pilar Karir & Portofolio)' }}
             </button>
         </div>
 
@@ -673,8 +681,85 @@
                     </div>
                 </div>
             </div>
-                        <strong class="text-zinc-950 dark:text-white font-mono uppercase block">Audit Trail &amp; CCTV</strong>
-                        <p>Pelacakan jejak perubahan model database (Eloquent Auditable trait) dengan rekaman JSON diff sebelum/sesudah, metadata aktor, alamat IP, dan AiWorkflowTracer.</p>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- TAB 6: CV PRO ULTIMATE 8-PILLAR CAREER & WEB PORTFOLIO STUDIO     -->
+        <!-- ================================================================= -->
+        <div x-show="activeTab === 'cv_pro'" x-cloak class="space-y-8">
+            <div class="p-6 sm:p-8 bg-white dark:bg-zinc-900 border-2 border-emerald-500 dark:border-emerald-600 rounded-none shadow-xs space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                    <div>
+                        <span class="px-2.5 py-1 bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200 dark:border-emerald-700 font-mono text-[10px] font-black uppercase">
+                            {{ $isEn ? 'FLAGSHIP PRODUCT 02 // 8-PILLAR AI CAREER & PORTFOLIO ENGINE' : 'PRODUK UNGGULAN 02 // STUDIO KARIR AI & PORTOFOLIO WEB 8 PILAR' }}
+                        </span>
+                        <h2 class="mt-2 text-xl sm:text-2xl font-black uppercase text-zinc-950 dark:text-white">
+                            {{ $isEn ? 'CV Pro Ultimate: Engineered to Outperform Global ATS & Impress Executive Recruiters' : 'CV Pro Ultimate: Dirancang untuk Menaklukkan Bot ATS Global & Memikat Perekrut Eksekutif' }}
+                        </h2>
+                    </div>
+                    <a href="/cv-pro" class="px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 text-white dark:bg-emerald-500 dark:hover:bg-emerald-400 dark:text-zinc-950 font-mono text-xs font-black uppercase rounded-none transition">
+                        {{ $isEn ? 'LAUNCH CV PRO STUDIO ->' : 'BUKA STUDIO CV PRO ->' }}
+                    </a>
+                </div>
+
+                <p class="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-sans">
+                    {{ $isEn
+                        ? 'Most candidates fail not because they lack talent, but because legacy PDF builders produce broken layouts that get rejected by enterprise Applicant Tracking Systems (Workday, Greenhouse, Taleo) or fail to capture a hiring manager’s attention within the critical first 15 seconds. CV Pro Ultimate combines mathematical ATS determinism with an interactive Dual-View Web Portfolio.'
+                        : 'Mayoritas kandidat gagal bukan karena kurangnya kompetensi, melainkan karena pembuat CV konvensional menghasilkan dokumen yang gagal dibaca oleh mesin seleksi perusahaan (Workday, Greenhouse, Taleo) atau gagal memikat perhatian Manajer HR dalam 15 detik pertama. CV Pro Ultimate memadukan kepastian rumus matematis ATS dengan Portofolio Web Dual-View berstandar global.'
+                    }}
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                        <span class="font-mono text-[10px] font-black uppercase text-emerald-800 dark:text-emerald-300">PILAR 01 &amp; 02 // PRECISION ATS &amp; OSINT</span>
+                        <h3 class="text-sm font-black uppercase text-zinc-950 dark:text-white">
+                            {{ $isEn ? 'Deterministic ATS Scorer, Parser Emulator & Company OSINT' : 'Skor ATS Deterministik, Emulator Bot HR & Riset OSINT Perusahaan' }}
+                        </h3>
+                        <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            {{ $isEn
+                                ? 'Evaluates your resume with an objective 4-weighted mathematical formula (Keyword TF-IDF 30%, Quantified Impact 25%, Structure 25%, Readability 20%), previews exact plaintext extraction from Workday/Greenhouse, and tailors your pitch using Company OSINT & the Google XYZ Formula.'
+                                : 'Mengevaluasi CV Anda dengan rumus matematis objektif 4 bobot (Kata Kunci TF-IDF 30%, Dampak Kuantitatif 25%, Struktur 25%, Keterbacaan 20%), menampilkan simulasi teks mentah yang dibaca mesin Workday/Greenhouse, serta menyelaraskan pencapaian Anda menggunakan rumus Google XYZ & riset OSINT perusahaan target.'
+                            }}
+                        </p>
+                    </div>
+
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                        <span class="font-mono text-[10px] font-black uppercase text-cyan-800 dark:text-cyan-300">PILAR 03 &amp; 04 // ZERO-HALLUCINATION &amp; TYPST</span>
+                        <h3 class="text-sm font-black uppercase text-zinc-950 dark:text-white">
+                            {{ $isEn ? 'Zero-Hallucination Case Study Architect & Typst Vector PDF' : 'Arsitek Studi Kasus Anti-Halusinasi & Mesin Vektor Typst (.typ)' }}
+                        </h3>
+                        <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            {{ $isEn
+                                ? 'Transforms bullet points into 4-Act Executive Case Studies (Challenge, Strategy, Execution, Impact) without inventing fake numbers—using honest verification placeholders and interactive widgets—while exporting anti-orphan Typst vector source code.'
+                                : 'Mengubah poin pengalaman kerja menjadi Studi Kasus Eksekutif 4 Babak (Tantangan, Strategi, Eksekusi, Dampak Terukur) tanpa mengarang angka fiktif—menggunakan penanda verifikasi jujur dan widget visual interaktif—serta mengekspor kode cetak vektor Typst bebas pemotongan halaman gantung.'
+                            }}
+                        </p>
+                    </div>
+
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                        <span class="font-mono text-[10px] font-black uppercase text-amber-800 dark:text-amber-300">PILAR 05 &amp; 06 // DUAL-VIEW &amp; RAG CO-BROWSING</span>
+                        <h3 class="text-sm font-black uppercase text-zinc-950 dark:text-white">
+                            {{ $isEn ? '10 Visual Portfolio Styles, <15s Speed-View & AI Recruiter Chat' : '10 Gaya Visual Portofolio, Mode Baca Cepat <15 Detik & AI Recruiter Chat' }}
+                        </h3>
+                        <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            {{ $isEn
+                                ? 'Switch seamlessly between full interactive web storytelling (Minimalist Swiss, Bento Grid, CLI Terminal, Editorial) and a 1-page Recruiter Speed-View, equipped with a 24/7 RAG AI Assistant that co-browses and scrolls recruiters directly to your best work.'
+                                : 'Beralih instan antara tampilan web interaktif (Minimalist Swiss, Bento Grid, Terminal Developer, Editorial) dan mode Recruiter Speed-View 1 halaman, dilengkapi Asisten AI RAG 24/7 yang menjawab pertanyaan perekrut dan menggulir layar otomatis ke bukti proyek Anda.'
+                            }}
+                        </p>
+                    </div>
+
+                    <div class="p-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                        <span class="font-mono text-[10px] font-black uppercase text-purple-800 dark:text-purple-300">PILAR 07 &amp; 08 // GLOBAL FORMATS &amp; UU PDP PRIVACY</span>
+                        <h3 class="text-sm font-black uppercase text-zinc-950 dark:text-white">
+                            {{ $isEn ? 'DEI Blind Hiring, Global Localization & UU PDP Right to Erasure' : 'Mode Blind Hiring DEI, Lokalisasi Format Dunia & Kepatuhan UU PDP' }}
+                        </h3>
+                        <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            {{ $isEn
+                                ? 'One-click PII anonymization for unbiased DEI evaluations, instant localization to US/Global ATS, German Lebenslauf, and Japanese Rirekisho standards, backed by 100% UU PDP No. 27/2022 Right to Erasure data protection.'
+                                : 'Anonimisasi identitas 1-klik untuk seleksi objektif bebas bias (DEI Blind Hiring), adaptasi otomatis ke format US/Global ATS, Lebenslauf Jerman, dan Rirekisho Jepang, serta jaminan penghapusan data permanen sesuai UU PDP No. 27/2022.'
+                            }}
+                        </p>
                     </div>
                 </div>
             </div>

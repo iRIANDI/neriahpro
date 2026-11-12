@@ -68,8 +68,8 @@ class SmartGuideRetentionPage extends Page
     public function getSubheading(): string|Htmlable|null
     {
         return app()->getLocale() === 'en'
-            ? 'Executive Business & Engineering Playbook (Project OS v12.0 Progressive Disclosure & Paripurna Edition): Satu Pintu SaaS Commercial Gate, Progressive Disclosure Flow, Zero-Leak Server Gate, 12-Sector SEO/GEO Authority (/llms.txt + Multi-Graph Schema.org), UU PDP Privacy Vault, Offline Outbox PWA, Post-BAST SLA Warranty, Holding Consolidation & 45 Native AI Tools.'
-            : 'Dokumentasi Rahasia Bisnis & Operasional Neriah Pro (Project OS v12.0 Progressive Disclosure & Paripurna Edition): Gerbang Komersial Satu Pintu SaaS, Progressive Disclosure Flow, Zero-Leak Server Gate, Otoritas SEO/GEO 12 Sektor (/llms.txt + Multi-Graph Schema.org), Brankas Privasi UU PDP, Offline Outbox PWA, Garansi SLA Pasca-BAST, Konsolidasi Holding & 45 Native AI Tools.';
+            ? 'Executive Business & Engineering Playbook (Dual-Flagship Ecosystem: Project OS v15.0 + CV Pro Ultimate 8-Pillar Studio): Satu Pintu SaaS Commercial Gate, CV Pro Deterministic ATS & Zero-Hallucination Case Study Engine (>92% Margin), Universal Superadmin Rp 0 Bypass, 12-Sector SEO/GEO Authority, UU PDP Privacy Vault & 52 Native AI Tools.'
+            : 'Dokumentasi Rahasia Bisnis & Operasional Neriah Pro (Ekosistem Dual-Flagship: Project OS v15.0 + CV Pro Ultimate 8-Pillar Studio): Gerbang Komersial Satu Pintu SaaS, Mesin ATS Deterministik & Studi Kasus Zero-Hallucination CV Pro (>92% Margin), Universal Superadmin Bypass Rp 0, Otoritas SEO/GEO 12 Sektor, Brankas Privasi UU PDP & 52 Native AI Tools.';
     }
 
     public function getViewData(): array

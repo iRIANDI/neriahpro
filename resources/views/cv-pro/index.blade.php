@@ -83,7 +83,7 @@
     <!-- Global Navigation -->
     <x-global-navigation :global-settings="$globalSettings" />
 
-    <main class="flex-1 pt-14">
+    <main class="flex-1">
         @php
             $currentUser = auth()->user() ? [
                 'id' => auth()->user()->id,

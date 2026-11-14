@@ -73,6 +73,25 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
   // Preview Mode: 'cv' (Dokumen A4 Cetak) | 'portfolio' (Web Portfolio Live)
   const [previewMode, setPreviewMode] = useState('cv');
   const [previewDevice, setPreviewDevice] = useState('desktop');
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) {
+        setExportMenuOpen(false);
+      }
+    };
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') setExportMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
 
   // Accordion State with localStorage persistence
   const [accordionState, setAccordionState] = useState(() => {
@@ -2181,165 +2200,111 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
   return (
     <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans pb-16 transition-colors">
       
-      {/* 1. TOP STUDIO TOOLBAR */}
-      <div className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-14 z-40 px-4 py-2.5 shadow-sm transition-colors">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-          
-          {/* Left: Branding & Tabs */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            <div className="flex items-center gap-2 font-mono text-xs font-black uppercase">
-              <span className="w-5 h-5 bg-indigo-600 text-white flex items-center justify-center font-bold text-[11px]">CV</span>
-              <span className="hidden sm:inline">CV PRO // STUDIO</span>
+      {/* 1. TOP STUDIO TOOLBAR (DOCKED FLUSH UNDER GLOBAL TOPBAR & CONCEPTUALLY GROUPED) */}
+      <div
+        className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky z-40 shadow-xs transition-colors"
+        style={{ top: 'var(--global-nav-h, 88px)' }}
+      >
+        {/* BAND 1: PRIMARY WORKFLOW TABS & PUBLISHING / QUOTA HUB */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 flex flex-wrap xl:flex-nowrap items-center justify-between gap-2.5">
+          {/* Left: Branding & 5 Core Workflow Tabs */}
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 overflow-x-auto">
+            <div className="flex items-center gap-2 font-mono text-xs font-black uppercase shrink-0">
+              <span className="w-5 h-5 bg-indigo-600 text-white flex items-center justify-center font-bold text-[11px] rounded-none">CV</span>
+              <span className="hidden md:inline whitespace-nowrap text-zinc-950 dark:text-white">CV PRO // STUDIO</span>
             </div>
 
-            <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700 hidden sm:block"></div>
+            <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700 hidden md:block shrink-0" />
 
             {/* Navigation Tabs */}
-            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-0.5 border border-zinc-200 dark:border-zinc-700 text-xs font-medium">
+            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-0.5 border border-zinc-300 dark:border-zinc-700 text-xs font-medium shrink-0 rounded-none">
               <button
+                type="button"
                 onClick={() => setActiveTab('editor')}
-                className={`px-3 py-1 flex items-center gap-1.5 transition ${activeTab === 'editor' ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
+                className={`px-2.5 py-1 flex items-center gap-1.5 whitespace-nowrap transition cursor-pointer rounded-none ${activeTab === 'editor' ? 'bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-300 font-bold shadow-xs' : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70'}`}
               >
-                <Layout className="w-3.5 h-3.5" />
-                <span>Editor & Preview</span>
+                <Layout className="w-3.5 h-3.5 shrink-0" />
+                <span>Editor &amp; Preview</span>
               </button>
 
               <button
+                type="button"
                 onClick={() => setActiveTab('job_hub')}
-                className={`px-3 py-1 flex items-center gap-1.5 transition ${activeTab === 'job_hub' ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
+                className={`px-2.5 py-1 flex items-center gap-1.5 whitespace-nowrap transition cursor-pointer rounded-none ${activeTab === 'job_hub' ? 'bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-300 font-bold shadow-xs' : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70'}`}
               >
-                <Briefcase className="w-3.5 h-3.5" />
-                <span>Job Hub & Pelacak</span>
-                <span className="px-1.5 py-0.2 text-[10px] font-mono bg-zinc-200 dark:bg-zinc-700 rounded-none">
+                <Briefcase className="w-3.5 h-3.5 shrink-0" />
+                <span>Job Hub</span>
+                <span className="px-1.5 py-0.2 text-[10px] font-mono font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 rounded-none">
                   {jobs.length}
                 </span>
               </button>
 
-
-
               <button
+                type="button"
                 onClick={() => { setActiveTab('ats_audit'); runAtsAudit(); }}
-                className={`px-3 py-1 flex items-center gap-1.5 transition ${activeTab === 'ats_audit' ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
+                className={`px-2.5 py-1 flex items-center gap-1.5 whitespace-nowrap transition cursor-pointer rounded-none ${activeTab === 'ats_audit' ? 'bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-300 font-bold shadow-xs' : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70'}`}
               >
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
                 <span>AI ATS Audit</span>
-                <span className={`px-1.5 py-0.2 text-[10px] font-mono font-bold ${atsScore >= 80 ? 'bg-emerald-500 text-black' : (atsScore >= 60 ? 'bg-amber-500 text-black' : 'bg-rose-500 text-white')}`}>
+                <span className={`px-1.5 py-0.2 text-[10px] font-mono font-black rounded-none ${atsScore >= 80 ? 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700' : (atsScore >= 60 ? 'bg-amber-100 text-amber-950 border border-amber-400 dark:bg-amber-950/90 dark:text-amber-200 dark:border-amber-700' : 'bg-rose-100 text-rose-950 border border-rose-400 dark:bg-rose-950/90 dark:text-rose-200 dark:border-rose-700')}`}>
                   {atsScore}%
                 </span>
               </button>
 
               <button
+                type="button"
                 onClick={() => setActiveTab('mock_interview')}
-                className={`px-3 py-1 flex items-center gap-1.5 transition ${activeTab === 'mock_interview' ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
+                className={`px-2.5 py-1 flex items-center gap-1.5 whitespace-nowrap transition cursor-pointer rounded-none ${activeTab === 'mock_interview' ? 'bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-300 font-bold shadow-xs' : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70'}`}
               >
-                <Mic className="w-3.5 h-3.5" />
+                <Mic className="w-3.5 h-3.5 shrink-0" />
                 <span>Mock Interview</span>
               </button>
 
               <button
+                type="button"
                 onClick={() => setActiveTab('outreach')}
-                className={`px-3 py-1 flex items-center gap-1.5 transition ${activeTab === 'outreach' ? 'bg-white dark:bg-zinc-900 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}
+                className={`px-2.5 py-1 flex items-center gap-1.5 whitespace-nowrap transition cursor-pointer rounded-none ${activeTab === 'outreach' ? 'bg-white dark:bg-zinc-900 text-indigo-900 dark:text-indigo-300 font-bold shadow-xs' : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-200/70 dark:hover:bg-zinc-700/70'}`}
               >
-                <Mail className="w-3.5 h-3.5" />
+                <Mail className="w-3.5 h-3.5 shrink-0" />
                 <span>Outreach Suite</span>
               </button>
             </div>
           </div>
 
-          {/* Right: Actions */}
-          <div className="flex items-center gap-2">
+          {/* Right: Tier Quota, Save, VIP & Export Hub */}
+          <div className="flex items-center gap-1.5 shrink-0">
             {saveSuccessMessage && (
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium animate-pulse flex items-center gap-1">
-                <Check className="w-3.5 h-3.5 inline" /> {saveSuccessMessage}
+              <span className="text-xs text-emerald-900 dark:text-emerald-300 font-bold flex items-center gap-1 whitespace-nowrap px-2 py-1 bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 rounded-none">
+                <Check className="w-3.5 h-3.5 shrink-0" /> {saveSuccessMessage}
               </span>
             )}
 
-            {/* Tour Guide Button */}
-            <button
-              onClick={() => { setTourStep(0); setTourModalOpen(true); }}
-              id="start-tour-btn"
-              className="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition flex items-center gap-1.5 shadow-sm rounded-none"
-              title="Mulai panduan interaktif seluruh fitur CV Pro"
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Panduan Tur</span>
-            </button>
-
-            {/* Blind Hiring Anonymizer Toggle */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsAnonymized(!isAnonymized);
-                showLocalToast('info', !isAnonymized ? 'Mode Blind Hiring Aktif: Identitas personal disembunyikan (Anti-Bias).' : 'Mode Blind Hiring Nonaktif: Identitas penuh ditampilkan.', 'BLIND HIRING');
-              }}
-              className={`px-2.5 py-1.5 border text-xs font-mono font-bold transition flex items-center gap-1.5 rounded-none cursor-pointer ${
-                isAnonymized
-                  ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-950 dark:text-emerald-200 border-emerald-400 dark:border-emerald-700'
-                  : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200'
-              }`}
-              title="Mode 1-Klik Blind Hiring untuk menyembunyikan nama, foto, dan kontak sensitif"
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline">{isAnonymized ? 'Blind Hiring: ON' : 'Blind Hiring: OFF'}</span>
-            </button>
-
-            {/* Deterministic Page-Break Density Switcher */}
-            <select
-              value={pdfDensity}
-              onChange={(e) => setPdfDensity(e.target.value)}
-              className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono font-bold px-2 py-1.5 rounded-none cursor-pointer"
-              title="Pengatur Kerapatan Spasi Mikro (Deterministic Page-Break Engine)"
-            >
-              <option value="compact">Density: Compact (1 Hal Aman)</option>
-              <option value="normal">Density: Normal (Standar)</option>
-              <option value="relaxed">Density: Relaxed (Eksekutif)</option>
-            </select>
-
-            {/* Global Format Localization */}
-            <select
-              value={globalFormat}
-              onChange={(e) => handleSwitchGlobalFormat(e.target.value)}
-              className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 text-xs font-mono font-bold px-2 py-1.5 rounded-none cursor-pointer hidden md:block"
-              title="Global Format Localization (US ATS / German Lebenslauf / Japanese Rirekisho)"
-            >
-              <option value="us_ats">Format: US / Global ATS</option>
-              <option value="de_lebenslauf">Format: DE Lebenslauf</option>
-              <option value="jp_rirekisho">Format: JP Rirekisho</option>
-            </select>
-
-            {/* Typst Compiler Source Export */}
-            <button
-              type="button"
-              onClick={handleDownloadTypst}
-              disabled={exportingTypst}
-              className="px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-950 border border-zinc-700 text-xs font-mono font-bold transition flex items-center gap-1.5 rounded-none cursor-pointer hover:opacity-90"
-              title="Unduh kode sumber Typst (.typ) dengan proteksi Anti-Orphan #block(breakable: false)"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline">{exportingTypst ? 'Exporting...' : '.TYP ATS'}</span>
-            </button>
-
-            {/* Transcript Paste Button */}
-            <button
-              onClick={() => setTranscriptModalOpen(true)}
-              id="open-transcript-modal-btn"
-              className="px-2.5 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700 text-xs font-bold transition flex items-center gap-1.5 shadow-sm rounded-sm"
-              title="Tempel transkrip wawancara untuk evaluasi AI STAR"
-            >
-              <FileText className="w-3.5 h-3.5 text-blue-500" />
-              <span className="hidden md:inline">Evaluasi Transkrip</span>
-            </button>
-
-            {/* Plan Tier & AI Quota Badge */}
-            <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-none text-xs">
-              <span className="font-mono text-[10px] font-bold text-amber-600 dark:text-amber-400">
-                {currentUser?.is_super_admin || userQuota?.tier_code === 'vip_superadmin_bypass' ? 'VIP SUPERADMIN BYPASS (RP 0)' : (userQuota?.tier_code ? userQuota.tier_code.toUpperCase() : 'STARTER FREE')}
-              </span>
-              <span className="text-zinc-400">•</span>
-              <span className="font-mono text-[10px] text-zinc-600 dark:text-zinc-300 flex items-center gap-0.5" title="Kredit AI Tersisa">
-                <Zap className="w-3 h-3 text-amber-500" />
-                {currentUser?.is_super_admin || userQuota?.tier_code === 'vip_superadmin_bypass' ? '∞' : (userQuota?.ai_credits_balance ?? 0)}
-              </span>
+            {/* Plan Tier & Quota Unified Pill */}
+            <div className="inline-flex items-stretch border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 rounded-none overflow-hidden">
+              <div
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 font-mono text-[10px] font-black text-zinc-900 dark:text-zinc-100 whitespace-nowrap"
+                title="Paket Aktif & Sisa Kredit AI"
+              >
+                <span className="text-amber-950 dark:text-amber-200">
+                  {currentUser?.is_super_admin || userQuota?.tier_code === 'vip_superadmin_bypass'
+                    ? 'VIP BYPASS'
+                    : (userQuota?.tier_code ? userQuota.tier_code.toUpperCase() : 'FREE')}
+                </span>
+                <span className="text-zinc-400">&bull;</span>
+                <span className="flex items-center gap-0.5 text-zinc-800 dark:text-zinc-200">
+                  <Zap className="w-3 h-3 text-amber-700 dark:text-amber-400 shrink-0" />
+                  {currentUser?.is_super_admin || userQuota?.tier_code === 'vip_superadmin_bypass' ? '∞' : (userQuota?.ai_credits_balance ?? 0)}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setUpgradeModalOpen(true)}
+                className="px-2.5 py-1 bg-amber-300 hover:bg-amber-400 dark:bg-amber-400 dark:hover:bg-amber-300 text-zinc-950 border-l border-zinc-300 dark:border-zinc-700 font-mono text-[11px] font-black uppercase whitespace-nowrap transition flex items-center gap-1 cursor-pointer"
+                title="Beli Kuota AI atau Upgrade Paket Pro"
+              >
+                <Crown className="w-3.5 h-3.5 shrink-0" />
+                <span>Upgrade</span>
+              </button>
             </div>
 
             {currentUser?.is_super_admin && (
@@ -2347,85 +2312,202 @@ export default function CvProStudioIsland({ initialData, featureFlags, currentUs
                 type="button"
                 onClick={handleActivateVipSuperadminBypass}
                 disabled={activatingVipBypass}
-                className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-black font-mono text-[11px] font-black uppercase rounded-none transition flex items-center gap-1 cursor-pointer shadow-xs"
+                className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-black font-mono text-[11px] font-black uppercase rounded-none transition flex items-center gap-1 whitespace-nowrap cursor-pointer shadow-xs"
                 title="1-Klik Bypass Superadmin Tanpa Bayar (Rp 0 Unlimited Semua 8 Pilar CV Pro)"
               >
-                <Crown className="w-3.5 h-3.5 text-black" />
-                <span className="hidden xl:inline">{activatingVipBypass ? 'BYPASSING...' : 'VIP BYPASS RP 0'}</span>
+                <Crown className="w-3.5 h-3.5 text-black shrink-0" />
+                <span>{activatingVipBypass ? 'BYPASSING...' : 'VIP RP 0'}</span>
               </button>
             )}
 
-            {/* Upgrade & Top-up Button */}
             <button
-              onClick={() => setUpgradeModalOpen(true)}
-              className="px-2.5 py-1.5 bg-zinc-950 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-amber-400 dark:text-zinc-950 border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-xs rounded-none cursor-pointer"
-              title="Beli Kuota AI atau Upgrade Paket Pro"
-            >
-              <Crown className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Upgrade / Kuota AI</span>
-              <span className="md:hidden">Upgrade</span>
-            </button>
-
-            {/* Real-Time Voice Copilot Tool Shortcut */}
-            <button
-              onClick={handleOpenRealtimeCopilot}
-              className="px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 text-zinc-100 border border-purple-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
-              title="Buka Asisten Wawancara Real-Time (Voice Copilot)"
-            >
-              <Headphones className="w-3.5 h-3.5 text-purple-400" />
-              <span className="hidden xl:inline">Voice Copilot</span>
-            </button>
-
-            {/* Web Portfolio Tool Shortcut */}
-            <button
-              onClick={handleOpenWebPortfolio}
-              className="px-2.5 py-1.5 bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 text-zinc-100 border border-indigo-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
-              title="Buat Portofolio Web AI dari CV Anda"
-            >
-              <Globe className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="hidden xl:inline">Web Portfolio</span>
-            </button>
-
-            <button
-              onClick={() => setUploadModalOpen(true)}
-              className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-100 border border-zinc-700 text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
-              title="Unggah berkas CV atau scan fisik via Microsoft MarkItDown"
-            >
-              <UploadCloud className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="hidden sm:inline">Scan / Upload CV</span>
-              <span className="sm:hidden">Upload</span>
-            </button>
-
-            <button
+              type="button"
               onClick={handleSaveToCloud}
               disabled={saving}
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 shadow-xs rounded-none cursor-pointer disabled:opacity-50"
             >
-              <Save className="w-3.5 h-3.5" />
+              <Save className="w-3.5 h-3.5 shrink-0" />
               <span>{saving ? 'Menyimpan...' : 'Simpan Cloud'}</span>
             </button>
 
-            {resumeSlug && (
-              <a
-                href={`/cv/${resumeSlug}`}
-                target="_blank"
-                rel="noreferrer"
-                className="px-2.5 py-1.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-mono font-bold transition flex items-center gap-1"
-                title="Buka Halaman Publik"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Preview Link</span>
-              </a>
-            )}
-
             <button
+              type="button"
               onClick={() => window.print()}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-black text-xs font-black whitespace-nowrap transition flex items-center gap-1.5 shadow-xs rounded-none cursor-pointer"
               title="Download PDF via print dialog"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Cetak / PDF</span>
+              <Download className="w-3.5 h-3.5 shrink-0" />
+              <span>Cetak PDF</span>
             </button>
+
+            {/* Export & Public Preview Popover */}
+            <div className="relative" ref={exportMenuRef}>
+              <button
+                type="button"
+                onClick={() => setExportMenuOpen(v => !v)}
+                aria-expanded={exportMenuOpen}
+                className="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 text-xs font-mono font-bold whitespace-nowrap transition flex items-center gap-1 rounded-none cursor-pointer"
+                title="Ekspor Source .TYP & Tautan Publik"
+              >
+                <span>Ekspor</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {exportMenuOpen && (
+                <div className="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 shadow-xl z-50 p-1.5 space-y-1 rounded-none">
+                  <div className="px-2 py-1 text-[10px] font-mono font-black uppercase tracking-wider text-zinc-600 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800">
+                    Ekspor &amp; Publikasi Dokumen
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => { setExportMenuOpen(false); handleDownloadTypst(); }}
+                    disabled={exportingTypst}
+                    className="w-full px-2.5 py-2 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs font-mono font-bold flex items-center justify-between transition rounded-none cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Download className="w-3.5 h-3.5 text-zinc-700 dark:text-zinc-300" />
+                      <span>{exportingTypst ? 'Mengekspor...' : 'Source .TYP ATS'}</span>
+                    </span>
+                    <span className="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200 text-[9px] font-black">ANTI-ORPHAN</span>
+                  </button>
+
+                  {resumeSlug && (
+                    <a
+                      href={`/cv/${resumeSlug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => setExportMenuOpen(false)}
+                      className="w-full px-2.5 py-2 text-left hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs font-mono font-bold flex items-center justify-between transition rounded-none"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Eye className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
+                        <span>Buka Preview Publik</span>
+                      </span>
+                      <ExternalLink className="w-3 h-3 text-zinc-500" />
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* BAND 2: CONCEPTUALLY GROUPED STUDIO UTILITY RAIL */}
+        <div className="border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/90">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 py-1.5 flex flex-wrap lg:flex-nowrap items-center justify-between gap-2">
+            {/* Left Group A & B */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              {/* KONSEP 1: FORMAT & COMPLIANCE */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="hidden xl:inline text-[10px] font-mono font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 mr-0.5">
+                  Format &amp; Privasi:
+                </span>
+
+                <select
+                  value={globalFormat}
+                  onChange={(e) => handleSwitchGlobalFormat(e.target.value)}
+                  className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 dark:hover:border-zinc-500 text-zinc-900 dark:text-zinc-100 text-[11px] font-mono font-bold px-2 py-1 rounded-none cursor-pointer whitespace-nowrap"
+                  title="Global Format Localization (US ATS / German Lebenslauf / Japanese Rirekisho)"
+                >
+                  <option value="us_ats">Format: US / Global ATS</option>
+                  <option value="de_lebenslauf">Format: DE Lebenslauf</option>
+                  <option value="jp_rirekisho">Format: JP Rirekisho</option>
+                </select>
+
+                <select
+                  value={pdfDensity}
+                  onChange={(e) => setPdfDensity(e.target.value)}
+                  className="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-500 dark:hover:border-zinc-500 text-zinc-900 dark:text-zinc-100 text-[11px] font-mono font-bold px-2 py-1 rounded-none cursor-pointer whitespace-nowrap"
+                  title="Pengatur Kerapatan Spasi Mikro (Deterministic Page-Break Engine)"
+                >
+                  <option value="compact">Density: Compact (1 Hal)</option>
+                  <option value="normal">Density: Normal</option>
+                  <option value="relaxed">Density: Relaxed</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAnonymized(!isAnonymized);
+                    showLocalToast('info', !isAnonymized ? 'Mode Blind Hiring Aktif: Identitas personal disembunyikan (Anti-Bias).' : 'Mode Blind Hiring Nonaktif: Identitas penuh ditampilkan.', 'BLIND HIRING');
+                  }}
+                  className={`px-2.5 py-1 border text-[11px] font-mono font-bold whitespace-nowrap transition flex items-center gap-1.5 rounded-none cursor-pointer ${
+                    isAnonymized
+                      ? 'bg-emerald-100 dark:bg-emerald-950/90 text-emerald-950 dark:text-emerald-200 border-emerald-400 dark:border-emerald-700'
+                      : 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-200 border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500'
+                  }`}
+                  title="Mode 1-Klik Blind Hiring untuk menyembunyikan nama, foto, dan kontak sensitif"
+                >
+                  <Shield className="w-3.5 h-3.5 shrink-0" />
+                  <span>{isAnonymized ? 'Blind Hiring: ON' : 'Blind Hiring: OFF'}</span>
+                </button>
+              </div>
+
+              <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-800 hidden lg:block" />
+
+              {/* KONSEP 2: AI COPILOT & CAREER ASSETS */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="hidden xl:inline text-[10px] font-mono font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 mr-0.5">
+                  AI &amp; Karir:
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setUploadModalOpen(true)}
+                  className="px-2.5 py-1 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 text-[11px] font-bold whitespace-nowrap transition flex items-center gap-1.5 rounded-none cursor-pointer"
+                  title="Unggah berkas CV atau scan fisik via Microsoft MarkItDown"
+                >
+                  <UploadCloud className="w-3.5 h-3.5 text-indigo-700 dark:text-indigo-400 shrink-0" />
+                  <span>Scan / Upload CV</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleOpenRealtimeCopilot}
+                  className="px-2.5 py-1 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 hover:border-purple-400 dark:hover:border-purple-500 text-[11px] font-bold whitespace-nowrap transition flex items-center gap-1.5 rounded-none cursor-pointer"
+                  title="Buka Asisten Wawancara Real-Time (Voice Copilot)"
+                >
+                  <Headphones className="w-3.5 h-3.5 text-purple-700 dark:text-purple-400 shrink-0" />
+                  <span>Voice Copilot</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleOpenWebPortfolio}
+                  className="px-2.5 py-1 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 hover:border-indigo-400 dark:hover:border-indigo-500 text-[11px] font-bold whitespace-nowrap transition flex items-center gap-1.5 rounded-none cursor-pointer"
+                  title="Buat Portofolio Web AI dari CV Anda"
+                >
+                  <Globe className="w-3.5 h-3.5 text-indigo-700 dark:text-indigo-400 shrink-0" />
+                  <span>Web Portfolio</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTranscriptModalOpen(true)}
+                  id="open-transcript-modal-btn"
+                  className="px-2.5 py-1 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-300 dark:border-zinc-700 hover:border-blue-400 dark:hover:border-blue-500 text-[11px] font-bold whitespace-nowrap transition flex items-center gap-1.5 rounded-none cursor-pointer"
+                  title="Tempel transkrip wawancara untuk evaluasi AI STAR"
+                >
+                  <FileText className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400 shrink-0" />
+                  <span>Evaluasi Transkrip</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right Group C: Onboarding & Tour Retention */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => { setTourStep(0); setTourModalOpen(true); }}
+                id="start-tour-btn"
+                className="px-2.5 py-1 bg-indigo-100 dark:bg-indigo-950/80 hover:bg-indigo-200 dark:hover:bg-indigo-900 text-indigo-950 dark:text-indigo-200 border border-indigo-400 dark:border-indigo-700 text-[11px] font-bold whitespace-nowrap transition flex items-center gap-1.5 rounded-none cursor-pointer"
+                title="Mulai panduan interaktif seluruh fitur CV Pro"
+              >
+                <HelpCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>Panduan Tur</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

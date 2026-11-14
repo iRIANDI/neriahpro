@@ -47,6 +47,9 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
+  const [pricingDropdownOpen, setPricingDropdownOpen] = useState(false);
+  const [mobilePricingOpen, setMobilePricingOpen] = useState(true);
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(true);
   const [cartDropdownOpen, setCartDropdownOpen] = useState(false);
   const [globalLangOpen, setGlobalLangOpen] = useState(false);
   const [mobileLangOpen, setMobileLangOpen] = useState(false);
@@ -244,13 +247,12 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
 
   const navLinks = [
     { label: lang === 'id' ? 'Beranda' : 'Home', href: '/' },
-    ...(isBlueprintEnabled ? [{ label: 'Project OS (PRD)', href: '/pricing#retail', highlight: true }] : []),
-    ...(isCvProEnabled ? [{ label: lang === 'id' ? 'Studio CV Pro' : 'CV Pro Studio', href: '/cv-pro' }] : []),
-    ...(isPricingEnabled ? [{ label: lang === 'id' ? 'Paket & Harga' : 'Pricing', href: '/pricing' }] : []),
-    ...(hasAnyService ? [{ label: lang === 'id' ? 'Layanan HUB' : 'Service Hub', href: '/#services' }] : []),
+    ...(isPricingEnabled ? [{ label: lang === 'id' ? 'Harga & Paket' : 'Pricing', href: '/pricing', isPricing: true }] : []),
   ];
 
-  // Extract custom dynamic navigation links from settings if defined in backend admin
+  // Extract custom dynamic navigation links from settings if defined in backend admin.
+  // Standalone Project OS & flat Services Hub entries are intentionally filtered out because
+  // Services Hub and Pricing submenus group Project OS & CV Pro cleanly without redundancy.
   const dynamicNavLinks = useMemo(() => {
     if (!settings) return null;
     let rawLinks = [];
@@ -280,19 +282,29 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
       .map(item => {
         const rawLabel = item.label || item.title || '';
         const rawUrl = item.url || item.href || '/';
+        const normalizedUrl = rawUrl.toLowerCase();
+        const normalizedLabel = rawLabel.toLowerCase();
         return {
           label: rawLabel,
           href: rawUrl,
-          highlight: Boolean(item.highlight || rawUrl.includes('pricing#retail') || rawUrl.includes('blueprint')),
+          isPricing: normalizedUrl === '/pricing' || normalizedUrl.startsWith('/pricing?') || normalizedLabel === 'pricing' || normalizedLabel.includes('paket & harga') || normalizedLabel.includes('paket & investasi'),
+          highlight: false,
         };
       })
       .filter(item => {
         const url = (item.href || '').toLowerCase();
-        if (url.includes('cv-pro') && !isCvProEnabled) return false;
-        if (url.includes('blueprint') && !isBlueprintEnabled) return false;
+        const label = (item.label || '').toLowerCase();
+        if (url.includes('pricing#retail') || url === '/blueprint' || label.includes('project os')) return false;
+        if (url.includes('#services') || label.includes('services hub') || label.includes('service hub') || label.includes('layanan hub')) return false;
+        if (url.includes('cv-pro')) return false;
+        if (item.isPricing && !isPricingEnabled) return false;
         return true;
       });
-  }, [settings, isCvProEnabled, isBlueprintEnabled]);
+  }, [settings, isCvProEnabled, isBlueprintEnabled, isPricingEnabled]);
+
+  const resolvedNavLinks = dynamicNavLinks && dynamicNavLinks.length > 0 ? dynamicNavLinks : navLinks;
+  const pricingMenuItem = resolvedNavLinks.find(item => item.isPricing) || (isPricingEnabled ? { label: lang === 'id' ? 'Harga & Paket' : 'Pricing', href: '/pricing', isPricing: true } : null);
+  const regularNavLinks = resolvedNavLinks.filter(item => !item.isPricing);
 
   return (
     <>
@@ -362,59 +374,112 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
           </a>
 
           {/* Desktop Navigation Links (Curated for High Retention) */}
-          <div className="hidden md:flex items-center gap-7 font-mono text-xs uppercase tracking-wider font-bold">
-            {dynamicNavLinks ? (
-              dynamicNavLinks.map((item, idx) => {
-                const isActive = currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href));
-                return (
-                  <a
-                    key={idx}
-                    href={item.href}
-                    className={`transition flex items-center gap-1.5 ${
-                      isActive 
-                        ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' 
-                        : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
-                    }`}
-                  >
-                    <span>{item.label}</span>
-                    {item.highlight && (
-                      <span className="px-1 py-0.2 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[9px] font-bold">
-                        ACTIVE
-                      </span>
-                    )}
-                  </a>
-                );
-              })
-            ) : (
-              <>
-                <a href="/" className={`transition ${currentPath === '/' ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
-                  {lang === 'id' ? 'Beranda' : 'Home'}
+          <div className="hidden md:flex items-center gap-6 font-mono text-xs uppercase tracking-wider font-bold">
+            {regularNavLinks.map((item, idx) => {
+              const isActive = currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href));
+              return (
+                <a
+                  key={idx}
+                  href={item.href}
+                  className={`transition flex items-center gap-1.5 py-2 ${
+                    isActive
+                      ? 'text-zinc-950 dark:text-white font-black border-b-2 border-emerald-500'
+                      : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
+                  }`}
+                >
+                  <span>{item.label}</span>
                 </a>
+              );
+            })}
 
-                {isBlueprintEnabled && (
-                  <a href="/pricing#retail" className={`transition flex items-center gap-1.5 ${currentPath === '/blueprint' ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
-                    <span>Project OS (PRD)</span>
-                    <span className="px-1 py-0.2 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[9px] font-bold">ACTIVE</span>
-                  </a>
-                )}
+            {/* Dropdown: Pricing (Project OS + CV Pro) */}
+            {isPricingEnabled && pricingMenuItem && (
+              <div
+                className="relative"
+                onMouseEnter={() => { setPricingDropdownOpen(true); setServicesDropdownOpen(false); }}
+                onMouseLeave={() => setPricingDropdownOpen(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => { setPricingDropdownOpen(v => !v); setServicesDropdownOpen(false); }}
+                  aria-expanded={pricingDropdownOpen}
+                  className={`flex items-center gap-1 transition py-2 cursor-pointer uppercase ${
+                    currentPath.startsWith('/pricing')
+                      ? 'text-zinc-950 dark:text-white font-black border-b-2 border-emerald-500'
+                      : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
+                  }`}
+                >
+                  <span>{pricingMenuItem.label}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${pricingDropdownOpen ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : ''}`} />
+                </button>
 
-                <a href="/pricing" className={`transition flex items-center gap-1.5 ${currentPath.startsWith('/pricing') ? 'text-zinc-900 dark:text-white font-black border-b-2 border-emerald-500 pb-1' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'}`}>
-                  <span>{lang === 'id' ? 'Paket & Investasi' : 'Pricing'}</span>
-                  <span className="px-1 py-0.2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[9px] font-bold">PROMO</span>
-                </a>
-              </>
+                <AnimatePresence>
+                  {pricingDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 5 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full left-0 w-80 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-xl p-2 space-y-1 text-left z-50 font-sans"
+                    >
+                      <div className="px-2.5 py-1 text-[10px] font-mono font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800">
+                        {lang === 'id' ? 'INVESTASI & PAKET LAYANAN' : 'INVESTMENT & PRICING PLANS'}
+                      </div>
+
+                      {isBlueprintEnabled && (
+                        <a href="/pricing#retail" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 transition rounded-none">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="font-bold text-zinc-950 dark:text-white text-xs font-mono flex items-center gap-1.5">
+                              <Cpu className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
+                              <span>Project OS</span>
+                            </span>
+                            <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/90 text-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 text-[9px] font-black">RETAIL &amp; MITRA</span>
+                          </div>
+                          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-tight font-normal normal-case tracking-normal">
+                            {lang === 'id' ? 'Paket Cetak Biru PRD, ERD &amp; Turnkey Architecture' : 'PRD Blueprints, ERD &amp; Turnkey Architecture Plans'}
+                          </p>
+                        </a>
+                      )}
+
+                      {isCvProEnabled && (
+                        <a href="/pricing?tab=cv-pro#cv-pro" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 transition rounded-none">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="font-bold text-zinc-950 dark:text-white text-xs font-mono flex items-center gap-1.5">
+                              <FileText className="w-3.5 h-3.5 text-indigo-700 dark:text-indigo-400" />
+                              <span>CV Pro</span>
+                            </span>
+                            <span className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-950/90 text-indigo-950 dark:text-indigo-200 border border-indigo-400 dark:border-indigo-700 text-[9px] font-black">CAREER STUDIO</span>
+                          </div>
+                          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-tight font-normal normal-case tracking-normal">
+                            {lang === 'id' ? 'Paket Studio CV ATS, Kuota AI &amp; Portofolio Web' : 'ATS Resume Studio, AI Credits &amp; Portfolio Plans'}
+                          </p>
+                        </a>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             )}
 
-            {/* Dropdown: Layanan HUB (Only visible if at least one service is enabled) */}
+            {/* Dropdown: Services Hub (Only visible if at least one service is enabled) */}
             {hasAnyService && (
               <div 
                 className="relative"
-                onMouseEnter={() => setServicesDropdownOpen(true)}
+                onMouseEnter={() => { setServicesDropdownOpen(true); setPricingDropdownOpen(false); }}
                 onMouseLeave={() => setServicesDropdownOpen(false)}
               >
-                <button className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition py-2 cursor-pointer">
-                  <span>{lang === 'id' ? 'Layanan HUB' : 'Services Hub'}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${servicesDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+                <button
+                  type="button"
+                  onClick={() => { setServicesDropdownOpen(v => !v); setPricingDropdownOpen(false); }}
+                  aria-expanded={servicesDropdownOpen}
+                  className={`flex items-center gap-1 transition py-2 cursor-pointer uppercase ${
+                    currentPath.startsWith('/blueprint') || currentPath.startsWith('/cv-pro')
+                      ? 'text-zinc-950 dark:text-white font-black border-b-2 border-emerald-500'
+                      : 'text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white'
+                  }`}
+                >
+                  <span>{lang === 'id' ? 'Services Hub' : 'Services Hub'}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${servicesDropdownOpen ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : ''}`} />
                 </button>
 
                 <AnimatePresence>
@@ -424,28 +489,38 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 5 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute top-full left-0 w-72 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-xl p-3 space-y-1 text-left z-50 font-sans"
+                      className="absolute top-full left-0 w-80 bg-white dark:bg-zinc-900 border-2 border-zinc-900 dark:border-zinc-700 rounded-none shadow-xl p-2 space-y-1 text-left z-50 font-sans"
                     >
+                      <div className="px-2.5 py-1 text-[10px] font-mono font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-800">
+                        {lang === 'id' ? 'EKOSISTEM MODUL NERIAH PRO' : 'NERIAH PRO PLATFORM MODULES'}
+                      </div>
+
                       {isBlueprintEnabled && (
-                        <a href="/pricing#retail" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                        <a href="/blueprint" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 transition rounded-none">
                           <div className="flex items-center justify-between mb-0.5">
-                            <span className="font-bold text-zinc-900 dark:text-white text-xs font-mono">Project OS (PRD)</span>
-                            <span className="px-1 py-0.2 bg-emerald-500 text-black text-[9px] font-bold">ACTIVE</span>
+                            <span className="font-bold text-zinc-950 dark:text-white text-xs font-mono flex items-center gap-1.5">
+                              <Cpu className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
+                              <span>Project OS (PRD)</span>
+                            </span>
+                            <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/90 text-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 text-[9px] font-black">ACTIVE</span>
                           </div>
-                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-tight">
-                            {lang === 'id' ? 'Generator PRD & Skema ERD Otomatis' : 'Automated PRD & ERD Schema'}
+                          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-tight font-normal normal-case tracking-normal">
+                            {lang === 'id' ? 'Generator PRD, Skema ERD &amp; Scaffolding Otomatis' : 'Automated PRD, ERD Schema &amp; Code Scaffolding'}
                           </p>
                         </a>
                       )}
 
                       {isCvProEnabled && (
-                        <a href="/cv-pro" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition rounded-none">
+                        <a href="/cv-pro" className="block p-2.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 transition rounded-none">
                           <div className="flex items-center justify-between mb-0.5">
-                            <span className="font-bold text-zinc-900 dark:text-white text-xs font-mono">Studio CV Pro</span>
-                            <span className="px-1 py-0.2 bg-purple-500 text-white text-[9px] font-bold">PRO STUDIO</span>
+                            <span className="font-bold text-zinc-950 dark:text-white text-xs font-mono flex items-center gap-1.5">
+                              <FileText className="w-3.5 h-3.5 text-indigo-700 dark:text-indigo-400" />
+                              <span>CV Pro Studio</span>
+                            </span>
+                            <span className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-950/90 text-indigo-950 dark:text-indigo-200 border border-indigo-400 dark:border-indigo-700 text-[9px] font-black">PRO STUDIO</span>
                           </div>
-                          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-tight">
-                            {lang === 'id' ? 'Studio CV Visual & Portofolio Klien' : 'Visual Resume & Portfolio Studio'}
+                          <p className="text-[11px] text-zinc-700 dark:text-zinc-300 leading-tight font-normal normal-case tracking-normal">
+                            {lang === 'id' ? 'Studio CV ATS Visual, Voice Copilot &amp; Portofolio' : 'Visual ATS Resume Studio, Copilot &amp; Portfolio'}
                           </p>
                         </a>
                       )}
@@ -885,47 +960,93 @@ export default function GlobalNavigationIsland({ settings, featureFlags, cartDat
                 )}
               </div>
 
-              {dynamicNavLinks ? (
-                dynamicNavLinks.map((item, idx) => (
-                  <a
-                    key={idx}
-                    href={item.href}
-                    className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between ${
-                      currentPath === item.href ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'
-                    }`}
+              {regularNavLinks.map((item, idx) => (
+                <a
+                  key={idx}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between ${
+                    currentPath === item.href ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-900 dark:text-zinc-100'
+                  }`}
+                >
+                  <span>{item.label}</span>
+                </a>
+              ))}
+
+              {/* Mobile Pricing Submenu */}
+              {isPricingEnabled && pricingMenuItem && (
+                <div className="border-b border-zinc-100 dark:border-zinc-900 py-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setMobilePricingOpen(v => !v)}
+                    className="w-full py-1.5 flex items-center justify-between font-bold text-zinc-900 dark:text-zinc-100 cursor-pointer"
                   >
-                    <span>{item.label}</span>
-                    {item.highlight && (
-                      <span className="px-1.5 py-0.2 bg-emerald-500 text-black text-[9px] font-black">
-                        ACTIVE
-                      </span>
-                    )}
-                  </a>
-                ))
-              ) : (
-                <>
-                  <a href="/" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 ${currentPath === '/' ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
-                    {lang === 'id' ? 'Beranda' : 'Home'}
-                  </a>
-
-                  {isBlueprintEnabled && (
-                    <a href="/pricing#retail" className="block py-2 text-emerald-600 dark:text-emerald-400 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between">
-                      <span>Project OS (PRD Generator)</span>
-                      <span className="px-1.5 py-0.2 bg-emerald-500 text-black text-[9px] font-black">ACTIVE</span>
-                    </a>
+                    <span>{pricingMenuItem.label}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${mobilePricingOpen ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : ''}`} />
+                  </button>
+                  {mobilePricingOpen && (
+                    <div className="pl-3 mt-1 space-y-1 border-l-2 border-zinc-200 dark:border-zinc-800">
+                      {isBlueprintEnabled && (
+                        <a
+                          href="/pricing#retail"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center justify-between py-1.5 px-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 font-bold"
+                        >
+                          <span>Project OS</span>
+                          <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 text-[9px] font-black">RETAIL &amp; MITRA</span>
+                        </a>
+                      )}
+                      {isCvProEnabled && (
+                        <a
+                          href="/pricing?tab=cv-pro#cv-pro"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center justify-between py-1.5 px-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 font-bold"
+                        >
+                          <span>CV Pro</span>
+                          <span className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-950 text-indigo-950 dark:text-indigo-200 border border-indigo-400 dark:border-indigo-700 text-[9px] font-black">CAREER STUDIO</span>
+                        </a>
+                      )}
+                    </div>
                   )}
+                </div>
+              )}
 
-                  <a href="/pricing" className={`block py-2 font-bold border-b border-zinc-100 dark:border-zinc-900 flex items-center justify-between ${currentPath.startsWith('/pricing') ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
-                    <span>{lang === 'id' ? 'Paket & Investasi Layanan' : 'Pricing & Packages'}</span>
-                    <span className="px-1.5 py-0.5 bg-emerald-500 text-black text-[9px] font-black">PROMO</span>
-                  </a>
-
-                  {isCvProEnabled && (
-                    <a href="/cv-pro" className="block py-2 text-purple-600 dark:text-purple-400 font-bold border-b border-zinc-100 dark:border-zinc-900">
-                      Studio CV Pro &rarr;
-                    </a>
+              {/* Mobile Services Hub Submenu */}
+              {hasAnyService && (
+                <div className="border-b border-zinc-100 dark:border-zinc-900 py-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setMobileServicesOpen(v => !v)}
+                    className="w-full py-1.5 flex items-center justify-between font-bold text-zinc-900 dark:text-zinc-100 cursor-pointer"
+                  >
+                    <span>Services Hub</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${mobileServicesOpen ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : ''}`} />
+                  </button>
+                  {mobileServicesOpen && (
+                    <div className="pl-3 mt-1 space-y-1 border-l-2 border-zinc-200 dark:border-zinc-800">
+                      {isBlueprintEnabled && (
+                        <a
+                          href="/blueprint"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center justify-between py-1.5 px-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 font-bold"
+                        >
+                          <span>Project OS (PRD)</span>
+                          <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-950 dark:text-emerald-200 border border-emerald-400 dark:border-emerald-700 text-[9px] font-black">ACTIVE</span>
+                        </a>
+                      )}
+                      {isCvProEnabled && (
+                        <a
+                          href="/cv-pro"
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center justify-between py-1.5 px-2 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-800 dark:text-zinc-200 font-bold"
+                        >
+                          <span>CV Pro Studio</span>
+                          <span className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-950 text-indigo-950 dark:text-indigo-200 border border-indigo-400 dark:border-indigo-700 text-[9px] font-black">STUDIO</span>
+                        </a>
+                      )}
+                    </div>
                   )}
-                </>
+                </div>
               )}
 
               {/* Mobile Client Portal / Auth Access */}

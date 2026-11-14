@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import CvPricingIsland from './CvPricingIsland';
 import {
   Check,
   Sparkles,
@@ -644,9 +645,48 @@ export default function ArchitecturePricingIsland({
 
   const mitraHourlyRate = parseCleanIdr(pricingSettings?.mitra_man_hour_rate_idr, 350000);
 
+  const isCvUrlRequested = () => {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = (params.get('tab') || '').toLowerCase();
+    const hash = (window.location.hash || '').toLowerCase().replace('#', '');
+    return ['cv', 'cv-pro', 'cvpro'].includes(tabParam) || ['cv', 'cv-pro', 'cvpro'].includes(hash);
+  };
+
   // Dynamic feature flag & admin toggle for CV Pro module switcher
-  const isCvProEnabled = !featureFlags?.midtrans_mode && Boolean(featureFlags?.enable_cv_pro) && Boolean(featureFlags?.pricing_show_cv_tab);
-  const [activeTab, setActiveTab] = useState('software'); // 'software' | 'cv'
+  const isCvProEnabled = !featureFlags?.midtrans_mode
+    && featureFlags?.enable_cv_pro !== false
+    && featureFlags?.enable_cv_pro !== 0
+    && featureFlags?.enable_cv_pro !== '0'
+    && (featureFlags?.pricing_show_cv_tab !== false || isCvUrlRequested());
+
+  const [activeTab, setActiveTab] = useState(() => (isCvProEnabled && isCvUrlRequested() ? 'cv' : 'software')); // 'software' | 'cv'
+
+  const switchModuleTab = (targetTab) => {
+    setActiveTab(targetTab);
+    if (typeof window !== 'undefined') {
+      const nextUrl = targetTab === 'cv' ? '/pricing?tab=cv-pro#cv-pro' : '/pricing#retail';
+      try {
+        window.history.replaceState(null, '', nextUrl);
+      } catch (e) {}
+    }
+  };
+
+  useEffect(() => {
+    const syncModuleTabFromUrl = () => {
+      if (isCvProEnabled && isCvUrlRequested()) {
+        setActiveTab('cv');
+      } else if (typeof window !== 'undefined' && ['#retail', '#project', '#sectoral', '#matrix', '#faq'].includes(window.location.hash.toLowerCase())) {
+        setActiveTab('software');
+      }
+    };
+    window.addEventListener('hashchange', syncModuleTabFromUrl);
+    window.addEventListener('popstate', syncModuleTabFromUrl);
+    return () => {
+      window.removeEventListener('hashchange', syncModuleTabFromUrl);
+      window.removeEventListener('popstate', syncModuleTabFromUrl);
+    };
+  }, [isCvProEnabled]);
 
   // Pricing Section Tab: 'retail' | 'project' | 'sectoral' | 'matrix' | 'faq'
   const [pricingSectionTab, setPricingSectionTab] = useState(() => {
@@ -1691,62 +1731,63 @@ export default function ArchitecturePricingIsland({
     <div id="pricing-matrix" className="w-full bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 pt-4 sm:pt-6 pb-12 sm:pb-16 transition-colors scroll-mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
-        {/* DYNAMIC MODULE SWITCHER (PROJECT OS VS UPCOMING CV PRO - DITENTUKAN DARI BACKEND ADMIN) */}
+        {/* DYNAMIC MODULE SWITCHER (PROJECT OS VS LIVE CV PRO STUDIO) */}
         {isCvProEnabled && (
           <div className="flex items-center justify-center pt-1 mb-6 sm:mb-8">
-            <div className="inline-flex p-1 bg-zinc-200 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none shadow-inner font-mono text-xs">
+            <div className="inline-flex p-1 bg-zinc-200 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-none shadow-xs font-mono text-xs">
               <button
                 type="button"
-                onClick={() => setActiveTab('software')}
+                onClick={() => switchModuleTab('software')}
                 className={`px-4 py-2 font-bold uppercase tracking-wider transition rounded-none flex items-center gap-2 cursor-pointer ${activeTab === 'software'
                   ? 'bg-zinc-900 text-white dark:bg-emerald-500 dark:text-black shadow-xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                  : 'text-zinc-800 dark:text-zinc-300 hover:bg-zinc-300/60 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white'
                   }`}
               >
-                <Cpu className="w-3.5 h-3.5 text-emerald-500 dark:text-black" />
+                <Cpu className={`w-3.5 h-3.5 ${activeTab === 'software' ? 'text-emerald-400 dark:text-black' : 'text-emerald-700 dark:text-emerald-400'}`} />
                 <span>Project OS // Digital Architecture</span>
-                <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-700 dark:text-black font-black text-[9px]">ACTIVE</span>
+                <span className={`px-1.5 py-0.5 text-[9px] font-black ${activeTab === 'software' ? 'bg-black text-white' : 'bg-emerald-100 text-emerald-950 border border-emerald-400 dark:bg-emerald-950/90 dark:text-emerald-200 dark:border-emerald-700'}`}>
+                  ACTIVE
+                </span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setActiveTab('cv')}
+                onClick={() => switchModuleTab('cv')}
                 className={`px-4 py-2 font-bold uppercase tracking-wider transition rounded-none flex items-center gap-2 cursor-pointer ${activeTab === 'cv'
-                  ? 'bg-zinc-900 text-white dark:bg-purple-500 dark:text-white shadow-xs'
-                  : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
+                  ? 'bg-zinc-900 text-white dark:bg-indigo-500 dark:text-black shadow-xs'
+                  : 'text-zinc-800 dark:text-zinc-300 hover:bg-zinc-300/60 dark:hover:bg-zinc-800 hover:text-zinc-950 dark:hover:text-white'
                   }`}
               >
-                <FileText className="w-3.5 h-3.5 text-purple-400" />
+                <FileText className={`w-3.5 h-3.5 ${activeTab === 'cv' ? 'text-indigo-300 dark:text-black' : 'text-indigo-700 dark:text-indigo-400'}`} />
                 <span>CV Pro Studio</span>
-                <span className="px-1.5 py-0.2 bg-zinc-300 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold text-[9px]">UPCOMING</span>
+                <span className={`px-1.5 py-0.5 text-[9px] font-black ${activeTab === 'cv' ? 'bg-black text-white' : 'bg-indigo-100 text-indigo-950 border border-indigo-400 dark:bg-indigo-950/90 dark:text-indigo-200 dark:border-indigo-700'}`}>
+                  ACTIVE
+                </span>
               </button>
             </div>
           </div>
         )}
 
-        {/* IF CV TAB IS CLICKED: SHOW CLEAN UPCOMING PREVIEW */}
+        {/* IF CV TAB IS ACTIVE: RENDER LIVE CV PRICING ISLAND DIRECTLY */}
         {isCvProEnabled && activeTab === 'cv' ? (
-          <div className="max-w-2xl mx-auto my-12 p-8 bg-zinc-100 dark:bg-zinc-900 border-2 border-dashed border-purple-500/40 rounded-none text-center space-y-4">
-            <div className="w-12 h-12 mx-auto rounded-none bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-500">
-              <FileText className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-black uppercase text-zinc-900 dark:text-white font-mono">
-              CV Pro Studio &bull; {isEn ? 'Module Under Active Development (Q4)' : 'Modul Dalam Pengembangan (Q4)'}
-            </h3>
-            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
-              {isEn
-                ? 'CV Pro Studio is currently under active sprint development for Q4 release. During our Midtrans merchant compliance review, only Project OS digital architecture services are actively processed for transactions.'
-                : 'Modul CV Pro Studio sedang dalam persiapan rilis Q4. Selama periode review kepatuhan merchant Midtrans, hanya layanan rekayasa arsitektur Project OS yang aktif diproses untuk transaksi.'}
-            </p>
-            <div className="pt-2">
+          <div id="cv-pro" className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-none">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                <span className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-950/90 text-indigo-950 dark:text-indigo-200 border border-indigo-400 dark:border-indigo-700 text-[10px] font-black">CV PRO</span>
+                <span>{isEn ? 'Career & ATS Studio Investment Plans' : 'Paket Investasi Studio CV ATS & AI Career Suite'}</span>
+              </div>
               <button
                 type="button"
-                onClick={() => setActiveTab('software')}
-                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black font-mono font-bold text-xs uppercase tracking-wider rounded-none cursor-pointer transition"
+                onClick={() => switchModuleTab('software')}
+                className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 font-mono font-bold text-[11px] uppercase tracking-wider rounded-none cursor-pointer transition"
               >
-                &larr; {isEn ? 'View Active Project OS Services' : 'Lihat Layanan Aktif Project OS'}
+                &larr; {isEn ? 'Switch to Project OS Plans' : 'Lihat Paket Project OS'}
               </button>
             </div>
+            <CvPricingIsland
+              locale={isEn ? 'en' : 'id'}
+              whatsappNumber={whatsappNumber}
+            />
           </div>
         ) : (
           <>

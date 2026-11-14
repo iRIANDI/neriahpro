@@ -63,9 +63,7 @@ class ManageSettings extends Page implements HasForms
                 'data' => [
                     'links' => [
                         ['label' => 'Home', 'url' => '/'],
-                        ['label' => 'Project OS (PRD)', 'url' => '/pricing#retail'],
                         ['label' => 'Pricing', 'url' => '/pricing'],
-                        ['label' => 'Services Hub', 'url' => '/#services'],
                     ]
                 ]
             ]
@@ -144,6 +142,7 @@ class ManageSettings extends Page implements HasForms
             'google_translate_enabled' => true,
             'google_translate_allowed_languages' => ['en', 'id', 'ja', 'zh-CN', 'ar', 'de', 'fr', 'es'],
             'feature_enable_cv_pro' => true,
+            'pricing_show_cv_tab' => true,
             'feature_enable_cv_pricing' => true,
             'feature_enable_cv_job_hub' => true,
             'feature_enable_cv_mock_interview' => true,

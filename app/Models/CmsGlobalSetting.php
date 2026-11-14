@@ -24,7 +24,12 @@ class CmsGlobalSetting extends Model
     public static function getAllCached(): \Illuminate\Support\Collection
     {
         if (static::$runtimeCache !== null) {
-            return static::$runtimeCache;
+            try {
+                if (\Illuminate\Support\Facades\Cache::has('cms_global_settings_data')) {
+                    return static::$runtimeCache;
+                }
+            } catch (\Throwable) {}
+            static::$runtimeCache = null;
         }
 
         try {

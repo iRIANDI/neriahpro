@@ -19,9 +19,7 @@ class CmsSeeder extends Seeder
                 'data' => [
                     'links' => [
                         ['label' => 'Home', 'url' => '/'],
-                        ['label' => 'Project OS (PRD)', 'url' => '/pricing#retail'],
                         ['label' => 'Pricing', 'url' => '/pricing'],
-                        ['label' => 'Services Hub', 'url' => '/#services'],
                     ]
                 ]
             ]

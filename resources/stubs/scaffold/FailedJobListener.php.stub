@@ -11,25 +11,25 @@ class NotifyFailedJobListener
     /**
      * Handle the event when a queue worker job fails.
      */
-    public function handle(JobFailed \$event): void
+    public function handle(JobFailed $event): void
     {
-        \$jobName = \$event->job->resolveName();
-        \$exception = \$event->exception->getMessage();
+        $jobName = $event->job->resolveName();
+        $exception = $event->exception->getMessage();
 
-        Log::error("[TELEMETRY ALERT] Queue job failed: {\$jobName}", [
-            'connection' => \$event->connectionName,
-            'queue' => \$event->job->getQueue(),
-            'error' => \$exception,
+        Log::error("[TELEMETRY ALERT] Queue job failed: {$jobName}", [
+            'connection' => $event->connectionName,
+            'queue' => $event->job->getQueue(),
+            'error' => $exception,
         ]);
 
-        \$webhookUrl = config('telemetry.incident_alert_webhook');
-        if (\$webhookUrl) {
+        $webhookUrl = config('telemetry.incident_alert_webhook');
+        if ($webhookUrl) {
             try {
-                Http::timeout(3)->post(\$webhookUrl, [
-                    'text' => "🚨 *CRITICAL QUEUE FAILURE*\\n*Job*: `{\$jobName}`\\n*Error*: `{\$exception}`\\n*Environment*: `" . config('app.env') . "`",
+                Http::timeout(3)->post($webhookUrl, [
+                    'text' => "*CRITICAL QUEUE FAILURE*\n*Job*: `{$jobName}`\n*Error*: `{$exception}`\n*Environment*: `".config('app.env').'`',
                 ]);
-            } catch (\\Throwable \$e) {
-                Log::warning("Failed to dispatch incident webhook: " . \$e->getMessage());
+            } catch (\Throwable $e) {
+                Log::warning('Failed to dispatch incident webhook: '.$e->getMessage());
             }
         }
     }

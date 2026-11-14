@@ -2,57 +2,59 @@
 
 declare(strict_types=1);
 
-namespace App\Actions\Tenancy;
+namespace App\Actions\Onboarding;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 /**
- * Layer 2: Atomic Zero-State Tenant Provisioning ({$sectorCode}).
- * Guarantees a newly signed-up organization NEVER lands on a dead-end blank dashboard.
+ * Layer 2: Atomic Zero-State Tenant Provisioning ({{ SECTOR_CODE }}).
+ * Seeds curated domain foundation baselines & marks onboarding checklist complete.
  */
 final class InitializeNewTenantAction
 {
     /**
-     * @param  array<string, mixed>  \$tenantPayload
-     * @return array<string, mixed>
+     * @param  array<string, mixed>  $tenantPayload
      */
-    public function __invoke(array \$tenantPayload): array
+    public function __invoke(array $tenantPayload): array
     {
-        \$foundationRecords = {$seedsExport};
-        \$checklistSteps = {$stepsExport};
+        $foundationRecords = {{ SEEDS_EXPORT }};
+        $checklistSteps = {{ STEPS_EXPORT }};
 
-        return DB::transaction(function () use (\$tenantPayload, \$foundationRecords, \$checklistSteps): array {
-            \$organizationId = (string) (\$tenantPayload['organization_id'] ?? Str::ulid());
+        return DB::transaction(function () use ($tenantPayload, $foundationRecords, $checklistSteps): array {
+            $organizationId = (string) ($tenantPayload['organization_id'] ?? Str::ulid());
 
-            if (DB::getSchemaBuilder()->hasTable('organizations')) {
-                DB::table('organizations')->where('id', \$organizationId)->lockForUpdate()->first();
+            if (Schema::hasTable('organizations')) {
+                DB::table('organizations')->where('id', $organizationId)->lockForUpdate()->first();
                 DB::table('organizations')->updateOrInsert(
-                    ['id' => \$organizationId],
+                    ['id' => $organizationId],
                     [
-                        'code' => (string) (\$tenantPayload['code'] ?? ('ORG-' . strtoupper(substr(\$organizationId, -6)))),
+                        'code' => (string) ($tenantPayload['code'] ?? ('ORG-'.strtoupper(substr($organizationId, -6)))),
                         'name' => json_encode([
-                            'id' => (string) (\$tenantPayload['name'] ?? 'Organisasi Operasional Utama'),
-                            'en' => (string) (\$tenantPayload['name'] ?? 'Primary Operational Organization'),
+                            'id' => (string) ($tenantPayload['name'] ?? 'Organisasi Operasional Utama'),
+                            'en' => (string) ($tenantPayload['name'] ?? 'Primary Operational Organization'),
                         ]),
-                        'timezone' => (string) (\$tenantPayload['timezone'] ?? 'Asia/Jakarta'),
-                        'currency' => (string) (\$tenantPayload['currency'] ?? 'IDR'),
+                        'timezone' => (string) ($tenantPayload['timezone'] ?? 'Asia/Jakarta'),
+                        'currency' => (string) ($tenantPayload['currency'] ?? 'IDR'),
+                        'is_active' => true,
                         'updated_at' => now(),
-                        'created_at' => now(),
                     ]
                 );
             }
 
             return [
-                'organization_id' => \$organizationId,
-                'sector_code' => '{$sectorCode}',
-                'seeded_foundations' => \$foundationRecords,
-                'guided_setup_widget' => [
-                    'component' => 'GuidedSetupChecklistWidget',
-                    'progress_percent' => 33,
-                    'auto_hide_at_percent' => 100,
-                    'steps' => \$checklistSteps,
+                'status' => 'provisioned',
+                'organization_id' => $organizationId,
+                'sector_code' => '{{ SECTOR_CODE }}',
+                'seeded_foundations' => $foundationRecords,
+                'onboarding_checklist' => [
+                    'status' => 'INITIALIZED',
+                    'completed_steps' => 0,
+                    'total_steps' => count($checklistSteps),
+                    'steps' => $checklistSteps,
                 ],
+                'provisioned_at' => now()->toIso8601String(),
             ];
         });
     }

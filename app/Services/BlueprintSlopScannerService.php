@@ -325,10 +325,10 @@ done
 
 # Scan 2: Database ULID & Keyset Cursor Pagination O(1)
 if [ -d "database/migrations" ]; then
-  if grep -RInE "\\\$table->id\(|\\\$table->uuid\(['\"]id['\"]\)" database/migrations >/dev/null 2>&1; then
-    echo " [FAIL] Scan 2A: Found \$table->id() or \$table->uuid('id') in database/migrations"
+  if grep -RInE '[$]table->id\(|[$]table->uuid\(["'\'']id["'\'']\)' database/migrations >/dev/null 2>&1; then
+    echo ' [FAIL] Scan 2A: Found \$table->id() or \$table->uuid("id") in database/migrations'
     VIOLATIONS=\$((VIOLATIONS + 1))
-    FIX_ITEMS="\${FIX_ITEMS}\n- Ubah seluruh primary key tabel domain bisnis di database/migrations menjadi \\\$table->ulid('id')->primary()."
+    FIX_ITEMS="\${FIX_ITEMS}\n"'- Ubah seluruh primary key tabel domain bisnis di database/migrations menjadi \$table->ulid("id")->primary().'
   fi
 fi
 

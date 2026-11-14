@@ -767,7 +767,7 @@
                             <h4 class="font-black text-base text-zinc-900 dark:text-zinc-100 mb-2">Modern Monolith Standard</h4>
                             <div class="space-y-1.5 text-[11px] text-zinc-700 dark:text-zinc-300">
                                 <div>&bull; Biaya Server Bulanan: <strong>Rp 350.000 - Rp 1.500.000 / bln</strong></div>
-                                <div>&bull; DevOps Headcount: <strong>0 FTE (Automated Nixpacks CI/CD)</strong></div>
+                                <div>&bull; DevOps Headcount: <strong>0 FTE (Automated Railpack &amp; Docker CI/CD)</strong></div>
                                 <div class="pt-2 border-t border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
                                     90% anggaran klien dialokasikan murni untuk fitur bisnis & akuisisi pengguna, bukan untuk beban overhead infrastruktur.
                                 </div>

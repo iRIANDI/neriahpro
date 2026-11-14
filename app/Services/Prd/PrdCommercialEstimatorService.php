@@ -291,8 +291,8 @@ class PrdCommercialEstimatorService
             'code' => 'BASE-CORE',
             'title' => $isEn ? 'Modern Monolith Foundation & Enterprise Security Setup' : 'Pondasi Modern Monolith & Setup Keamanan Enterprise',
             'desc' => $isEn
-                ? 'Laravel 13 architecture, Filament v5 Enterprise, PostgreSQL 16+ Strict ULID database, OWASP Top 10 sanitization, Dark/Light Mode, and Docker/Nixpacks VPS container deployment.'
-                : 'Arsitektur Laravel 13, Filament v5 Enterprise, Database PostgreSQL 16+ Strict ULID, Sanitasi OWASP Top 10, Dark/Light Mode, dan Deploy Container VPS Docker/Nixpacks.',
+                ? 'Laravel 13 architecture, Filament v5 Enterprise, PostgreSQL 16+ Strict ULID database, OWASP Top 10 sanitization, Dark/Light Mode, and Docker/Railpack VPS container deployment.'
+                : 'Arsitektur Laravel 13, Filament v5 Enterprise, Database PostgreSQL 16+ Strict ULID, Sanitasi OWASP Top 10, Dark/Light Mode, dan Deploy Container VPS Docker/Railpack.',
             'complexity' => $isEn ? 'Mandatory Standard' : 'Standar Wajib',
             'amount' => 5000000.00,
         ];
@@ -768,7 +768,7 @@ class PrdCommercialEstimatorService
                     'cost_formula' => 'Base Core (Rp 17.5M) + Integrasi Gateway Lengkap & Dedicated VPS Setup (Rp 7.5M)',
                     'ai_swarm_specs' => [
                         'Seluruh kapabilitas Business Core Solution',
-                        'Dedicated VPS Nixpacks & Docker setup dengan Nginx HTTP/2 reverse proxy',
+                        'Dedicated VPS Railpack & Docker setup dengan Nginx HTTP/2 reverse proxy',
                         'Integrasi Payment Gateway Midtrans (Kartu Kredit, QRIS, Virtual Account)',
                         'Background Worker Redis 24/7 untuk notifikasi & rekapitulasi real-time',
                     ],
@@ -959,7 +959,7 @@ class PrdCommercialEstimatorService
                     'Arsitektur Modern Monolith dengan isolasi basis data PostgreSQL ULID',
                     'Dashboard Filament v5 dengan filter instan dan ekspor laporan otomatis',
                     'Integrasi Payment Gateway Midtrans (QRIS, Kartu Kredit, Virtual Account)',
-                    'Dedicated VPS Container via Nixpacks & Docker',
+                    'Dedicated VPS Container via Railpack & Docker',
                 ],
                 'description' => 'Keseimbangan terbaik antara kelengkapan fitur bisnis kustom, performa server terisolasi, dan nilai investasi yang proporsional.',
             ],
@@ -1357,7 +1357,7 @@ class PrdCommercialEstimatorService
                     'capacity' => $storageNvmeGb . ' GB NVMe SSD (PCIe Gen 4.0)',
                     'speed' => 'Read/Write hingga 3.500 MB/s (Zero I/O Wait)',
                     'distribution' => [
-                        ['use' => 'OS Linux, Nixpacks Runtimes & Container Engine', 'size' => '12 GB'],
+                        ['use' => 'OS Linux, Railpack Runtimes & Container Engine', 'size' => '12 GB'],
                         ['use' => 'PostgreSQL 16 Data Tables, WAL & Indices (~10M Baris Data)', 'size' => round($storageNvmeGb * 0.35) . ' GB'],
                         ['use' => 'Curator Media Storage & Dokumen Attachment', 'size' => round($storageNvmeGb * 0.35) . ' GB'],
                         ['use' => 'Cadangan Snapshot Lokal & Rolling DB Dump', 'size' => round($storageNvmeGb * 0.15) . ' GB'],

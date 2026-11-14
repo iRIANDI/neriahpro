@@ -41,6 +41,7 @@ use App\Support\PosRealWorldRuntimeCatalog;
 use App\Support\PosSectorUiArchetypeCatalog;
 use App\Support\PosStackPresetCatalog;
 use App\Support\PricingRegistry;
+use App\Support\WorldDesignSystemCatalog;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Notifications\Actions\Action;
 use Filament\Notifications\Notification;
@@ -157,6 +158,103 @@ class BlueprintScaffoldController extends Controller
             'custom_folder' => $customFolder ?: null,
             'effective_slug' => $effectiveSlug,
             'message' => 'Nama folder kerja kustom berhasil disimpan secara unik untuk proyek ini.',
+        ]);
+    }
+
+    /**
+     * Save per-project dynamic infrastructure credentials, runtime ports, and selected worldwide Design System.
+     */
+    public function saveInfraConfig(Request $request, string $slug): JsonResponse
+    {
+        $blueprint = VisionBlueprint::where('slug', $slug)->firstOrFail();
+        $this->authorizeBlueprintAccess($blueprint);
+
+        $validated = $request->validate([
+            'design_system' => ['nullable', 'string', 'max:64'],
+            'db_database' => ['nullable', 'string', 'max:64', 'regex:/^[a-zA-Z0-9_]+$/'],
+            'db_username' => ['nullable', 'string', 'max:64', 'regex:/^[a-zA-Z0-9_]+$/'],
+            'db_password' => ['nullable', 'string', 'max:128'],
+            'db_port' => ['nullable', 'integer', 'min:1024', 'max:65535'],
+            'app_port' => ['nullable', 'integer', 'min:80', 'max:65535'],
+            'app_url' => ['nullable', 'string', 'max:255'],
+            'redis_password' => ['nullable', 'string', 'max:128'],
+            'mail_host' => ['nullable', 'string', 'max:128'],
+            'mail_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
+            'mail_username' => ['nullable', 'string', 'max:128'],
+            'mail_password' => ['nullable', 'string', 'max:128'],
+            'admin_seed_name' => ['nullable', 'string', 'max:100'],
+            'admin_seed_email' => ['nullable', 'email', 'max:128'],
+            'admin_seed_password' => ['nullable', 'string', 'max:128'],
+            'reverb_app_id' => ['nullable', 'string', 'max:64'],
+            'reverb_app_key' => ['nullable', 'string', 'max:64'],
+            'reverb_app_secret' => ['nullable', 'string', 'max:128'],
+            'livekit_api_key' => ['nullable', 'string', 'max:64'],
+            'livekit_api_secret' => ['nullable', 'string', 'max:128'],
+            'livekit_lan_host' => ['nullable', 'string', 'max:128'],
+            's3_bucket' => ['nullable', 'string', 'max:64', 'regex:/^[a-z0-9-]+$/'],
+        ]);
+
+        $uMeta = is_array($blueprint->user_metadata) ? $blueprint->user_metadata : [];
+
+        $designCode = strtoupper(trim((string) ($validated['design_system'] ?? '')));
+        if ($designCode === '' || $designCode === 'AUTO') {
+            unset($uMeta['design_system']);
+        } else {
+            $catalog = WorldDesignSystemCatalog::all();
+            if (! isset($catalog[$designCode])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Design system '{$designCode}' tidak dikenal di WorldDesignSystemCatalog.",
+                ], 422);
+            }
+            $uMeta['design_system'] = $designCode;
+        }
+
+        $infraKeys = [
+            'db_database', 'db_username', 'db_password', 'db_port',
+            'app_port', 'app_url', 'redis_password',
+            'mail_host', 'mail_port', 'mail_username', 'mail_password',
+            'admin_seed_name', 'admin_seed_email', 'admin_seed_password',
+            'reverb_app_id', 'reverb_app_key', 'reverb_app_secret',
+            'livekit_api_key', 'livekit_api_secret', 'livekit_lan_host',
+            's3_bucket',
+        ];
+        $existingInfra = is_array($uMeta['infra_config'] ?? null) ? $uMeta['infra_config'] : [];
+        foreach ($infraKeys as $k) {
+            if (array_key_exists($k, $validated)) {
+                $val = $validated[$k];
+                if ($val === null || trim((string) $val) === '') {
+                    unset($existingInfra[$k]);
+                } else {
+                    $existingInfra[$k] = is_int($val) ? $val : trim((string) $val);
+                }
+            }
+        }
+        $uMeta['infra_config'] = $existingInfra;
+
+        // Invalidate previously cached ZIP archive so updated credentials take effect immediately
+        unset($uMeta['scaffold_zip_path']);
+        $uMeta['scaffold_ready'] = false;
+
+        $blueprint->update(['user_metadata' => $uMeta]);
+        $blueprint->refresh();
+
+        $shortSlug = ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?: 'project', $blueprint);
+        $resolvedInfra = ScaffoldGeneratorService::resolveInfraConfig($blueprint, $shortSlug);
+        $resolvedDesign = WorldDesignSystemCatalog::resolveForBlueprint($blueprint);
+        $capabilities = ScaffoldGeneratorService::detectStackCapabilities($blueprint);
+
+        return response()->json([
+            'success' => true,
+            'infra_config' => $resolvedInfra,
+            'design_system' => [
+                'selected' => $uMeta['design_system'] ?? 'AUTO',
+                'effective_code' => $resolvedDesign['code'],
+                'recommended_code' => $resolvedDesign['recommended_code'] ?? $resolvedDesign['code'],
+                'reason' => $resolvedDesign['reason'] ?? '',
+            ],
+            'capabilities' => $capabilities,
+            'message' => 'Konfigurasi kredensial infrastruktur & sistem desain berhasil disimpan.',
         ]);
     }
 
@@ -351,6 +449,10 @@ class BlueprintScaffoldController extends Controller
             }
 
             $files = $gateService->filterScaffoldFilesForTier($files, $tier, app()->getLocale());
+            $shortSlug = $customFolder ?: ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?: 'project', $blueprint);
+            $resolvedInfra = ScaffoldGeneratorService::resolveInfraConfig($blueprint, $shortSlug);
+            $resolvedDesign = WorldDesignSystemCatalog::resolveForBlueprint($blueprint);
+            $capabilities = ScaffoldGeneratorService::detectStackCapabilities($blueprint);
 
             return response()->json([
                 'success' => true,
@@ -358,6 +460,14 @@ class BlueprintScaffoldController extends Controller
                 'project_name' => $blueprint->nama_bisnis ?: 'Proyek',
                 'files' => $files,
                 'customized_files' => array_keys($customizations),
+                'infra_config' => $resolvedInfra,
+                'design_system' => [
+                    'selected' => $blueprint->user_metadata['design_system'] ?? 'AUTO',
+                    'effective_code' => $resolvedDesign['code'],
+                    'recommended_code' => $resolvedDesign['recommended_code'] ?? $resolvedDesign['code'],
+                    'reason' => $resolvedDesign['reason'] ?? '',
+                ],
+                'capabilities' => $capabilities,
             ]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('Preview scaffold failed: ' . $e->getMessage(), [
@@ -453,7 +563,8 @@ class BlueprintScaffoldController extends Controller
         }
 
         // Generate clean default
-        $allFiles = ScaffoldGeneratorService::generateFiles($blueprint);
+        $customFolder = (string) ($blueprint->user_metadata['short_slug'] ?? '');
+        $allFiles = ScaffoldGeneratorService::generateFiles($blueprint, $customFolder !== '' ? $customFolder : null);
         $defaultContent = $allFiles[$filename] ?? '';
 
         return response()->json([

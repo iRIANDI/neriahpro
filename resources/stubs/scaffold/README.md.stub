@@ -77,3 +77,16 @@ Baca panduan lengkapnya di **[docs/deployment/COOLIFY.md](docs/deployment/COOLIF
 
 ---
 Hak Cipta & Hak Milik: **{{ APP_NAME }}** & **Neriah Pro Hub**
+
+
+---
+
+## 📦 Portable Multi-Stage Docker & Railpack Deployment (`railpack.json`)
+
+This repository ships with **Railpack** (`railpack.json` — modern zero-config FrankenPHP + Node 22 buildpack) and a multi-stage **`Dockerfile.portable`** + **`docker-compose.portable.yml`**:
+
+```bash
+# Run self-contained production stack (Composer vendor -> Vite bundle -> PHP 8.5 FPM -> Nginx)
+docker compose -f docker-compose.portable.yml up --build -d
+docker compose -f docker-compose.portable.yml exec app php artisan migrate --force
+```

@@ -6,22 +6,27 @@
 
 set -euo pipefail
 
-BACKUP_FILE="\${1:-}"
+BACKUP_FILE="${1:-}"
 
-if [ -z "\${BACKUP_FILE}" ] || [ ! -f "\${BACKUP_FILE}" ]; then
+if [ -z "${BACKUP_FILE}" ] || [ ! -f "${BACKUP_FILE}" ]; then
   echo "Penggunaan: ./scripts/restore.sh /path/to/backup.sql.gz"
   exit 1
 fi
 
+PG_CONTAINER="{{ SHORT_SLUG }}_postgres_portable"
+if ! docker ps --format '{{.Names}}' | grep -qx "${PG_CONTAINER}"; then
+  PG_CONTAINER="{{ SHORT_SLUG }}_postgres"
+fi
+
 echo ">>> [RESTORE DRILL] Restoring database snapshot into verification database..."
 
-# Temporary verification database name
-VERIFY_DB="{{ SLUG }}_verify_drill"
+VERIFY_DB="{{ DB_DATABASE }}_verify_drill"
+PG_USER="${DB_USERNAME:-{{ DB_USERNAME }}}"
 
-docker exec {{ SLUG }}_postgres psql -U {{ SLUG }}_user -c "DROP DATABASE IF EXISTS \${VERIFY_DB};"
-docker exec {{ SLUG }}_postgres psql -U {{ SLUG }}_user -c "CREATE DATABASE \${VERIFY_DB};"
+docker exec "${PG_CONTAINER}" psql -U "${PG_USER}" -d postgres -c "DROP DATABASE IF EXISTS ${VERIFY_DB};"
+docker exec "${PG_CONTAINER}" psql -U "${PG_USER}" -d postgres -c "CREATE DATABASE ${VERIFY_DB};"
 
-gunzip -c "\${BACKUP_FILE}" | docker exec -i {{ SLUG }}_postgres psql -U {{ SLUG }}_user -d "\${VERIFY_DB}"
+gunzip -c "${BACKUP_FILE}" | docker exec -i "${PG_CONTAINER}" psql -U "${PG_USER}" -d "${VERIFY_DB}"
 
 echo ">>> [RESTORE DRILL SUCCESS] Backup snapshot is healthy and verified."
-docker exec {{ SLUG }}_postgres psql -U {{ SLUG }}_user -c "DROP DATABASE \${VERIFY_DB};"
+docker exec "${PG_CONTAINER}" psql -U "${PG_USER}" -d postgres -c "DROP DATABASE IF EXISTS ${VERIFY_DB};"

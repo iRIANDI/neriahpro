@@ -1,16 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="antialiased">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ \$title ?? '{{ APP_NAME }} - Interactive API Reference' }}</title>
-    <link rel="icon" href="/favicon.ico">
-    <style>
-        body { margin: 0; padding: 0; background: #09090b; }
-    </style>
+    <title>{{ $title ?? '{{ APP_NAME }} — OpenAPI 3.1 Reference' }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body>
-    <script id="api-reference" data-url="/openapi.json"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+<body class="min-h-screen p-6">
+    <div class="max-w-5xl mx-auto ds-card p-6 space-y-4">
+        <div class="flex items-center justify-between gap-4">
+            <h1 class="text-xl font-display font-bold">{{ APP_NAME }} — Local OpenAPI 3.1 Docs</h1>
+            <a href="{{ url('/openapi.json') }}" class="ds-btn-primary px-3 py-1.5 text-xs font-mono uppercase">View /openapi.json</a>
+        </div>
+        <p class="text-xs font-mono opacity-80">Served 100% locally via Vite assets without external CDN dependencies.</p>
+    </div>
 </body>
 </html>

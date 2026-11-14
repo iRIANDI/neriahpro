@@ -360,14 +360,14 @@
                     sprintBody = `SPRINT 5 TASK: STAGING VALIDATION & DEPLOYMENT PREPARATION (${business})\n` +
                         `Scope:\n` +
                         `- Verify frontend build: npm run build.\n` +
-                        `- Verify nixpacks.toml and Nginx configurations.\n` +
+                        `- Verify railpack.json, Dockerfile.portable, and Nginx configurations.\n` +
                         `- Prepare deployment script ./deploy.sh 2 (Safe Migration) or ./deploy.sh 6 (Assets).\n` +
                         `- Perform comprehensive UAT before GitHub private repo handover.`;
                 } else {
                     sprintBody = `SPRINT 5 TASK: STAGING VALIDATION & DEPLOYMENT PREPARATION (${business})\n` +
                         `Scope:\n` +
                         `- Verifikasi build frontend: npm run build.\n` +
-                        `- Verifikasi file nixpacks.toml dan konfigurasi Nginx.\n` +
+                        `- Verifikasi file railpack.json, Dockerfile.portable, dan konfigurasi Nginx.\n` +
                         `- Siapkan script deployment ./deploy.sh 2 (Migrasi Aman) atau ./deploy.sh 6 (Assets).\n` +
                         `- Lakukan UAT komprehensif sebelum serah terima kunci private repo GitHub.`;
                 }

@@ -93,7 +93,7 @@ class CvProDemoDataSeeder extends Seeder
                 'Laravel 13 & PHP 8.4',
                 'Distributed Database Systems',
                 'React 19 & Next.js',
-                'Docker & Nixpacks CI/CD',
+                'Docker & Railpack CI/CD',
                 'Livewire 4 & Flux UI',
                 'Redis Cache & Queues',
                 'System Architecture O(1)',

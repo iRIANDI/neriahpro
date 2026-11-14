@@ -708,9 +708,9 @@ export default function HeroIsland({
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                     <span>
                       {isEn ? (
-                        <><strong>Turnkey Production Deployment:</strong> Configured for high-speed Cloud VPS (Docker/Nixpacks, Nginx HTTP/2, SSL, Custom Domain).</>
+                        <><strong>Turnkey Production Deployment:</strong> Configured for high-speed Cloud VPS (Docker/Railpack, Nginx HTTP/2, SSL, Custom Domain).</>
                       ) : (
-                        <><strong>Full Deployment Siap Pakai</strong> ke Cloud Production VPS (Docker/Nixpacks, Nginx HTTP/2, SSL, Domain).</>
+                        <><strong>Full Deployment Siap Pakai</strong> ke Cloud Production VPS (Docker/Railpack, Nginx HTTP/2, SSL, Domain).</>
                       )}
                     </span>
                   </div>

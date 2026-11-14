@@ -84,7 +84,7 @@ class PrdArchitectureManifestoService
             'hosting_evaluation' => [
                 'verdict' => $isLeanBudget 
                     ? 'Cloud Starter / Micro VPS (Fase 1) & Seamless VPS Scale-Up (Fase 2)' 
-                    : ($isDecoupledRequested ? 'Multi-Tier Cloud Infrastructure (Cloudflare Pages Edge + Dedicated API VPS)' : 'Dedicated VPS (Nixpacks & Docker Containerization)'),
+                    : ($isDecoupledRequested ? 'Multi-Tier Cloud Infrastructure (Cloudflare Pages Edge + Dedicated API VPS)' : 'Dedicated VPS (Railpack & Docker Containerization)'),
                 'verdict_badge' => $isLeanBudget ? 'LEAN_CLOUD_STARTER' : ($isDecoupledRequested ? 'MULTI_TIER_EDGE_CLOUD' : 'VPS_DEDICATED'),
                 'recommendation' => $isLeanBudget ? 'CLOUD_STARTER_LEAN' : ($isDecoupledRequested ? 'MULTI_TIER_DECOUPLED' : 'DEDICATED_VPS'),
                 'compute_weight_score' => $isLeanBudget ? '70/100 (Lean Operational Footprint)' : ($isDecoupledRequested ? '95/100 (Global Edge & Multi-Party API Scale)' : '92/100 (High-Throughput Enterprise)'),
@@ -99,7 +99,7 @@ class PrdArchitectureManifestoService
                 ],
                 'dedicated_vps' => [
                     'status' => 'HIGH-PERFORMANCE / SCALE-UP READY (Rp 350.000+ / bln)',
-                    'title' => 'Dedicated VPS Container (Nixpacks & Docker)',
+                    'title' => 'Dedicated VPS Container (Railpack & Docker)',
                     'reasons' => [
                         'Isolasi Resource 100%: Alokasi CPU & RAM terdedikasi menjamin throughput data tinggi tanpa gangguan tenant lain.',
                         'Native PostgreSQL 16+ pgvector Support: Penyimpanan representasi vektor berdimensi tinggi untuk AI embeddings & semantic search.',
@@ -216,7 +216,7 @@ class PrdArchitectureManifestoService
                             'verdict' => 'IDEAL FASE 1: Solusi paling rasional untuk UMKM, komunitas, dan proyek validasi modal minim.',
                         ],
                         'option_b' => [
-                            'name' => 'Dedicated VPS (Nixpacks & Docker)',
+                            'name' => 'Dedicated VPS (Railpack & Docker)',
                             'pros' => ['100% isolasi performa', 'Mendukung database AI pgvector', 'Queue worker 24/7 tanpa timeout', 'Zero-downtime deploy'],
                             'cons' => ['Biaya bulanan mulai Rp 350rb/bln', 'Memerlukan manajemen container terkelola'],
                             'verdict' => 'STANDAR SCALE-UP: Wajib untuk sistem transaksi bisnis harian, multi-cabang, atau integrasi AI cerdas.',
@@ -269,7 +269,7 @@ class PrdArchitectureManifestoService
                 'monolith_tco' => [
                     'title' => 'Modern Monolith (Efisiensi Modal Maksimal)',
                     'monthly_cost' => $isLeanBudget ? '< Rp 100.000 - Rp 250.000 / bulan' : 'Rp 350.000 - Rp 950.000 / bulan',
-                    'devops_headcount' => '0 FTE (Automated Nixpacks CI/CD)',
+                    'devops_headcount' => '0 FTE (Automated Railpack & Docker CI/CD)',
                     'capital_efficiency' => '90% anggaran klien dialokasikan murni untuk fitur bisnis & akuisisi pengguna.',
                 ],
                 'decoupled_tco' => [
@@ -357,7 +357,7 @@ class PrdArchitectureManifestoService
                     ['category' => 'Frontend Layer', 'name' => 'Island Architecture (React 19 + Framer Motion)', 'desc' => 'Interaktivitas fluid 60fps, micro-animations, Canva-style canvas capability'],
                     ['category' => 'AI Database Engine', 'name' => 'PostgreSQL 16+ (pgvector' . ($isSpatialRequested ? ' + PostGIS)' : ')'), 'desc' => 'Vector embeddings, HNSW semantic search, JSONB documents, ULID standard'],
                     ['category' => 'In-Memory Cache & Broker', 'name' => 'Redis / Predis', 'desc' => 'Zero-latency sessions, distributed lock, persistent queue processing'],
-                    ['category' => 'Infrastructure & Runtime', 'name' => 'Dedicated VPS via Nixpacks & Docker', 'desc' => 'Container isolation, Nginx HTTP/2, automated SSL, Zero-downtime deploy'],
+                    ['category' => 'Infrastructure & Runtime', 'name' => 'Dedicated VPS via Railpack & Docker', 'desc' => 'Container isolation, Nginx HTTP/2, automated SSL, Zero-downtime deploy'],
                     ['category' => 'AI Acceleration Engine', 'name' => 'Enterprise LLM API SDK (Gemini / Anthropic / OpenAI)', 'desc' => 'High-reasoning prompt synthesis, context injection RAG, automated code assistant'],
                 ],
                 $isBiometricsRequested ? [
@@ -1593,8 +1593,8 @@ class PrdArchitectureManifestoService
                 'maturity_score' => '100% Ultimate Maturity',
                 'status' => 'BULLETPROOF_PROVEN',
                 'description' => $isEn
-                    ? 'Intelligent automated shell deployment with 6 precise scenarios (UI/Blade, Safe Migration, Fresh DB Staging, Package Install, Dump Autoload, Asset Build) compatible with Nixpacks/Railpacks and automated pre-flight database backups.'
-                    : 'Otomasi deployment shell script cerdas dengan 6 skenario presisi (UI/Blade, Migrasi Aman, Fresh DB Staging, Package Install, Dump Autoload, Asset Build) yang kompatibel dengan Nixpacks/Railpacks serta pre-flight backup database.',
+                    ? 'Intelligent automated shell deployment with 6 precise scenarios (UI/Blade, Safe Migration, Fresh DB Staging, Package Install, Dump Autoload, Asset Build) compatible with Railpack/Docker and automated pre-flight database backups.'
+                    : 'Otomasi deployment shell script cerdas dengan 6 skenario presisi (UI/Blade, Migrasi Aman, Fresh DB Staging, Package Install, Dump Autoload, Asset Build) yang kompatibel dengan Railpack/Docker serta pre-flight backup database.',
                 'capabilities' => [
                     'Automated pre-migration database snapshot backup and rollback runbook',
                     'Zero-downtime OPcache reset and atomic symlink deployment compatibility',

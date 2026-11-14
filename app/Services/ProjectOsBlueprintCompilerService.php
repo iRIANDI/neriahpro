@@ -161,7 +161,7 @@ class ProjectOsBlueprintCompilerService
                 $score = 0;
                 foreach (($preset->detection_keywords ?? []) as $kw) {
                     $kwLower = mb_strtolower(trim((string) $kw));
-                    if ($kwLower !== '' && str_contains($normalizedCorpus, $kwLower)) {
+                    if ($kwLower !== '' && self::containsKeywordSafe($normalizedCorpus, $kwLower)) {
                         $score += str_contains($kwLower, ' ') ? 3 : 2;
                     }
                 }
@@ -509,10 +509,10 @@ class ProjectOsBlueprintCompilerService
             $selectedCodes['PRIMITIVE_DOUBLE_ENTRY_LEDGER'] = true;
         }
 
-        // Always include Double-Entry Ledger when payment / billing / invoice / Midtrans / revenue flows are mentioned
+        // Always include Double-Entry Ledger when genuine payment / billing / invoice / Midtrans / revenue / donation flows are mentioned
         if (! isset($selectedCodes['PRIMITIVE_DOUBLE_ENTRY_LEDGER']) && $allPrimitives->has('PRIMITIVE_DOUBLE_ENTRY_LEDGER')) {
-            foreach (['bayar', 'payment', 'midtrans', 'invoice', 'tagihan', 'omzet', 'pendapatan', 'kasir', 'pos', 'transaksi'] as $finKw) {
-                if (str_contains($normalized, $finKw)) {
+            foreach (['bayar', 'payment', 'pembayaran', 'midtrans', 'invoice', 'tagihan', 'omzet', 'pendapatan', 'kasir', 'pos', 'donasi', 'zakat', 'wakaf', 'escrow', 'ledger', 'akuntansi', 'fintech'] as $finKw) {
+                if (self::containsKeywordSafe($normalized, $finKw)) {
                     $selectedCodes['PRIMITIVE_DOUBLE_ENTRY_LEDGER'] = true;
                     break;
                 }
@@ -1381,7 +1381,31 @@ class ProjectOsBlueprintCompilerService
     }
 
     /**
+     * Boundary-safe keyword matcher to avoid substring false positives (e.g. 'pos' in 'purpose' or 'media' in 'immediate').
+     */
+    protected static function containsKeywordSafe(string $haystack, string $keyword): bool
+    {
+        $kw = mb_strtolower(trim($keyword));
+        if ($kw === '' || $haystack === '') {
+            return false;
+        }
+
+        if (mb_strlen($kw) <= 5 && ! str_contains($kw, ' ')) {
+            return preg_match('/(?<![a-z0-9])'.preg_quote($kw, '/').'(?![a-z0-9])/u', $haystack) === 1;
+        }
+
+        if (str_contains($kw, ' ')) {
+            return str_contains($haystack, $kw);
+        }
+
+        return preg_match('/(?<![a-z0-9])'.preg_quote($kw, '/').'(?![a-z0-9])/u', $haystack) === 1
+            || str_contains($haystack, $kw);
+    }
+
+    /**
      * Extract clean ULID-compliant custom entity blueprints from user feature lines without overlapping core primitive tables.
+     * Parenthetical attribute lists e.g. "Language Channels (flag_icon, active/inactive, assign default translator)"
+     * become real typed columns on the parent table instead of bogus standalone tables.
      */
     protected static function extractCustomDomainTables(?VisionBlueprint $blueprint, array $seenTables): array
     {
@@ -1391,7 +1415,7 @@ class ProjectOsBlueprintCompilerService
 
         $rawFeatures = is_array($blueprint->fitur_wajib)
             ? $blueprint->fitur_wajib
-            : preg_split('/[\r\n,;]+/', (string) $blueprint->fitur_wajib);
+            : preg_split('/[\r\n;]+|,(?![^(]*\))/', (string) $blueprint->fitur_wajib);
 
         $featureLines = array_values(array_filter(array_map('trim', $rawFeatures ?: [])));
         if (empty($featureLines)) {
@@ -1399,10 +1423,20 @@ class ProjectOsBlueprintCompilerService
         }
 
         $stopWords = ['modul', 'sistem', 'fitur', 'manajemen', 'kelola', 'otomatis', 'integrasi', 'dashboard', 'portal', 'dan', 'untuk', 'dengan', 'data', 'laporan'];
+        $monetaryPattern = '/\b(amount|price|harga|nominal|biaya|tarif|fee|total|donasi|saldo|omzet|bayar|payment|invoice|billing)\b/i';
         $customTables = [];
 
         foreach (array_slice($featureLines, 0, 4) as $idx => $featureLine) {
-            $clean = preg_replace('/[^a-zA-Z0-9\s]/', ' ', strtolower((string) $featureLine));
+            $featureStr = (string) $featureLine;
+            $parentheticalRaw = '';
+            $outerText = $featureStr;
+
+            if (preg_match('/^([^\(]+?)\(([^\)]+)\)(.*)$/', $featureStr, $matches)) {
+                $outerText = trim($matches[1].' '.($matches[3] ?? ''));
+                $parentheticalRaw = trim($matches[2]);
+            }
+
+            $clean = preg_replace('/[^a-zA-Z0-9\s]/', ' ', strtolower($outerText));
             $words = array_values(array_filter(
                 explode(' ', (string) $clean),
                 fn ($w) => strlen($w) >= 4 && ! in_array($w, $stopWords, true)
@@ -1419,22 +1453,68 @@ class ProjectOsBlueprintCompilerService
             }
 
             $seenTables[$tableName] = true;
+            $columns = [
+                ['name' => 'id', 'type' => 'ULID', 'primary' => true],
+                ['name' => 'organization_id', 'type' => 'ULID', 'foreign' => 'organizations.id', 'index' => true],
+                ['name' => 'created_by_user_id', 'type' => 'ULID', 'foreign' => 'users.id', 'nullable' => true],
+                ['name' => 'reference_code', 'type' => 'VARCHAR(48)', 'nullable' => false],
+                ['name' => 'title', 'type' => 'JSONB', 'nullable' => false],
+            ];
+            $addedCols = ['id' => true, 'organization_id' => true, 'created_by_user_id' => true, 'reference_code' => true, 'title' => true];
+
+            if ($parentheticalRaw !== '') {
+                $hints = array_values(array_filter(array_map('trim', explode(',', $parentheticalRaw))));
+                foreach ($hints as $hint) {
+                    $hLower = strtolower($hint);
+                    if (str_contains($hLower, 'active/inactive') || $hLower === 'active' || $hLower === 'is_active' || str_contains($hLower, 'toggle')) {
+                        if (! isset($addedCols['is_active'])) {
+                            $columns[] = ['name' => 'is_active', 'type' => 'BOOLEAN', 'nullable' => false];
+                            $addedCols['is_active'] = true;
+                        }
+                    } elseif (preg_match('/(?:assign|default)\s+.*?(translator|interpreter|operator|staff|owner|user|member|reviewer)/i', $hLower, $uMatch)) {
+                        $colSlug = 'default_'.Str::snake($uMatch[1]).'_user_id';
+                        if (! isset($addedCols[$colSlug])) {
+                            $columns[] = ['name' => $colSlug, 'type' => 'ULID', 'foreign' => 'users.id', 'nullable' => true];
+                            $addedCols[$colSlug] = true;
+                        }
+                    } elseif (preg_match('/(flag_icon|icon|avatar|logo|image|thumbnail)/i', $hLower)) {
+                        $colSlug = Str::snake(preg_replace('/[^a-zA-Z0-9_]/', '_', $hLower));
+                        $colSlug = trim((string) preg_replace('/_+/', '_', $colSlug), '_') ?: 'icon_key';
+                        if (! isset($addedCols[$colSlug])) {
+                            $columns[] = ['name' => $colSlug, 'type' => 'VARCHAR(255)', 'nullable' => true];
+                            $addedCols[$colSlug] = true;
+                        }
+                    } else {
+                        $colSlug = Str::snake(preg_replace('/[^a-zA-Z0-9\s_]/', ' ', $hLower));
+                        $colSlug = trim((string) preg_replace('/_+/', '_', $colSlug), '_');
+                        if ($colSlug !== '' && strlen($colSlug) <= 40 && ! isset($addedCols[$colSlug])) {
+                            $colType = preg_match($monetaryPattern, $hLower) ? 'DECIMAL(19,4)' : 'VARCHAR(255)';
+                            $columns[] = ['name' => $colSlug, 'type' => $colType, 'nullable' => true];
+                            $addedCols[$colSlug] = true;
+                        }
+                    }
+                }
+            }
+
+            if (preg_match($monetaryPattern, $featureStr) && ! isset($addedCols['amount_value'])) {
+                $columns[] = ['name' => 'amount_value', 'type' => 'DECIMAL(19,4)', 'nullable' => false];
+                $addedCols['amount_value'] = true;
+            }
+
+            if (! isset($addedCols['attributes_json'])) {
+                $columns[] = ['name' => 'attributes_json', 'type' => 'JSONB', 'nullable' => true];
+            }
+            if (! isset($addedCols['status'])) {
+                $columns[] = ['name' => 'status', 'type' => 'VARCHAR(32)', 'nullable' => false, 'index' => true];
+            }
+
             $customTables[] = [
                 'table' => $tableName,
                 'tenant_scoped' => true,
                 'soft_deletes' => false,
                 'source_module' => 'CUSTOM_DOMAIN_EXTENSION_'.($idx + 1),
-                'feature_origin' => (string) $featureLine,
-                'columns' => [
-                    ['name' => 'id', 'type' => 'ULID', 'primary' => true],
-                    ['name' => 'organization_id', 'type' => 'ULID', 'foreign' => 'organizations.id', 'index' => true],
-                    ['name' => 'created_by_user_id', 'type' => 'ULID', 'foreign' => 'users.id', 'nullable' => true],
-                    ['name' => 'reference_code', 'type' => 'VARCHAR(48)', 'nullable' => false],
-                    ['name' => 'title', 'type' => 'JSONB', 'nullable' => false],
-                    ['name' => 'amount_value', 'type' => 'DECIMAL(19,4)', 'nullable' => false],
-                    ['name' => 'attributes_json', 'type' => 'JSONB', 'nullable' => true],
-                    ['name' => 'status', 'type' => 'VARCHAR(32)', 'nullable' => false, 'index' => true],
-                ],
+                'feature_origin' => $featureStr,
+                'columns' => $columns,
                 'unique_constraints' => [
                     ['name' => "{$tableName}_org_ref_unique", 'rule' => 'UNIQUE (organization_id, reference_code)'],
                 ],

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // ==============================================================================
 // NEXT.JS APP ROUTER // API ENDPOINT FOR {{ APP_NAME }}
-// Resource: /api/{$domainName}
+// Resource: /api/{{ DOMAIN_NAME }}
 // ==============================================================================
 
 export async function GET(request: NextRequest) {
@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
     // Keyset pagination O(1) query simulation
     return NextResponse.json({
       success: true,
-      resource: '{$domainName}',
+      resource: '{{ DOMAIN_NAME }}',
+      cursor,
+      limit,
       data: [
         { id: '01JABCDEF12345678901234567', title: 'Example Entity 1', created_at: new Date().toISOString() },
         { id: '01JABCDEF12345678901234568', title: 'Example Entity 2', created_at: new Date().toISOString() },
@@ -22,8 +24,9 @@ export async function GET(request: NextRequest) {
       next_cursor: '01JABCDEF12345678901234568',
       has_more: false,
     });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unexpected server error';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
 
@@ -37,14 +40,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Security policy violation detected.' }, { status: 403 });
     }
 
-    // Process validated payload
     return NextResponse.json({
       success: true,
       message: 'Resource created successfully with ULID primary key',
       id: '01J' + Math.random().toString(36).substring(2, 15).toUpperCase(),
       payload,
     }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Invalid JSON payload';
+    return NextResponse.json({ success: false, error: message }, { status: 400 });
   }
 }

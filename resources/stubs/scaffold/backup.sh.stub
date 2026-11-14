@@ -1,33 +1,35 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # DISASTER RECOVERY // ENCRYPTED DATABASE BACKUP SCRIPT
-# Project: {{ APP_NAME }}
+# Project: {{ APP_NAME }} ({{ SHORT_SLUG }})
 # Target SLA: Recovery Point Objective (RPO) < 15 Minutes
 # ==============================================================================
 
 set -euo pipefail
 
-BACKUP_DIR="/var/backups/{{ SLUG }}"
-TIMESTAMP=\$(date +"%Y%m%d_%H%M%S")
-FILENAME="db_{{ SLUG }}_\${TIMESTAMP}.sql.gz"
-BACKUP_PATH="\${BACKUP_DIR}/\${FILENAME}"
+BACKUP_DIR="/var/backups/{{ SHORT_SLUG }}"
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+FILENAME="db_{{ SHORT_SLUG }}_${TIMESTAMP}.sql.gz"
+BACKUP_PATH="${BACKUP_DIR}/${FILENAME}"
+PG_CONTAINER="{{ SHORT_SLUG }}_postgres_portable"
 
-mkdir -p "\${BACKUP_DIR}"
-
-echo ">>> [BACKUP] Initiating PostgreSQL snapshot for {{ SLUG }}..."
-
-# 1. Execute compressed database dump
-docker exec {{ SLUG }}_postgres pg_dump -U {{ SLUG }}_user -d {{ SLUG }}_db | gzip -9 > "\${BACKUP_PATH}"
-
-echo ">>> [BACKUP] Snapshot successfully written: \${BACKUP_PATH} (\$(du -h "\${BACKUP_PATH}" | cut -f1))"
-
-# 2. Upload to Off-Site Cloud Storage (AWS S3 or Cloudflare R2 if AWS CLI configured)
-if command -v aws &> /dev/null && [ -n "\${BACKUP_S3_BUCKET:-}" ]; then
-  echo ">>> [BACKUP] Uploading to off-site S3 bucket: \${BACKUP_S3_BUCKET}..."
-  aws s3 cp "\${BACKUP_PATH}" "s3://\${BACKUP_S3_BUCKET}/{{ SLUG }}/\${FILENAME}"
+if ! docker ps --format '{{.Names}}' | grep -qx "${PG_CONTAINER}"; then
+  PG_CONTAINER="{{ SHORT_SLUG }}_postgres"
 fi
 
-# 3. Purge Local Backups Older Than 7 Days
-find "\${BACKUP_DIR}" -type f -name "db_{{ SLUG }}_*.sql.gz" -mtime +7 -delete
+mkdir -p "${BACKUP_DIR}"
+
+echo ">>> [BACKUP] Initiating PostgreSQL snapshot for {{ SHORT_SLUG }} (${PG_CONTAINER})..."
+
+docker exec "${PG_CONTAINER}" pg_dump -U "${DB_USERNAME:-{{ DB_USERNAME }}}" -d "${DB_DATABASE:-{{ DB_DATABASE }}}" | gzip -9 > "${BACKUP_PATH}"
+
+echo ">>> [BACKUP] Snapshot successfully written: ${BACKUP_PATH} ($(du -h "${BACKUP_PATH}" | cut -f1))"
+
+if command -v aws &> /dev/null && [ -n "${BACKUP_S3_BUCKET:-}" ]; then
+  echo ">>> [BACKUP] Uploading to off-site S3 bucket: ${BACKUP_S3_BUCKET}..."
+  aws s3 cp "${BACKUP_PATH}" "s3://${BACKUP_S3_BUCKET}/{{ SHORT_SLUG }}/${FILENAME}"
+fi
+
+find "${BACKUP_DIR}" -type f -name "db_{{ SHORT_SLUG }}_*.sql.gz" -mtime +7 -delete
 
 echo ">>> [BACKUP COMPLETE] Backup cycle finished successfully."

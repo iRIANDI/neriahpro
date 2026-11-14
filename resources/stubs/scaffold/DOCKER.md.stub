@@ -175,12 +175,24 @@ Jika Anda sudah memiliki PostgreSQL lokal atau XAMPP/Apache yang aktif di komput
 * Restart container: `docker compose up -d`.
 
 ### 2. Error: `The stream or file ".../laravel.log" could not be opened in append mode: Permission denied`
-Ubah kepemilikan direktori `storage` dan `bootstrap/cache` ke user `www`:
+Ubah kepemilikan direktori `storage` dan `bootstrap/cache` ke user `www-data`:
 ```bash
-docker compose exec -u root app chown -R www:www /var/www/html/storage /var/www/html/bootstrap/cache
+docker compose exec -u root app chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 docker compose exec -u root app chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 ```
 
 ### 3. Error: `Connection refused` pada Database
 PostgreSQL memerlukan beberapa detik untuk inisialisasi skema saat pertama kali dijalankan. Tunggu 5-10 detik hingga status health check `docker compose ps` berubah menjadi `(healthy)` sebelum menjalankan `php artisan migrate`.
+
+---
+
+## 📦 Portable Multi-Stage Build (`docker-compose.portable.yml` & `railpack.json`)
+
+Untuk produksi tanpa bind-mount host, jalankan stack portable multi-stage (`Dockerfile.portable` menjalankan Composer vendor terlebih dahulu sebelum Vite asset build):
+```bash
+docker compose -f docker-compose.portable.yml up --build -d
+docker compose -f docker-compose.portable.yml exec app php artisan migrate --force
+```
+Untuk PaaS zero-config modern (Railway / Coolify v4+), repositori ini dilengkapi **`railpack.json`** (buildpack zero-config generasi terbaru dengan runtime FrankenPHP + Node 22).
+
 

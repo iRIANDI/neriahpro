@@ -169,24 +169,231 @@
                 </div>
             </div>
 
+            <!-- Environment, Dynamic DB/Stack Credentials & 10-Design-System Configurator -->
+            <div class="mb-3 border border-zinc-800 bg-zinc-950 shrink-0 rounded-none">
+                <div class="px-3 py-2 flex flex-wrap items-center justify-between gap-2 bg-zinc-900/90">
+                    <div class="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+                        <span class="px-1.5 py-0.5 bg-zinc-950 border border-zinc-700 text-emerald-300 font-bold" x-text="'DB: ' + (infraForm.db_database || 'app_db')"></span>
+                        <span class="px-1.5 py-0.5 bg-zinc-950 border border-zinc-700 text-zinc-200 font-bold" x-text="'PORT: ' + (infraForm.app_port || 8080)"></span>
+                        <span class="px-1.5 py-0.5 bg-zinc-950 border border-cyan-600 text-cyan-200 font-bold" x-text="'UI: ' + (designSystemEffective || 'SWISS_TECHNICAL_GRID')"></span>
+                        <template x-if="scaffoldCapabilities.webrtc_audio || scaffoldCapabilities.realtime_ws">
+                            <span class="px-1.5 py-0.5 bg-amber-950 border border-amber-500 text-amber-200 font-bold" x-text="scaffoldCapabilities.webrtc_audio ? 'WEBRTC + REVERB' : 'WEBSOCKET REVERB'"></span>
+                        </template>
+                    </div>
+                    <button
+                        type="button"
+                        @click="infraConfigOpen = !infraConfigOpen"
+                        class="px-2.5 py-1 bg-zinc-950 hover:bg-zinc-800 border border-zinc-600 hover:border-emerald-400 text-zinc-100 font-mono text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 transition cursor-pointer rounded-none"
+                    >
+                        <span x-text="infraConfigOpen ? '▼' : '▶'"></span>
+                        <span x-show="locale === 'en'">ENV, DB CREDENTIALS &amp; DESIGN SYSTEM</span>
+                        <span x-show="locale !== 'en'">ATUR DB, KREDENSIAL &amp; DESIGN SYSTEM</span>
+                    </button>
+                </div>
+
+                <div x-show="infraConfigOpen" x-cloak class="p-4 border-t border-zinc-800 space-y-4 max-h-[52vh] overflow-y-auto custom-prd-scrollbar">
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-zinc-800">
+                        <div class="text-xs font-mono text-zinc-300">
+                            <span class="font-bold text-white" x-text="locale === 'en' ? 'Dynamic Stack Credentials (Zero Hardcode)' : 'Kredensial Stack Dinamis (Bebas Hardcode)'"></span>
+                            <span class="block text-[11px] text-zinc-400" x-text="locale === 'en' ? 'Injected directly into .env, docker-compose, backup scripts, and SyntheticDataSeeder.' : 'Disuntikkan langsung ke .env, docker-compose, skrip backup, dan SyntheticDataSeeder.'"></span>
+                        </div>
+                        <button
+                            type="button"
+                            @click="infraShowSecrets = !infraShowSecrets"
+                            class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-mono text-[11px] font-bold uppercase cursor-pointer rounded-none transition"
+                        >
+                            <span x-text="infraShowSecrets ? (locale === 'en' ? 'HIDE SECRETS' : 'SEMBUNYIKAN SANDI') : (locale === 'en' ? 'REVEAL SECRETS' : 'TAMPILKAN SANDI')"></span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 font-mono text-xs">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1" x-text="locale === 'en' ? 'Database Name' : 'Nama Database'"></label>
+                            <input type="text" x-model="infraForm.db_database" :placeholder="locale === 'en' ? 'e.g. my_app_db' : 'misal: db_aplikasi_saya'" placeholder="{{ $isEn ? 'e.g. my_app_db' : 'misal: db_aplikasi_saya' }}" class="w-full px-2.5 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1" x-text="locale === 'en' ? 'DB Username' : 'Username Database'"></label>
+                            <input type="text" x-model="infraForm.db_username" :placeholder="locale === 'en' ? 'e.g. db_operator' : 'misal: operator_db'" placeholder="{{ $isEn ? 'e.g. db_operator' : 'misal: operator_db' }}" class="w-full px-2.5 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1 flex items-center justify-between">
+                                <span x-text="locale === 'en' ? 'DB Password' : 'Password Database'"></span>
+                                <button type="button" @click="generateRandomSecret('db_password')" class="text-[10px] text-emerald-400 hover:underline cursor-pointer">⚡ Gen</button>
+                            </label>
+                            <input :type="infraShowSecrets ? 'text' : 'password'" x-model="infraForm.db_password" :placeholder="locale === 'en' ? 'e.g. StrongDbPass!26' : 'misal: SandiDbKuat!26'" placeholder="{{ $isEn ? 'e.g. StrongDbPass!26' : 'misal: SandiDbKuat!26' }}" class="w-full px-2.5 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1">DB Port</label>
+                                <input type="number" min="1024" max="65535" x-model.number="infraForm.db_port" placeholder="5432" class="w-full px-2 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1">App Port</label>
+                                <input type="number" min="80" max="65535" x-model.number="infraForm.app_port" placeholder="8080" class="w-full px-2 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1">App Base URL</label>
+                            <input type="text" x-model="infraForm.app_url" placeholder="http://localhost:8080" class="w-full px-2.5 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1 flex items-center justify-between">
+                                <span x-text="locale === 'en' ? 'Redis Password' : 'Password Redis'"></span>
+                                <button type="button" @click="generateRandomSecret('redis_password')" class="text-[10px] text-emerald-400 hover:underline cursor-pointer">⚡ Gen</button>
+                            </label>
+                            <input :type="infraShowSecrets ? 'text' : 'password'" x-model="infraForm.redis_password" :placeholder="locale === 'en' ? 'e.g. RedisSecret!26' : 'misal: SandiRedis!26'" placeholder="{{ $isEn ? 'e.g. RedisSecret!26' : 'misal: SandiRedis!26' }}" class="w-full px-2.5 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1" x-text="locale === 'en' ? 'Seed Admin Email' : 'Email Admin Awal'"></label>
+                            <input type="email" x-model="infraForm.admin_seed_email" :placeholder="locale === 'en' ? 'e.g. admin@workspace.local' : 'misal: admin@ruangkerja.local'" placeholder="{{ $isEn ? 'e.g. admin@workspace.local' : 'misal: admin@ruangkerja.local' }}" class="w-full px-2.5 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1 flex items-center justify-between">
+                                <span x-text="locale === 'en' ? 'Seed Admin Pass' : 'Sandi Admin Awal'"></span>
+                                <button type="button" @click="generateRandomSecret('admin_seed_password')" class="text-[10px] text-emerald-400 hover:underline cursor-pointer">⚡ Gen</button>
+                            </label>
+                            <input :type="infraShowSecrets ? 'text' : 'password'" x-model="infraForm.admin_seed_password" :placeholder="locale === 'en' ? 'e.g. AdminPass!2026' : 'misal: SandiAdmin!2026'" placeholder="{{ $isEn ? 'e.g. AdminPass!2026' : 'misal: SandiAdmin!2026' }}" class="w-full px-2.5 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1" x-text="locale === 'en' ? 'Seed Admin Name' : 'Nama Admin Awal'"></label>
+                            <input type="text" x-model="infraForm.admin_seed_name" :placeholder="locale === 'en' ? 'e.g. Principal Administrator' : 'misal: Administrator Utama'" placeholder="{{ $isEn ? 'e.g. Principal Administrator' : 'misal: Administrator Utama' }}" class="w-full px-2.5 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1">SMTP Mail Host</label>
+                            <input type="text" x-model="infraForm.mail_host" placeholder="mailpit" class="w-full px-2.5 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1">SMTP Mail Port</label>
+                            <input type="number" min="1" max="65535" x-model.number="infraForm.mail_port" placeholder="1025" class="w-full px-2.5 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                        </div>
+                        <div x-show="scaffoldCapabilities.s3_storage">
+                            <label class="block text-[10px] font-bold uppercase text-zinc-300 mb-1">S3 Bucket</label>
+                            <input type="text" x-model="infraForm.s3_bucket" :placeholder="locale === 'en' ? 'e.g. app-media-assets' : 'misal: aset-media-app'" placeholder="{{ $isEn ? 'e.g. app-media-assets' : 'misal: aset-media-app' }}" class="w-full px-2.5 py-1.5 bg-black border border-zinc-700 focus:border-emerald-400 focus:outline-none text-zinc-100 placeholder:text-zinc-500 rounded-none">
+                        </div>
+                    </div>
+
+                    <!-- Conditional Realtime / WebRTC LiveKit + Reverb Inputs -->
+                    <div x-show="scaffoldCapabilities.webrtc_audio || scaffoldCapabilities.realtime_ws" class="p-3 bg-black border border-amber-500/40 space-y-2.5 font-mono text-xs">
+                        <div class="text-[11px] font-bold uppercase text-amber-300" x-text="locale === 'en' ? 'Realtime WebSocket &amp; Offline-LAN WebRTC Configuration' : 'Konfigurasi WebSocket Realtime &amp; WebRTC Jaringan Lokal'"></div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                            <div>
+                                <label class="block text-[10px] text-zinc-300 mb-1">Reverb App Key</label>
+                                <input type="text" x-model="infraForm.reverb_app_key" :placeholder="locale === 'en' ? 'e.g. workspace_reverb_key' : 'misal: kunci_reverb_lokal'" placeholder="{{ $isEn ? 'e.g. workspace_reverb_key' : 'misal: kunci_reverb_lokal' }}" class="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-none">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] text-zinc-300 mb-1 flex items-center justify-between">
+                                    <span>Reverb Secret</span>
+                                    <button type="button" @click="generateRandomSecret('reverb_app_secret')" class="text-[10px] text-emerald-400 hover:underline cursor-pointer">⚡ Gen</button>
+                                </label>
+                                <input :type="infraShowSecrets ? 'text' : 'password'" x-model="infraForm.reverb_app_secret" :placeholder="locale === 'en' ? 'e.g. reverb_secret_token' : 'misal: token_rahasia_reverb'" placeholder="{{ $isEn ? 'e.g. reverb_secret_token' : 'misal: token_rahasia_reverb' }}" class="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-none">
+                            </div>
+                            <div x-show="scaffoldCapabilities.webrtc_audio">
+                                <label class="block text-[10px] text-zinc-300 mb-1">LiveKit LAN Host / IP</label>
+                                <input type="text" x-model="infraForm.livekit_lan_host" placeholder="192.168.1.50" class="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-none">
+                            </div>
+                            <div x-show="scaffoldCapabilities.webrtc_audio">
+                                <label class="block text-[10px] text-zinc-300 mb-1">LiveKit API Key</label>
+                                <input type="text" x-model="infraForm.livekit_api_key" :placeholder="locale === 'en' ? 'e.g. lk_media_key' : 'misal: kunci_api_livekit'" placeholder="{{ $isEn ? 'e.g. lk_media_key' : 'misal: kunci_api_livekit' }}" class="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-none">
+                            </div>
+                            <div x-show="scaffoldCapabilities.webrtc_audio" class="sm:col-span-2">
+                                <label class="block text-[10px] text-zinc-300 mb-1 flex items-center justify-between">
+                                    <span>LiveKit API Secret (min 32 chars)</span>
+                                    <button type="button" @click="generateRandomSecret('livekit_api_secret', 36)" class="text-[10px] text-emerald-400 hover:underline cursor-pointer">⚡ Gen 36</button>
+                                </label>
+                                <input :type="infraShowSecrets ? 'text' : 'password'" x-model="infraForm.livekit_api_secret" :placeholder="locale === 'en' ? 'e.g. 32+ char WebRTC signing secret' : 'misal: minimal 32 karakter kunci rahasia WebRTC'" placeholder="{{ $isEn ? 'e.g. 32+ char WebRTC signing secret' : 'misal: minimal 32 karakter kunci rahasia WebRTC' }}" class="w-full px-2.5 py-1.5 bg-zinc-950 border border-zinc-700 text-zinc-100 rounded-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section B: 10 Worldwide Frontend Design Systems -->
+                    <div class="space-y-2.5">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div class="text-xs font-mono">
+                                <span class="font-bold text-white" x-text="locale === 'en' ? '10 Worldwide Design Systems (Domain-Calibrated UI)' : '10 Aliran Design System Dunia (Kalibrasi Sektor Proyek)'"></span>
+                                <span class="block text-[11px] text-zinc-400" x-text="locale === 'en' ? 'Choose a custom frontend aesthetic matched to your domain instead of cloning Neriah styles.' : 'Pilih aliran estetika frontend yang sesuai latar belakang proyek Anda, bukan meniru tema Neriah.'"></span>
+                            </div>
+                            <button
+                                type="button"
+                                @click="designSystemSelected = 'AUTO'"
+                                :class="designSystemSelected === 'AUTO' ? 'bg-emerald-500 text-black font-black border-emerald-400' : 'bg-zinc-900 text-zinc-200 border-zinc-700 hover:border-zinc-500'"
+                                class="px-2.5 py-1 border font-mono text-[11px] uppercase cursor-pointer rounded-none transition"
+                            >
+                                AUTO (<span x-text="designSystemRecommended"></span>)
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+                            <template x-for="ds in designSystemCatalog" :key="ds.code">
+                                <button
+                                    type="button"
+                                    @click="designSystemSelected = ds.code"
+                                    :class="(designSystemSelected === ds.code || (designSystemSelected === 'AUTO' && designSystemRecommended === ds.code)) ? 'border-emerald-400 bg-zinc-900 ring-1 ring-emerald-500/60' : 'border-zinc-800 bg-black hover:border-zinc-600'"
+                                    class="p-2.5 border text-left transition cursor-pointer rounded-none flex flex-col justify-between gap-2"
+                                >
+                                    <div class="space-y-1">
+                                        <div class="flex items-center justify-between gap-1">
+                                            <div class="flex items-center gap-1">
+                                                <span class="w-3 h-3 border border-zinc-600 inline-block" :style="'background:' + (ds.swatches?.light_bg || '#ffffff')"></span>
+                                                <span class="w-3 h-3 border border-zinc-600 inline-block" :style="'background:' + (ds.swatches?.dark_bg || '#09090b')"></span>
+                                                <span class="w-3 h-3 border border-zinc-600 inline-block" :style="'background:' + (ds.swatches?.light_accent || ds.swatches?.dark_primary || '#10b981')"></span>
+                                            </div>
+                                            <span x-show="ds.code === designSystemRecommended" class="px-1 py-0.5 bg-amber-950 text-amber-200 border border-amber-500 text-[9px] font-black font-mono uppercase">REC</span>
+                                        </div>
+                                        <div class="font-bold text-[11px] text-zinc-100 leading-tight" x-text="ds.name?.[locale === 'en' ? 'en' : 'id'] || ds.name?.en || ds.code"></div>
+                                        <div class="text-[10px] font-mono text-zinc-400 leading-tight" x-text="ds.school"></div>
+                                    </div>
+                                    <div class="text-[10px] font-mono text-zinc-400 border-t border-zinc-800 pt-1.5" x-text="(ds.default_mode || 'light').toUpperCase() + ' · ' + (ds.radius_token || '2px')"></div>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-zinc-800 font-mono text-xs">
+                        <span class="text-[11px] text-zinc-400" x-text="locale === 'en' ? 'Saving immediately regenerates preview files & clears outdated cached ZIP.' : 'Menyimpan akan memperbarui pratinjau scaffold & mereset cache ZIP lama.'"></span>
+                        <div class="flex items-center gap-2">
+                            <span x-show="infraSaveStatus === 'saved'" class="text-[11px] font-bold text-emerald-300" x-text="locale === 'en' ? 'SAVED & SYNCED ✓' : 'TERSIMPAN & SINKRON ✓'"></span>
+                            <button
+                                type="button"
+                                @click="saveInfraConfig(true)"
+                                :disabled="infraSaveStatus === 'saving'"
+                                class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 text-black font-black uppercase text-[11px] tracking-wider cursor-pointer rounded-none transition flex items-center gap-1.5"
+                            >
+                                <svg x-show="infraSaveStatus === 'saving'" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                </svg>
+                                <span x-text="infraSaveStatus === 'saving' ? (locale === 'en' ? 'APPLYING...' : 'MENERAPKAN...') : (locale === 'en' ? 'SAVE & REGENERATE PREVIEW' : 'SIMPAN & PERBARUI PRATINJAU')"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tab Selector (All 10 Pillars of Software Factory OS) -->
             <div class="flex items-center gap-1.5 mb-3 font-mono text-xs border-b border-zinc-800 pb-2 shrink-0 overflow-x-auto custom-prd-scrollbar py-1 select-none">
                 <template x-for="tab in [
                     { id: 'docs/product/PRODUCT-BRIEF.md', label: 'PRODUCT-BRIEF.md (Pillar 0)' },
                     { id: 'docs/architecture/ADR-001-postgresql-ulid.md', label: 'ADR-001.md (Architecture)' },
-                    { id: 'docker-compose.yml', label: 'docker-compose.yml (Containers)' },
+                    { id: 'Dockerfile.portable', label: 'Dockerfile.portable (Multi-Stage)' },
+                    { id: 'docker-compose.portable.yml', label: 'docker-compose.portable.yml (Prod)' },
+                    { id: 'docker-compose.yml', label: 'docker-compose.yml (Dev Containers)' },
+                    { id: 'railpack.json', label: 'railpack.json (Railpack v2)' },
+                    { id: '.env', label: '.env (Credentials)' },
+                    { id: 'resources/css/app.css', label: 'resources/css/app.css (Design System)' },
                     { id: 'openapi.json', label: 'openapi.json (OpenAPI 3.1)' },
                     { id: 'schema_complete.sql', label: 'schema_complete.sql (PostgreSQL)' },
                     { id: 'design/wireframes/screens.md', label: 'screens.md (UI/UX Wireframes)' },
                     { id: 'design/tokens.json', label: 'tokens.json (Design Tokens)' },
                     { id: 'routes/web.php', label: 'routes/web.php (Laravel 13)' },
-                    { id: 'routes/api.php', label: 'routes/api.php (Sanctum)' },
+                    { id: 'routes/api.php', label: 'routes/api.php (RBAC API)' },
                     { id: 'app/Http/Controllers/HealthProbeController.php', label: 'HealthProbeController.php (Pillar 8)' },
                     { id: 'app/api/route.ts', label: 'Next.js App Router (TypeScript)' },
                     { id: 'database/seeders/SyntheticDataSeeder.php', label: 'SyntheticDataSeeder.php (Pillar 4)' },
                     { id: '.cursorrules', label: '.cursorrules (AI Agent)' },
                     { id: 'AGENTS.md', label: 'AGENTS.md (AI & ECC Rules)' },
-                    { id: 'tests/Feature/ApiContractTest.php', label: 'ApiContractTest.php (Pest Contract)' },
+                    { id: 'tests/Feature/ApiContractTest.php', label: 'ApiContractTest.php (PHPUnit 12)' },
                     { id: 'tests/e2e/smoke.spec.ts', label: 'smoke.spec.ts (Playwright E2E)' },
                     { id: 'deploy.sh', label: 'deploy.sh (CI/CD 6 Skenario)' },
                     { id: '.github/workflows/deploy.yml', label: 'deploy.yml (GitHub Actions)' },

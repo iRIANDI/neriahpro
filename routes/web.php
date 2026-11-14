@@ -117,6 +117,7 @@ Route::get('/blueprint/{slug}/download/schema-json', [BlueprintExportController:
 Route::get('/blueprint/{slug}/raw-md', [BlueprintExportController::class, 'rawMd'])->name('blueprint.raw-md')->middleware('throttle:30,1');
 Route::get('/blueprint/{slug}/export/scaffold', [BlueprintScaffoldController::class, 'exportScaffold'])->name('blueprint.export-scaffold');
 Route::post('/blueprint/{slug}/scaffold/custom-folder', [BlueprintScaffoldController::class, 'saveCustomFolder'])->name('blueprint.scaffold.save-custom-folder')->middleware('throttle:60,1');
+Route::post('/blueprint/{slug}/scaffold/infra-config', [BlueprintScaffoldController::class, 'saveInfraConfig'])->name('blueprint.scaffold.save-infra-config')->middleware('throttle:60,1');
 Route::post('/blueprint/{slug}/scaffold/generate-async', [BlueprintScaffoldController::class, 'generateAsync'])->name('blueprint.scaffold.generate-async');
 Route::get('/blueprint/{slug}/scaffold/job-status', [BlueprintScaffoldController::class, 'getJobStatus'])->name('blueprint.scaffold.job-status');
 Route::get('/blueprint/{slug}/scaffold/preview', [BlueprintScaffoldController::class, 'previewScaffold'])->name('blueprint.scaffold.preview');

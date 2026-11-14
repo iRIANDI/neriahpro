@@ -6,30 +6,30 @@ use Tests\TestCase;
 
 class HealthProbeTest extends TestCase
 {
-    public function test_healthz_endpoint_returns_json_and_healthy_status(): void
+    public function test_healthz_probe_returns_comprehensive_diagnostics(): void
     {
-        \$response = \$this->getJson('/healthz');
-        \$response->assertStatus(200);
-        \$response->assertJsonStructure([
+        $response = $this->getJson('/healthz');
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
             'status',
             'timestamp',
             'total_duration_ms',
             'checks' => ['database', 'cache', 'storage'],
         ]);
-        \$response->assertJsonPath('status', 'healthy');
+        $response->assertJsonPath('status', 'healthy');
     }
 
-    public function test_livez_endpoint_returns_200(): void
+    public function test_livez_probe_returns_instant_alive_signal(): void
     {
-        \$response = \$this->getJson('/livez');
-        \$response->assertStatus(200);
-        \$response->assertJsonPath('status', 'alive');
+        $response = $this->getJson('/livez');
+        $response->assertStatus(200);
+        $response->assertJsonPath('status', 'alive');
     }
 
-    public function test_readyz_endpoint_returns_200(): void
+    public function test_readyz_probe_verifies_database_readiness(): void
     {
-        \$response = \$this->getJson('/readyz');
-        \$response->assertStatus(200);
-        \$response->assertJsonPath('status', 'ready');
+        $response = $this->getJson('/readyz');
+        $response->assertStatus(200);
+        $response->assertJsonPath('status', 'ready');
     }
 }

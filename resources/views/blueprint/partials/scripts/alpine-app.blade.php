@@ -1738,6 +1738,11 @@
                         && !(method_exists($blueprint, 'isRetailTrack') && $blueprint->isRetailTrack())
                         && !(method_exists($blueprint, 'hasPaidRetailLicense') && $blueprint->hasPaidRetailLicense())
                         && !(auth()->user()?->isSuperAdmin() ?? false);
+                    $initShortSlug = \App\Services\ScaffoldGeneratorService::deriveShortSlug($blueprint->slug ?: 'app', $blueprint);
+                    $initInfraConfig = \App\Services\ScaffoldGeneratorService::resolveInfraConfig($blueprint, $initShortSlug);
+                    $initDesignResolved = \App\Support\WorldDesignSystemCatalog::resolveForBlueprint($blueprint);
+                    $initCapabilities = \App\Services\ScaffoldGeneratorService::detectStackCapabilities($blueprint);
+                    $initDesignCatalog = \App\Support\WorldDesignSystemCatalog::catalogForUi();
                 @endphp
                 scaffoldIsScopeLocked: {{ $isScaffoldLockedForUser ? 'true' : 'false' }},
                 scaffoldFullscreenPreview: false,
@@ -1746,6 +1751,91 @@
                 scaffoldAiLoading: false,
                 scaffoldElaboratingDirective: false,
                 scaffoldTelemetry: @js($blueprint->user_metadata['scaffold_elaboration_telemetry'] ?? []),
+                infraConfigOpen: false,
+                infraSaveStatus: 'idle',
+                infraShowSecrets: false,
+                infraForm: @js($initInfraConfig),
+                designSystemSelected: @js($blueprint->user_metadata['design_system'] ?? 'AUTO'),
+                designSystemEffective: @js($initDesignResolved['code']),
+                designSystemRecommended: @js($initDesignResolved['recommended_code'] ?? $initDesignResolved['code']),
+                designSystemCatalog: @js($initDesignCatalog),
+                scaffoldCapabilities: @js($initCapabilities),
+                generateRandomSecret(field, len = 18) {
+                    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
+                    let out = '';
+                    if (window.crypto && window.crypto.getRandomValues) {
+                        const bytes = new Uint32Array(len);
+                        window.crypto.getRandomValues(bytes);
+                        for (let i = 0; i < len; i++) {
+                            out += alphabet[bytes[i] % alphabet.length];
+                        }
+                    } else {
+                        for (let i = 0; i < len; i++) {
+                            out += alphabet[Math.floor(Math.random() * alphabet.length)];
+                        }
+                    }
+                    this.infraForm[field] = out;
+                },
+                async saveInfraConfig(refreshPreview = true) {
+                    if (this.infraSaveStatus === 'saving') return;
+                    this.infraSaveStatus = 'saving';
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                        const payload = Object.assign({}, this.infraForm, {
+                            design_system: this.designSystemSelected || 'AUTO',
+                        });
+                        const res = await fetch('{{ route('blueprint.scaffold.save-infra-config', $blueprint->slug) }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token || '',
+                            },
+                            body: JSON.stringify(payload),
+                        });
+                        const data = await res.json();
+                        if (!res.ok || !data?.success) {
+                            throw new Error(data?.message || ('HTTP ' + res.status));
+                        }
+                        if (data.infra_config) {
+                            this.infraForm = Object.assign({}, this.infraForm, data.infra_config);
+                        }
+                        if (data.design_system) {
+                            this.designSystemSelected = data.design_system.selected || 'AUTO';
+                            this.designSystemEffective = data.design_system.effective_code || this.designSystemEffective;
+                            this.designSystemRecommended = data.design_system.recommended_code || this.designSystemRecommended;
+                        }
+                        if (data.capabilities) {
+                            this.scaffoldCapabilities = data.capabilities;
+                        }
+                        this.infraSaveStatus = 'saved';
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'success',
+                                title: this.locale === 'en' ? 'INFRA & DESIGN SAVED' : 'INFRA & DESAIN TERSIMPAN',
+                                message: this.locale === 'en'
+                                    ? 'Credentials & Design System applied. Regenerating scaffold preview...'
+                                    : 'Kredensial & Sistem Desain diterapkan. Memperbarui pratinjau scaffold...',
+                            });
+                        }
+                        if (refreshPreview) {
+                            this.scaffoldFiles = {};
+                            await this.openScaffoldModal();
+                        }
+                        setTimeout(() => {
+                            if (this.infraSaveStatus === 'saved') this.infraSaveStatus = 'idle';
+                        }, 3000);
+                    } catch (e) {
+                        this.infraSaveStatus = 'error';
+                        if (window.showToast) {
+                            window.showToast({
+                                type: 'error',
+                                title: this.locale === 'en' ? 'SAVE FAILED' : 'GAGAL MENYIMPAN',
+                                message: e.message || 'Gagal menyimpan konfigurasi infrastruktur.',
+                            });
+                        }
+                    }
+                },
                 getScaffoldPresetChips(tabId) {
                     const lower = String(tabId || '').toLowerCase();
                     const isEn = this.isEn;
@@ -1959,6 +2049,17 @@
                                 }
                                 this.scaffoldFiles = data.files;
                                 this.scaffoldCustomizedFiles = data.customized_files || [];
+                                if (data.infra_config) {
+                                    this.infraForm = Object.assign({}, this.infraForm, data.infra_config);
+                                }
+                                if (data.design_system) {
+                                    this.designSystemSelected = data.design_system.selected || 'AUTO';
+                                    this.designSystemEffective = data.design_system.effective_code || this.designSystemEffective;
+                                    this.designSystemRecommended = data.design_system.recommended_code || this.designSystemRecommended;
+                                }
+                                if (data.capabilities) {
+                                    this.scaffoldCapabilities = data.capabilities;
+                                }
                                 const keys = Object.keys(data.files);
                                 if (keys.length > 0 && !this.scaffoldFiles[this.scaffoldActiveTab]) {
                                     const code = this.getScaffoldCode(this.scaffoldActiveTab);

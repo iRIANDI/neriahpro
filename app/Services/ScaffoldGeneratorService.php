@@ -9,6 +9,7 @@ use App\Support\PosEnterpriseGuaranteeCatalog;
 use App\Support\PosLifecycleAndStudioCatalog;
 use App\Support\PosRealWorldRuntimeCatalog;
 use App\Support\PosStackPresetCatalog;
+use App\Support\WorldDesignSystemCatalog;
 use Illuminate\Support\Str;
 use ZipArchive;
 
@@ -17,8 +18,18 @@ class ScaffoldGeneratorService
     /**
      * Generate all scaffold files as an associative array: filename => content.
      */
-    public static function generateFiles(VisionBlueprint $blueprint, ?string $customFolder = null): array
+    public static function generateFiles(VisionBlueprint $blueprint, string|array|null $customFolder = null): array
     {
+        $overrideUniversalSchema = null;
+        if (is_array($customFolder)) {
+            $overrideUniversalSchema = is_array($customFolder['universal_blueprint_schema'] ?? null)
+                ? $customFolder['universal_blueprint_schema']
+                : null;
+            $customFolder = isset($customFolder['custom_folder']) && is_string($customFolder['custom_folder'])
+                ? $customFolder['custom_folder']
+                : null;
+        }
+
         $projectName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'MyApplication');
         $slug = $blueprint->slug ?: Str::slug($projectName);
         if (!empty($customFolder)) {
@@ -126,7 +137,8 @@ class ScaffoldGeneratorService
         }
 
         try {
-            $universalSchema = $prd['universal_blueprint_schema']
+            $universalSchema = $overrideUniversalSchema
+                ?? ($prd['universal_blueprint_schema'] ?? null)
                 ?? ProjectOsBlueprintCompilerService::compileUniversalSchema($blueprint);
         } catch (\Throwable $schemaEx) {
             \Illuminate\Support\Facades\Log::warning('compileUniversalSchema failed in ScaffoldGeneratorService: ' . $schemaEx->getMessage());
@@ -193,9 +205,10 @@ class ScaffoldGeneratorService
 
             // Pillar 3: Infrastructure, Containerization, Health Probes & Routing
             'Dockerfile' => self::generateDockerfile($blueprint, $slug, $universalSchema),
+            'Dockerfile.portable' => self::generateDockerfilePortable($blueprint, $slug, $universalSchema),
             'docker-compose.yml' => self::generateDockerCompose($blueprint, $slug, $universalSchema),
+            'docker-compose.portable.yml' => self::generateDockerComposePortable($blueprint, $slug, $universalSchema),
             'docker-compose.coolify.yml' => self::generateDockerComposeCoolify($blueprint, $slug, $universalSchema),
-            'nixpacks.toml' => self::generateNixpacksToml($universalSchema),
             'coolify.yaml' => self::generateCoolifyYaml($blueprint, $slug, $universalSchema),
             'docs/deployment/DOCKER.md' => self::generateDockerGuide($blueprint, $slug, $universalSchema),
             'docs/DOCKER.md' => self::generateDockerGuide($blueprint, $slug, $universalSchema),
@@ -298,7 +311,7 @@ class ScaffoldGeneratorService
 
             // Pillar 10: Interactive API Sandbox & Developer Portal
             'resources/views/api-docs.blade.php' => self::generateApiDocsBlade($blueprint),
-            'resources/views/welcome.blade.php' => self::generateWelcomeBlade($blueprint, $erdTables, $mvpEngineeringSpecs),
+            'resources/views/welcome.blade.php' => self::generateWelcomeBlade($blueprint, $erdTables, $mvpEngineeringSpecs, $universalSchema),
             'prd.md' => PrdGeneratorService::toMarkdown($blueprint, $prd),
         ];
 
@@ -395,6 +408,32 @@ class ScaffoldGeneratorService
                 }
             }
         }
+
+        // Complete Runnable Laravel 13 Core Skeleton, Design System Assets, LiveKit/Reverb (conditional) & Domain Web Controllers
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $infraConfig = self::resolveInfraConfig($blueprint, $shortSlug);
+        $capabilities = self::detectStackCapabilities($blueprint, $universalSchema);
+        $resolvedDesign = WorldDesignSystemCatalog::resolveForBlueprint($blueprint, $universalSchema);
+
+        $skeletonFiles = self::generateRunnableSkeletonFiles($blueprint, $slug, $shortSlug, $erdTables, $universalSchema, $infraConfig, $capabilities, $resolvedDesign);
+        foreach ($skeletonFiles as $path => $content) {
+            if (! array_key_exists($path, $files)) {
+                $files[$path] = $content;
+            }
+        }
+
+        $webControllers = self::generateDomainWebControllers($erdTables);
+        foreach ($webControllers as $path => $content) {
+            $files[$path] = $content;
+        }
+
+        if ($capabilities['webrtc_audio']) {
+            $files['livekit.yaml'] = self::generateLiveKitYaml($shortSlug, $infraConfig);
+            $files['resources/js/realtime/live-stage-client.js'] = self::generateRealtimeStageClientJs($shortSlug, $infraConfig);
+        }
+
+        // Enforce deterministic hygiene & security validator across every generated file
+        self::validateGeneratedFiles($files);
 
         return $files;
     }
@@ -1090,31 +1129,40 @@ volumes:
 YAML;
         }
 
+        $infra = self::resolveInfraConfig($blueprint, $shortSlug);
+        $capabilities = self::detectStackCapabilities($blueprint, $universalSchema);
+        $baseReplacements = [
+            '{{ APP_NAME }}' => $appName,
+            '{{ SHORT_SLUG }}' => $shortSlug,
+            '{{ APP_PORT }}' => (string) $infra['app_port'],
+            '{{ DB_PORT }}' => (string) $infra['db_port'],
+            '{{ DB_DATABASE }}' => $infra['db_database'],
+            '{{ DB_USERNAME }}' => $infra['db_username'],
+            '{{ DB_PASSWORD }}' => $infra['db_password'],
+            '{{ REDIS_PASSWORD }}' => $infra['redis_password'],
+            '{{ REALTIME_COMPOSE_SERVICES }}' => self::buildRealtimeComposeServices($shortSlug, $infra, $capabilities, true),
+        ];
+
         // Standard Laravel / Monolith Docker Compose
         if ($stack['db_engine'] === 'mysql') {
-            return StubLoader::load('scaffold/docker-compose.yml.stub', [
-                '{{ APP_NAME }}' => $appName,
-                '{{ SLUG }}' => $cleanSlug,
-                '{{ SHORT_SLUG }}' => $shortSlug,
+            return StubLoader::load('scaffold/docker-compose.yml.stub', array_merge($baseReplacements, [
                 'postgres:16-alpine' => 'mysql:8.4',
-                'postgres' => 'mysql',
-                '5432' => '3306',
+                '  postgres:' => '  mysql:',
+                '      postgres:' => '      mysql:',
+                'DB_HOST: postgres' => 'DB_HOST: mysql',
+                ':5432' => ':3306',
+                'DB_PORT: 5432' => 'DB_PORT: 3306',
                 'DB_CONNECTION: pgsql' => 'DB_CONNECTION: mysql',
                 'POSTGRES_DB:' => 'MYSQL_DATABASE:',
                 'POSTGRES_USER:' => 'MYSQL_USER:',
                 'POSTGRES_PASSWORD:' => 'MYSQL_PASSWORD:',
                 'postgres_data:' => 'mysql_data:',
                 '/var/lib/postgresql/data' => '/var/lib/mysql',
-                'schema_complete_postgresql.sql' => 'schema_complete_mysql.sql',
-                'pg_isready -U ${DB_USERNAME:-' . $shortSlug . '_user} -d ${DB_DATABASE:-' . $shortSlug . '_db}' => 'mysqladmin ping -h localhost',
-            ]);
+                "pg_isready -U {$infra['db_username']} -d {$infra['db_database']}" => 'mysqladmin ping -h localhost',
+            ]));
         }
 
-        return StubLoader::load('scaffold/docker-compose.yml.stub', [
-            '{{ APP_NAME }}' => $appName,
-            '{{ SLUG }}' => $cleanSlug,
-            '{{ SHORT_SLUG }}' => $shortSlug,
-        ]);
+        return StubLoader::load('scaffold/docker-compose.yml.stub', $baseReplacements);
     }
 
     /**
@@ -1334,14 +1382,26 @@ volumes:
 YAML;
         }
 
+        $infra = self::resolveInfraConfig($blueprint, $shortSlug);
+        $capabilities = self::detectStackCapabilities($blueprint, $universalSchema);
+        $coolifyReplacements = [
+            '{{ APP_NAME }}' => $appName,
+            '{{ SHORT_SLUG }}' => $shortSlug,
+            '{{ APP_URL }}' => $infra['app_url'],
+            '{{ DB_DATABASE }}' => $infra['db_database'],
+            '{{ DB_USERNAME }}' => $infra['db_username'],
+            '{{ DB_PASSWORD }}' => $infra['db_password'],
+            '{{ REDIS_PASSWORD }}' => $infra['redis_password'],
+            '{{ REALTIME_COMPOSE_SERVICES }}' => self::buildRealtimeComposeServices($shortSlug, $infra, $capabilities, false),
+        ];
+
         // Standard Laravel / PHP Monolith for Coolify
         if ($stack['db_engine'] === 'mysql') {
-            return StubLoader::load('scaffold/docker-compose.coolify.yml.stub', [
-                '{{ APP_NAME }}' => $appName,
-                '{{ SLUG }}' => $cleanSlug,
-                '{{ SHORT_SLUG }}' => $shortSlug,
+            return StubLoader::load('scaffold/docker-compose.coolify.yml.stub', array_merge($coolifyReplacements, [
                 'postgres:16-alpine' => 'mysql:8.4',
-                'postgres' => 'mysql',
+                '  postgres:' => '  mysql:',
+                '      postgres:' => '      mysql:',
+                'DB_HOST: postgres' => 'DB_HOST: mysql',
                 '5432' => '3306',
                 'DB_CONNECTION: pgsql' => 'DB_CONNECTION: mysql',
                 'POSTGRES_DB:' => 'MYSQL_DATABASE:',
@@ -1349,86 +1409,11 @@ YAML;
                 'POSTGRES_PASSWORD:' => 'MYSQL_PASSWORD:',
                 'postgres_data:' => 'mysql_data:',
                 '/var/lib/postgresql/data' => '/var/lib/mysql',
-                'pg_isready -U ${DB_USERNAME:-' . $shortSlug . '_user} -d ${DB_DATABASE:-' . $shortSlug . '_db}' => 'mysqladmin ping -h localhost',
-            ]);
+                'pg_isready -U ${DB_USERNAME:-' . $infra['db_username'] . '} -d ${DB_DATABASE:-' . $infra['db_database'] . '}' => 'mysqladmin ping -h localhost',
+            ]));
         }
 
-        return StubLoader::load('scaffold/docker-compose.coolify.yml.stub', [
-            '{{ APP_NAME }}' => $appName,
-            '{{ SLUG }}' => $cleanSlug,
-            '{{ SHORT_SLUG }}' => $shortSlug,
-        ]);
-    }
-
-    /**
-     * Generate Coolify Nixpacks configuration dynamically adapted to runtime.
-     */
-    public static function generateNixpacksToml(?array $universalSchema = null): string
-    {
-        $techStack = $universalSchema['tech_stack_contract'] ?? [];
-        $shortCode = strtoupper((string)($techStack['short_code'] ?? 'M1'));
-
-        if (in_array($shortCode, ['M3', 'S2'], true)) {
-            return <<<TOML
-# ==============================================================================
-# PROJECT OS // COOLIFY NIXPACKS RUNTIME CONFIGURATION (NODE.JS / NEXT.JS)
-# ==============================================================================
-
-[phases.setup]
-nixPkgs = ["nodejs_22", "pnpm"]
-
-[phases.install]
-cmds = ["npm ci || pnpm install"]
-
-[phases.build]
-cmds = ["npm run build"]
-
-[start]
-cmd = "node server.js"
-TOML;
-        }
-
-        if (in_array($shortCode, ['D2', 'S1'], true)) {
-            return <<<TOML
-# ==============================================================================
-# PROJECT OS // COOLIFY NIXPACKS RUNTIME CONFIGURATION (GOLANG)
-# ==============================================================================
-
-[phases.setup]
-nixPkgs = ["go_1_24"]
-
-[phases.install]
-cmds = ["go mod download"]
-
-[phases.build]
-cmds = ["CGO_ENABLED=0 go build -ldflags=\"-w -s\" -o server ."]
-
-[start]
-cmd = "./server"
-TOML;
-        }
-
-        if ($shortCode === 'M4') {
-            return <<<TOML
-# ==============================================================================
-# PROJECT OS // COOLIFY NIXPACKS RUNTIME CONFIGURATION (PYTHON / DJANGO)
-# ==============================================================================
-
-[phases.setup]
-nixPkgs = ["python312"]
-
-[phases.install]
-cmds = ["pip install --no-cache-dir -r requirements.txt"]
-
-[phases.build]
-cmds = ["python manage.py collectstatic --noinput"]
-
-[start]
-cmd = "gunicorn config.asgi:application -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:\$PORT"
-TOML;
-        }
-
-        return StubLoader::load('scaffold/nixpacks.toml.stub', []);
+        return StubLoader::load('scaffold/docker-compose.coolify.yml.stub', $coolifyReplacements);
     }
 
     /**
@@ -1788,15 +1773,45 @@ AI_SHIELD_ENABLED=true
 ENV;
         }
 
-        // Standard Laravel .env.example with dynamic DB
-        return StubLoader::load('scaffold/env.example.stub', [
+        // Standard Laravel .env.example with dynamic DB, Redis, Mail, Seeder & Design System tokens
+        $infra = self::resolveInfraConfig($blueprint, $shortSlug);
+        $capabilities = self::detectStackCapabilities($blueprint, $universalSchema);
+        $resolvedDesign = WorldDesignSystemCatalog::resolveForBlueprint($blueprint, $universalSchema ?? []);
+        $sectorCode = (string) ($universalSchema['sector']['code'] ?? ($universalSchema['project_metadata']['primary_sector'] ?? 'GENERAL_ENTERPRISE'));
+        $sectorTitle = (string) ($universalSchema['sector']['name']['en'] ?? ($universalSchema['sector']['title'] ?? $appName));
+        $locale = (string) (($blueprint->user_metadata['locale'] ?? null) ?: 'id');
+
+        $envReplacements = [
             '{{ APP_NAME }}' => $appName,
-            '{{ SLUG }}' => $cleanSlug,
             '{{ SHORT_SLUG }}' => $shortSlug,
-            'DB_CONNECTION=pgsql' => 'DB_CONNECTION=' . $dbEngine,
-            'DB_PORT=5432' => 'DB_PORT=' . $dbPort,
-            'DB_FORWARD_PORT=5432' => 'DB_FORWARD_PORT=' . $dbPort,
-        ]);
+            '{{ SECTOR_CODE }}' => $sectorCode,
+            '{{ SECTOR_TITLE }}' => $sectorTitle,
+            '{{ DESIGN_SYSTEM_CODE }}' => (string) ($resolvedDesign['code'] ?? 'SWISS_TECHNICAL_GRID'),
+            '{{ APP_PORT }}' => (string) $infra['app_port'],
+            '{{ APP_URL }}' => $infra['app_url'],
+            '{{ LOCALE }}' => $locale,
+            '{{ DB_HOST }}' => $infra['db_host'],
+            '{{ DB_PORT }}' => (string) ($dbEngine === 'mysql' ? 3306 : $infra['db_port']),
+            '{{ DB_DATABASE }}' => $infra['db_database'],
+            '{{ DB_USERNAME }}' => $infra['db_username'],
+            '{{ DB_PASSWORD }}' => $infra['db_password'],
+            '{{ REDIS_HOST }}' => $infra['redis_host'],
+            '{{ REDIS_PASSWORD }}' => $infra['redis_password'],
+            '{{ MAIL_HOST }}' => $infra['mail_host'],
+            '{{ MAIL_PORT }}' => (string) $infra['mail_port'],
+            '{{ MAIL_USERNAME }}' => $infra['mail_username'],
+            '{{ MAIL_PASSWORD }}' => $infra['mail_password'],
+            '{{ ADMIN_SEED_NAME }}' => $infra['admin_seed_name'],
+            '{{ ADMIN_SEED_EMAIL }}' => $infra['admin_seed_email'],
+            '{{ ADMIN_SEED_PASSWORD }}' => $infra['admin_seed_password'],
+            '{{ STACK_EXTRA_ENV }}' => self::buildStackExtraEnv($infra, $capabilities),
+        ];
+
+        if ($dbEngine === 'mysql') {
+            $envReplacements['DB_CONNECTION=pgsql'] = 'DB_CONNECTION=mysql';
+        }
+
+        return StubLoader::load('scaffold/env.example.stub', $envReplacements);
     }
 
     /**
@@ -1906,11 +1921,13 @@ CONF;
                 ];
             }
 
+            $seenCols = ['id' => true, 'created_at' => true, 'updated_at' => true, 'timestamps' => true];
             foreach ($columns as $col) {
                 $colName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? ''));
-                if ($colName === 'id' || empty($colName)) {
+                if ($colName === '' || isset($seenCols[$colName])) {
                     continue;
                 }
+                $seenCols[$colName] = true;
 
                 $rawType = strtolower($col['type'] ?? 'string');
                 $sqlType = 'VARCHAR(255)';
@@ -1922,7 +1939,7 @@ CONF;
                 } elseif (str_contains($rawType, 'int') || str_contains($rawType, 'count')) {
                     $sqlType = 'INTEGER DEFAULT 0';
                 } elseif (str_contains($rawType, 'decimal') || str_contains($rawType, 'price') || str_contains($rawType, 'amount')) {
-                    $sqlType = 'NUMERIC(15, 2) DEFAULT 0.00';
+                    $sqlType = 'NUMERIC(19, 4) DEFAULT 0.0000';
                 } elseif (str_contains($rawType, 'bool')) {
                     $sqlType = 'BOOLEAN DEFAULT FALSE';
                 } elseif (str_contains($rawType, 'json')) {
@@ -2037,11 +2054,13 @@ CONF;
             $indexes = [];
             $indexes[] = '    PRIMARY KEY (`id`)';
 
+            $seenMyCols = ['id' => true, 'created_at' => true, 'updated_at' => true, 'timestamps' => true];
             foreach ($columns as $col) {
                 $colName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? ''));
-                if ($colName === 'id' || empty($colName)) {
+                if ($colName === '' || isset($seenMyCols[$colName])) {
                     continue;
                 }
+                $seenMyCols[$colName] = true;
 
                 $rawType = strtolower($col['type'] ?? 'string');
                 $sqlType = 'VARCHAR(255) NULL';
@@ -2054,7 +2073,7 @@ CONF;
                 } elseif (str_contains($rawType, 'int') || str_contains($rawType, 'count')) {
                     $sqlType = 'INT NOT NULL DEFAULT 0';
                 } elseif (str_contains($rawType, 'decimal') || str_contains($rawType, 'price') || str_contains($rawType, 'amount')) {
-                    $sqlType = 'DECIMAL(15, 2) NOT NULL DEFAULT 0.00';
+                    $sqlType = 'DECIMAL(19, 4) NOT NULL DEFAULT 0.0000';
                 } elseif (str_contains($rawType, 'bool')) {
                     $sqlType = 'TINYINT(1) NOT NULL DEFAULT 0';
                 } elseif (str_contains($rawType, 'json')) {
@@ -2124,18 +2143,26 @@ CONF;
         $code .= "Route::get('/healthz', [HealthProbeController::class, 'healthz'])->name('healthz');\n";
         $code .= "Route::get('/livez', [HealthProbeController::class, 'livez'])->name('livez');\n";
         $code .= "Route::get('/readyz', [HealthProbeController::class, 'readyz'])->name('readyz');\n\n";
-        $code .= "// Pillar 10: Interactive OpenAPI Scalar Documentation Sandbox\n";
+        $safeTitle = addslashes((string) ($blueprint->nama_bisnis ?: 'Enterprise App'));
+        $code .= "// Kubernetes & Load-Balancer Health Probes\n";
+        $code .= "Route::get('/healthz', [\\App\\Http\\Controllers\\HealthProbeController::class, 'healthz'])->name('healthz');\n";
+        $code .= "Route::get('/livez', [\\App\\Http\\Controllers\\HealthProbeController::class, 'livez'])->name('livez');\n";
+        $code .= "Route::get('/readyz', [\\App\\Http\\Controllers\\HealthProbeController::class, 'readyz'])->name('readyz');\n\n";
+        $code .= "// Pillar 10: 100% Local Offline-Safe OpenAPI 3.1 Explorer\n";
         $code .= "Route::get('/docs/api', function () {\n";
-        $code .= "    return view('api-docs', ['title' => '{$blueprint->nama_bisnis} - Interactive API Reference']);\n";
-        $code .= "})->name('docs.api');\n\n";
+        $code .= "    return view('api-docs', ['title' => '{$safeTitle} - Interactive API Reference']);\n";
+        $code .= "})->name('docs.api');\n";
+        $code .= "Route::get('/openapi.json', function () {\n";
+        $code .= "    return response()->file(public_path('openapi.json'), ['Content-Type' => 'application/json']);\n";
+        $code .= "})->name('openapi.spec');\n\n";
         $code .= "Route::get('/', function () {\n";
-        $code .= "    return view('welcome', ['title' => '{$blueprint->nama_bisnis} - Sistem Resmi']);\n";
-        $code .= "});\n\n";
-        $code .= "Route::middleware(['auth', 'verified'])->group(function () {\n";
-        $code .= "    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');\n";
-        $code .= "    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');\n";
-        $code .= "    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');\n";
-        $code .= "    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');\n\n";
+        $code .= "    return view('welcome', ['title' => '{$safeTitle} - Operational Portal']);\n";
+        $code .= "})->name('home');\n\n";
+        $code .= "Route::middleware(['auth'])->group(function () {\n";
+        $code .= "    Route::get('/dashboard', [\\App\\Http\\Controllers\\DashboardController::class, 'index'])->name('dashboard');\n";
+        $code .= "    Route::get('/profile', [\\App\\Http\\Controllers\\ProfileController::class, 'edit'])->name('profile.edit');\n";
+        $code .= "    Route::patch('/profile', [\\App\\Http\\Controllers\\ProfileController::class, 'update'])->name('profile.update');\n";
+        $code .= "    Route::delete('/profile', [\\App\\Http\\Controllers\\ProfileController::class, 'destroy'])->name('profile.destroy');\n\n";
 
         foreach ($erdTables as $table) {
             $tableName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $table['name'] ?? ''));
@@ -2144,7 +2171,7 @@ CONF;
             }
             $controllerName = Str::studly(Str::singular($tableName)).'Controller';
             $code .= "    // Domain CRUD: {$table['name']}\n";
-            $code .= "    Route::resource('{$tableName}', \\App\\Http\\Controllers\\{$controllerName}::class);\n";
+            $code .= "    Route::resource('{$tableName}', \\App\\Http\\Controllers\\{$controllerName}::class)->parameters(['{$tableName}' => 'record']);\n";
         }
 
         $code .= "});\n\n";
@@ -2154,20 +2181,21 @@ CONF;
     }
 
     /**
-     * Generate Laravel routes/api.php with AI-Shield middleware.
+     * Generate Laravel routes/api.php with AI-Shield middleware & RBAC enforcement.
      */
     public static function generateLaravelApiRoutes(VisionBlueprint $blueprint, array $erdTables): string
     {
         $code = "<?php\n\n";
-        $code .= "use Illuminate\Http\Request;\n";
         $code .= "use Illuminate\Support\Facades\Route;\n\n";
         $code .= "/*\n";
         $code .= "|--------------------------------------------------------------------------\n";
-        $code .= "| API Routes with AI-Shield & O(1) Keyset Cursor Pagination\n";
+        $code .= "| API Routes with AI-Shield, RBAC Gate & O(1) Keyset Cursor Pagination\n";
         $code .= "|--------------------------------------------------------------------------\n";
         $code .= "*/\n\n";
         $code .= "Route::middleware(['api', \\App\\Http\\Middleware\\AiThreatShield::class])->prefix('v1')->group(function () {\n";
-        $code .= "    Route::get('/health', fn () => response()->json(['status' => 'operational', 'timestamp' => now()->toIso8601String()]));\n\n";
+        $code .= "    Route::get('/health', fn () => response()->json(['status' => 'operational', 'timestamp' => now()->toIso8601String()]));\n";
+        $code .= "    Route::post('/telemetry/client-error', [\\App\\Http\\Controllers\\Telemetry\\ClientErrorTelemetryController::class, 'store'])->name('api.telemetry.client-error');\n\n";
+        $code .= "    Route::middleware(['auth', 'operator.role:superadmin,admin,operator'])->group(function () {\n";
 
         foreach ($erdTables as $table) {
             $tableName = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $table['name'] ?? ''));
@@ -2175,10 +2203,11 @@ CONF;
                 continue;
             }
             $controllerName = Str::studly(Str::singular($tableName)).'ApiController';
-            $code .= "    // API Endpoints for {$tableName}\n";
-            $code .= "    Route::apiResource('{$tableName}', \\App\\Http\\Controllers\\Api\\{$controllerName}::class);\n";
+            $code .= "        // API Endpoints for {$tableName}\n";
+            $code .= "        Route::apiResource('{$tableName}', \\App\\Http\\Controllers\\Api\\{$controllerName}::class)->parameters(['{$tableName}' => 'record']);\n";
         }
 
+        $code .= "    });\n";
         $code .= "});\n";
 
         return $code;
@@ -2190,8 +2219,11 @@ CONF;
     public static function generateNextJsRoute(VisionBlueprint $blueprint, array $erdTables = []): string
     {
         $projectName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'MyApplication');
+        $firstTable = strtolower((string) preg_replace('/[^a-zA-Z0-9_]/', '_', (string) ($erdTables[0]['name'] ?? 'resources')));
+
         return StubLoader::load('scaffold/nextjs.route.ts.stub', [
             '{{ APP_NAME }}' => $projectName,
+            '{{ DOMAIN_NAME }}' => $firstTable !== '' ? $firstTable : 'resources',
         ]);
     }
 
@@ -2276,18 +2308,22 @@ CONF;
             . "    user_id VARCHAR(26) REFERENCES users(id) ON DELETE RESTRICT,\n"
             . "    booking_code VARCHAR(64) UNIQUE NOT NULL,\n"
             . "    status VARCHAR(50) DEFAULT 'pending',\n"
-            . "    total_amount NUMERIC(15, 2) DEFAULT 0.00,\n"
+            . "    total_amount NUMERIC(19, 4) NOT NULL DEFAULT 0.0000,\n"
             . "    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,\n"
             . "    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP\n"
             . ");\n\n"
             . "CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);\n";
 
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+
         return [
-            'README.md' => "# {$projectName} (Project OS Starter Kit)\n\nArsitektur: Laravel 13, Filament v5, PostgreSQL 16 Strict ULID, Keyset Cursor Pagination O(1).\n",
+            'README.md' => "# {$projectName} (Project OS Starter Kit)\n\nArsitektur: Laravel 13, Railpack + Docker Portable, PostgreSQL 16 Strict ULID, Keyset Cursor Pagination O(1).\n",
             'Dockerfile' => self::generateDockerfile($blueprint, $slug),
+            'Dockerfile.portable' => self::generateDockerfilePortable($blueprint, $slug),
             'docker-compose.yml' => self::generateDockerCompose($blueprint, $slug),
+            'docker-compose.portable.yml' => self::generateDockerComposePortable($blueprint, $slug),
             'docker-compose.coolify.yml' => self::generateDockerComposeCoolify($blueprint, $slug),
-            'nixpacks.toml' => self::generateNixpacksToml(),
+            'railpack.json' => self::generateRailpackConfig($shortSlug),
             'coolify.yaml' => self::generateCoolifyYaml($blueprint, $slug),
             'docs/deployment/DOCKER.md' => self::generateDockerGuide($blueprint, $slug),
             'docs/DOCKER.md' => self::generateDockerGuide($blueprint, $slug),
@@ -3011,6 +3047,12 @@ MARKDOWN;
     {
         $projectName = $blueprint->nama_bisnis ?: 'Application';
         $slug = $blueprint->slug ?: Str::slug($projectName);
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $infraConfig = self::resolveInfraConfig($blueprint, $shortSlug);
+
+        $adminName = addslashes((string) ($infraConfig['admin_seed_name'] ?? 'Principal Administrator'));
+        $adminEmail = addslashes((string) ($infraConfig['admin_seed_email'] ?? "admin@{$shortSlug}.local"));
+        $adminPassword = addslashes((string) ($infraConfig['admin_seed_password'] ?? 'ChangeMe!Ops2026'));
 
         $tablesToSeed = [];
         foreach ($erdTables as $table) {
@@ -3026,56 +3068,62 @@ MARKDOWN;
             foreach ($tablesToSeed as $tbl) {
                 $tname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $tbl['name'] ?? 'records'));
                 $tableLabel = Str::headline($tname);
+                $safeTableLabel = addslashes($tableLabel);
+                $safeProjectName = addslashes($projectName);
                 $columns = $tbl['columns'] ?? [];
 
                 $colAssignments = [];
                 $colAssignments[] = "                    'id' => \$recordId,";
-
-                $hasUserId = false;
-                $hasTitle = false;
-                $hasDesc = false;
-                $hasAmount = false;
-                $hasStatus = false;
-                $hasPhone = false;
+                $seenCols = ['id' => true, 'created_at' => true, 'updated_at' => true, 'deleted_at' => true];
 
                 foreach ($columns as $c) {
                     $cname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $c['name'] ?? ''));
-                    if ($cname === 'id' || empty($cname) || in_array($cname, ['created_at', 'updated_at', 'deleted_at'])) {
+                    if ($cname === '' || isset($seenCols[$cname])) {
                         continue;
                     }
+                    $seenCols[$cname] = true;
+                    $rawType = strtolower((string) ($c['type'] ?? 'string'));
+                    $isJson = str_contains($rawType, 'json');
 
-                    if ($cname === 'user_id' || str_ends_with($cname, '_user_id')) {
+                    if ($cname === 'organization_id') {
+                        $colAssignments[] = "                    'organization_id' => \$defaultOrgId,";
+                    } elseif ($cname === 'user_id' || str_ends_with($cname, '_user_id')) {
                         $colAssignments[] = "                    '{$cname}' => (\$i % 2 === 0 ? \$adminId : \$operatorId),";
-                        $hasUserId = true;
                     } elseif (str_ends_with($cname, '_id')) {
                         $colAssignments[] = "                    '{$cname}' => null,";
-                    } elseif (in_array($cname, ['title', 'name', 'nama', 'label', 'subject'])) {
-                        $colAssignments[] = "                    '{$cname}' => json_encode(['id' => '{$tableLabel} #' . \$padded . ' - {$projectName}', 'en' => '{$tableLabel} #' . \$padded . ' - {$projectName}']),";
-                        $hasTitle = true;
-                    } elseif (in_array($cname, ['description', 'deskripsi', 'notes', 'catatan', 'summary', 'detail'])) {
-                        $colAssignments[] = "                    '{$cname}' => json_encode(['id' => 'Catatan simulasi nyata terverifikasi arsitektur PostgreSQL ULID.', 'en' => 'Verified synthetic operational data bound to PostgreSQL ULID.']),";
-                        $hasDesc = true;
-                    } elseif (in_array($cname, ['amount', 'nominal_amount', 'price', 'total', 'biaya', 'fee', 'saldo', 'budget'])) {
-                        $colAssignments[] = "                    '{$cname}' => 1500000 + (\$i * 250000),";
-                        $hasAmount = true;
+                    } elseif ($isJson) {
+                        if (in_array($cname, ['title', 'name', 'nama', 'label', 'subject'], true)) {
+                            $colAssignments[] = "                    '{$cname}' => json_encode(['id' => '{$safeTableLabel} #' . \$padded . ' - {$safeProjectName}', 'en' => '{$safeTableLabel} #' . \$padded . ' - {$safeProjectName}']),";
+                        } elseif (in_array($cname, ['description', 'deskripsi', 'notes', 'catatan', 'summary', 'detail'], true)) {
+                            $colAssignments[] = "                    '{$cname}' => json_encode(['id' => 'Rekaman operasional terverifikasi Strict ULID.', 'en' => 'Verified operational record bound to Strict ULID.']),";
+                        } else {
+                            $colAssignments[] = "                    '{$cname}' => json_encode(['batch' => 'synthetic_v1', 'sequence' => \$i, 'module' => '{$tname}']),";
+                        }
+                    } elseif (in_array($cname, ['title', 'name', 'nama', 'label', 'subject'], true)) {
+                        $colAssignments[] = "                    '{$cname}' => '{$safeTableLabel} #' . \$padded . ' - {$safeProjectName}',";
+                    } elseif (in_array($cname, ['description', 'deskripsi', 'notes', 'catatan', 'summary', 'detail'], true)) {
+                        $colAssignments[] = "                    '{$cname}' => 'Operational synthetic record #' . \$padded . ' verified for {$safeTableLabel}.',";
                     } elseif ($cname === 'status') {
                         $colAssignments[] = "                    'status' => \$statuses[\$i % count(\$statuses)],";
-                        $hasStatus = true;
-                    } elseif (in_array($cname, ['phone', 'phone_e164', 'whatsapp', 'telepon', 'mobile'])) {
+                    } elseif (in_array($cname, ['phone', 'phone_e164', 'whatsapp', 'telepon', 'mobile'], true)) {
                         $colAssignments[] = "                    '{$cname}' => '+628123456' . \$padded,";
-                        $hasPhone = true;
-                    } elseif (in_array($cname, ['email', 'email_address'])) {
-                        $colAssignments[] = "                    '{$cname}' => 'member' . \$padded . '@{$slug}.local',";
-                    } elseif (in_array($cname, ['code', 'kode', 'sku', 'nisn', 'nim', 'invoice_number', 'reference'])) {
-                        $colAssignments[] = "                    '{$cname}' => '".strtoupper(substr($tname, 0, 3))."-' . date('Y') . '-' . \$padded,";
-                    } elseif (str_contains(strtolower($c['type'] ?? ''), 'json')) {
-                        $colAssignments[] = "                    '{$cname}' => json_encode(['batch' => 'synthetic_v1', 'sequence' => \$i, 'system' => 'Project OS']),";
-                    } elseif (str_contains(strtolower($c['type'] ?? ''), 'int')) {
-                        $colAssignments[] = "                    '{$cname}' => \$i * 10,";
-                    } elseif (str_contains(strtolower($c['type'] ?? ''), 'bool')) {
-                        $colAssignments[] = "                    '{$cname}' => \$i % 2 === 0,";
+                    } elseif (in_array($cname, ['email', 'email_address'], true)) {
+                        $colAssignments[] = "                    '{$cname}' => 'member' . \$padded . '@{$shortSlug}.local',";
+                    } elseif (in_array($cname, ['code', 'kode', 'sku', 'nisn', 'nim', 'invoice_number', 'reference', 'slug'], true)) {
+                        $prefix = strtoupper(substr($tname, 0, 3) ?: 'REC');
+                        $colAssignments[] = "                    '{$cname}' => '{$prefix}-' . date('Y') . '-' . \$padded,";
+                    } elseif (str_contains($rawType, 'bool') || str_starts_with($cname, 'is_') || str_starts_with($cname, 'has_')) {
+                        $colAssignments[] = "                    '{$cname}' => (\$i % 2 === 0),";
+                    } elseif (str_contains($rawType, 'decimal') || str_contains($rawType, 'numeric') || str_contains($rawType, 'float') || str_contains($rawType, 'double') || in_array($cname, ['amount', 'nominal_amount', 'price', 'total', 'biaya', 'fee', 'saldo', 'budget'], true)) {
+                        $colAssignments[] = "                    '{$cname}' => number_format(150000 + (\$i * 25000), 4, '.', ''),";
+                    } elseif (str_contains($rawType, 'int')) {
+                        $colAssignments[] = "                    '{$cname}' => (\$i * 10),";
+                    } elseif ($rawType === 'date') {
+                        $colAssignments[] = "                    '{$cname}' => \$now->copy()->subDays(\$i)->toDateString(),";
+                    } elseif (str_contains($rawType, 'time')) {
+                        $colAssignments[] = "                    '{$cname}' => \$now->copy()->subHours(\$i * 2)->toDateTimeString(),";
                     } else {
-                        $colAssignments[] = "                    '{$cname}' => 'Synthetic ' . \$padded,";
+                        $colAssignments[] = "                    '{$cname}' => '{$safeTableLabel} Sample ' . \$padded,";
                     }
                 }
 
@@ -3086,51 +3134,51 @@ MARKDOWN;
 
                 $seederBlocks[] = <<<INNER
         // Seed Realistic Mock Records for Entity: {$tname} ({$tableLabel})
-        for (\$i = 1; \$i <= 20; \$i++) {
-            \$recordId = (string) Str::ulid();
-            \$padded = str_pad((string)\$i, 3, '0', STR_PAD_LEFT);
+        if (Schema::hasTable('{$tname}')) {
             \$statuses = ['active', 'processing', 'settled', 'completed'];
+            for (\$i = 1; \$i <= 20; \$i++) {
+                \$recordId = (string) Str::ulid();
+                \$padded = str_pad((string) \$i, 3, '0', STR_PAD_LEFT);
 
-            try {
-                DB::table('{$tname}')->insertOrIgnore([
+                try {
+                    DB::table('{$tname}')->insertOrIgnore([
 {$colBlock}
-                ]);
-            } catch (\\Throwable \$e) {
-                // Table might use custom schema; safely bypass if migration structure varies
+                    ]);
+                } catch (\\Throwable \$e) {
+                    Log::warning('[SyntheticDataSeeder] Failed inserting synthetic record into {$tname}', [
+                        'iteration' => \$i,
+                        'error' => \$e->getMessage(),
+                    ]);
+                }
             }
         }
 INNER;
             }
         } else {
-            // Fallback general domain table
+            $safeProjectName = addslashes($projectName);
             $seederBlocks[] = <<<FALLBACK
-        // Seed 25 Realistic Demonstration Records
-        for (\$i = 1; \$i <= 25; \$i++) {
-            \$recordId = (string) Str::ulid();
-            \$padded = str_pad((string)\$i, 3, '0', STR_PAD_LEFT);
-            \$titleJson = json_encode([
-                'id' => "Proyek Operasional #{\$padded} - {$projectName}",
-                'en' => "Operational Enterprise Project #{\$padded} - {$projectName}",
-            ]);
-            \$descJson = json_encode([
-                'id' => "Catatan rekayasa sistem otomatis yang terhubung ke arsitektur PostgreSQL ULID.",
-                'en' => "Automated engineering record bound to PostgreSQL ULID architecture.",
-            ]);
+        // Fallback operational seed when custom domain tables exist
+        if (Schema::hasTable('project_records')) {
+            for (\$i = 1; \$i <= 25; \$i++) {
+                \$recordId = (string) Str::ulid();
+                \$padded = str_pad((string) \$i, 3, '0', STR_PAD_LEFT);
 
-            try {
-                DB::table('project_records')->insertOrIgnore([
-                    'id' => \$recordId,
-                    'user_id' => \$operatorId,
-                    'title' => \$titleJson,
-                    'description' => \$descJson,
-                    'nominal_amount' => 1500000 + (\$i * 250000),
-                    'phone_e164' => '+628123456' . \$padded,
-                    'status' => \$i % 3 === 0 ? 'settled' : (\$i % 2 === 0 ? 'processing' : 'active'),
-                    'created_at' => \$now->copy()->subHours(\$i * 2),
-                    'updated_at' => \$now->copy()->subHours(\$i * 2),
-                ]);
-            } catch (\\Throwable \$e) {
-                // Safely bypass if not migrated yet
+                try {
+                    DB::table('project_records')->insertOrIgnore([
+                        'id' => \$recordId,
+                        'organization_id' => \$defaultOrgId,
+                        'user_id' => \$operatorId,
+                        'title' => "Operational Enterprise Record #{\$padded} - {$safeProjectName}",
+                        'description' => 'Automated engineering record bound to Strict ULID architecture.',
+                        'nominal_amount' => number_format(1500000 + (\$i * 250000), 4, '.', ''),
+                        'phone_e164' => '+628123456' . \$padded,
+                        'status' => \$i % 3 === 0 ? 'settled' : (\$i % 2 === 0 ? 'processing' : 'active'),
+                        'created_at' => \$now->copy()->subHours(\$i * 2),
+                        'updated_at' => \$now->copy()->subHours(\$i * 2),
+                    ]);
+                } catch (\\Throwable \$e) {
+                    Log::warning('[SyntheticDataSeeder] Fallback table seed failed', ['error' => \$e->getMessage()]);
+                }
             }
         }
 FALLBACK;
@@ -3141,42 +3189,52 @@ FALLBACK;
         return <<<PHP
 <?php
 
+declare(strict_types=1);
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class SyntheticDataSeeder extends Seeder
 {
     /**
      * Run synthetic mock data generation for all core entities.
-     * Enforces strict ULID primary keys, localized JSON strings, and concrete relationships.
+     * Enforces Strict ULID primary keys, dynamic infra credentials, and schema-safe inserts.
      */
     public function run(): void
     {
         \$now = now();
+        \$defaultOrgId = (string) Str::ulid();
 
-        // 1. Seed Core Administrative User
+        // 1. Seed Core Administrative User (aligned with INFRA_CONFIG credentials)
         \$adminId = (string) Str::ulid();
         DB::table('users')->insertOrIgnore([
             'id' => \$adminId,
-            'name' => 'Principal Administrator',
-            'email' => 'admin@{$slug}.local',
-            'password' => bcrypt('password123'),
+            'organization_id' => \$defaultOrgId,
+            'name' => '{$adminName}',
+            'email' => '{$adminEmail}',
+            'password' => Hash::make('{$adminPassword}'),
             'role' => 'superadmin',
+            'is_active' => true,
             'created_at' => \$now,
             'updated_at' => \$now,
         ]);
 
-        // 2. Seed Standard Operators & Clients
+        // 2. Seed Standard Operator
         \$operatorId = (string) Str::ulid();
         DB::table('users')->insertOrIgnore([
             'id' => \$operatorId,
+            'organization_id' => \$defaultOrgId,
             'name' => 'Operations Lead',
-            'email' => 'ops@{$slug}.local',
-            'password' => bcrypt('password123'),
+            'email' => 'ops@{$shortSlug}.local',
+            'password' => Hash::make('{$adminPassword}'),
             'role' => 'operator',
+            'is_active' => true,
             'created_at' => \$now,
             'updated_at' => \$now,
         ]);
@@ -3184,35 +3242,31 @@ class SyntheticDataSeeder extends Seeder
 {$allBlocks}
 
         // 3. Stress & Benchmark Scaling Mode (SCALE_STRESS=true)
-        // Benchmark 10,000+ records to verify sub-5ms O(1) Keyset indexes
-        if (env('SCALE_STRESS', false) === true) {
-            echo ">>> [STRESS BENCHMARK] Seeding 10,000 high-scale records to verify O(1) Keyset indexes...\n";
+        if ((bool) env('SCALE_STRESS', false) === true) {
             \$benchmarkStart = microtime(true);
             \$chunks = [];
             for (\$s = 1; \$s <= 10000; \$s++) {
                 \$chunks[] = [
                     'id' => (string) Str::ulid(),
+                    'organization_id' => \$defaultOrgId,
                     'name' => 'Stress Benchmark User #' . \$s,
-                    'email' => 'stress_user_' . \$s . '@{$slug}.local',
-                    'password' => bcrypt('secret'),
-                    'role' => 'client',
+                    'email' => 'stress_user_' . \$s . '@{$shortSlug}.local',
+                    'password' => Hash::make('secret'),
+                    'role' => 'operator',
+                    'is_active' => true,
                     'created_at' => \$now->copy()->subMinutes(\$s),
                     'updated_at' => \$now->copy()->subMinutes(\$s),
                 ];
                 if (count(\$chunks) >= 1000) {
-                    try {
-                        DB::table('users')->insertOrIgnore(\$chunks);
-                    } catch (\\Throwable \$e) {}
+                    DB::table('users')->insertOrIgnore(\$chunks);
                     \$chunks = [];
                 }
             }
-            if (!empty(\$chunks)) {
-                try {
-                    DB::table('users')->insertOrIgnore(\$chunks);
-                } catch (\\Throwable \$e) {}
+            if (! empty(\$chunks)) {
+                DB::table('users')->insertOrIgnore(\$chunks);
             }
             \$elapsed = round((microtime(true) - \$benchmarkStart), 3);
-            echo ">>> [STRESS BENCHMARK COMPLETE] 10,000 records seeded in {\$elapsed}s. Keyset O(1) index verified!\n";
+            Log::info("[SyntheticDataSeeder] 10,000 stress records seeded in {\$elapsed}s.");
         }
     }
 }
@@ -3446,9 +3500,12 @@ PHP;
      */
     public static function generateCiCdWorkflow(VisionBlueprint $blueprint, string $slug): string
     {
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+
         return StubLoader::load('scaffold/deploy.yml.stub', [
             '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
             '{{ SLUG }}' => $slug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
         ]);
     }
 
@@ -3458,9 +3515,13 @@ PHP;
      */
     public static function generateDeployScript(VisionBlueprint $blueprint, string $slug): string
     {
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $infra = self::resolveInfraConfig($blueprint, $shortSlug);
+
         return StubLoader::load('scaffold/deploy.sh.stub', [
             '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
-            '{{ SLUG }}' => $slug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
+            '{{ APP_PORT }}' => (string) $infra['app_port'],
         ]);
     }
 
@@ -3496,8 +3557,16 @@ PHP;
      */
     public static function generateProductBrief(VisionBlueprint $blueprint): string
     {
+        $fiturText = is_array($blueprint->fitur_wajib)
+            ? implode("\n  - ", array_filter($blueprint->fitur_wajib))
+            : (string) ($blueprint->fitur_wajib ?: 'Core operational modules');
+
         return StubLoader::load('scaffold/PRODUCT-BRIEF.md.stub', [
             '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ TARGET_WAKTU }}' => $blueprint->target_waktu ?: '4-8 Minggu',
+            '{{ AUDIENS }}' => $blueprint->target_audiens ?: 'Operational Staff & Stakeholders',
+            '{{ MASALAH }}' => $blueprint->masalah_utama ?: 'Digital operational efficiency and data integrity',
+            '{{ FITUR_WAJIB }}' => $fiturText,
         ]);
     }
 
@@ -3698,9 +3767,14 @@ PHP;
      */
     public static function generateBackupScript(VisionBlueprint $blueprint, string $slug): string
     {
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $infra = self::resolveInfraConfig($blueprint, $shortSlug);
+
         return StubLoader::load('scaffold/backup.sh.stub', [
             '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
-            '{{ SLUG }}' => $slug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
+            '{{ DB_DATABASE }}' => $infra['db_database'],
+            '{{ DB_USERNAME }}' => $infra['db_username'],
         ]);
     }
 
@@ -3709,9 +3783,13 @@ PHP;
      */
     public static function generateRestoreScript(VisionBlueprint $blueprint, string $slug): string
     {
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $infra = self::resolveInfraConfig($blueprint, $shortSlug);
+
         return StubLoader::load('scaffold/restore.sh.stub', [
-            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
-            '{{ SLUG }}' => $slug,
+            '{{ SHORT_SLUG }}' => $shortSlug,
+            '{{ DB_DATABASE }}' => $infra['db_database'],
+            '{{ DB_USERNAME }}' => $infra['db_username'],
         ]);
     }
 
@@ -3729,11 +3807,12 @@ PHP;
     /**
      * Pillar 10: Interactive API Scalar Sandbox Blade View (resources/views/api-docs.blade.php).
      */
-    public static function generateApiDocsBlade(VisionBlueprint $blueprint): string
+    public static function generateApiDocsBlade(VisionBlueprint $blueprint, ?array $universalSchema = null): string
     {
-        return StubLoader::load('scaffold/api-docs.blade.stub', [
-            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
-        ]);
+        $appName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Enterprise App');
+        $resolvedDesign = WorldDesignSystemCatalog::resolveForBlueprint($blueprint, $universalSchema ?? []);
+
+        return WorldDesignSystemCatalog::generateApiDocsBlade($appName, $resolvedDesign);
     }
 
     /**
@@ -3927,10 +4006,13 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint \$table) {
             \$table->ulid('id')->primary();
+            \$table->ulid('organization_id')->nullable()->index();
             \$table->string('name', 255);
             \$table->string('email', 255)->unique();
             \$table->string('password', 255);
-            \$table->string('role', 50)->default('client')->index();
+            \$table->string('role', 50)->default('operator')->index();
+            \$table->boolean('is_active')->default(true);
+            \$table->timestampTz('revoked_at')->nullable();
             \$table->timestampTz('email_verified_at')->nullable();
             \$table->rememberToken();
             \$table->timestampsTz();
@@ -3965,11 +4047,13 @@ PHP;
             }
 
             $colCode = "            \$table->ulid('id')->primary();\n";
+            $seenEloCols = ['id' => true, 'created_at' => true, 'updated_at' => true, 'deleted_at' => true, 'timestamps' => true];
             foreach ($columns as $col) {
                 $cname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? ''));
-                if ($cname === 'id' || empty($cname)) {
+                if ($cname === '' || isset($seenEloCols[$cname])) {
                     continue;
                 }
+                $seenEloCols[$cname] = true;
 
                 $rawType = strtolower($col['type'] ?? 'string');
 
@@ -3980,7 +4064,7 @@ PHP;
                 } elseif (str_contains($rawType, 'int') || str_contains($rawType, 'count')) {
                     $colCode .= "            \$table->integer('{$cname}')->default(0);\n";
                 } elseif (str_contains($rawType, 'decimal') || str_contains($rawType, 'price') || str_contains($rawType, 'amount')) {
-                    $colCode .= "            \$table->decimal('{$cname}', 15, 2)->default(0.00);\n";
+                    $colCode .= "            \$table->decimal('{$cname}', 19, 4)->default(0.0000);\n";
                 } elseif (str_contains($rawType, 'bool')) {
                     $colCode .= "            \$table->boolean('{$cname}')->default(false);\n";
                 } elseif (str_contains($rawType, 'date') || str_contains($rawType, 'time')) {
@@ -3992,7 +4076,8 @@ PHP;
                     $colCode .= "            \$table->string('{$cname}', 255)->nullable(){$indexStr};\n";
                 }
             }
-            $colCode .= '            $table->timestampsTz();';
+            $colCode .= '            $table->timestampsTz();'."\n";
+            $colCode .= '            $table->softDeletesTz();';
 
             $files[$fileName] = <<<PHP
 <?php
@@ -4044,23 +4129,39 @@ PHP;
             $casts = [];
             $relations = [];
 
+            $knownModelClasses = ['User' => true];
+            foreach ($erdTables as $knownTable) {
+                $kt = strtolower((string) preg_replace('/[^a-zA-Z0-9_]/', '_', (string) ($knownTable['name'] ?? '')));
+                if ($kt !== '' && $kt !== 'users') {
+                    $knownModelClasses[Str::studly(Str::singular($kt))] = true;
+                }
+            }
+
+            $userFkNames = ['user_id', 'created_by_user_id', 'updated_by_user_id', 'approved_by_user_id', 'maker_id', 'checker_id', 'operator_id', 'assigned_to_user_id', 'default_translator_user_id', 'translator_user_id'];
             foreach ($columns as $col) {
                 $cname = strtolower(preg_replace('/[^a-zA-Z0-9_]/', '_', $col['name'] ?? ''));
+                if ($cname === '' || in_array($cname, ['id', 'timestamps', 'created_at', 'updated_at', 'deleted_at'], true)) {
+                    continue;
+                }
                 $rawType = strtolower($col['type'] ?? 'string');
 
                 if (str_contains($rawType, 'json')) {
                     $casts[$cname] = 'array';
                 } elseif (str_contains($rawType, 'bool')) {
                     $casts[$cname] = 'boolean';
+                } elseif (str_contains($rawType, 'decimal') || str_contains($rawType, 'price') || str_contains($rawType, 'amount')) {
+                    $casts[$cname] = 'decimal:4';
                 } elseif (str_contains($rawType, 'date') || str_contains($rawType, 'time')) {
                     $casts[$cname] = 'datetime';
                 } elseif (str_ends_with($cname, '_id')) {
                     $relationBase = substr($cname, 0, -3);
                     $relationMethod = Str::camel($relationBase);
                     $targetModel = Str::studly($relationBase);
-                    if ($targetModel === 'User') {
-                        $relations[] = "    public function {$relationMethod}(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\n    {\n        return \$this->belongsTo(User::class);\n    }";
-                    } else {
+                    $isUserFk = in_array($cname, $userFkNames, true) || str_ends_with($cname, '_user_id');
+
+                    if ($isUserFk) {
+                        $relations[] = "    public function {$relationMethod}(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\n    {\n        return \$this->belongsTo(User::class, '{$cname}');\n    }";
+                    } elseif (isset($knownModelClasses[$targetModel])) {
                         $relations[] = "    public function {$relationMethod}(): \\Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\n    {\n        return \$this->belongsTo({$targetModel}::class, '{$cname}');\n    }";
                     }
                 }
@@ -4078,13 +4179,17 @@ PHP;
 
 namespace App\Models;
 
+use App\Traits\ScopesToTenantOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class {$modelName} extends Model
 {
     use HasFactory, HasUlids;
+    use ScopesToTenantOrganization;
+    use SoftDeletes;
 
     protected \$table = '{$tableName}';
     protected \$keyType = 'string';
@@ -4485,17 +4590,66 @@ TSX;
             $variableName = Str::camel($modelName);
             $pluralVariable = Str::camel(Str::plural($tableName));
 
+            $columns = is_array($table['columns'] ?? null) ? $table['columns'] : [];
+            $hasOrganizationColumn = false;
+            $hasUserIdColumn = false;
+            $searchableColumns = [];
+
+            foreach ($columns as $col) {
+                $cname = strtolower((string) preg_replace('/[^a-zA-Z0-9_]/', '_', (string) ($col['name'] ?? '')));
+                $ctype = strtolower((string) ($col['type'] ?? 'string'));
+                if ($cname === 'organization_id') {
+                    $hasOrganizationColumn = true;
+                }
+                if ($cname === 'user_id') {
+                    $hasUserIdColumn = true;
+                }
+                if ($cname !== '' && ! str_ends_with($cname, '_id') && ! in_array($cname, ['id', 'created_at', 'updated_at', 'deleted_at'], true)) {
+                    if (str_contains($ctype, 'string') || str_contains($ctype, 'text') || str_contains($ctype, 'varchar')) {
+                        $searchableColumns[] = $cname;
+                    }
+                }
+            }
+            $searchableColumns = array_values(array_unique(array_slice($searchableColumns, 0, 5)));
+
+            $searchLogic = '';
+            if (! empty($searchableColumns)) {
+                $likes = [];
+                foreach ($searchableColumns as $scIdx => $scCol) {
+                    $method = $scIdx === 0 ? 'where' : 'orWhere';
+                    $likes[] = "                \$sub->{$method}('{$scCol}', 'like', \"%{\$search}%\");";
+                }
+                $likesCode = implode("\n", $likes);
+                $searchLogic = "\n        \$search = trim((string) \$request->query('q', ''));\n"
+                    . "        if (\$search !== '') {\n"
+                    . "            \$query->where(function (\$sub) use (\$search): void {\n"
+                    . "{$likesCode}\n"
+                    . "            });\n"
+                    . "        }\n";
+            }
+
+            $autoFillOrg = $hasOrganizationColumn
+                ? "        if (empty(\$payload['organization_id']) && \$request->user() && method_exists(\$request->user(), 'organizationIdValue')) {\n            \$payload['organization_id'] = \$request->user()->organizationIdValue();\n        }\n"
+                : '';
+            $autoFillUser = $hasUserIdColumn
+                ? "        if (empty(\$payload['user_id']) && \$request->user()) {\n            \$payload['user_id'] = \$request->user()->getAuthIdentifier();\n        }\n"
+                : '';
+
             $files["app/Http/Controllers/Api/{$controllerName}.php"] = <<<CTRL_PHP
 <?php
+
+declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\\{$modelName};
 use App\Http\Requests\\{$storeRequest};
 use App\Http\Requests\\{$updateRequest};
-use Illuminate\Http\Request;
+use App\Models\\{$modelName};
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class {$controllerName} extends Controller
 {
@@ -4504,11 +4658,12 @@ class {$controllerName} extends Controller
      */
     public function index(Request \$request): JsonResponse
     {
-        \$limit = (int) \$request->query('limit', 20);
-        \$limit = min(max(\$limit, 1), 100);
+        \$limit = min(max((int) \$request->query('limit', 20), 1), 100);
 
+        \$query = {$modelName}::query()->forTenant(\$request->user());
+{$searchLogic}
         // Strict O(1) Keyset Cursor Pagination
-        \${$pluralVariable} = {$modelName}::query()
+        \${$pluralVariable} = \$query
             ->orderBy('id', 'asc')
             ->cursorPaginate(\$limit);
 
@@ -4523,11 +4678,29 @@ class {$controllerName} extends Controller
     }
 
     /**
-     * Store a newly created {$modelName} in storage under Strict ULID.
+     * Store a newly created {$modelName} in storage under Strict ULID & optional X-Idempotency-Key.
      */
     public function store({$storeRequest} \$request): JsonResponse
     {
-        \${$variableName} = {$modelName}::create(\$request->validated());
+        \$idempotencyKey = trim((string) \$request->header('X-Idempotency-Key', ''));
+        \$cacheKey = \$idempotencyKey !== '' ? 'idemp:{$tableName}:' . sha1(\$idempotencyKey) : null;
+
+        if (\$cacheKey !== null && Cache::has(\$cacheKey)) {
+            return response()->json([
+                'success' => true,
+                'idempotent_replay' => true,
+                'message' => '{$modelName} replayed idempotently',
+                'data' => Cache::get(\$cacheKey),
+            ], 200);
+        }
+
+        \$payload = \$request->validated();
+{$autoFillOrg}{$autoFillUser}
+        \${$variableName} = DB::transaction(fn () => {$modelName}::create(\$payload));
+
+        if (\$cacheKey !== null) {
+            Cache::put(\$cacheKey, \${$variableName}->toArray(), now()->addHours(24));
+        }
 
         return response()->json([
             'success' => true,
@@ -4539,9 +4712,11 @@ class {$controllerName} extends Controller
     /**
      * Display the specified {$modelName}.
      */
-    public function show(string \$id): JsonResponse
+    public function show(Request \$request, string \$record): JsonResponse
     {
-        \${$variableName} = {$modelName}::findOrFail(\$id);
+        \${$variableName} = {$modelName}::query()
+            ->forTenant(\$request->user())
+            ->findOrFail(\$record);
 
         return response()->json([
             'success' => true,
@@ -4550,12 +4725,21 @@ class {$controllerName} extends Controller
     }
 
     /**
-     * Update the specified {$modelName} in storage.
+     * Update the specified {$modelName} inside an atomic row-locked DB transaction.
      */
-    public function update({$updateRequest} \$request, string \$id): JsonResponse
+    public function update({$updateRequest} \$request, string \$record): JsonResponse
     {
-        \${$variableName} = {$modelName}::findOrFail(\$id);
-        \${$variableName}->update(\$request->validated());
+        \${$variableName} = DB::transaction(function () use (\$request, \$record): {$modelName} {
+            \$locked = {$modelName}::query()
+                ->forTenant(\$request->user())
+                ->whereKey(\$record)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            \$locked->update(\$request->validated());
+
+            return \$locked->fresh() ?? \$locked;
+        });
 
         return response()->json([
             'success' => true,
@@ -4565,12 +4749,19 @@ class {$controllerName} extends Controller
     }
 
     /**
-     * Remove the specified {$modelName} from storage.
+     * Remove the specified {$modelName} inside an atomic row-locked DB transaction.
      */
-    public function destroy(string \$id): JsonResponse
+    public function destroy(Request \$request, string \$record): JsonResponse
     {
-        \${$variableName} = {$modelName}::findOrFail(\$id);
-        \${$variableName}->delete();
+        DB::transaction(function () use (\$request, \$record): void {
+            \$locked = {$modelName}::query()
+                ->forTenant(\$request->user())
+                ->whereKey(\$record)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            \$locked->delete();
+        });
 
         return response()->json([
             'success' => true,
@@ -4834,129 +5025,92 @@ HOOK;
     }
 
     /**
-     * Generate welcome.blade.php with exact data-testid matching Playwright E2E spec.
+     * Generate welcome.blade.php via WorldDesignSystemCatalog with zero external CDNs and Playwright hooks.
      */
-    public static function generateWelcomeBlade(VisionBlueprint $blueprint, array $erdTables, array $mvpSpecs): string
+    public static function generateWelcomeBlade(VisionBlueprint $blueprint, array $erdTables, array $mvpSpecs, ?array $universalSchema = null): string
     {
         $projectName = $blueprint->nama_bisnis ?: 'Enterprise Application';
         $slug = $blueprint->slug ?: Str::slug($projectName);
-        $firstFeature = $mvpSpecs[0]['title'] ?? 'Core Record Ingestion';
+        $firstFeature = (string) ($mvpSpecs[0]['title'] ?? 'Core Record Ingestion');
+        $resolvedDesign = WorldDesignSystemCatalog::resolveForBlueprint($blueprint, $universalSchema ?? []);
+        $capabilities = self::detectStackCapabilities($blueprint, $universalSchema);
 
         $discoveryData = is_array($blueprint->discovery_data) ? $blueprint->discovery_data : (json_decode($blueprint->discovery_data ?? '[]', true) ?: []);
-        $domainDetected = $discoveryData['meta']['detected_domain'] ?? '';
+        $domainDetected = (string) ($discoveryData['meta']['detected_domain'] ?? '');
         $isGame = ($domainDetected === 'game_3d_simulation' || $domainDetected === 'game_engine_simulation');
 
-        $gameHud = $isGame ? <<<'HTML'
-        <!-- 3D Flight Simulation Canvas & Telemetry HUD -->
-        <div class="relative w-full h-80 bg-zinc-900 border border-zinc-800 rounded-xs overflow-hidden mb-8 flex items-center justify-center">
-            <canvas id="flight-canvas" data-testid="flight-canvas" class="w-full h-full"></canvas>
-            <div id="flight-hud" data-testid="flight-hud" class="absolute top-4 left-4 bg-zinc-950/80 border border-zinc-700 p-3 rounded-xs text-xs font-mono text-emerald-400">
-                <div>ALT: <span data-testid="altimeter" id="hud-alt">2,450 FT</span></div>
-                <div>SPD: <span id="hud-spd">320 KTS</span></div>
-                <div>HDG: <span id="hud-hdg">045°</span></div>
-            </div>
-        </div>
-HTML : '';
+        $sectorTitle = (string) ($blueprint->project_sector ?: ($universalSchema['meta']['project_sector'] ?? 'Enterprise Domain Architecture'));
+        $summary = trim((string) ($blueprint->executive_summary ?: 'Modular Laravel 13 + PostgreSQL 16 + Strict ULID system engineered for high-reliability enterprise operations.'));
 
-        return <<<HTML
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title data-testid="page-title">{{ config('app.name', '{$projectName}') }} - Enterprise Solution</title>
-    <!-- Tailwind CSS (Solid Clean Brutalism) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    borderRadius: {
-                        'xs': '2px',
-                        'sm': '4px',
-                        'md': '6px',
-                    }
-                }
+        $cards = [];
+        $systemTables = ['users', 'cache', 'jobs', 'sessions', 'failed_jobs', 'migrations', 'password_reset_tokens'];
+        $moduleCount = 0;
+
+        foreach ($erdTables as $tbl) {
+            $tableName = (string) ($tbl['table_name'] ?? '');
+            if ($tableName === '' || in_array($tableName, $systemTables, true)) {
+                continue;
+            }
+            $label = Str::headline($tableName);
+            $colCount = is_array($tbl['columns'] ?? null) ? count($tbl['columns']) : 0;
+            $cards[] = '<a href="/' . e($tableName) . '" class="ds-card block p-4 transition-all">'
+                . '<div class="flex items-center justify-between gap-2 mb-1">'
+                . '<span class="text-xs font-mono uppercase tracking-wider ds-badge-accent px-2 py-0.5">' . e($tableName) . '</span>'
+                . '<span class="text-[11px] font-mono opacity-70">' . $colCount . ' cols</span>'
+                . '</div>'
+                . '<div class="font-bold text-sm mt-2">' . e($label) . '</div>'
+                . '<div class="text-xs opacity-75 mt-1">CRUD &amp; Keyset Cursor O(1)</div>'
+                . '</a>';
+            $moduleCount++;
+            if ($moduleCount >= 6) {
+                break;
             }
         }
-    </script>
-</head>
-<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col justify-between antialiased selection:bg-emerald-500 selection:text-black">
-    <!-- Topbar Navigation -->
-    <header class="border-b border-zinc-800 bg-zinc-900/60 backdrop-blur-md px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div class="w-3 h-3 bg-emerald-500 rounded-xs animate-pulse"></div>
-            <span class="font-black text-sm tracking-wider uppercase text-white">{$projectName}</span>
-        </div>
-        <nav class="flex items-center gap-4 text-xs font-medium">
-            <a href="/docs/api" class="text-zinc-400 hover:text-white transition-colors">API Docs</a>
-            <a href="/healthz" class="text-zinc-400 hover:text-white transition-colors">Healthz</a>
-            <a href="/login" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-xs transition-colors">Login</a>
-        </nav>
-    </header>
 
-    <!-- Main Content Area -->
-    <main class="max-w-4xl mx-auto w-full px-6 py-12 flex-1 flex flex-col justify-center">
-        <div class="mb-8">
-            <span class="px-2.5 py-1 text-[10px] font-black uppercase tracking-widest bg-emerald-950 text-emerald-300 border border-emerald-800 rounded-xs mb-3 inline-block">
-                SOFTWARE FACTORY OS // STRICT ULID
-            </span>
-            <h1 data-testid="main-heading" class="text-3xl sm:text-4xl font-black text-white tracking-tight uppercase mb-3">
-                {$projectName}
-            </h1>
-            <p class="text-sm text-zinc-400 leading-relaxed max-w-2xl">
-                Arsitektur enterprise monolitik berkinerja tinggi. Didukung skema PostgreSQL 16 Strict ULID dan Keyset Cursor Pagination O(1).
-            </p>
-        </div>
+        if ($cards === []) {
+            $cards[] = '<a href="/dashboard" class="ds-card block p-4 transition-all">'
+                . '<div class="text-xs font-mono uppercase ds-badge-accent px-2 py-0.5 inline-block mb-2">dashboard</div>'
+                . '<div class="font-bold text-sm">Operations Command Center</div>'
+                . '<div class="text-xs opacity-75 mt-1">Authenticated Workspace &amp; Telemetry</div>'
+                . '</a>';
+        }
 
-{$gameHud}
+        if ($isGame) {
+            $cards[] = '<div class="col-span-full ds-card p-4 relative overflow-hidden">'
+                . '<canvas id="flight-canvas" data-testid="flight-canvas" class="w-full h-72 block"></canvas>'
+                . '<div id="flight-hud" data-testid="flight-hud" class="mt-2 flex flex-wrap gap-4 text-xs font-mono">'
+                . '<span>ALT: <strong data-testid="altimeter" id="hud-alt">2,450 FT</strong></span>'
+                . '<span>SPD: <strong id="hud-spd">320 KTS</strong></span>'
+                . '<span>HDG: <strong id="hud-hdg">045&deg;</strong></span>'
+                . '</div></div>';
+        }
 
-        <!-- Interactive Form matching Playwright test-ids -->
-        <div class="bg-zinc-900/80 border border-zinc-800 p-6 rounded-xs shadow-2xl">
-            <h2 class="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-4">
-                Uji Interaktif Alur Bisnis: {$firstFeature}
-            </h2>
+        $safeFirstFeature = e($firstFeature);
+        $cards[] = '<div class="col-span-full ds-card p-5 mt-2">'
+            . '<div class="flex flex-wrap items-center justify-between gap-2 mb-3">'
+            . '<h3 class="text-xs font-bold uppercase tracking-wider opacity-85">' . $safeFirstFeature . '</h3>'
+            . '<a href="/docs/api" class="text-xs font-mono underline">Inspect API Schema</a>'
+            . '</div>'
+            . '<form data-testid="feature-form" onsubmit="event.preventDefault(); document.getElementById(\'success-box\')?.classList.remove(\'hidden\');" class="flex flex-col sm:flex-row gap-3">'
+            . '<input type="text" data-testid="feature-input-title" placeholder="Enter verification record title..." required class="flex-1 px-3 py-2 text-xs border border-current/25 bg-transparent focus:outline-none">'
+            . '<button type="submit" data-testid="feature-submit-btn" class="ds-btn-primary px-4 py-2 text-xs font-bold uppercase tracking-wider">Submit Data &rarr;</button>'
+            . '</form>'
+            . '<div id="success-box" data-testid="feature-success-alert" class="hidden mt-3 p-2.5 border border-current/30 text-xs font-mono">'
+            . '&check; Verified locally via Strict ULID pipeline.'
+            . '</div>'
+            . '</div>';
 
-            <form data-testid="feature-form" onsubmit="event.preventDefault(); document.getElementById('success-box').classList.remove('hidden');" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-zinc-300 mb-1.5 uppercase">Judul Transaksi / Record</label>
-                    <input 
-                        type="text" 
-                        data-testid="feature-input-title" 
-                        placeholder="Masukkan data transaksi uji..." 
-                        required
-                        class="w-full bg-zinc-950 border border-zinc-800 rounded-xs px-3.5 py-2.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
-                    >
-                </div>
-                <div class="flex items-center gap-3">
-                    <button 
-                        type="submit" 
-                        data-testid="feature-submit-btn" 
-                        class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-black font-black text-xs uppercase tracking-wider rounded-xs transition-colors flex items-center gap-2"
-                    >
-                        <span>Submit Data</span>
-                        <span>&rarr;</span>
-                    </button>
-                    <a href="/docs/api" class="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold text-xs uppercase tracking-wider rounded-xs transition-colors">
-                        Inspect Scalar API
-                    </a>
-                </div>
-            </form>
+        $navLinksHtml = implode("\n", $cards);
+        $hasRealtimeMedia = (bool) ($capabilities['webrtc_audio'] || $capabilities['realtime_ws']);
 
-            <div id="success-box" data-testid="feature-success-alert" class="hidden mt-4 p-3 bg-emerald-950/80 border border-emerald-700 rounded-xs text-xs text-emerald-200">
-                &check; Data berhasil diverifikasi secara lokal via Strict ULID pipeline!
-            </div>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="border-t border-zinc-800/80 bg-zinc-950 px-6 py-4 text-center text-xs text-zinc-500">
-        Engineered with Neriah Pro Software Factory OS &bull; 10 Pillars Turnkey Standard
-    </footer>
-</body>
-</html>
-HTML;
+        return WorldDesignSystemCatalog::generateWelcomeBlade(
+            $projectName,
+            $sectorTitle,
+            $summary,
+            $resolvedDesign,
+            $navLinksHtml,
+            $hasRealtimeMedia
+        );
     }
 
     /**
@@ -5145,38 +5299,73 @@ PHP;
     }
 
     /**
-     * Generate Pest Contract Test proving deterministic state machine transitions and illegal transition rejection.
+     * Generate PHPUnit 12 Contract Test proving deterministic state machine transitions and illegal transition rejection.
      */
     public static function generateStateMachinePestContractTest(array $universalSchema): string
     {
         $firstSm = $universalSchema['state_machines'][0] ?? null;
         if (! $firstSm) {
-            return "<?php\n\ntest('universal blueprint schema v1.0 contract is loaded', function () {\n    expect(file_exists(base_path('.agents/BLUEPRINT_SCHEMA.json')))->toBeTrue();\n});\n";
+            return <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class DeterministicStateMachineContractTest extends TestCase
+{
+    public function test_universal_blueprint_schema_contract_is_loaded(): void
+    {
+        $this->assertFileExists(base_path('.agents/BLUEPRINT_SCHEMA.json'));
+    }
+}
+PHP;
         }
 
         $enumClass = class_basename(str_replace('\\\\', '\\', (string) ($firstSm['enum_class'] ?? 'BookingStatus')));
         $initConst = strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', (string) ($firstSm['initial_state'] ?? 'DRAFT')));
-        $firstTransitionTo = strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', (string) ($firstSm['transitions'][0]['to'] ?? $initConst)));
+
+        $firstTransitionTo = $initConst;
+        foreach (($firstSm['transitions'] ?? []) as $tr) {
+            $candidate = strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', (string) ($tr['to'] ?? '')));
+            if ($candidate !== '' && $candidate !== $initConst) {
+                $firstTransitionTo = $candidate;
+                break;
+            }
+        }
+
+        $transitionAssertion = $firstTransitionTo !== $initConst
+            ? "\$this->assertTrue(\$initial->canTransitionTo(\$next));"
+            : "\$this->assertIsString(\$initial->value);";
 
         return <<<PHP
 <?php
 
 declare(strict_types=1);
 
+namespace Tests\Feature;
+
 use App\Enums\\{$enumClass};
+use Tests\TestCase;
 
-test('deterministic state machine enum {$enumClass} permits declared transition and rejects self/illegal jumps', function () {
-    \$initial = {$enumClass}::{$initConst};
-    \$next = {$enumClass}::{$firstTransitionTo};
+class DeterministicStateMachineContractTest extends TestCase
+{
+    public function test_state_machine_enum_{$enumClass}_permits_declared_transition_and_rejects_self_jumps(): void
+    {
+        \$initial = {$enumClass}::{$initConst};
+        \$next = {$enumClass}::{$firstTransitionTo};
 
-    expect(\$initial->canTransitionTo(\$next))->toBeTrue();
-    expect(\$initial->canTransitionTo(\$initial))->toBeFalse();
-});
+        {$transitionAssertion}
+        \$this->assertFalse(\$initial->canTransitionTo(\$initial));
+    }
+}
 PHP;
     }
 
     /**
-     * Generate Pre-Built Given-When-Then Acceptance Test Matrix verifying all 7 Zero-Assumption Dimensions.
+     * Generate PHPUnit 12 Pre-Built Given-When-Then Acceptance Test Matrix verifying all 7 Zero-Assumption Dimensions.
      */
     public static function generateZeroAssumptionAcceptanceTest(array $universalSchema): string
     {
@@ -5185,25 +5374,25 @@ PHP;
         $rawMatrix = (array) ($universalSchema['acceptance_test_matrix'] ?? []);
         $scenarios = array_values(array_slice(isset($rawMatrix['scenarios']) ? (array) $rawMatrix['scenarios'] : $rawMatrix, 0, 8));
 
-        $scenarioBlocks = '';
+        $scenarioMethods = '';
         foreach ($scenarios as $idx => $sc) {
             $id = addslashes((string) ($sc['id'] ?? ('AT-'.($idx + 1))));
             $given = addslashes((string) ($sc['given'] ?? 'valid precondition'));
-            $when = addslashes((string) ($sc['when'] ?? 'domain command executes'));
             $then = addslashes((string) ($sc['then'] ?? 'deterministic invariant holds'));
+            $safeMethodSuffix = preg_replace('/[^a-z0-9_]+/', '_', strtolower($id)) ?: ('scenario_'.($idx + 1));
 
-            $scenarioBlocks .= <<<PHP
+            $scenarioMethods .= <<<PHP
 
+    public function test_acceptance_matrix_{$idx}_{$safeMethodSuffix}(): void
+    {
+        \$schema = json_decode((string) file_get_contents(base_path('.agents/BLUEPRINT_SCHEMA.json')), true);
+        \$list = \$schema['acceptance_test_matrix']['scenarios'] ?? \$schema['acceptance_test_matrix'] ?? [];
+        \$matched = collect(\$list)->firstWhere('id', '{$id}');
 
-test('acceptance matrix [{$id}]: {$when}', function () {
-    \$schema = json_decode((string) file_get_contents(base_path('.agents/BLUEPRINT_SCHEMA.json')), true);
-    \$list = \$schema['acceptance_test_matrix']['scenarios'] ?? \$schema['acceptance_test_matrix'] ?? [];
-    \$matched = collect(\$list)->firstWhere('id', '{$id}');
-
-    expect(\$matched)->not->toBeNull();
-    expect(\$matched['given'])->toBe('{$given}');
-    expect(\$matched['then'])->toBe('{$then}');
-});
+        \$this->assertNotNull(\$matched);
+        \$this->assertSame('{$given}', \$matched['given']);
+        \$this->assertSame('{$then}', \$matched['then']);
+    }
 PHP;
         }
 
@@ -5212,29 +5401,39 @@ PHP;
 
 declare(strict_types=1);
 
-test('universal blueprint schema v2.0.0 enforces all 7 zero-assumption architecture dimensions for {$presetCode} ({$topology})', function () {
-    \$schemaPath = base_path('.agents/BLUEPRINT_SCHEMA.json');
-    expect(file_exists(\$schemaPath))->toBeTrue();
+namespace Tests\Feature;
 
-    \$schema = json_decode((string) file_get_contents(\$schemaPath), true);
+use Tests\TestCase;
 
-    expect(\$schema['schema_version'] ?? null)->toBe('2.0.0');
-    expect(\$schema['tech_stack_contract']['preset_code'] ?? null)->toBe('{$presetCode}');
-    expect(\$schema['api_and_envelope_contract']['standard'] ?? '')->toContain('RFC 9457');
-    expect(\$schema['distributed_saga_and_outbox_contract']['outbox_table'] ?? null)->toBe('outbox_messages');
-    expect(\$schema['external_integration_contracts']['inbound_webhook_vault_table'] ?? null)->toBe('webhook_inbound_logs');
-    expect(\$schema['data_lifecycle_and_pii_governance']['table_policies'] ?? [])->not->toBeEmpty();
-    expect(\$schema['deterministic_formulas'] ?? [])->not->toBeEmpty();
-    expect(\$schema['ui_screen_archetypes'] ?? [])->not->toBeEmpty();
+class ZeroAssumptionAcceptanceMatrixTest extends TestCase
+{
+    public function test_universal_blueprint_schema_enforces_all_seven_zero_assumption_dimensions(): void
+    {
+        \$schemaPath = base_path('.agents/BLUEPRINT_SCHEMA.json');
+        \$this->assertFileExists(\$schemaPath);
 
-    // Penny Allocation Invariant: Rp 100.000 split across 3 installments => [33333, 33333, 33334]
-    \$total = 100000;
-    \$n = 3;
-    \$base = intdiv(\$total, \$n);
-    \$splits = [\$base, \$base, \$total - (\$base * (\$n - 1))];
-    expect(\$splits)->toBe([33333, 33333, 33334]);
-    expect(array_sum(\$splits))->toBe(\$total);
-});{$scenarioBlocks}
+        \$schema = json_decode((string) file_get_contents(\$schemaPath), true);
+
+        \$this->assertSame('2.0.0', \$schema['schema_version'] ?? null);
+        \$this->assertSame('{$presetCode}', \$schema['tech_stack_contract']['preset_code'] ?? null);
+        \$this->assertSame('{$topology}', \$schema['tech_stack_contract']['topology'] ?? null);
+        \$this->assertStringContainsString('RFC 9457', (string) (\$schema['api_and_envelope_contract']['standard'] ?? ''));
+        \$this->assertSame('outbox_messages', \$schema['distributed_saga_and_outbox_contract']['outbox_table'] ?? null);
+        \$this->assertSame('webhook_inbound_logs', \$schema['external_integration_contracts']['inbound_webhook_vault_table'] ?? null);
+        \$this->assertNotEmpty(\$schema['data_lifecycle_and_pii_governance']['table_policies'] ?? []);
+        \$this->assertNotEmpty(\$schema['deterministic_formulas'] ?? []);
+        \$this->assertNotEmpty(\$schema['ui_screen_archetypes'] ?? []);
+
+        // Penny Allocation Invariant: Rp 100.000 split across 3 installments => [33333, 33333, 33334]
+        \$total = 100000;
+        \$n = 3;
+        \$base = intdiv(\$total, \$n);
+        \$splits = [\$base, \$base, \$total - (\$base * (\$n - 1))];
+        \$this->assertSame([33333, 33333, 33334], \$splits);
+        \$this->assertSame(\$total, array_sum(\$splits));
+    }
+{$scenarioMethods}
+}
 PHP;
     }
 
@@ -5783,7 +5982,16 @@ PHP;
      */
     public static function generateInitializeNewTenantAction(array $universalSchema): string
     {
-        return StubLoader::load('scaffold/InitializeNewTenantAction.php.stub');
+        $sectorCode = (string) ($universalSchema['project_metadata']['primary_sector'] ?? ($universalSchema['sector']['code'] ?? 'SECTOR_08_PROFESSIONAL_PSA'));
+        $onboarding = $universalSchema['zero_state_onboarding_contract'] ?? [];
+        $seeds = $onboarding['foundation_records'] ?? [['key' => 'default_role', 'label' => 'System Administrator']];
+        $steps = $onboarding['checklist_steps'] ?? ['Configure Tenant Profile', 'Verify Primary Operator', 'Run Initial Sync'];
+
+        return StubLoader::load('scaffold/InitializeNewTenantAction.php.stub', [
+            '{{ SECTOR_CODE }}' => $sectorCode,
+            '{{ SEEDS_EXPORT }}' => var_export($seeds, true),
+            '{{ STEPS_EXPORT }}' => var_export($steps, true),
+        ]);
     }
 
     /**
@@ -5791,7 +5999,15 @@ PHP;
      */
     public static function generateThermalAndOfficialPrintView(array $universalSchema): string
     {
-        return StubLoader::load('scaffold/thermal-and-official-a4.blade.stub');
+        $appName = (string) ($universalSchema['project_metadata']['project_name'] ?? ($universalSchema['project_name'] ?? 'Enterprise App'));
+        $thermalMode = (string) ($universalSchema['historical_snapshot_contract']['thermal_mode'] ?? '80mm ESC/POS & A4');
+        $watermark = (string) ($universalSchema['historical_snapshot_contract']['watermark'] ?? 'VERIFIED COPY');
+
+        return StubLoader::load('scaffold/thermal-and-official-a4.blade.stub', [
+            '{{ APP_NAME }}' => $appName,
+            '{{ THERMAL_MODE }}' => $thermalMode,
+            '{{ WATERMARK }}' => $watermark,
+        ]);
     }
 
     /**
@@ -5836,8 +6052,11 @@ PHP;
      */
     public static function generateTenantIsolationSecurityTest(array $universalSchema, string $appName = 'Enterprise App'): string
     {
+        $sectorCode = (string) ($universalSchema['project_metadata']['primary_sector'] ?? ($universalSchema['sector']['code'] ?? 'SECTOR_08_PROFESSIONAL_PSA'));
+
         return StubLoader::load('scaffold/TenantIsolationSecurityTest.php.stub', [
             '{{ APP_NAME }}' => $appName,
+            '{{ SECTOR_CODE }}' => $sectorCode,
         ]);
     }
 
@@ -5868,47 +6087,9 @@ PHP;
         ));
         $keysExport = var_export($requiredKeys, true);
 
-        return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace App\Console\Commands;
-
-use Illuminate\Console\Command;
-
-final class CheckEnvironmentVaultCommand extends Command
-{
-    protected \$signature = 'pos:check-env';
-
-    protected \$description = 'Project OS v4.0 Pre-Deployment Secret & Environment Validator';
-
-    public function handle(): int
-    {
-        \$required = {$keysExport};
-        \$missing = [];
-
-        foreach (\$required as \$key) {
-            if (env(\$key) === null || trim((string) env(\$key)) === '') {
-                \$missing[] = \$key;
-            }
-        }
-
-        if (app()->environment('production') && (bool) config('app.debug') === true) {
-            \$this->error('CRITICAL: APP_DEBUG must be false in production!');
-            return self::FAILURE;
-        }
-
-        if (! empty(\$missing)) {
-            \$this->error('Missing required .env.blueprint credentials: ' . implode(', ', \$missing));
-            return self::FAILURE;
-        }
-
-        \$this->info('All required Project OS v4.0 environment variables are valid.');
-        return self::SUCCESS;
-    }
-}
-PHP;
+        return StubLoader::load('scaffold/CheckEnvironmentVaultCommand.php.stub', [
+            '{{ REQUIRED_KEYS_EXPORT }}' => $keysExport,
+        ]);
     }
 
     /**
@@ -6157,5 +6338,1495 @@ class ClientErrorTelemetryController extends Controller
     }
 }
 PHP;
+    }
+
+    /**
+     * Resolve dynamic infrastructure credentials, ports, URLs, and design override
+     * from VisionBlueprint user_metadata['infra_config'] with safe per-slug defaults.
+     *
+     * @return array<string, mixed>
+     */
+    public static function resolveInfraConfig(VisionBlueprint $blueprint, string $shortSlug): array
+    {
+        $meta = is_array($blueprint->user_metadata) ? $blueprint->user_metadata : [];
+        $raw = is_array($meta['infra_config'] ?? null) ? $meta['infra_config'] : [];
+
+        $sqlSlug = trim(strtolower((string) preg_replace('/[^a-zA-Z0-9]+/', '_', $shortSlug)), '_');
+        if ($sqlSlug === '' || preg_match('/^[0-9]/', $sqlSlug) === 1) {
+            $sqlSlug = 'app_'.$sqlSlug;
+        }
+
+        $sanitizeIdent = static function (mixed $val, string $fallback): string {
+            $cleaned = trim((string) preg_replace('/[^a-zA-Z0-9_]/', '_', (string) $val), '_');
+
+            return $cleaned !== '' ? strtolower($cleaned) : $fallback;
+        };
+
+        $sanitizePort = static function (mixed $val, int $fallback): int {
+            $port = (int) $val;
+
+            return ($port >= 80 && $port <= 65535) ? $port : $fallback;
+        };
+
+        $sanitizeString = static function (mixed $val, string $fallback): string {
+            $trimmed = trim((string) $val);
+
+            return $trimmed !== '' ? $trimmed : $fallback;
+        };
+
+        $appPort = $sanitizePort($raw['app_port'] ?? null, 8000);
+        $dbPort = $sanitizePort($raw['db_port'] ?? null, 5432);
+        $mailPort = $sanitizePort($raw['mail_port'] ?? null, 1025);
+        $reverbPort = $sanitizePort($raw['reverb_port'] ?? null, 8080);
+        $livekitPort = $sanitizePort($raw['livekit_port'] ?? null, 7880);
+
+        $appUrl = trim((string) ($raw['app_url'] ?? ''));
+        if ($appUrl === '') {
+            $appUrl = $appPort === 80 ? 'http://localhost' : "http://localhost:{$appPort}";
+        }
+
+        $seedEmail = trim((string) ($raw['admin_seed_email'] ?? ''));
+        if ($seedEmail === '' || filter_var($seedEmail, FILTER_VALIDATE_EMAIL) === false) {
+            $seedEmail = 'admin@localhost.test';
+        }
+
+        $designOverride = strtoupper(trim((string) ($meta['design_system'] ?? ($raw['design_system'] ?? ''))));
+
+        $livekitSecret = $sanitizeString($raw['livekit_api_secret'] ?? null, "lk_{$sqlSlug}_secret_key_min_32_characters_len");
+        if (strlen($livekitSecret) < 32) {
+            $livekitSecret = str_pad($livekitSecret, 32, '_sec');
+        }
+
+        return [
+            'short_slug' => $shortSlug,
+            'sql_slug' => $sqlSlug,
+            'db_host' => $sanitizeString($raw['db_host'] ?? null, 'postgres'),
+            'db_port' => $dbPort,
+            'db_database' => $sanitizeIdent($raw['db_database'] ?? null, "{$sqlSlug}_db"),
+            'db_username' => $sanitizeIdent($raw['db_username'] ?? null, "{$sqlSlug}_user"),
+            'db_password' => $sanitizeString($raw['db_password'] ?? null, 'secret_change_in_prod'),
+            'app_port' => $appPort,
+            'app_url' => $appUrl,
+            'redis_host' => $sanitizeString($raw['redis_host'] ?? null, 'redis'),
+            'redis_password' => $sanitizeString($raw['redis_password'] ?? null, 'secret_redis_change_in_prod'),
+            'mail_host' => $sanitizeString($raw['mail_host'] ?? null, 'mailpit'),
+            'mail_port' => $mailPort,
+            'mail_username' => trim((string) ($raw['mail_username'] ?? '')),
+            'mail_password' => trim((string) ($raw['mail_password'] ?? '')),
+            'admin_seed_name' => $sanitizeString($raw['admin_seed_name'] ?? null, 'System Administrator'),
+            'admin_seed_email' => $seedEmail,
+            'admin_seed_password' => $sanitizeString($raw['admin_seed_password'] ?? null, 'Admin@ChangeMe2026!'),
+            'design_system' => $designOverride,
+            'reverb_app_id' => $sanitizeString($raw['reverb_app_id'] ?? null, "app_{$sqlSlug}"),
+            'reverb_app_key' => $sanitizeString($raw['reverb_app_key'] ?? null, "{$sqlSlug}_reverb_key"),
+            'reverb_app_secret' => $sanitizeString($raw['reverb_app_secret'] ?? null, "{$sqlSlug}_reverb_secret"),
+            'reverb_port' => $reverbPort,
+            'livekit_api_key' => $sanitizeString($raw['livekit_api_key'] ?? null, "lk_{$sqlSlug}_key"),
+            'livekit_api_secret' => $livekitSecret,
+            'livekit_port' => $livekitPort,
+            'livekit_lan_host' => trim((string) ($raw['livekit_lan_host'] ?? '')),
+            's3_bucket' => $sanitizeString($raw['s3_bucket'] ?? null, "{$shortSlug}-assets"),
+            's3_endpoint' => trim((string) ($raw['s3_endpoint'] ?? '')),
+            's3_access_key' => trim((string) ($raw['s3_access_key'] ?? '')),
+            's3_secret_key' => trim((string) ($raw['s3_secret_key'] ?? '')),
+            'ai_provider_key' => trim((string) ($raw['ai_provider_key'] ?? '')),
+        ];
+    }
+
+    /**
+     * Inspect project background and features to detect conditional real-time, audio, storage, and AI capabilities.
+     *
+     * @return array{webrtc_audio: bool, realtime_ws: bool, s3_storage: bool, ai_llm: bool}
+     */
+    public static function detectStackCapabilities(VisionBlueprint $blueprint, ?array $universalSchema = null): array
+    {
+        $parts = [
+            (string) $blueprint->nama_bisnis,
+            (string) $blueprint->masalah_utama,
+            (string) $blueprint->tujuan_utama,
+            (string) $blueprint->target_audiens,
+            is_array($blueprint->fitur_wajib) ? implode(' ', $blueprint->fitur_wajib) : (string) $blueprint->fitur_wajib,
+            (string) $blueprint->alur_kerja,
+            (string) $blueprint->kebutuhan_integrasi,
+            (string) ($universalSchema['sector']['code'] ?? ''),
+            (string) ($universalSchema['stack_preset']['code'] ?? ''),
+            json_encode($universalSchema['mvp_engineering_specs'] ?? []) ?: '',
+        ];
+
+        $corpus = strtolower(implode(' ', array_filter($parts)));
+
+        return [
+            'webrtc_audio' => preg_match('/(?<![a-z0-9])(livekit|webrtc|audio|interpreter|penerjemah|broadcast|stage|voice|microphone|opus|multichannel)(?![a-z0-9])/i', $corpus) === 1,
+            'realtime_ws' => preg_match('/(?<![a-z0-9])(reverb|websocket|pusher|realtime|real-time|echo|live|chat|duplex|broadcast|interpreter)(?![a-z0-9])/i', $corpus) === 1,
+            's3_storage' => preg_match('/(?<![a-z0-9])(s3|minio|bucket|recording|arsip|archive|upload|object\s+storage)(?![a-z0-9])/i', $corpus) === 1,
+            'ai_llm' => preg_match('/(?<![a-z0-9])(openai|deepseek|gemini|whisper|transcribe|llm|rag|embedding|ai\s+copilot)(?![a-z0-9])/i', $corpus) === 1,
+        ];
+    }
+
+    /**
+     * Generate multi-stage portable Dockerfile where Composer vendor ALWAYS installs BEFORE Vite npm build.
+     */
+    public static function generateDockerfilePortable(VisionBlueprint $blueprint, string $slug, ?array $universalSchema = null): string
+    {
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+
+        return StubLoader::load('scaffold/Dockerfile.portable.stub', [
+            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ SHORT_SLUG }}' => $shortSlug,
+        ]);
+    }
+
+    /**
+     * Generate portable zero-bind-mount Docker Compose file with dynamic DB/Redis/App credentials.
+     */
+    public static function generateDockerComposePortable(VisionBlueprint $blueprint, string $slug, ?array $universalSchema = null): string
+    {
+        $shortSlug = self::deriveShortSlug($slug, $blueprint);
+        $infra = self::resolveInfraConfig($blueprint, $shortSlug);
+        $capabilities = self::detectStackCapabilities($blueprint, $universalSchema);
+
+        return StubLoader::load('scaffold/docker-compose.portable.yml.stub', [
+            '{{ APP_NAME }}' => $blueprint->nama_bisnis ?: 'Enterprise App',
+            '{{ SHORT_SLUG }}' => $shortSlug,
+            '{{ APP_PORT }}' => (string) $infra['app_port'],
+            '{{ APP_URL }}' => $infra['app_url'],
+            '{{ DB_DATABASE }}' => $infra['db_database'],
+            '{{ DB_USERNAME }}' => $infra['db_username'],
+            '{{ DB_PASSWORD }}' => $infra['db_password'],
+            '{{ DB_PORT }}' => (string) $infra['db_port'],
+            '{{ REDIS_PASSWORD }}' => $infra['redis_password'],
+            '{{ REALTIME_COMPOSE_SERVICES }}' => self::buildRealtimeComposeServices($shortSlug, $infra, $capabilities, true),
+        ]);
+    }
+
+    /**
+     * Conditionally append Laravel Reverb WebSocket and/or LiveKit WebRTC services to Docker Compose files.
+     */
+    public static function buildRealtimeComposeServices(string $shortSlug, array $infra, array $capabilities, bool $withNetwork = true): string
+    {
+        $blocks = [];
+        $netBlock = $withNetwork ? "\n    networks:\n      - app_network" : '';
+
+        if (! empty($capabilities['realtime_ws'])) {
+            $reverbPort = (int) ($infra['reverb_port'] ?? 8080);
+            $reverbAppId = $infra['reverb_app_id'] ?? "app_{$shortSlug}";
+            $reverbKey = $infra['reverb_app_key'] ?? "{$shortSlug}_reverb_key";
+            $reverbSecret = $infra['reverb_app_secret'] ?? "{$shortSlug}_reverb_secret";
+
+            $blocks[] = <<<YAML
+
+  reverb:
+    build:
+      context: .
+      dockerfile: Dockerfile.portable
+      target: app
+    container_name: {$shortSlug}_reverb
+    restart: unless-stopped
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    ports:
+      - "{$reverbPort}:8080"
+    environment:
+      APP_ENV: "\${APP_ENV:-production}"
+      REVERB_APP_ID: "\${REVERB_APP_ID:-{$reverbAppId}}"
+      REVERB_APP_KEY: "\${REVERB_APP_KEY:-{$reverbKey}}"
+      REVERB_APP_SECRET: "\${REVERB_APP_SECRET:-{$reverbSecret}}"
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PASSWORD: "\${REDIS_PASSWORD:-{$infra['redis_password']}}"
+    depends_on:
+      redis:
+        condition: service_healthy{$netBlock}
+YAML;
+        }
+
+        if (! empty($capabilities['webrtc_audio'])) {
+            $lkPort = (int) ($infra['livekit_port'] ?? 7880);
+            $lkKey = $infra['livekit_api_key'] ?? "lk_{$shortSlug}_key";
+            $lkSecret = $infra['livekit_api_secret'] ?? "lk_{$shortSlug}_secret_key_min_32_characters_len";
+
+            $blocks[] = <<<YAML
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: {$shortSlug}_livekit
+    restart: unless-stopped
+    command: ["--config", "/livekit.yaml"]
+    ports:
+      - "{$lkPort}:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    volumes:
+      - ./livekit.yaml:/livekit.yaml:ro
+    environment:
+      LIVEKIT_KEYS: "{$lkKey}: {$lkSecret}"{$netBlock}
+YAML;
+        }
+
+        return implode('', $blocks);
+    }
+
+    /**
+     * Build conditional .env / .env.example lines for Reverb, LiveKit LAN, S3 storage, and AI providers.
+     */
+    public static function buildStackExtraEnv(array $infra, array $capabilities): string
+    {
+        $lines = [];
+
+        if (! empty($capabilities['realtime_ws'])) {
+            $lines[] = '# Real-Time WebSocket Broadcast (Laravel Reverb)';
+            $lines[] = 'BROADCAST_CONNECTION=reverb';
+            $lines[] = 'REVERB_APP_ID='.($infra['reverb_app_id'] ?? 'app_local');
+            $lines[] = 'REVERB_APP_KEY='.($infra['reverb_app_key'] ?? 'local_reverb_key');
+            $lines[] = 'REVERB_APP_SECRET='.($infra['reverb_app_secret'] ?? 'local_reverb_secret');
+            $lines[] = 'REVERB_HOST=reverb';
+            $lines[] = 'REVERB_PORT='.($infra['reverb_port'] ?? 8080);
+            $lines[] = 'REVERB_SCHEME=http';
+            $lines[] = '';
+        }
+
+        if (! empty($capabilities['webrtc_audio'])) {
+            $lines[] = '# Low-Latency WebRTC / Audio Stage (LiveKit Offline LAN Safe - Zero STUN Dependency)';
+            $lines[] = 'LIVEKIT_URL=ws://livekit:'.($infra['livekit_port'] ?? 7880);
+            $lines[] = 'LIVEKIT_PUBLIC_PORT='.($infra['livekit_port'] ?? 7880);
+            $lines[] = 'LIVEKIT_LAN_HOST='.($infra['livekit_lan_host'] ?? '');
+            $lines[] = 'LIVEKIT_API_KEY='.($infra['livekit_api_key'] ?? 'devkey');
+            $lines[] = 'LIVEKIT_API_SECRET='.($infra['livekit_api_secret'] ?? '');
+            $lines[] = '';
+        }
+
+        if (! empty($capabilities['s3_storage'])) {
+            $lines[] = '# Object Storage / Media Archive (S3 / MinIO)';
+            $lines[] = 'FILESYSTEM_DISK=s3';
+            $lines[] = 'AWS_BUCKET='.($infra['s3_bucket'] ?? 'app-assets');
+            $lines[] = 'AWS_ENDPOINT='.($infra['s3_endpoint'] ?? '');
+            $lines[] = 'AWS_ACCESS_KEY_ID='.($infra['s3_access_key'] ?? '');
+            $lines[] = 'AWS_SECRET_ACCESS_KEY='.($infra['s3_secret_key'] ?? '');
+            $lines[] = 'AWS_USE_PATH_STYLE_ENDPOINT=true';
+            $lines[] = '';
+        }
+
+        if (! empty($capabilities['ai_llm'])) {
+            $lines[] = '# AI Gateway Integration';
+            $lines[] = 'AI_PROVIDER_API_KEY='.($infra['ai_provider_key'] ?? '');
+            $lines[] = '';
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Generate LAN-safe livekit.yaml with stun_servers disabled for offline/intranet operation.
+     */
+    public static function generateLiveKitYaml(string $shortSlug, array $infraConfig): string
+    {
+        $port = (int) ($infraConfig['livekit_port'] ?? 7880);
+        $apiKey = $infraConfig['livekit_api_key'] ?? "lk_{$shortSlug}_key";
+        $apiSecret = $infraConfig['livekit_api_secret'] ?? "lk_{$shortSlug}_secret_key_min_32_characters_len";
+
+        return <<<YAML
+# ==============================================================================
+# LiveKit Media Server Configuration ({$shortSlug})
+# Configured for LAN / Intranet Offline-Resilient Audio & WebRTC Streaming
+# ==============================================================================
+port: {$port}
+
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 50100
+  use_external_ip: false
+  stun_servers: []
+
+keys:
+  {$apiKey}: {$apiSecret}
+
+logging:
+  level: info
+YAML;
+    }
+
+    /**
+     * Generate runtime-dynamic WebRTC / LiveKit + Reverb browser client helper
+     * resolving LAN / host IP from window.location.hostname instead of hardcoded localhost.
+     */
+    public static function generateRealtimeStageClientJs(string $shortSlug, array $infraConfig): string
+    {
+        $lkPort = (int) ($infraConfig['livekit_port'] ?? 7880);
+        $rvPort = (int) ($infraConfig['reverb_port'] ?? 8080);
+        $lanHost = addslashes((string) ($infraConfig['livekit_lan_host'] ?? ''));
+
+        return <<<JS
+/**
+ * Runtime LAN-Aware LiveKit & Reverb Endpoint Resolver ({$shortSlug})
+ * Automatically binds to the active server hostname (LAN IP or domain) so
+ * mobile phones and booths on the local network connect without localhost drift.
+ */
+export function resolveRealtimeEndpoints() {
+    const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const wsScheme = isSecure ? 'wss' : 'ws';
+    const configuredHost = '{$lanHost}';
+    const activeHost = configuredHost || (typeof window !== 'undefined' ? window.location.hostname : '127.0.0.1');
+
+    return {
+        host: activeHost,
+        livekitWsUrl: `\${wsScheme}://\${activeHost}:{$lkPort}`,
+        reverbWsUrl: `\${wsScheme}://\${activeHost}:{$rvPort}`,
+    };
+}
+
+export class LiveStageConnection {
+    constructor(options = {}) {
+        this.endpoints = resolveRealtimeEndpoints();
+        this.channel = options.channel || 'main-stage';
+        this.listeners = new Map();
+    }
+
+    on(event, handler) {
+        if (!this.listeners.has(event)) {
+            this.listeners.set(event, []);
+        }
+        this.listeners.get(event).push(handler);
+        return this;
+    }
+
+    emit(event, payload) {
+        (this.listeners.get(event) || []).forEach((fn) => fn(payload));
+    }
+
+    getConnectionDescriptor() {
+        return {
+            channel: this.channel,
+            endpoints: this.endpoints,
+            audioConstraints: {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false,
+                sampleRate: 48000,
+                channelCount: 1,
+            },
+        };
+    }
+}
+JS;
+    }
+
+    /**
+     * Generate Web Resource Controllers matching routes/web.php plus DashboardController & ProfileController.
+     *
+     * @return array<string, string>
+     */
+    public static function generateDomainWebControllers(array $erdTables): array
+    {
+        $files = [];
+
+        $files['app/Http/Controllers/DashboardController.php'] = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers;
+
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+class DashboardController extends Controller
+{
+    public function index(Request $request): View|JsonResponse
+    {
+        $summary = [
+            'user' => $request->user()?->only(['id', 'name', 'email', 'role']),
+            'users_count' => Schema::hasTable('users') ? DB::table('users')->count() : 0,
+        ];
+
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'ok', 'summary' => $summary]);
+        }
+
+        return view('dashboard', ['summary' => $summary]);
+    }
+}
+PHP;
+
+        $files['app/Http/Controllers/ProfileController.php'] = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class ProfileController extends Controller
+{
+    public function edit(Request $request): JsonResponse
+    {
+        return response()->json(['user' => $request->user()]);
+    }
+
+    public function update(Request $request): RedirectResponse|JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $user = $request->user();
+        if ($user) {
+            $user->update($validated);
+        }
+
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'user' => $user])
+            : back()->with('status', 'profile-updated');
+    }
+
+    public function destroy(Request $request): RedirectResponse|JsonResponse
+    {
+        $user = $request->user();
+        Auth::logout();
+        if ($user) {
+            $user->delete();
+        }
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return $request->expectsJson()
+            ? response()->json([], 204)
+            : redirect('/');
+    }
+}
+PHP;
+
+        $controllerTemplate = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers;
+
+use App\Models\__MODEL_CLASS__;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+
+class __CONTROLLER_CLASS__ extends Controller
+{
+    public function index(Request $request): View|JsonResponse
+    {
+        $records = __MODEL_CLASS__::query()
+            ->orderByDesc('id')
+            ->cursorPaginate(25)
+            ->withQueryString();
+
+        if ($request->expectsJson()) {
+            return response()->json($records);
+        }
+
+        return view('domain.index', [
+            'resourceTitle' => '__RESOURCE_TITLE__',
+            'routePrefix' => '__TABLE_NAME__',
+            'records' => $records,
+        ]);
+    }
+
+    public function create(Request $request): JsonResponse
+    {
+        return response()->json(['resource' => '__TABLE_NAME__', 'action' => 'create']);
+    }
+
+    public function store(Request $request): RedirectResponse|JsonResponse
+    {
+        $payload = $request->except(['_token', '_method']);
+        $record = __MODEL_CLASS__::query()->create($payload);
+
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'data' => $record], 201)
+            : redirect()->route('__TABLE_NAME__.index')->with('status', 'created');
+    }
+
+    public function show(Request $request, string $record): JsonResponse
+    {
+        $item = __MODEL_CLASS__::query()->findOrFail($record);
+
+        return response()->json(['data' => $item]);
+    }
+
+    public function edit(Request $request, string $record): JsonResponse
+    {
+        $item = __MODEL_CLASS__::query()->findOrFail($record);
+
+        return response()->json(['data' => $item, 'action' => 'edit']);
+    }
+
+    public function update(Request $request, string $record): RedirectResponse|JsonResponse
+    {
+        $item = __MODEL_CLASS__::query()->findOrFail($record);
+        $item->update($request->except(['_token', '_method']));
+
+        return $request->expectsJson()
+            ? response()->json(['success' => true, 'data' => $item])
+            : redirect()->route('__TABLE_NAME__.index')->with('status', 'updated');
+    }
+
+    public function destroy(Request $request, string $record): RedirectResponse|JsonResponse
+    {
+        $item = __MODEL_CLASS__::query()->findOrFail($record);
+        $item->delete();
+
+        return $request->expectsJson()
+            ? response()->json([], 204)
+            : redirect()->route('__TABLE_NAME__.index')->with('status', 'deleted');
+    }
+}
+PHP;
+
+        foreach ($erdTables as $table) {
+            $tableName = strtolower((string) preg_replace('/[^a-zA-Z0-9_]/', '_', (string) ($table['name'] ?? '')));
+            if ($tableName === '' || $tableName === 'users' || $tableName === 'security_threat_logs') {
+                continue;
+            }
+
+            $modelClass = Str::studly(Str::singular($tableName));
+            $controllerClass = $modelClass.'Controller';
+            $resourceTitle = Str::headline($tableName);
+
+            $files["app/Http/Controllers/{$controllerClass}.php"] = strtr($controllerTemplate, [
+                '__MODEL_CLASS__' => $modelClass,
+                '__CONTROLLER_CLASS__' => $controllerClass,
+                '__TABLE_NAME__' => $tableName,
+                '__RESOURCE_TITLE__' => $resourceTitle,
+            ]);
+        }
+
+        return $files;
+    }
+
+    /**
+     * Generate complete runnable Laravel 13 core skeleton files so the exported project
+     * boots immediately via Docker, Vite, Composer, and PHPUnit without manual bootstrapping.
+     *
+     * @return array<string, string>
+     */
+    public static function generateRunnableSkeletonFiles(
+        VisionBlueprint $blueprint,
+        string $slug,
+        string $shortSlug,
+        array $erdTables,
+        array $universalSchema,
+        array $infraConfig,
+        array $capabilities,
+        array $resolvedDesign
+    ): array {
+        $appName = $blueprint->nama_bisnis ?: ($blueprint->client_name ?: 'Enterprise App');
+        $appKey = 'base64:'.base64_encode(random_bytes(32));
+        $envTemplate = self::generateEnvExample($blueprint, $slug, $universalSchema);
+        $readyEnv = str_replace('APP_KEY=base64:GENERATE_WITH_PHP_ARTISAN_KEY_GENERATE', "APP_KEY={$appKey}", $envTemplate);
+        if (! str_contains($readyEnv, $appKey)) {
+            $readyEnv = preg_replace('/^APP_KEY=.*$/m', "APP_KEY={$appKey}", $readyEnv) ?? ($readyEnv."\nAPP_KEY={$appKey}\n");
+        }
+
+        $designCode = $resolvedDesign['code'] ?? 'SWISS_TECHNICAL_GRID';
+        $designSys = $resolvedDesign['system'] ?? [];
+        $taxonomyRows = [];
+        foreach (WorldDesignSystemCatalog::worldwideTaxonomySummary() as $row) {
+            $taxonomyRows[] = "| `{$row['system_code']}` | {$row['school']} | {$row['benchmarks']} | {$row['best_for']['en']} |";
+        }
+        $taxonomyTable = implode("\n", $taxonomyRows);
+
+        $appJsHeader = <<<'JS'
+import Alpine from 'alpinejs';
+
+window.__APP_ALPINE_BOOTSTRAP__ = () => {
+    window.Alpine = Alpine;
+    Alpine.start();
+};
+
+JS;
+
+        $dbSafeTesting = ($infraConfig['db_database'] ?? 'app_db').'_testing';
+        $dbUsername = $infraConfig['db_username'] ?? 'app_user';
+        $dbPassword = $infraConfig['db_password'] ?? 'secret_change_in_prod';
+
+        $files = [];
+
+        $files['.env'] = $readyEnv;
+
+        $files['.gitignore'] = <<<'GIT'
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/vendor
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+GIT;
+
+        $files['composer.json'] = (string) json_encode([
+            'name' => "project-os/{$shortSlug}",
+            'type' => 'project',
+            'description' => "{$appName} — Enterprise Application generated by Project OS",
+            'require' => [
+                'php' => '^8.4|^8.5',
+                'laravel/framework' => '^13.0',
+                'laravel/tinker' => '^2.10',
+            ],
+            'require-dev' => [
+                'fakerphp/faker' => '^1.24',
+                'mockery/mockery' => '^1.6',
+                'phpunit/phpunit' => '^12.0',
+            ],
+            'autoload' => [
+                'psr-4' => [
+                    'App\\' => 'app/',
+                    'Database\\Factories\\' => 'database/factories/',
+                    'Database\\Seeders\\' => 'database/seeders/',
+                ],
+            ],
+            'autoload-dev' => [
+                'psr-4' => [
+                    'Tests\\' => 'tests/',
+                ],
+            ],
+            'scripts' => [
+                'post-autoload-dump' => [
+                    'Illuminate\\Foundation\\ComposerScripts::postAutoloadDump',
+                    '@php artisan package:discover --ansi',
+                ],
+                'test' => ['@php artisan test'],
+            ],
+            'minimum-stability' => 'stable',
+            'prefer-stable' => true,
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n";
+
+        $files['package.json'] = (string) json_encode([
+            'name' => $shortSlug,
+            'private' => true,
+            'type' => 'module',
+            'scripts' => [
+                'dev' => 'vite',
+                'build' => 'vite build',
+            ],
+            'dependencies' => [
+                'alpinejs' => '^3.14.8',
+            ],
+            'devDependencies' => [
+                '@tailwindcss/vite' => '^4.0.0',
+                'laravel-vite-plugin' => '^1.2.0',
+                'tailwindcss' => '^4.0.0',
+                'vite' => '^6.0.0',
+            ],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n";
+
+        $files['vite.config.js'] = <<<'JS'
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+import tailwindcss from '@tailwindcss/vite';
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: ['resources/css/app.css', 'resources/js/app.js'],
+            refresh: true,
+        }),
+        tailwindcss(),
+    ],
+});
+JS;
+
+        $files['resources/css/app.css'] = WorldDesignSystemCatalog::generateAppCss($resolvedDesign, $appName);
+        $files['resources/js/app.js'] = $appJsHeader.WorldDesignSystemCatalog::generateAppJs($resolvedDesign);
+
+        $rationaleEn = $designSys['rationale']['en'] ?? 'Calibrated for domain clarity and high contrast.';
+        $schoolTitle = $designSys['school'] ?? 'Structural Technical Grid';
+
+        $files['DESIGN-SYSTEM.md'] = <<<MD
+# Frontend Design System Architecture — {$appName}
+
+- **Selected Design System**: `{$designCode}`
+- **Global School**: {$schoolTitle}
+- **Domain Rationale**: {$rationaleEn}
+- **Asset Delivery**: 100% Local Vite + Tailwind CSS v4 (`resources/css/app.css`, `resources/js/app.js`) — zero external CDN runtime dependency.
+
+## Global Frontend Design System Taxonomy (10 Worldwide Schools)
+
+| Code | School | Benchmarks | Best Domains |
+| --- | --- | --- | --- |
+{$taxonomyTable}
+MD;
+
+        $files['public/openapi.json'] = self::generateOpenApiSpec($blueprint, $erdTables);
+
+        $files['artisan'] = <<<'PHP'
+#!/usr/bin/env php
+<?php
+
+use Illuminate\Foundation\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+
+define('LARAVEL_START', microtime(true));
+
+require __DIR__.'/vendor/autoload.php';
+
+/** @var Application $app */
+$app = require_once __DIR__.'/bootstrap/app.php';
+
+$status = $app->handleCommand(new ArgvInput);
+
+exit($status);
+PHP;
+
+        $files['public/index.php'] = <<<'PHP'
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
+
+define('LARAVEL_START', microtime(true));
+
+if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+
+require __DIR__.'/../vendor/autoload.php';
+
+/** @var Application $app */
+$app = require_once __DIR__.'/../bootstrap/app.php';
+
+$app->handleRequest(Request::capture());
+PHP;
+
+        $files['bootstrap/app.php'] = <<<'PHP'
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'operator.role' => \App\Http\Middleware\EnsureOperatorRole::class,
+            'ai.shield' => \App\Http\Middleware\AiThreatShield::class,
+        ]);
+    })
+    ->withExceptions(function (Exceptions $exceptions): void {
+        // Production telemetry hook ready
+    })->create();
+PHP;
+
+        $files['bootstrap/providers.php'] = <<<'PHP'
+<?php
+
+return [
+    App\Providers\AppServiceProvider::class,
+];
+PHP;
+
+        $files['app/Providers/AppServiceProvider.php'] = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Providers;
+
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\ServiceProvider;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        // Bind application-specific singletons cleanly
+    }
+
+    public function boot(): void
+    {
+        Model::preventLazyLoading(! $this->app->isProduction());
+        Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
+
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
+        });
+    }
+}
+PHP;
+
+        $files['config/app.php'] = strtr(<<<'PHP'
+<?php
+
+return [
+    'name' => env('APP_NAME', '__APP_NAME__'),
+    'env' => env('APP_ENV', 'production'),
+    'debug' => (bool) env('APP_DEBUG', false),
+    'url' => env('APP_URL', 'http://localhost'),
+    'timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'),
+    'locale' => env('APP_LOCALE', 'id'),
+    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+    'key' => env('APP_KEY'),
+    'cipher' => 'AES-256-CBC',
+    'ai_shield' => (bool) env('AI_THREAT_SHIELD_ENABLED', true),
+    'maintenance' => ['driver' => 'file'],
+];
+PHP, ['__APP_NAME__' => addslashes($appName)]);
+
+        $files['config/database.php'] = strtr(<<<'PHP'
+<?php
+
+return [
+    'default' => env('DB_CONNECTION', 'pgsql'),
+    'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            'prefix' => '',
+            'foreign_key_constraints' => true,
+        ],
+        'pgsql' => [
+            'driver' => 'pgsql',
+            'host' => env('DB_HOST', 'postgres'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('DB_DATABASE', '__DB_DATABASE__'),
+            'username' => env('DB_USERNAME', '__DB_USERNAME__'),
+            'password' => env('DB_PASSWORD', '__DB_PASSWORD__'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
+        ],
+        'mysql' => [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => env('DB_DATABASE', '__DB_DATABASE__'),
+            'username' => env('DB_USERNAME', '__DB_USERNAME__'),
+            'password' => env('DB_PASSWORD', '__DB_PASSWORD__'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+        ],
+    ],
+    'migrations' => ['table' => 'migrations', 'update_date_on_publish' => true],
+    'redis' => [
+        'client' => env('REDIS_CLIENT', 'phpredis'),
+        'default' => [
+            'host' => env('REDIS_HOST', 'redis'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_DB', '0'),
+        ],
+        'cache' => [
+            'host' => env('REDIS_HOST', 'redis'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_CACHE_DB', '1'),
+        ],
+    ],
+];
+PHP, [
+            '__DB_DATABASE__' => addslashes($infraConfig['db_database'] ?? 'app_db'),
+            '__DB_USERNAME__' => addslashes($dbUsername),
+            '__DB_PASSWORD__' => addslashes($dbPassword),
+        ]);
+
+        $files['config/cache.php'] = <<<'PHP'
+<?php
+
+return [
+    'default' => env('CACHE_STORE', 'redis'),
+    'stores' => [
+        'array' => ['driver' => 'array', 'serialize' => false],
+        'file' => ['driver' => 'file', 'path' => storage_path('framework/cache/data')],
+        'redis' => ['driver' => 'redis', 'connection' => env('REDIS_CACHE_CONNECTION', 'cache')],
+    ],
+    'prefix' => env('CACHE_PREFIX', 'pos_cache'),
+];
+PHP;
+
+        $files['config/auth.php'] = <<<'PHP'
+<?php
+
+return [
+    'defaults' => ['guard' => 'web', 'passwords' => 'users'],
+    'guards' => [
+        'web' => ['driver' => 'session', 'provider' => 'users'],
+    ],
+    'providers' => [
+        'users' => ['driver' => 'eloquent', 'model' => App\Models\User::class],
+    ],
+    'passwords' => [
+        'users' => ['provider' => 'users', 'table' => 'password_reset_tokens', 'expire' => 60, 'throttle' => 60],
+    ],
+];
+PHP;
+
+        $files['config/session.php'] = <<<'PHP'
+<?php
+
+return [
+    'driver' => env('SESSION_DRIVER', 'redis'),
+    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    'expire_on_close' => false,
+    'encrypt' => true,
+    'files' => storage_path('framework/sessions'),
+    'connection' => env('SESSION_CONNECTION'),
+    'table' => 'sessions',
+    'store' => env('SESSION_STORE'),
+    'lottery' => [2, 100],
+    'cookie' => env('SESSION_COOKIE', 'app_session'),
+    'path' => '/',
+    'domain' => env('SESSION_DOMAIN'),
+    'secure' => env('SESSION_SECURE_COOKIE'),
+    'http_only' => true,
+    'same_site' => 'lax',
+];
+PHP;
+
+        $files['config/queue.php'] = <<<'PHP'
+<?php
+
+return [
+    'default' => env('QUEUE_CONNECTION', 'redis'),
+    'connections' => [
+        'sync' => ['driver' => 'sync'],
+        'redis' => [
+            'driver' => 'redis',
+            'connection' => 'default',
+            'queue' => env('REDIS_QUEUE', 'default'),
+            'retry_after' => 90,
+            'block_for' => 5,
+            'after_commit' => true,
+        ],
+    ],
+];
+PHP;
+
+        $files['app/Models/User.php'] = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+
+class User extends Authenticatable
+{
+    use HasFactory, HasUlids;
+    use Notifiable;
+
+    protected $fillable = [
+        'organization_id',
+        'name',
+        'email',
+        'password',
+        'role',
+        'is_active',
+        'revoked_at',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'revoked_at' => 'datetime',
+            'is_active' => 'boolean',
+            'password' => 'hashed',
+        ];
+    }
+
+    public function organizationIdValue(): string
+    {
+        return (string) ($this->organization_id ?: $this->id);
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array(strtolower((string) $this->role), ['superadmin', 'super_admin', 'admin', 'owner'], true);
+    }
+
+    public function hasAnyRole(array $roles): bool
+    {
+        $current = strtolower(trim((string) $this->role));
+        if (in_array($current, ['superadmin', 'super_admin'], true)) {
+            return true;
+        }
+
+        $normalized = array_map(static fn (string $r): string => strtolower(trim($r)), $roles);
+
+        return in_array($current, $normalized, true);
+    }
+}
+PHP;
+
+        $files['app/Traits/ScopesToTenantOrganization.php'] = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Traits;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+
+trait ScopesToTenantOrganization
+{
+    /** @var array<string, bool> */
+    private static array $organizationColumnCache = [];
+
+    private static function tableHasOrganizationColumn(Model $model): bool
+    {
+        $table = $model->getTable();
+        if (! array_key_exists($table, self::$organizationColumnCache)) {
+            self::$organizationColumnCache[$table] = $model
+                ->getConnection()
+                ->getSchemaBuilder()
+                ->hasColumn($table, 'organization_id');
+        }
+
+        return self::$organizationColumnCache[$table];
+    }
+
+    public static function bootScopesToTenantOrganization(): void
+    {
+        static::creating(function (Model $model): void {
+            if (Auth::check() && ! isset($model->organization_id) && self::tableHasOrganizationColumn($model)) {
+                $user = Auth::user();
+                if ($user && method_exists($user, 'organizationIdValue')) {
+                    $model->setAttribute('organization_id', $user->organizationIdValue());
+                }
+            }
+        });
+    }
+
+    public function scopeForTenant(Builder $query, ?object $actor = null): Builder
+    {
+        $user = $actor ?? Auth::user();
+        if (! $user || (method_exists($user, 'isAdmin') && $user->isAdmin())) {
+            return $query;
+        }
+
+        if (self::tableHasOrganizationColumn($this) && method_exists($user, 'organizationIdValue')) {
+            return $query->where('organization_id', $user->organizationIdValue());
+        }
+
+        return $query;
+    }
+}
+PHP;
+
+        $files['app/Http/Middleware/AiThreatShield.php'] = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
+
+class AiThreatShield
+{
+    private const BLOCK_PATTERN = '/(\b(?:system|exec|shell_exec|passthru|proc_open|popen|eval|assert)\s*\(|<\?php|__destruct|__wakeup|\$\{IFS\})/i';
+
+    public function handle(Request $request, Closure $next): Response
+    {
+        if (! (bool) config('app.ai_shield', true)) {
+            return $next($request);
+        }
+
+        $payload = json_encode($request->all(), JSON_UNESCAPED_SLASHES) ?: '';
+        if ($payload !== '' && preg_match(self::BLOCK_PATTERN, $payload) === 1) {
+            Log::warning('[AiThreatShield] Blocked suspicious payload', [
+                'ip' => $request->ip(),
+                'path' => $request->path(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Request rejected by AiThreatShield security policy.',
+            ], 403);
+        }
+
+        return $next($request);
+    }
+}
+PHP;
+
+        $files['app/Http/Middleware/EnsureOperatorRole.php'] = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class EnsureOperatorRole
+{
+    public function handle(Request $request, Closure $next, string ...$roles): Response
+    {
+        $user = $request->user();
+        if (! $user) {
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Unauthenticated.'], 401)
+                : redirect()->route('login');
+        }
+
+        if (! empty($user->revoked_at) || ! ($user->is_active ?? true)) {
+            return response()->json(['message' => 'Account suspended or revoked.'], 403);
+        }
+
+        if ($roles !== [] && method_exists($user, 'hasAnyRole') && ! $user->hasAnyRole($roles)) {
+            return response()->json(['message' => 'Insufficient operator privileges.'], 403);
+        }
+
+        return $next($request);
+    }
+}
+PHP;
+
+        $files['app/Http/Controllers/Controller.php'] = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers;
+
+abstract class Controller
+{
+    // Base HTTP & API controller
+}
+PHP;
+
+        $files['app/Http/Controllers/Auth/AuthenticatedSessionController.php'] = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class AuthenticatedSessionController extends Controller
+{
+    public function create(): View
+    {
+        return view('auth.login');
+    }
+
+    public function store(Request $request): RedirectResponse|JsonResponse
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
+
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Invalid credentials.'], 422)
+                : back()->withErrors(['email' => 'Invalid credentials.'])->onlyInput('email');
+        }
+
+        $user = Auth::user();
+        if ($user && (! empty($user->revoked_at) || ! ($user->is_active ?? true))) {
+            Auth::logout();
+
+            return response()->json(['message' => 'Operator account is inactive or revoked.'], 403);
+        }
+
+        $request->session()->regenerate();
+
+        return $request->expectsJson()
+            ? response()->json(['authenticated' => true, 'user' => $user])
+            : redirect()->intended(route('dashboard'));
+    }
+
+    public function destroy(Request $request): RedirectResponse|JsonResponse
+    {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return $request->expectsJson()
+            ? response()->json(['authenticated' => false])
+            : redirect('/');
+    }
+}
+PHP;
+
+        $files['routes/auth.php'] = <<<'PHP'
+<?php
+
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use Illuminate\Support\Facades\Route;
+
+Route::middleware('guest')->group(function () {
+    Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+});
+PHP;
+
+        $files['routes/console.php'] = <<<'PHP'
+<?php
+
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('pos:check-env')->daily();
+PHP;
+
+        $files['resources/views/layouts/app.blade.php'] = strtr(<<<'BLADE'
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="antialiased">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', '__APP_NAME__')</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="min-h-screen flex flex-col">
+    <header class="border-b px-6 py-3 flex items-center justify-between" style="background-color: var(--ds-surface); border-color: var(--ds-border);">
+        <a href="{{ url('/') }}" class="font-display font-bold text-sm">__APP_NAME__</a>
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="window.toggleAppTheme()" class="ds-card px-3 py-1 text-xs font-mono cursor-pointer">Theme</button>
+            @auth
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="ds-card px-3 py-1 text-xs font-mono cursor-pointer">Logout</button>
+                </form>
+            @endauth
+        </div>
+    </header>
+    <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
+        @yield('content')
+    </main>
+</body>
+</html>
+BLADE, ['__APP_NAME__' => e($appName)]);
+
+        $files['resources/views/auth/login.blade.php'] = <<<'BLADE'
+@extends('layouts.app')
+
+@section('content')
+<div class="max-w-md mx-auto ds-card p-6 space-y-4">
+    <h1 class="text-xl font-display font-bold">Operator Sign In</h1>
+    <form method="POST" action="{{ route('login') }}" class="space-y-4">
+        @csrf
+        <div>
+            <label for="email" class="block text-xs font-mono uppercase mb-1">Email</label>
+            <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus
+                   placeholder="operator@domain.test"
+                   class="w-full px-3 py-2 text-sm border" style="background-color: var(--ds-bg); border-color: var(--ds-border);">
+        </div>
+        <div>
+            <label for="password" class="block text-xs font-mono uppercase mb-1">Password</label>
+            <input id="password" name="password" type="password" required
+                   placeholder="Enter password"
+                   class="w-full px-3 py-2 text-sm border" style="background-color: var(--ds-bg); border-color: var(--ds-border);">
+        </div>
+        <button type="submit" class="ds-btn-primary w-full py-2 text-xs font-mono uppercase cursor-pointer">
+            Sign In
+        </button>
+    </form>
+</div>
+@endsection
+BLADE;
+
+        $files['resources/views/dashboard.blade.php'] = <<<'BLADE'
+@extends('layouts.app')
+
+@section('content')
+<div class="space-y-6">
+    <div class="ds-card p-6">
+        <h1 class="text-2xl font-display font-bold">Operational Dashboard</h1>
+        <p class="text-sm mt-1" style="color: var(--ds-text-muted);">
+            Active Operator: {{ auth()->user()->name ?? 'Guest' }} ({{ auth()->user()->role ?? 'operator' }})
+        </p>
+    </div>
+</div>
+@endsection
+BLADE;
+
+        $files['resources/views/domain/index.blade.php'] = <<<'BLADE'
+@extends('layouts.app')
+
+@section('content')
+<div class="space-y-6">
+    <div class="ds-card p-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-xl font-display font-bold">{{ $resourceTitle ?? 'Domain Records' }}</h1>
+            <p class="text-xs font-mono mt-1" style="color: var(--ds-text-muted);">O(1) Keyset Cursor Pagination Active</p>
+        </div>
+        <a href="{{ url('/dashboard') }}" class="ds-card px-3 py-1.5 text-xs font-mono">Dashboard</a>
+    </div>
+
+    <div class="ds-card overflow-x-auto">
+        <table class="w-full text-xs text-left">
+            <thead class="border-b font-mono uppercase" style="border-color: var(--ds-border);">
+                <tr>
+                    <th class="px-4 py-3">ULID</th>
+                    <th class="px-4 py-3">Details</th>
+                    <th class="px-4 py-3">Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($records as $item)
+                <tr class="border-b" style="border-color: var(--ds-border);">
+                    <td class="px-4 py-3 font-mono">{{ $item->id }}</td>
+                    <td class="px-4 py-3">{{ $item->title ?? $item->name ?? $item->status ?? '-' }}</td>
+                    <td class="px-4 py-3 font-mono">{{ $item->created_at }}</td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="3" class="px-4 py-8 text-center" style="color: var(--ds-text-muted);">No records found.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+@endsection
+BLADE;
+
+        $files['phpunit.xml'] = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_CONNECTION" value="pgsql"/>
+        <env name="DB_DATABASE" value="{$dbSafeTesting}"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+    </php>
+</phpunit>
+XML;
+
+        $files['tests/TestCase.php'] = <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Tests;
+
+use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use RuntimeException;
+
+abstract class TestCase extends BaseTestCase
+{
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $connection = (string) config('database.default');
+        $database = (string) config("database.connections.{$connection}.database", '');
+
+        $isSafeMemorySqlite = ($connection === 'sqlite' && $database === ':memory:');
+        $isSafeTestingSchema = ($database !== '' && str_ends_with($database, '_testing'));
+
+        if (! $isSafeMemorySqlite && ! $isSafeTestingSchema) {
+            throw new RuntimeException(
+                "SAFETY GUARD ABORTED: phpunit attempted to execute against non-isolated database '{$database}' on '{$connection}'. Expected '{db}_testing' or sqlite ':memory:'."
+            );
+        }
+    }
+}
+PHP;
+
+        return $files;
+    }
+
+    /**
+     * Validate hygiene, script line endings, and zero leaked template bugs across all scaffolded files.
+     *
+     * @param  array<string, string>  $files
+     */
+    public static function validateGeneratedFiles(array &$files): void
+    {
+        unset($files['nixpacks.toml']);
+
+        foreach ($files as $path => &$content) {
+            if (! is_string($content)) {
+                continue;
+            }
+
+            if (preg_match('/(\.sh|\.ya?ml|\.env.*|Dockerfile.*|Caddyfile|\.conf)$/i', $path) === 1) {
+                $content = str_replace("\r\n", "\n", $content);
+            }
+
+            if (preg_match('/\{\{\s*[A-Z][A-Z0-9_]{2,}\s*\}\}/', $content, $match) === 1) {
+                throw new \RuntimeException("Unreplaced stub placeholder '{$match[0]}' detected in scaffold file '{$path}'.");
+            }
+
+            if (preg_match('/\.(php|blade\.php|sh|ya?ml)$/i', $path) === 1
+                && preg_match('/\\\\\$(?=[a-zA-Z_])/', $content, $dollarMatch) === 1) {
+                throw new \RuntimeException("Leaked backslash-escaped variable '{$dollarMatch[0]}' detected in scaffold file '{$path}'.");
+            }
+        }
+        unset($content);
     }
 }

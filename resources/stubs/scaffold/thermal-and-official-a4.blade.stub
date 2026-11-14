@@ -1,66 +1,76 @@
-{{-- Project OS v3.0 — Printable Thermal (58mm/80mm ESC/POS) & Official A4 PDF Archetype --}}
-{{-- Zero External CDN: Local Inline SVG Cryptographic QR + Strict Page-Break Protection --}}
-<div class="bg-white text-zinc-950 font-sans">
+<!DOCTYPE html>
+<html lang="id" class="antialiased">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ APP_NAME }} — Official Immutable Document</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @media print {
+            @page { size: A4 portrait; margin: 12mm; }
             .no-print { display: none !important; }
-            thead { display: table-header-group; }
-            tr, .signature-block, .totals-block { break-inside: avoid; page-break-inside: avoid; }
-            body.print-thermal-80mm { width: 80mm; margin: 0; font-family: ui-monospace, monospace; color: #000 !important; background: #fff !important; }
-            body.print-thermal-58mm { width: 58mm; margin: 0; font-family: ui-monospace, monospace; color: #000 !important; background: #fff !important; }
         }
     </style>
-
-    {{-- Official A4 Document Container --}}
-    <section class="relative max-w-4xl mx-auto p-8 border border-zinc-300 rounded-none bg-white text-zinc-950">
-        <div class="pointer-events-none select-none absolute inset-0 flex items-center justify-center opacity-10">
-            <span class="text-5xl font-black tracking-widest uppercase border-4 border-zinc-900 px-6 py-2">{$watermark}</span>
+</head>
+<body class="bg-white text-zinc-950 p-6 font-sans text-xs">
+    <div class="max-w-3xl mx-auto border border-zinc-400 p-6 relative">
+        <div class="pointer-events-none select-none fixed inset-0 flex items-center justify-center opacity-10 rotate-[-25deg]">
+            <span class="text-5xl font-black tracking-widest uppercase border-4 border-zinc-900 px-6 py-2">{{ WATERMARK }}</span>
         </div>
 
-        <header class="flex items-start justify-between border-b-2 border-zinc-950 pb-4 mb-6">
+        <header class="flex items-start justify-between border-b-2 border-zinc-900 pb-4 mb-4">
             <div>
-                <h1 class="text-xl font-black uppercase tracking-tight">{$appName}</h1>
-                <p class="text-xs font-mono text-zinc-700">Thermal Mode: {$thermalMode} | Historical Snapshot Locked</p>
+                <h1 class="text-xl font-black uppercase tracking-tight">{{ APP_NAME }}</h1>
+                <p class="text-xs font-mono text-zinc-700">Thermal Mode: {{ THERMAL_MODE }} | Historical Snapshot Locked</p>
             </div>
-            {{-- Local Inline SVG QR Verification Matrix (Zero External QR API) --}}
-            <div class="text-right">
-                <svg class="w-16 h-16 border border-zinc-900 p-1 inline-block" viewBox="0 0 24 24" fill="currentColor" aria-label="SHA-256 Document Verification QR">
-                    <rect x="2" y="2" width="6" height="6"/><rect x="16" y="2" width="6" height="6"/><rect x="2" y="16" width="6" height="6"/>
-                    <rect x="10" y="4" width="2" height="2"/><rect x="12" y="8" width="2" height="4"/><rect x="10" y="14" width="4" height="2"/>
-                    <rect x="16" y="14" width="2" height="4"/><rect x="20" y="18" width="2" height="4"/>
-                </svg>
-                <div class="text-[10px] font-mono tabular-nums text-zinc-800 mt-1">SHA-256 VERIFIED</div>
+            <div class="text-right font-mono text-[11px]">
+                <div>REF: {{ $documentNumber ?? 'DOC-0001' }}</div>
+                <div>DATE: {{ now()->format('Y-m-d H:i') }}</div>
             </div>
         </header>
 
-        <table class="w-full text-xs border-collapse mb-6">
+        <table class="w-full border-collapse text-xs mb-6">
             <thead>
-                <tr class="border-b border-zinc-900 text-left uppercase font-bold">
-                    <th class="py-2 pr-3">Item (Frozen Snapshot)</th>
+                <tr class="border-b border-zinc-900 text-left font-mono uppercase text-[11px]">
+                    <th class="py-2 pr-3">Item Snapshot</th>
                     <th class="py-2 px-3 text-right">Qty</th>
-                    <th class="py-2 px-3 text-right">Unit Price Snapshot</th>
-                    <th class="py-2 pl-3 text-right">Subtotal</th>
+                    <th class="py-2 px-3 text-right">Unit Price</th>
+                    <th class="py-2 pl-3 text-right">Total</th>
                 </tr>
             </thead>
-            <tbody class="tabular-nums divide-y divide-zinc-200">
-                <tr>
-                    <td class="py-2 pr-3 font-medium">{{ \$line['item_name_snapshot'] ?? 'Frozen Master Item Snapshot' }}</td>
-                    <td class="py-2 px-3 text-right">{{ number_format((float) (\$line['qty'] ?? 1), 0, ',', '.') }}</td>
-                    <td class="py-2 px-3 text-right">Rp {{ number_format((float) (\$line['unit_price_snapshot'] ?? 150000), 0, ',', '.') }}</td>
-                    <td class="py-2 pl-3 text-right font-bold">Rp {{ number_format((float) (\$line['line_total'] ?? 150000), 0, ',', '.') }}</td>
+            <tbody>
+                @forelse(($lines ?? []) as $line)
+                <tr class="border-b border-zinc-200">
+                    <td class="py-2 pr-3 font-medium">{{ $line['item_name_snapshot'] ?? 'Frozen Master Item Snapshot' }}</td>
+                    <td class="py-2 px-3 text-right tabular-nums">{{ number_format((float) ($line['qty'] ?? 1), 0, ',', '.') }}</td>
+                    <td class="py-2 px-3 text-right tabular-nums">Rp {{ number_format((float) ($line['unit_price_snapshot'] ?? 150000), 0, ',', '.') }}</td>
+                    <td class="py-2 pl-3 text-right font-bold tabular-nums">Rp {{ number_format((float) ($line['line_total'] ?? 150000), 0, ',', '.') }}</td>
                 </tr>
+                @empty
+                <tr class="border-b border-zinc-200">
+                    <td class="py-2 pr-3 font-medium">Operational Service Baseline Snapshot</td>
+                    <td class="py-2 px-3 text-right tabular-nums">1</td>
+                    <td class="py-2 px-3 text-right tabular-nums">Rp 150.000</td>
+                    <td class="py-2 pl-3 text-right font-bold tabular-nums">Rp 150.000</td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
 
-        <footer class="signature-block grid grid-cols-2 gap-8 pt-6 border-t border-zinc-900 text-xs">
-            <div>
-                <p class="font-bold uppercase">Counterparty Snapshot</p>
-                <p class="text-zinc-700 font-mono">Immutable Historical Record (DECIMAL 19,4)</p>
+        <footer class="flex items-center justify-between pt-4 border-t border-zinc-300 text-[11px] font-mono text-zinc-700">
+            <div class="flex items-center gap-3">
+                <svg class="w-10 h-10 border border-zinc-900 p-0.5 bg-white text-zinc-950 shrink-0" viewBox="0 0 21 21" fill="currentColor" aria-label="Local Offline Verification Matrix">
+                    <rect x="0" y="0" width="7" height="7" /><rect x="1" y="1" width="5" height="5" fill="#ffffff" /><rect x="2" y="2" width="3" height="3" />
+                    <rect x="14" y="0" width="7" height="7" /><rect x="15" y="1" width="5" height="5" fill="#ffffff" /><rect x="16" y="2" width="3" height="3" />
+                    <rect x="0" y="14" width="7" height="7" /><rect x="1" y="15" width="5" height="5" fill="#ffffff" /><rect x="2" y="16" width="3" height="3" />
+                    <rect x="9" y="2" width="3" height="3" /><rect x="9" y="9" width="3" height="3" /><rect x="14" y="14" width="3" height="3" /><rect x="18" y="18" width="3" height="3" />
+                </svg>
+                <span>SHA-256 Tamper-Evident Audit Printout (Offline SVG QR Matrix)</span>
             </div>
-            <div class="text-right">
-                <p class="font-bold uppercase">Authorized Digital Seal</p>
-                <p class="font-mono tabular-nums text-zinc-700">{{ now()->format('Y-m-d H:i:s') }} UTC</p>
-            </div>
+            <button type="button" onclick="window.print()" class="no-print px-3 py-1 bg-zinc-900 text-white font-bold uppercase cursor-pointer">
+                Print Document
+            </button>
         </footer>
-    </section>
-</div>
+    </div>
+</body>
+</html>

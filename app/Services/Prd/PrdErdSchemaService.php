@@ -276,7 +276,18 @@ class PrdErdSchemaService
                 continue;
             }
             $cols = [];
+            $seenColNames = [];
+            $hasCreatedAt = false;
             foreach (($tbl['columns'] ?? []) as $col) {
+                $colNameLower = strtolower((string) ($col['name'] ?? ''));
+                if ($colNameLower === '' || $colNameLower === 'timestamps' || isset($seenColNames[$colNameLower])) {
+                    continue;
+                }
+                $seenColNames[$colNameLower] = true;
+                if ($colNameLower === 'created_at') {
+                    $hasCreatedAt = true;
+                }
+
                 $rawType = strtoupper((string) ($col['type'] ?? 'VARCHAR(120)'));
                 $erdType = match (true) {
                     $rawType === 'ULID' && ! empty($col['foreign']) => 'foreignUlid',
@@ -317,14 +328,16 @@ class PrdErdSchemaService
                     ],
                 ];
             }
-            $cols[] = [
-                'name' => 'created_at',
-                'type' => 'timestamp',
-                'index' => 'INDEX',
-                'nullable' => true,
-                'notes' => 'Keyset cursor pointer O(1)',
-                'label' => ['id' => 'Waktu Dibuat', 'en' => 'Created At'],
-            ];
+            if (! $hasCreatedAt) {
+                $cols[] = [
+                    'name' => 'created_at',
+                    'type' => 'timestamp',
+                    'index' => 'INDEX',
+                    'nullable' => true,
+                    'notes' => 'Keyset cursor pointer O(1)',
+                    'label' => ['id' => 'Waktu Dibuat', 'en' => 'Created At'],
+                ];
+            }
 
             $constraintsNote = '';
             if (! empty($tbl['unique_constraints'])) {

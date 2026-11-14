@@ -437,7 +437,7 @@ class ProjectOsMatrixCatalog
                     'Anti-scalping QR/pass check-in sekali pakai dengan tanda tangan kriptografis HMAC-SHA256',
                 ],
                 'default_compliance_standards' => ['UU Hak Cipta & Royalti Digital', 'Pajak Hiburan Daerah & PPh 23 Royalti', 'UU PDP No. 27/2022', 'OWASP ASVS L2'],
-                'detection_keywords' => ['tiket', 'ticketing', 'konser', 'event organizer', 'eo', 'stadion', 'kursi', 'seat', 'media', 'berita', 'portal berita', 'streaming', 'kreator', 'royalti', 'talenta', 'paywall', 'penyiaran', 'face checkin', 'gate biometrik'],
+                'detection_keywords' => ['tiket', 'ticketing', 'konser', 'event organizer', 'eo', 'stadion', 'kursi', 'seat', 'media', 'berita', 'portal berita', 'streaming', 'kreator', 'royalti', 'talenta', 'paywall', 'penyiaran', 'face checkin', 'gate biometrik', 'audio', 'interpreter', 'translator', 'penerjemah', 'siaran', 'broadcast', 'webrtc', 'livekit', 'live stream', 'livestream', 'channel', 'microphone'],
                 'is_active' => true,
                 'mandatory_primitives' => ['PRIMITIVE_HIGH_CONCURRENCY_TICKETING', 'PRIMITIVE_TIME_SLOT_ENGINE', 'PRIMITIVE_SUBSCRIPTION_COHORT'],
                 'optional_primitives' => ['PRIMITIVE_DOUBLE_ENTRY_LEDGER', 'PRIMITIVE_AI_VISION_BIOMETRICS'],
@@ -499,8 +499,8 @@ class ProjectOsMatrixCatalog
                 'default_compliance_standards' => ['ISAK 35 (Pelaporan Entitas Berorientasi Nonlaba)', 'PSAK 109 (Akuntansi Zakat/Infak/Sedekah)', 'UU Yayasan & Keterbukaan Informasi Publik', 'UU PDP No. 27/2022'],
                 'detection_keywords' => ['yayasan', 'ngo', 'nirlaba', 'nonprofit', 'non-profit', 'donasi', 'filantropi', 'zakat', 'infak', 'wakaf', 'gereja', 'masjid', 'pelayanan', 'relawan', 'volunteer', 'bantuan sosial', 'govtech', 'pemerintah', 'desa'],
                 'is_active' => true,
-                'mandatory_primitives' => ['PRIMITIVE_DOUBLE_ENTRY_LEDGER', 'PRIMITIVE_FUND_DISBURSEMENT_IMPACT', 'PRIMITIVE_APPROVAL_WORKFLOW'],
-                'optional_primitives' => ['PRIMITIVE_SUBSCRIPTION_COHORT'],
+                'mandatory_primitives' => ['PRIMITIVE_FUND_DISBURSEMENT_IMPACT', 'PRIMITIVE_APPROVAL_WORKFLOW'],
+                'optional_primitives' => ['PRIMITIVE_DOUBLE_ENTRY_LEDGER', 'PRIMITIVE_SUBSCRIPTION_COHORT'],
             ],
         ];
 

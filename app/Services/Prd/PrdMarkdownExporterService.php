@@ -374,7 +374,7 @@ class PrdMarkdownExporterService
         $md .= "### C. Pemisahan Deployment dan Release (Feature Flags)\n";
         $md .= "- **Dark Launching**: Sistem akan menggunakan arsitektur *Feature Toggles* (Feature Flags) untuk fitur-fitur berisiko tinggi (mis. integrasi payment gateway baru). Hal ini memungkinkan kode dideploy ke *Production* dengan aman (Zero Downtime), namun fitur tersebut dapat diaktifkan/dinonaktifkan secara dinamis (Canary Release) tanpa perlu melakukan *re-deploy* server.\n\n";
         $md .= "### D. Infrastructure as Code (IaC) Asset Handoff\n";
-        $md .= "- **Immutable Infrastructure**: Konfigurasi server (Nginx, PostgreSQL, Redis, Worker) tidak dikonfigurasi secara manual (*ClickOps*). Seluruh topologi dideklarasikan dalam bentuk skrip Infrastructure as Code (mis. *Nixpacks, Docker Compose, atau Ansible*). File skrip infrastruktur ini menjadi bagian integral dari *Source Code* yang diserahterimakan kepada klien (Anti-Vendor Lock-in dan Anti-Drift).\n\n";
+        $md .= "- **Immutable Infrastructure**: Konfigurasi server (Nginx, PostgreSQL, Redis, Worker) tidak dikonfigurasi secara manual (*ClickOps*). Seluruh topologi dideklarasikan dalam bentuk skrip Infrastructure as Code (mis. *Railpack, Docker Compose, atau Ansible*). File skrip infrastruktur ini menjadi bagian integral dari *Source Code* yang diserahterimakan kepada klien (Anti-Vendor Lock-in dan Anti-Drift).\n\n";
 
         // 7. Technology Stack & Architecture Decision
         $isDecoupled = ($prd['architecture_evaluation']['architecture_pattern_evaluation']['is_decoupled'] ?? false);

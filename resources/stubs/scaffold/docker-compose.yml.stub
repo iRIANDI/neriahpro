@@ -1,107 +1,106 @@
 # ==============================================================================
-# PROJECT OS // LOCAL & PRODUCTION CONTAINER ARCHITECTURE
-# Project: {{ APP_NAME }}
-# Generated: Project OS Architecture Engine & strict O(1) Scalability Spec
+# DEVELOPMENT & LOCAL DOCKER COMPOSE ORCHESTRATION
+# Project: {{ APP_NAME }} ({{ SHORT_SLUG }})
+# Run : docker compose up --build -d
+# Note: For zero-bind-mount portable builds, use docker-compose.portable.yml
 # ==============================================================================
 
-name: ${COMPOSE_PROJECT_NAME:-{{ SHORT_SLUG }}}
+name: {{ SHORT_SLUG }}
 
 services:
-  # 1. Main Application Container (PHP 8.5 FPM with High-Concurrency Extensions)
   app:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        - PHP_VERSION=8.5
-    container_name: ${COMPOSE_PROJECT_NAME:-{{ SHORT_SLUG }}}_app
+    container_name: {{ SHORT_SLUG }}_app
     restart: unless-stopped
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
-      - ./storage:/var/www/html/storage
-    environment:
-      APP_NAME: "${APP_NAME:-{{ APP_NAME }}}"
-      APP_ENV: ${APP_ENV:-local}
-      APP_DEBUG: "${APP_DEBUG:-true}"
-      APP_URL: "${APP_URL:-http://localhost:8080}"
-      DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_DATABASE: ${DB_DATABASE:-{{ SHORT_SLUG }}_db}
-      DB_USERNAME: ${DB_USERNAME:-{{ SHORT_SLUG }}_user}
-      DB_PASSWORD: ${DB_PASSWORD:-secret_production_change_me}
-      CACHE_STORE: redis
-      SESSION_DRIVER: redis
-      QUEUE_CONNECTION: redis
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      AI_THREAT_SHIELD_ENABLED: "true"
+      - app_vendor:/var/www/html/vendor
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    environment:
+      APP_NAME: "{{ APP_NAME }}"
+      APP_ENV: local
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: {{ DB_DATABASE }}
+      DB_USERNAME: {{ DB_USERNAME }}
+      DB_PASSWORD: {{ DB_PASSWORD }}
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: {{ REDIS_PASSWORD }}
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+    networks:
+      - app_network
 
-  # 2. Web Server (Nginx Alpine Reverse Proxy with FastCGI Buffering)
   web:
-    image: nginx:alpine
-    container_name: ${COMPOSE_PROJECT_NAME:-{{ SHORT_SLUG }}}_web
+    image: nginx:1.27-alpine
+    container_name: {{ SHORT_SLUG }}_web
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-8080}:80"
+      - "{{ APP_PORT }}:80"
     volumes:
-      - ./:/var/www/html:ro
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
+    networks:
+      - app_network
 
-  # 3. Database Engine (PostgreSQL 16 with Strict ULID & UTF-8)
   postgres:
     image: postgres:16-alpine
-    container_name: ${COMPOSE_PROJECT_NAME:-{{ SHORT_SLUG }}}_postgres
+    container_name: {{ SHORT_SLUG }}_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_DATABASE:-{{ SHORT_SLUG }}_db}
-      POSTGRES_USER: ${DB_USERNAME:-{{ SHORT_SLUG }}_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret_production_change_me}
-      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: {{ DB_DATABASE }}
+      POSTGRES_USER: {{ DB_USERNAME }}
+      POSTGRES_PASSWORD: {{ DB_PASSWORD }}
+    ports:
+      - "{{ DB_PORT }}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/migrations/schema_complete.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    ports:
-      - "${DB_FORWARD_PORT:-5432}:5432"
+      - ./database/migrations/schema_complete.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-{{ SHORT_SLUG }}_user} -d ${DB_DATABASE:-{{ SHORT_SLUG }}_db}"]
+      test: ["CMD-SHELL", "pg_isready -U {{ DB_USERNAME }} -d {{ DB_DATABASE }}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+    networks:
+      - app_network
 
-  # 4. In-Memory Cache, Rate Limiting & Queue Broker (Redis 7)
   redis:
     image: redis:7-alpine
-    container_name: ${COMPOSE_PROJECT_NAME:-{{ SHORT_SLUG }}}_redis
+    container_name: {{ SHORT_SLUG }}_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    command: >
+      redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+      --requirepass "{{ REDIS_PASSWORD }}"
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
-    ports:
-      - "${REDIS_FORWARD_PORT:-6379}:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"{{ REDIS_PASSWORD }}\" redis-cli ping | grep PONG"]
       interval: 5s
       timeout: 3s
-      retries: 5
-
-  # 5. Local Mail Testing Sandbox (Mailpit)
-  mailpit:
-    image: axllent/mailpit:latest
-    container_name: ${COMPOSE_PROJECT_NAME:-{{ SHORT_SLUG }}}_mailpit
-    restart: unless-stopped
-    ports:
-      - "1025:1025"
-      - "8025:8025"
+      retries: 10
+    networks:
+      - app_network{{ REALTIME_COMPOSE_SERVICES }}
 
 volumes:
+  app_vendor:
   postgres_data:
   redis_data:
+
+networks:
+  app_network:
+    driver: bridge
